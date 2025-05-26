@@ -10,17 +10,14 @@ use crate::messages::{MTMessage, MTMessageType};
 /// Main parser for SWIFT MT messages
 pub struct MTParser {
     block_regex: Regex,
-    field_regex: Regex,
 }
 
 impl MTParser {
     pub fn new() -> Result<Self> {
         let block_regex = Regex::new(r"\{(\d):([^}]*)\}")?;
-        let field_regex = Regex::new(r":(\d+[A-Z]*):([^:]*)")?;
         
         Ok(Self {
             block_regex,
-            field_regex,
         })
     }
 

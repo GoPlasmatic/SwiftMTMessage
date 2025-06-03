@@ -1,4 +1,4 @@
-//! MT202: General Financial Institution Transfer
+//! MT202COV: General Financial Institution Transfer (Cover)
 
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -10,14 +10,15 @@ use crate::messages::{
     get_required_field_value,
 };
 
-/// MT202: General Financial Institution Transfer
+/// MT202COV: General Financial Institution Transfer (Cover)
+/// This message is used in correspondent banking to provide cover for an underlying customer credit transfer
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MT202 {
+pub struct MT202COV {
     /// All fields from the text block
     fields: Vec<Field>,
 }
 
-impl MT202 {
+impl MT202COV {
     /// Get transaction reference number (Field 20)
     pub fn transaction_reference(&self) -> Result<String> {
         get_required_field_value(&self.fields, tags::SENDER_REFERENCE)
@@ -72,7 +73,21 @@ impl MT202 {
         Ok(swift_date.date)
     }
 
-    /// Get ordering institution (Field 52A) - Institution placing the order
+    /// Get ordering customer (Field 50A/50F/50K) - Customer ordering the transfer
+    pub fn ordering_customer(&self) -> Result<String> {
+        // Try different variants in order of preference
+        if let Some(customer) = get_optional_field_value(&self.fields, tags::ORDERING_CUSTOMER) {
+            Ok(customer)
+        } else if let Some(customer) = get_optional_field_value(&self.fields, "50A") {
+            Ok(customer)
+        } else if let Some(customer) = get_optional_field_value(&self.fields, "50F") {
+            Ok(customer)
+        } else {
+            Err(MTError::missing_required_field("50K/50A/50F"))
+        }
+    }
+
+    /// Get ordering institution (Field 52A/52D) - Institution placing the order
     pub fn ordering_institution(&self) -> Option<String> {
         get_optional_field_value(&self.fields, tags::ORDERING_INSTITUTION)
     }
@@ -82,7 +97,7 @@ impl MT202 {
         get_optional_field_value(&self.fields, "52D")
     }
 
-    /// Get sender's correspondent (Field 53A) - Sender's correspondent
+    /// Get sender's correspondent (Field 53A/53B/53D) - Sender's correspondent
     pub fn senders_correspondent(&self) -> Option<String> {
         get_optional_field_value(&self.fields, tags::SENDERS_CORRESPONDENT)
     }
@@ -97,7 +112,7 @@ impl MT202 {
         get_optional_field_value(&self.fields, "53D")
     }
 
-    /// Get receiver's correspondent (Field 54A) - Receiver's correspondent
+    /// Get receiver's correspondent (Field 54A/54B/54D) - Receiver's correspondent
     pub fn receivers_correspondent(&self) -> Option<String> {
         get_optional_field_value(&self.fields, tags::RECEIVERS_CORRESPONDENT)
     }
@@ -112,7 +127,7 @@ impl MT202 {
         get_optional_field_value(&self.fields, "54D")
     }
 
-    /// Get third reimbursement institution (Field 55A) - Third reimbursement institution
+    /// Get third reimbursement institution (Field 55A/55D) - Third reimbursement institution
     pub fn third_reimbursement_institution(&self) -> Option<String> {
         get_optional_field_value(&self.fields, tags::THIRD_REIMBURSEMENT_INSTITUTION)
     }
@@ -122,7 +137,7 @@ impl MT202 {
         get_optional_field_value(&self.fields, "55D")
     }
 
-    /// Get intermediary institution (Field 56A) - Intermediary institution
+    /// Get intermediary institution (Field 56A/56C/56D) - Intermediary institution
     pub fn intermediary_institution(&self) -> Option<String> {
         get_optional_field_value(&self.fields, tags::INTERMEDIARY_INSTITUTION)
     }
@@ -137,7 +152,7 @@ impl MT202 {
         get_optional_field_value(&self.fields, "56D")
     }
 
-    /// Get account with institution (Field 57A) - Account with institution
+    /// Get account with institution (Field 57A/57B/57C/57D) - Account with institution
     pub fn account_with_institution(&self) -> Option<String> {
         get_optional_field_value(&self.fields, tags::ACCOUNT_WITH_INSTITUTION)
     }
@@ -157,14 +172,33 @@ impl MT202 {
         get_optional_field_value(&self.fields, "57D")
     }
 
-    /// Get beneficiary institution (Field 58A) - Beneficiary institution
+    /// Get beneficiary institution (Field 58A/58D) - Beneficiary institution
     pub fn beneficiary_institution(&self) -> Result<String> {
-        get_required_field_value(&self.fields, "58A")
+        if let Some(beneficiary) = get_optional_field_value(&self.fields, "58A") {
+            Ok(beneficiary)
+        } else if let Some(beneficiary) = get_optional_field_value(&self.fields, "58D") {
+            Ok(beneficiary)
+        } else {
+            Err(MTError::missing_required_field("58A or 58D"))
+        }
     }
 
     /// Get beneficiary institution (Field 58D) - Alternative format
     pub fn beneficiary_institution_d(&self) -> Option<String> {
         get_optional_field_value(&self.fields, "58D")
+    }
+
+    /// Get beneficiary customer (Field 59/59A/59F) - Customer receiving the transfer
+    pub fn beneficiary_customer(&self) -> Result<String> {
+        if let Some(customer) = get_optional_field_value(&self.fields, tags::BENEFICIARY_CUSTOMER) {
+            Ok(customer)
+        } else if let Some(customer) = get_optional_field_value(&self.fields, "59A") {
+            Ok(customer)
+        } else if let Some(customer) = get_optional_field_value(&self.fields, "59F") {
+            Ok(customer)
+        } else {
+            Err(MTError::missing_required_field("59/59A/59F"))
+        }
     }
 
     /// Get remittance information (Field 70) - Details of payment
@@ -204,9 +238,20 @@ impl MT202 {
             .map(|field| field.value().to_string())
             .collect()
     }
+
+    /// Get underlying customer credit transfer reference (Field 21) - Reference to underlying MT103
+    pub fn underlying_customer_credit_transfer(&self) -> Option<String> {
+        get_optional_field_value(&self.fields, "21")
+    }
+
+    /// Check if this is a cover message for an underlying customer transfer
+    pub fn is_cover_message(&self) -> bool {
+        // MT202COV is always a cover message if it has customer fields (50K and 59)
+        self.get_field("50K").is_some() || self.get_field("59").is_some()
+    }
 }
 
-impl MTMessageType for MT202 {
+impl MTMessageType for MT202COV {
     fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self> {
         let fields = extract_text_block(&blocks)?;
 
@@ -214,17 +259,16 @@ impl MTMessageType for MT202 {
         let required_fields = [
             tags::SENDER_REFERENCE,           // Field 20
             tags::VALUE_DATE_CURRENCY_AMOUNT, // Field 32A
-            "58A", // Beneficiary institution (either 58A or 58D required)
         ];
 
-        // Check for field 20 and 32A
-        for &field_tag in &required_fields[0..2] {
+        // Check for required fields
+        for &field_tag in &required_fields {
             if !fields.iter().any(|f| f.tag.as_str() == field_tag) {
                 return Err(MTError::missing_required_field(field_tag));
             }
         }
 
-        // Check for either 58A or 58D
+        // Check for either 58A or 58D (beneficiary institution)
         if !fields
             .iter()
             .any(|f| f.tag.as_str() == "58A" || f.tag.as_str() == "58D")
@@ -232,7 +276,22 @@ impl MTMessageType for MT202 {
             return Err(MTError::missing_required_field("58A or 58D"));
         }
 
-        Ok(MT202 { fields })
+        // For COV messages, we also need ordering customer and beneficiary customer
+        if !fields
+            .iter()
+            .any(|f| f.tag.as_str() == "50K" || f.tag.as_str() == "50A" || f.tag.as_str() == "50F")
+        {
+            return Err(MTError::missing_required_field("50K/50A/50F"));
+        }
+
+        if !fields
+            .iter()
+            .any(|f| f.tag.as_str() == "59" || f.tag.as_str() == "59A" || f.tag.as_str() == "59F")
+        {
+            return Err(MTError::missing_required_field("59/59A/59F"));
+        }
+
+        Ok(MT202COV { fields })
     }
 
     fn get_field(&self, tag: &str) -> Option<&Field> {
@@ -258,128 +317,131 @@ mod tests {
     use crate::common::Field;
     use chrono::Datelike;
 
-    fn create_test_mt202() -> MT202 {
+    fn create_test_mt202cov() -> MT202COV {
         let fields = vec![
-            Field::new("20", "FI202123456789"),
-            Field::new("21", "REL987654321"),
+            Field::new("20", "COV123456789"),
+            Field::new("21", "NOTPROVIDED"),
             Field::new("32A", "210315USD10000000,00"),
-            Field::new("52A", "ORDERING BANK\nNEW YORK"),
-            Field::new("53A", "SENDERS CORRESPONDENT\nLONDON"),
-            Field::new("54A", "RECEIVERS CORRESPONDENT\nTOKYO"),
-            Field::new("56A", "INTERMEDIARY BANK\nFRANKFURT"),
-            Field::new("57A", "ACCOUNT WITH BANK\nZURICH"),
-            Field::new("58A", "BENEFICIARY BANK\nSINGAPORE"),
-            Field::new("70", "INTERBANK TRANSFER"),
+            Field::new("50K", "ORDERING CUSTOMER\nCOMPANY ABC\nNEW YORK NY"),
+            Field::new("52A", "ORDBANK33XXX"),
+            Field::new("53A", "SNDCOR33XXX"),
+            Field::new("54A", "RCVCOR33XXX"),
+            Field::new("57A", "ACWITH33XXX"),
+            Field::new("58A", "BENBANK44XXX"),
+            Field::new("59", "BENEFICIARY CUSTOMER\nCOMPANY XYZ\nLONDON GB"),
+            Field::new("70", "INVOICE PAYMENT INV-2021-001"),
             Field::new("71A", "OUR"),
-            Field::new("72", "URGENT PROCESSING REQUIRED"),
-            Field::new("77B", "/ORDERRES/BE//MEILAAN 1, 1000 BRUSSELS"),
+            Field::new("72", "COVER FOR UNDERLYING MT103"),
         ];
-        MT202 { fields }
+        MT202COV { fields }
     }
 
     #[test]
     fn test_transaction_reference() {
-        let mt202 = create_test_mt202();
-        assert_eq!(mt202.transaction_reference().unwrap(), "FI202123456789");
+        let mt202cov = create_test_mt202cov();
+        assert_eq!(mt202cov.transaction_reference().unwrap(), "COV123456789");
     }
 
     #[test]
     fn test_related_reference() {
-        let mt202 = create_test_mt202();
-        assert_eq!(mt202.related_reference().unwrap(), "REL987654321");
+        let mt202cov = create_test_mt202cov();
+        assert_eq!(mt202cov.related_reference().unwrap(), "NOTPROVIDED");
     }
 
     #[test]
     fn test_amount_parsing() {
-        let mt202 = create_test_mt202();
-        let amount = mt202.amount().unwrap();
+        let mt202cov = create_test_mt202cov();
+        let amount = mt202cov.amount().unwrap();
+        assert_eq!(amount.value, 10000000.0);
         assert_eq!(amount.currency, "USD");
-        assert_eq!(amount.value, 10000000.00);
     }
 
     #[test]
     fn test_currency() {
-        let mt202 = create_test_mt202();
-        assert_eq!(mt202.currency().unwrap(), "USD");
+        let mt202cov = create_test_mt202cov();
+        assert_eq!(mt202cov.currency().unwrap(), "USD");
     }
 
     #[test]
     fn test_value_date() {
-        let mt202 = create_test_mt202();
-        let date = mt202.value_date().unwrap();
+        let mt202cov = create_test_mt202cov();
+        let date = mt202cov.value_date().unwrap();
         assert_eq!(date.year(), 2021);
         assert_eq!(date.month(), 3);
         assert_eq!(date.day(), 15);
     }
 
     #[test]
-    fn test_ordering_institution() {
-        let mt202 = create_test_mt202();
+    fn test_ordering_customer() {
+        let mt202cov = create_test_mt202cov();
         assert_eq!(
-            mt202.ordering_institution().unwrap(),
-            "ORDERING BANK\nNEW YORK"
+            mt202cov.ordering_customer().unwrap(),
+            "ORDERING CUSTOMER\nCOMPANY ABC\nNEW YORK NY"
+        );
+    }
+
+    #[test]
+    fn test_beneficiary_customer() {
+        let mt202cov = create_test_mt202cov();
+        assert_eq!(
+            mt202cov.beneficiary_customer().unwrap(),
+            "BENEFICIARY CUSTOMER\nCOMPANY XYZ\nLONDON GB"
         );
     }
 
     #[test]
     fn test_beneficiary_institution() {
-        let mt202 = create_test_mt202();
-        assert_eq!(
-            mt202.beneficiary_institution().unwrap(),
-            "BENEFICIARY BANK\nSINGAPORE"
-        );
+        let mt202cov = create_test_mt202cov();
+        assert_eq!(mt202cov.beneficiary_institution().unwrap(), "BENBANK44XXX");
     }
 
     #[test]
-    fn test_intermediary_institution() {
-        let mt202 = create_test_mt202();
-        assert_eq!(
-            mt202.intermediary_institution().unwrap(),
-            "INTERMEDIARY BANK\nFRANKFURT"
-        );
+    fn test_ordering_institution() {
+        let mt202cov = create_test_mt202cov();
+        assert_eq!(mt202cov.ordering_institution().unwrap(), "ORDBANK33XXX");
     }
 
     #[test]
     fn test_remittance_information() {
-        let mt202 = create_test_mt202();
+        let mt202cov = create_test_mt202cov();
         assert_eq!(
-            mt202.remittance_information().unwrap(),
-            "INTERBANK TRANSFER"
+            mt202cov.remittance_information().unwrap(),
+            "INVOICE PAYMENT INV-2021-001"
         );
     }
 
     #[test]
     fn test_details_of_charges() {
-        let mt202 = create_test_mt202();
-        assert_eq!(mt202.details_of_charges().unwrap(), "OUR");
+        let mt202cov = create_test_mt202cov();
+        assert_eq!(mt202cov.details_of_charges().unwrap(), "OUR");
     }
 
     #[test]
     fn test_instructions() {
-        let mt202 = create_test_mt202();
-        assert_eq!(mt202.instructions().unwrap(), "URGENT PROCESSING REQUIRED");
-    }
-
-    #[test]
-    fn test_regulatory_reporting() {
-        let mt202 = create_test_mt202();
+        let mt202cov = create_test_mt202cov();
         assert_eq!(
-            mt202.regulatory_reporting().unwrap(),
-            "/ORDERRES/BE//MEILAAN 1, 1000 BRUSSELS"
+            mt202cov.instructions().unwrap(),
+            "COVER FOR UNDERLYING MT103"
         );
     }
 
     #[test]
+    fn test_is_cover_message() {
+        let mt202cov = create_test_mt202cov();
+        assert!(mt202cov.is_cover_message());
+    }
+
+    #[test]
     fn test_get_field() {
-        let mt202 = create_test_mt202();
-        let field = mt202.get_field("20").unwrap();
-        assert_eq!(field.value(), "FI202123456789");
+        let mt202cov = create_test_mt202cov();
+        let field_20 = mt202cov.get_field("20").unwrap();
+        assert_eq!(field_20.value(), "COV123456789");
     }
 
     #[test]
     fn test_get_all_fields() {
-        let mt202 = create_test_mt202();
-        let fields = mt202.get_all_fields();
-        assert_eq!(fields.len(), 13);
+        let mt202cov = create_test_mt202cov();
+        let all_fields = mt202cov.get_all_fields();
+        assert_eq!(all_fields.len(), 13);
     }
 }

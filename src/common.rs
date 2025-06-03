@@ -92,17 +92,11 @@ pub enum MessageBlock {
         obsolescence_period: Option<String>,
     },
     /// Block 3: User Header Block (optional)
-    UserHeader {
-        fields: HashMap<String, String>,
-    },
+    UserHeader { fields: HashMap<String, String> },
     /// Block 4: Text Block
-    TextBlock {
-        fields: Vec<Field>,
-    },
+    TextBlock { fields: Vec<Field> },
     /// Block 5: Trailer Block (optional)
-    TrailerBlock {
-        fields: HashMap<String, String>,
-    },
+    TrailerBlock { fields: HashMap<String, String> },
 }
 
 /// Common field types used across MT messages
@@ -127,8 +121,9 @@ impl Amount {
 
         // Handle both comma and dot as decimal separators
         let normalized_amount = amount_str.replace(',', ".");
-        
-        let value = normalized_amount.parse::<f64>()
+
+        let value = normalized_amount
+            .parse::<f64>()
             .map_err(|_| MTError::AmountParseError {
                 message: format!("Invalid amount format: {}", amount_str),
             })?;
@@ -157,28 +152,26 @@ impl SwiftDate {
             });
         }
 
-        let year: i32 = input[0..2].parse()
-            .map_err(|_| MTError::DateParseError {
-                message: format!("Invalid year in date: {}", input),
-            })?;
-        
-        let month: u32 = input[2..4].parse()
-            .map_err(|_| MTError::DateParseError {
-                message: format!("Invalid month in date: {}", input),
-            })?;
-        
-        let day: u32 = input[4..6].parse()
-            .map_err(|_| MTError::DateParseError {
-                message: format!("Invalid day in date: {}", input),
-            })?;
+        let year: i32 = input[0..2].parse().map_err(|_| MTError::DateParseError {
+            message: format!("Invalid year in date: {}", input),
+        })?;
+
+        let month: u32 = input[2..4].parse().map_err(|_| MTError::DateParseError {
+            message: format!("Invalid month in date: {}", input),
+        })?;
+
+        let day: u32 = input[4..6].parse().map_err(|_| MTError::DateParseError {
+            message: format!("Invalid day in date: {}", input),
+        })?;
 
         // Handle Y2K: assume 00-49 is 20xx, 50-99 is 19xx
         let full_year = if year <= 49 { 2000 + year } else { 1900 + year };
 
-        let date = NaiveDate::from_ymd_opt(full_year, month, day)
-            .ok_or_else(|| MTError::DateParseError {
+        let date = NaiveDate::from_ymd_opt(full_year, month, day).ok_or_else(|| {
+            MTError::DateParseError {
                 message: format!("Invalid date: {}-{:02}-{:02}", full_year, month, day),
-            })?;
+            }
+        })?;
 
         Ok(SwiftDate {
             date,
@@ -194,23 +187,20 @@ impl SwiftDate {
             });
         }
 
-        let year: i32 = input[0..4].parse()
-            .map_err(|_| MTError::DateParseError {
-                message: format!("Invalid year in date: {}", input),
-            })?;
-        
-        let month: u32 = input[4..6].parse()
-            .map_err(|_| MTError::DateParseError {
-                message: format!("Invalid month in date: {}", input),
-            })?;
-        
-        let day: u32 = input[6..8].parse()
-            .map_err(|_| MTError::DateParseError {
-                message: format!("Invalid day in date: {}", input),
-            })?;
+        let year: i32 = input[0..4].parse().map_err(|_| MTError::DateParseError {
+            message: format!("Invalid year in date: {}", input),
+        })?;
 
-        let date = NaiveDate::from_ymd_opt(year, month, day)
-            .ok_or_else(|| MTError::DateParseError {
+        let month: u32 = input[4..6].parse().map_err(|_| MTError::DateParseError {
+            message: format!("Invalid month in date: {}", input),
+        })?;
+
+        let day: u32 = input[6..8].parse().map_err(|_| MTError::DateParseError {
+            message: format!("Invalid day in date: {}", input),
+        })?;
+
+        let date =
+            NaiveDate::from_ymd_opt(year, month, day).ok_or_else(|| MTError::DateParseError {
                 message: format!("Invalid date: {}-{:02}-{:02}", year, month, day),
             })?;
 
@@ -262,7 +252,7 @@ pub mod tags {
     pub const DETAILS_OF_CHARGES: &str = "71A";
     pub const SENDERS_CHARGES: &str = "71F";
     pub const RECEIVERS_CHARGES: &str = "71G";
-    
+
     // MT940 specific tags
     pub const TRANSACTION_REFERENCE: &str = "20";
     pub const ACCOUNT_IDENTIFICATION: &str = "25";
@@ -311,4 +301,4 @@ mod tests {
         assert!(validate_currency_code("EURO").is_err());
         assert!(validate_currency_code("EU").is_err());
     }
-} 
+}

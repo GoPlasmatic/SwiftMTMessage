@@ -1,5 +1,5 @@
-use swift_mt_message::{parse_message, MTMessage};
 use swift_mt_message::messages::MTMessageType;
+use swift_mt_message::{MTMessage, parse_message};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example MT103 message
@@ -17,36 +17,42 @@ XYZ COMPANY
 -}"#;
 
     println!("Parsing SWIFT MT message...");
-    
+
     // Parse the message
     let message = parse_message(message_text)?;
-    
+
     println!("Message type: {}", message.message_type());
-    
+
     // Extract fields based on message type
     match message {
         MTMessage::MT103(mt103) => {
             println!("\n=== MT103: Single Customer Credit Transfer ===");
-            
+
             // Required fields
             println!("Sender Reference (20): {}", mt103.sender_reference()?);
-            println!("Bank Operation Code (23B): {}", mt103.bank_operation_code()?);
-            println!("Value Date/Currency/Amount (32A): {}", mt103.value_date_currency_amount()?);
-            
+            println!(
+                "Bank Operation Code (23B): {}",
+                mt103.bank_operation_code()?
+            );
+            println!(
+                "Value Date/Currency/Amount (32A): {}",
+                mt103.value_date_currency_amount()?
+            );
+
             // Parsed amount details
             let amount = mt103.amount()?;
             println!("  - Currency: {}", amount.currency);
             println!("  - Amount: {:.2}", amount.value);
             println!("  - Value Date: {}", mt103.value_date()?);
-            
+
             println!("Ordering Customer (50K): {}", mt103.ordering_customer()?);
             println!("Beneficiary (59): {}", mt103.beneficiary()?);
-            
+
             // Optional fields
             if let Some(remittance) = mt103.remittance_information() {
                 println!("Remittance Information (70): {}", remittance);
             }
-            
+
             // Access all fields
             println!("\n=== All Fields ===");
             for field in mt103.get_all_fields() {
@@ -58,6 +64,6 @@ XYZ COMPANY
             println!("This example focuses on MT103 messages.");
         }
     }
-    
+
     Ok(())
-} 
+}

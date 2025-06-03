@@ -5,7 +5,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::{Amount, Field, MessageBlock, SwiftDate, tags};
 use crate::error::{MTError, Result};
-use crate::messages::{extract_text_block, find_field, find_fields, get_required_field_value, get_optional_field_value, MTMessageType};
+use crate::messages::{
+    MTMessageType, extract_text_block, find_field, find_fields, get_optional_field_value,
+    get_required_field_value,
+};
 
 /// MT102: Multiple Customer Credit Transfer
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,7 +36,7 @@ impl MT102 {
     /// Get parsed amount from field 32A
     pub fn amount(&self) -> Result<Amount> {
         let field_32a = get_required_field_value(&self.fields, tags::VALUE_DATE_CURRENCY_AMOUNT)?;
-        
+
         // Format: YYMMDDCCCNNNNN,NN (date + currency + amount)
         if field_32a.len() < 9 {
             return Err(MTError::InvalidFieldFormat {
@@ -56,7 +59,7 @@ impl MT102 {
     /// Get value date from field 32A
     pub fn value_date(&self) -> Result<NaiveDate> {
         let field_32a = get_required_field_value(&self.fields, tags::VALUE_DATE_CURRENCY_AMOUNT)?;
-        
+
         if field_32a.len() < 6 {
             return Err(MTError::InvalidFieldFormat {
                 field: "32A".to_string(),
@@ -172,7 +175,7 @@ impl MT102 {
 impl MTMessageType for MT102 {
     fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self> {
         let fields = extract_text_block(&blocks)?;
-        
+
         // Validate required fields are present
         let required_fields = [
             tags::SENDER_REFERENCE,
@@ -272,7 +275,10 @@ mod tests {
     #[test]
     fn test_ordering_customer() {
         let mt102 = create_test_mt102();
-        assert_eq!(mt102.ordering_customer().unwrap(), "ORDERING BANK\nMAIN STREET 123\nCITY");
+        assert_eq!(
+            mt102.ordering_customer().unwrap(),
+            "ORDERING BANK\nMAIN STREET 123\nCITY"
+        );
     }
 
     #[test]
@@ -323,4 +329,4 @@ mod tests {
         let fields = mt102.get_all_fields();
         assert_eq!(fields.len(), 14);
     }
-} 
+}

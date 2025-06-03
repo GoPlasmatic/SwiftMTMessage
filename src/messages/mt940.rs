@@ -5,7 +5,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::{Amount, Field, MessageBlock, SwiftDate, tags};
 use crate::error::{MTError, Result};
-use crate::messages::{extract_text_block, find_field, find_fields, get_required_field_value, get_optional_field_value, MTMessageType};
+use crate::messages::{
+    MTMessageType, extract_text_block, find_field, find_fields, get_optional_field_value,
+    get_required_field_value,
+};
 
 /// MT940: Customer Statement Message
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,10 +75,11 @@ impl MT940 {
     }
 
     /// Parse closing available balance into components
-    pub fn parse_closing_available_balance(&self) -> Option<Result<(String, NaiveDate, String, f64)>> {
-        self.closing_available_balance().map(|balance_str| {
-            self.parse_balance_field(&balance_str)
-        })
+    pub fn parse_closing_available_balance(
+        &self,
+    ) -> Option<Result<(String, NaiveDate, String, f64)>> {
+        self.closing_available_balance()
+            .map(|balance_str| self.parse_balance_field(&balance_str))
     }
 
     /// Get all statement lines (Field 61)
@@ -112,16 +116,21 @@ impl MT940 {
 
         // Extract debit/credit indicator
         let dc_indicator = &balance_str[0..1];
-        
+
         // Extract date (positions 1-6)
         let date_str = &balance_str[1..7];
         let swift_date = SwiftDate::parse_yymmdd(date_str)?;
-        
+
         // Extract currency and amount (from position 7 onwards)
         let currency_amount = &balance_str[7..];
         let amount = Amount::parse(currency_amount)?;
 
-        Ok((dc_indicator.to_string(), swift_date.date, amount.currency, amount.value))
+        Ok((
+            dc_indicator.to_string(),
+            swift_date.date,
+            amount.currency,
+            amount.value,
+        ))
     }
 
     /// Parse a statement line (Field 61) into components
@@ -182,12 +191,12 @@ pub struct StatementLineInfo {
 impl MTMessageType for MT940 {
     fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self> {
         let fields = extract_text_block(&blocks)?;
-        
+
         // Validate required fields are present
         let required_fields = [
-            tags::TRANSACTION_REFERENCE, // Field 20
+            tags::TRANSACTION_REFERENCE,  // Field 20
             tags::ACCOUNT_IDENTIFICATION, // Field 25
-            tags::STATEMENT_NUMBER, // Field 28C
+            tags::STATEMENT_NUMBER,       // Field 28C
         ];
 
         for &field_tag in &required_fields {
@@ -197,12 +206,18 @@ impl MTMessageType for MT940 {
         }
 
         // Check for opening balance (60F or 60M)
-        if !fields.iter().any(|f| f.tag.as_str() == "60F" || f.tag.as_str() == "60M") {
+        if !fields
+            .iter()
+            .any(|f| f.tag.as_str() == "60F" || f.tag.as_str() == "60M")
+        {
             return Err(MTError::missing_required_field("60F or 60M"));
         }
 
         // Check for closing balance (62F or 62M)
-        if !fields.iter().any(|f| f.tag.as_str() == "62F" || f.tag.as_str() == "62M") {
+        if !fields
+            .iter()
+            .any(|f| f.tag.as_str() == "62F" || f.tag.as_str() == "62M")
+        {
             return Err(MTError::missing_required_field("62F or 62M"));
         }
 
@@ -257,7 +272,10 @@ mod tests {
     #[test]
     fn test_account_identification() {
         let mt940 = create_test_mt940();
-        assert_eq!(mt940.account_identification().unwrap(), "12345678901234567890");
+        assert_eq!(
+            mt940.account_identification().unwrap(),
+            "12345678901234567890"
+        );
     }
 
     #[test]
@@ -323,13 +341,18 @@ mod tests {
     #[test]
     fn test_closing_available_balance() {
         let mt940 = create_test_mt940();
-        assert_eq!(mt940.closing_available_balance().unwrap(), "C210316EUR1950000,00");
+        assert_eq!(
+            mt940.closing_available_balance().unwrap(),
+            "C210316EUR1950000,00"
+        );
     }
 
     #[test]
     fn test_parse_statement_line() {
         let mt940 = create_test_mt940();
-        let line_info = mt940.parse_statement_line("2103150315DR500,00NTRFNONREF//PAYMENT").unwrap();
+        let line_info = mt940
+            .parse_statement_line("2103150315DR500,00NTRFNONREF//PAYMENT")
+            .unwrap();
         assert_eq!(line_info.value_date.year(), 2021);
         assert_eq!(line_info.value_date.month(), 3);
         assert_eq!(line_info.value_date.day(), 15);
@@ -349,4 +372,4 @@ mod tests {
         let fields = mt940.get_all_fields();
         assert_eq!(fields.len(), 10);
     }
-} 
+}

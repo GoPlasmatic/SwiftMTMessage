@@ -15,17 +15,15 @@ pub struct MTParser {
 impl MTParser {
     pub fn new() -> Result<Self> {
         let block_regex = Regex::new(r"\{(\d):([^}]*)\}")?;
-        
-        Ok(Self {
-            block_regex,
-        })
+
+        Ok(Self { block_regex })
     }
 
     /// Parse a complete SWIFT MT message
     pub fn parse(&self, input: &str) -> Result<MTMessage> {
         let blocks = self.parse_blocks(input)?;
         let message_type = self.extract_message_type(&blocks)?;
-        
+
         match message_type.as_str() {
             "103" => {
                 let mt103 = crate::messages::mt103::MT103::from_blocks(blocks)?;
@@ -36,8 +34,28 @@ impl MTParser {
                 Ok(MTMessage::MT102(mt102))
             }
             "202" => {
-                let mt202 = crate::messages::mt202::MT202::from_blocks(blocks)?;
-                Ok(MTMessage::MT202(mt202))
+                // Check if this is a COV message by looking for customer fields
+                let text_block = self.extract_text_block(&blocks)?;
+                let has_ordering_customer = text_block.iter().any(|f| {
+                    f.tag.as_str() == "50K" || f.tag.as_str() == "50A" || f.tag.as_str() == "50F"
+                });
+                let has_beneficiary_customer = text_block.iter().any(|f| {
+                    f.tag.as_str() == "59" || f.tag.as_str() == "59A" || f.tag.as_str() == "59F"
+                });
+
+                if has_ordering_customer && has_beneficiary_customer {
+                    // This is MT202COV
+                    let mt202cov = crate::messages::mt202cov::MT202COV::from_blocks(blocks)?;
+                    Ok(MTMessage::MT202COV(mt202cov))
+                } else {
+                    // This is regular MT202
+                    let mt202 = crate::messages::mt202::MT202::from_blocks(blocks)?;
+                    Ok(MTMessage::MT202(mt202))
+                }
+            }
+            "210" => {
+                let mt210 = crate::messages::mt210::MT210::from_blocks(blocks)?;
+                Ok(MTMessage::MT210(mt210))
             }
             "940" => {
                 let mt940 = crate::messages::mt940::MT940::from_blocks(blocks)?;
@@ -78,43 +96,52 @@ impl MTParser {
     }
 
     /// Parse message blocks from input
-    fn parse_blocks(&self, input: &str) -> Result<Vec<MessageBlock>> {
+    pub fn parse_blocks(&self, input: &str) -> Result<Vec<MessageBlock>> {
         let mut blocks = Vec::new();
-        
-        for captures in self.block_regex.captures_iter(input) {
-            let block_number = &captures[1];
-            let block_content = &captures[2];
-            
+
+        for cap in self.block_regex.captures_iter(input) {
+            let block_number = cap
+                .get(1)
+                .ok_or_else(|| MTError::ParseError {
+                    line: 1,
+                    column: 1,
+                    message: "Invalid block format".to_string(),
+                })?
+                .as_str();
+
+            let block_content = cap
+                .get(2)
+                .ok_or_else(|| MTError::ParseError {
+                    line: 1,
+                    column: 1,
+                    message: "Invalid block content".to_string(),
+                })?
+                .as_str();
+
             match block_number {
-                "1" => {
-                    blocks.push(self.parse_basic_header(block_content)?);
-                }
-                "2" => {
-                    blocks.push(self.parse_application_header(block_content)?);
-                }
-                "3" => {
-                    blocks.push(self.parse_user_header(block_content)?);
-                }
-                "4" => {
-                    blocks.push(self.parse_text_block(block_content)?);
-                }
-                "5" => {
-                    blocks.push(self.parse_trailer_block(block_content)?);
-                }
+                "1" => blocks.push(self.parse_basic_header(block_content)?),
+                "2" => blocks.push(self.parse_application_header(block_content)?),
+                "3" => blocks.push(self.parse_user_header(block_content)?),
+                "4" => blocks.push(self.parse_text_block(block_content)?),
+                "5" => blocks.push(self.parse_trailer_block(block_content)?),
                 _ => {
-                    return Err(MTError::InvalidMessageStructure {
+                    return Err(MTError::ParseError {
+                        line: 1,
+                        column: 1,
                         message: format!("Unknown block number: {}", block_number),
                     });
                 }
             }
         }
-        
+
         if blocks.is_empty() {
-            return Err(MTError::InvalidMessageStructure {
-                message: "No valid blocks found in message".to_string(),
+            return Err(MTError::ParseError {
+                line: 1,
+                column: 1,
+                message: "No blocks found in message".to_string(),
             });
         }
-        
+
         Ok(blocks)
     }
 
@@ -152,7 +179,7 @@ impl MTParser {
         }
 
         let input_output_identifier = content[0..1].to_string();
-        
+
         if content.len() < 4 {
             return Err(MTError::InvalidMessageStructure {
                 message: "Application header block too short".to_string(),
@@ -161,9 +188,9 @@ impl MTParser {
 
         let message_type = content[1..4].to_string();
         let remaining = &content[4..];
-        
+
         // Parse the rest based on input/output identifier
-        let (destination_address, priority, delivery_monitoring, obsolescence_period) = 
+        let (destination_address, priority, delivery_monitoring, obsolescence_period) =
             if input_output_identifier == "I" {
                 // Input message format
                 if remaining.len() >= 12 {
@@ -193,7 +220,7 @@ impl MTParser {
     /// Parse user header block (Block 3)
     fn parse_user_header(&self, content: &str) -> Result<MessageBlock> {
         let mut fields = HashMap::new();
-        
+
         // Parse user header fields (format: {tag:value})
         let user_field_regex = Regex::new(r"\{(\w+):([^}]*)\}")?;
         for captures in user_field_regex.captures_iter(content) {
@@ -209,22 +236,25 @@ impl MTParser {
     fn parse_text_block(&self, content: &str) -> Result<MessageBlock> {
         let mut fields = Vec::new();
         let lines: Vec<&str> = content.lines().collect();
-        
+
         let mut current_tag = String::new();
         let mut current_value = String::new();
-        
+
         for line in lines {
             let line = line.trim();
             if line.is_empty() || line == "-" {
                 continue;
             }
-            
+
             if line.starts_with(':') && line.contains(':') {
                 // Save previous field if exists
                 if !current_tag.is_empty() {
-                    fields.push(Field::new(current_tag.clone(), current_value.trim().to_string()));
+                    fields.push(Field::new(
+                        current_tag.clone(),
+                        current_value.trim().to_string(),
+                    ));
                 }
-                
+
                 // Parse new field
                 if let Some(colon_pos) = line[1..].find(':') {
                     current_tag = line[1..colon_pos + 1].to_string();
@@ -244,7 +274,7 @@ impl MTParser {
                 current_value.push_str(line);
             }
         }
-        
+
         // Save last field
         if !current_tag.is_empty() {
             fields.push(Field::new(current_tag, current_value.trim().to_string()));
@@ -256,7 +286,7 @@ impl MTParser {
     /// Parse trailer block (Block 5)
     fn parse_trailer_block(&self, content: &str) -> Result<MessageBlock> {
         let mut fields = HashMap::new();
-        
+
         // Parse trailer fields (format: {tag:value})
         let trailer_field_regex = Regex::new(r"\{(\w+):([^}]*)\}")?;
         for captures in trailer_field_regex.captures_iter(content) {
@@ -269,15 +299,32 @@ impl MTParser {
     }
 
     /// Extract message type from blocks
-    fn extract_message_type(&self, blocks: &[MessageBlock]) -> Result<String> {
+    pub fn extract_message_type(&self, blocks: &[MessageBlock]) -> Result<String> {
         for block in blocks {
             if let MessageBlock::ApplicationHeader { message_type, .. } = block {
                 return Ok(message_type.clone());
             }
         }
-        
-        Err(MTError::InvalidMessageStructure {
+
+        Err(MTError::ParseError {
+            line: 1,
+            column: 1,
             message: "No application header block found".to_string(),
+        })
+    }
+
+    /// Extract text block fields for message type detection
+    fn extract_text_block(&self, blocks: &[MessageBlock]) -> Result<Vec<Field>> {
+        for block in blocks {
+            if let MessageBlock::TextBlock { fields } = block {
+                return Ok(fields.clone());
+            }
+        }
+
+        Err(MTError::ParseError {
+            line: 1,
+            column: 1,
+            message: "No text block found".to_string(),
         })
     }
 }
@@ -313,15 +360,18 @@ mod tests {
     #[test]
     fn test_basic_header_parsing() {
         let parser = MTParser::new().unwrap();
-        let result = parser.parse_basic_header("F01BANKDEFFAXXX0123456789").unwrap();
-        
-        if let MessageBlock::BasicHeader { 
-            application_id, 
-            service_id, 
-            logical_terminal, 
-            session_number, 
-            sequence_number 
-        } = result {
+        let result = parser
+            .parse_basic_header("F01BANKDEFFAXXX0123456789")
+            .unwrap();
+
+        if let MessageBlock::BasicHeader {
+            application_id,
+            service_id,
+            logical_terminal,
+            session_number,
+            sequence_number,
+        } = result
+        {
             assert_eq!(application_id, "F");
             assert_eq!(service_id, "01");
             assert_eq!(logical_terminal, "BANKDEFFAXXX");
@@ -335,15 +385,18 @@ mod tests {
     #[test]
     fn test_application_header_parsing() {
         let parser = MTParser::new().unwrap();
-        let result = parser.parse_application_header("I103BANKDEFFAXXXU3003").unwrap();
-        
-        if let MessageBlock::ApplicationHeader { 
-            input_output_identifier, 
-            message_type, 
-            destination_address, 
+        let result = parser
+            .parse_application_header("I103BANKDEFFAXXXU3003")
+            .unwrap();
+
+        if let MessageBlock::ApplicationHeader {
+            input_output_identifier,
+            message_type,
+            destination_address,
             priority,
-            .. 
-        } = result {
+            ..
+        } = result
+        {
             assert_eq!(input_output_identifier, "I");
             assert_eq!(message_type, "103");
             assert_eq!(destination_address, "BANKDEFFAXXX");
@@ -356,9 +409,10 @@ mod tests {
     #[test]
     fn test_text_block_parsing() {
         let parser = MTParser::new().unwrap();
-        let text = ":20:FT21234567890\n:23B:CRED\n:32A:210315EUR1234567,89\n:50K:JOHN DOE\n:59:JANE SMITH";
+        let text =
+            ":20:FT21234567890\n:23B:CRED\n:32A:210315EUR1234567,89\n:50K:JOHN DOE\n:59:JANE SMITH";
         let result = parser.parse_text_block(text).unwrap();
-        
+
         if let MessageBlock::TextBlock { fields } = result {
             assert_eq!(fields.len(), 5);
             assert_eq!(fields[0].tag.as_str(), "20");
@@ -369,4 +423,4 @@ mod tests {
             panic!("Expected TextBlock");
         }
     }
-} 
+}

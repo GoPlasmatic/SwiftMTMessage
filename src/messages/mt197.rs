@@ -1,9 +1,12 @@
 //! MT197: Copy of a Message
 
-use serde::{Deserialize, Serialize};
 use crate::common::{Field, MessageBlock, tags};
 use crate::error::{MTError, Result};
-use crate::messages::{extract_text_block, find_field, find_fields, get_required_field_value, get_optional_field_value, MTMessageType};
+use crate::messages::{
+    MTMessageType, extract_text_block, find_field, find_fields, get_optional_field_value,
+    get_required_field_value,
+};
+use serde::{Deserialize, Serialize};
 
 /// MT197: Copy of a Message
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -88,11 +91,11 @@ impl MT197 {
 impl MTMessageType for MT197 {
     fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self> {
         let fields = extract_text_block(&blocks)?;
-        
+
         // Validate required fields are present
         let required_fields = [
             tags::SENDER_REFERENCE, // Field 20
-            "21", // Related reference
+            "21",                   // Related reference
         ];
 
         for &field_tag in &required_fields {
@@ -172,13 +175,19 @@ mod tests {
     #[test]
     fn test_sending_institution() {
         let mt197 = create_test_mt197();
-        assert_eq!(mt197.sending_institution().unwrap(), "SENDING BANK\nADDRESS");
+        assert_eq!(
+            mt197.sending_institution().unwrap(),
+            "SENDING BANK\nADDRESS"
+        );
     }
 
     #[test]
     fn test_receiving_institution() {
         let mt197 = create_test_mt197();
-        assert_eq!(mt197.receiving_institution().unwrap(), "RECEIVING BANK\nADDRESS");
+        assert_eq!(
+            mt197.receiving_institution().unwrap(),
+            "RECEIVING BANK\nADDRESS"
+        );
     }
 
     #[test]
@@ -190,7 +199,10 @@ mod tests {
     #[test]
     fn test_original_receiver() {
         let mt197 = create_test_mt197();
-        assert_eq!(mt197.original_receiver().unwrap(), "ORIGINAL RECEIVER\nCOMPANY");
+        assert_eq!(
+            mt197.original_receiver().unwrap(),
+            "ORIGINAL RECEIVER\nCOMPANY"
+        );
     }
 
     #[test]
@@ -214,7 +226,10 @@ mod tests {
     #[test]
     fn test_copy_of_original_message() {
         let mt197 = create_test_mt197();
-        assert_eq!(mt197.copy_of_original_message().unwrap(), "FULL COPY OF ORIGINAL MT103...");
+        assert_eq!(
+            mt197.copy_of_original_message().unwrap(),
+            "FULL COPY OF ORIGINAL MT103..."
+        );
     }
 
     #[test]
@@ -230,4 +245,4 @@ mod tests {
         let fields = mt197.get_all_fields();
         assert_eq!(fields.len(), 13);
     }
-} 
+}

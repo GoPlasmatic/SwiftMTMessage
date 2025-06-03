@@ -16,51 +16,31 @@ pub enum MTError {
     },
 
     #[error("Validation error in field {field}: {message}")]
-    ValidationError {
-        field: String,
-        message: String,
-    },
+    ValidationError { field: String, message: String },
 
     #[error("Unsupported message type: {message_type}")]
-    UnsupportedMessageType {
-        message_type: String,
-    },
+    UnsupportedMessageType { message_type: String },
 
     #[error("Field not found: {field_tag}")]
-    FieldNotFound {
-        field_tag: String,
-    },
+    FieldNotFound { field_tag: String },
 
     #[error("Invalid field format in field {field}: {message}")]
-    InvalidFieldFormat {
-        field: String,
-        message: String,
-    },
+    InvalidFieldFormat { field: String, message: String },
 
     #[error("Missing required field: {field_tag}")]
-    MissingRequiredField {
-        field_tag: String,
-    },
+    MissingRequiredField { field_tag: String },
 
     #[error("Invalid message structure: {message}")]
-    InvalidMessageStructure {
-        message: String,
-    },
+    InvalidMessageStructure { message: String },
 
     #[error("Date parsing error: {message}")]
-    DateParseError {
-        message: String,
-    },
+    DateParseError { message: String },
 
     #[error("Amount parsing error: {message}")]
-    AmountParseError {
-        message: String,
-    },
+    AmountParseError { message: String },
 
     #[error("Currency code error: {message}")]
-    CurrencyError {
-        message: String,
-    },
+    CurrencyError { message: String },
 
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
@@ -108,4 +88,4 @@ impl MTError {
             field_tag: field_tag.into(),
         }
     }
-} 
+}

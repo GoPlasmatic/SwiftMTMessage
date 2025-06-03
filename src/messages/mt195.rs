@@ -1,9 +1,12 @@
 //! MT195: Queries
 
-use serde::{Deserialize, Serialize};
 use crate::common::{Field, MessageBlock, tags};
 use crate::error::{MTError, Result};
-use crate::messages::{extract_text_block, find_field, find_fields, get_required_field_value, get_optional_field_value, MTMessageType};
+use crate::messages::{
+    MTMessageType, extract_text_block, find_field, find_fields, get_optional_field_value,
+    get_required_field_value,
+};
+use serde::{Deserialize, Serialize};
 
 /// MT195: Queries
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -83,11 +86,11 @@ impl MT195 {
 impl MTMessageType for MT195 {
     fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self> {
         let fields = extract_text_block(&blocks)?;
-        
+
         // Validate required fields are present
         let required_fields = [
             tags::SENDER_REFERENCE, // Field 20
-            "21", // Related reference
+            "21",                   // Related reference
         ];
 
         for &field_tag in &required_fields {
@@ -165,13 +168,19 @@ mod tests {
     #[test]
     fn test_querying_institution() {
         let mt195 = create_test_mt195();
-        assert_eq!(mt195.querying_institution().unwrap(), "QUERYING BANK\nADDRESS");
+        assert_eq!(
+            mt195.querying_institution().unwrap(),
+            "QUERYING BANK\nADDRESS"
+        );
     }
 
     #[test]
     fn test_queried_institution() {
         let mt195 = create_test_mt195();
-        assert_eq!(mt195.queried_institution().unwrap(), "QUERIED BANK\nADDRESS");
+        assert_eq!(
+            mt195.queried_institution().unwrap(),
+            "QUERIED BANK\nADDRESS"
+        );
     }
 
     #[test]
@@ -195,7 +204,10 @@ mod tests {
     #[test]
     fn test_copy_of_queried_message() {
         let mt195 = create_test_mt195();
-        assert_eq!(mt195.copy_of_queried_message().unwrap(), "COPY OF ORIGINAL MESSAGE...");
+        assert_eq!(
+            mt195.copy_of_queried_message().unwrap(),
+            "COPY OF ORIGINAL MESSAGE..."
+        );
     }
 
     #[test]
@@ -211,4 +223,4 @@ mod tests {
         let fields = mt195.get_all_fields();
         assert_eq!(fields.len(), 11);
     }
-} 
+}

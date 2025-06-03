@@ -26,9 +26,32 @@ A comprehensive Rust library for parsing SWIFT MT (Message Type) messages and ex
 | **MT197** | Copy of a Message | ✅ Complete |
 | **MT199** | Free Format Message | ✅ Complete |
 | **MT202** | General Financial Institution Transfer | ✅ Complete |
+| **MT202COV** | General Financial Institution Transfer (Cover) | ✅ Complete |
+| **MT210** | Notice to Receive | ✅ Complete |
 | **MT940** | Customer Statement Message | ✅ Complete |
 | **MT941** | Balance Report Message | ✅ Complete |
 | **MT942** | Interim Transaction Report | ✅ Complete |
+
+## CBPR+ (Cross-Border Payments & Reporting Plus) Support
+
+This library provides **complete support** for all CBPR+ message types used in correspondent banking workflows:
+
+| CBPR+ Message Type | Purpose | Implementation Status |
+|-------------------|---------|----------------------|
+| **MT103** | Single Customer Credit Transfer | ✅ Complete |
+| **MT202** | General Financial Institution Transfer | ✅ Complete |
+| **MT202COV** | General Financial Institution Transfer (Cover) | ✅ Complete |
+| **MT210** | Notice to Receive | ✅ Complete |
+| **MT192** | Request for Cancellation | ✅ Complete |
+| **MT196** | Answers | ✅ Complete |
+
+### CBPR+ Workflow Support
+
+- **Payment Instructions**: MT103 for customer transfers, MT202/MT202COV for institutional transfers
+- **Pre-notification**: MT210 for incoming funds notification
+- **Exception Handling**: MT192 for cancellation requests, MT196 for query responses
+- **Cover Processing**: MT202COV with full ordering/beneficiary customer details
+- **Correspondent Banking**: Full institutional field support (52A-58D variants)
 
 ## Installation
 
@@ -36,7 +59,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-swift-mt-message = "0.1.0"
+swift-mt-message = "0.1.1"
 ```
 
 ## Quick Start
@@ -165,6 +188,93 @@ if let MTMessage::MT202(mt202) = message {
     if let Some(ordering_d) = mt202.ordering_institution_d() {
         println!("Ordering Institution (52D): {}", ordering_d);
     }
+}
+```
+
+#### MT202COV - General Financial Institution Transfer (Cover)
+
+```rust
+if let MTMessage::MT202COV(mt202cov) = message {
+    println!("Cover Transaction Reference: {}", mt202cov.transaction_reference()?);
+    
+    let amount = mt202cov.amount()?;
+    println!("Cover Amount: {} {}", amount.value, amount.currency);
+    
+    // Cover messages include underlying customer details
+    println!("Ordering Customer: {}", mt202cov.ordering_customer()?);
+    println!("Beneficiary Customer: {}", mt202cov.beneficiary_customer()?);
+    
+    println!("Beneficiary Institution: {}", mt202cov.beneficiary_institution()?);
+    
+    // Check if this is a cover message
+    if mt202cov.is_cover_message() {
+        println!("This is a cover message for underlying customer transfer");
+    }
+    
+    // Related underlying customer transfer reference
+    if let Some(underlying_ref) = mt202cov.underlying_customer_credit_transfer() {
+        println!("Underlying Transfer Reference: {}", underlying_ref);
+    }
+    
+    // Full institutional chain support
+    if let Some(ordering_inst) = mt202cov.ordering_institution() {
+        println!("Ordering Institution: {}", ordering_inst);
+    }
+    if let Some(senders_corr) = mt202cov.senders_correspondent() {
+        println!("Sender's Correspondent: {}", senders_corr);
+    }
+    if let Some(receivers_corr) = mt202cov.receivers_correspondent() {
+        println!("Receiver's Correspondent: {}", receivers_corr);
+    }
+}
+```
+
+#### MT210 - Notice to Receive
+
+```rust
+if let MTMessage::MT210(mt210) = message {
+    println!("Notice Reference: {}", mt210.transaction_reference()?);
+    
+    // Pre-notification details
+    if let Some(notice_ref) = mt210.notice_reference() {
+        println!("Notice Reference: {}", notice_ref);
+    }
+    
+    // Expected incoming transfer details
+    let expected_amount = mt210.expected_incoming_amount()?;
+    println!("Expected Amount: {} {}", expected_amount.value, expected_amount.currency);
+    
+    let expected_date = mt210.expected_value_date()?;
+    println!("Expected Value Date: {}", expected_date);
+    
+    // Account information
+    if let Some(account) = mt210.account_identification() {
+        println!("Beneficiary Account: {}", account);
+    }
+    
+    // Customer details (optional in MT210)
+    if let Some(ordering_customer) = mt210.ordering_customer() {
+        println!("Ordering Customer: {}", ordering_customer);
+    }
+    if let Some(beneficiary_customer) = mt210.beneficiary_customer() {
+        println!("Beneficiary Customer: {}", beneficiary_customer);
+    }
+    
+    println!("Beneficiary Institution: {}", mt210.beneficiary_institution()?);
+    
+    // Notification details
+    if let Some(notification) = mt210.notification_details() {
+        println!("Notification: {}", notification);
+    }
+    
+    // All notification details (can be multiple)
+    let all_notifications = mt210.all_notification_details();
+    for notification in all_notifications {
+        println!("Notification Detail: {}", notification);
+    }
+    
+    // MT210 is always a pre-notification
+    println!("Is Pre-notification: {}", mt210.is_pre_notification());
 }
 ```
 
@@ -444,6 +554,9 @@ cargo run --example basic_parsing
 
 # Comprehensive demo of all message types
 cargo run --example comprehensive_demo
+
+# CBPR+ (Cross-Border Payments & Reporting Plus) demo
+cargo run --example cbpr_plus_demo
 
 # Run all tests
 cargo test

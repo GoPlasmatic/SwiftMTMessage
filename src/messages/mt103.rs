@@ -5,7 +5,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::{Amount, Field, MessageBlock, SwiftDate, tags};
 use crate::error::{MTError, Result};
-use crate::messages::{extract_text_block, find_field, find_fields, get_required_field_value, get_optional_field_value, MTMessageType};
+use crate::messages::{
+    MTMessageType, extract_text_block, find_field, find_fields, get_optional_field_value,
+    get_required_field_value,
+};
 
 /// MT103: Single Customer Credit Transfer
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -33,7 +36,7 @@ impl MT103 {
     /// Get parsed amount from field 32A
     pub fn amount(&self) -> Result<Amount> {
         let field_32a = get_required_field_value(&self.fields, tags::VALUE_DATE_CURRENCY_AMOUNT)?;
-        
+
         // Format: YYMMDDCCCNNNNN,NN (date + currency + amount)
         if field_32a.len() < 9 {
             return Err(MTError::InvalidFieldFormat {
@@ -56,7 +59,7 @@ impl MT103 {
     /// Get value date from field 32A
     pub fn value_date(&self) -> Result<NaiveDate> {
         let field_32a = get_required_field_value(&self.fields, tags::VALUE_DATE_CURRENCY_AMOUNT)?;
-        
+
         if field_32a.len() < 6 {
             return Err(MTError::InvalidFieldFormat {
                 field: "32A".to_string(),
@@ -138,7 +141,7 @@ impl MT103 {
 impl MTMessageType for MT103 {
     fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self> {
         let fields = extract_text_block(&blocks)?;
-        
+
         // Validate required fields are present
         let required_fields = [
             tags::SENDER_REFERENCE,
@@ -230,13 +233,19 @@ mod tests {
     #[test]
     fn test_ordering_customer() {
         let mt103 = create_test_mt103();
-        assert_eq!(mt103.ordering_customer().unwrap(), "JOHN DOE\nACME CORP\n123 MAIN ST");
+        assert_eq!(
+            mt103.ordering_customer().unwrap(),
+            "JOHN DOE\nACME CORP\n123 MAIN ST"
+        );
     }
 
     #[test]
     fn test_beneficiary() {
         let mt103 = create_test_mt103();
-        assert_eq!(mt103.beneficiary().unwrap(), "JANE SMITH\nXYZ COMPANY\n456 OAK AVE");
+        assert_eq!(
+            mt103.beneficiary().unwrap(),
+            "JANE SMITH\nXYZ COMPANY\n456 OAK AVE"
+        );
     }
 
     #[test]
@@ -258,4 +267,4 @@ mod tests {
         let fields = mt103.get_all_fields();
         assert_eq!(fields.len(), 6);
     }
-} 
+}

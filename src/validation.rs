@@ -114,6 +114,12 @@ impl MTValidator {
             MTMessage::MT202(mt202) => {
                 Self::validate_mt202(mt202, level, &mut result);
             }
+            MTMessage::MT202COV(mt202cov) => {
+                Self::validate_mt202cov(mt202cov, level, &mut result);
+            }
+            MTMessage::MT210(mt210) => {
+                Self::validate_mt210(mt210, level, &mut result);
+            }
             MTMessage::MT940(mt940) => {
                 Self::validate_mt940(mt940, level, &mut result);
             }
@@ -176,6 +182,22 @@ impl MTValidator {
         _result: &mut ValidationResult,
     ) {
         // TODO: Implement MT202 validation
+    }
+
+    fn validate_mt202cov(
+        _mt202cov: &crate::messages::mt202cov::MT202COV,
+        _level: ValidationLevel,
+        _result: &mut ValidationResult,
+    ) {
+        // TODO: Implement MT202COV validation
+    }
+
+    fn validate_mt210(
+        _mt210: &crate::messages::mt210::MT210,
+        _level: ValidationLevel,
+        _result: &mut ValidationResult,
+    ) {
+        // TODO: Implement MT210 validation
     }
 
     fn validate_mt940(
@@ -269,7 +291,8 @@ pub mod field_validators {
     /// Validate IBAN (International Bank Account Number)
     pub fn validate_iban(iban: &str) -> Result<()> {
         // Basic IBAN format validation
-        let iban_regex = Regex::new(r"^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$").unwrap();
+        let iban_regex =
+            Regex::new(r"^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$").unwrap();
         if iban_regex.is_match(iban) {
             Ok(())
         } else {
@@ -296,7 +319,7 @@ pub mod field_validators {
     /// Validate date format (YYMMDD)
     pub fn validate_date_yymmdd(date: &str) -> Result<()> {
         use crate::common::SwiftDate;
-        
+
         let date_regex = Regex::new(r"^[0-9]{6}$").unwrap();
         if date_regex.is_match(date) {
             // Use SwiftDate to validate the actual date
@@ -336,8 +359,8 @@ pub mod field_validators {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::field_validators::*;
+    use super::*;
 
     #[test]
     fn test_validation_result() {
@@ -383,7 +406,7 @@ mod tests {
         assert!(validate_date_yymmdd("991231").is_ok());
         assert!(validate_date_yymmdd("210230").is_err()); // Invalid date (Feb 30)
         assert!(validate_date_yymmdd("211301").is_err()); // Invalid month
-        assert!(validate_date_yymmdd("21031").is_err());  // Too short
+        assert!(validate_date_yymmdd("21031").is_err()); // Too short
     }
 
     #[test]
@@ -392,4 +415,4 @@ mod tests {
         assert!(validate_reference("REF-123/456").is_ok());
         assert!(validate_reference("A".repeat(17).as_str()).is_err()); // Too long
     }
-} 
+}

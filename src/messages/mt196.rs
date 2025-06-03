@@ -1,9 +1,12 @@
 //! MT196: Answers
 
-use serde::{Deserialize, Serialize};
 use crate::common::{Field, MessageBlock, tags};
 use crate::error::{MTError, Result};
-use crate::messages::{extract_text_block, find_field, find_fields, get_required_field_value, get_optional_field_value, MTMessageType};
+use crate::messages::{
+    MTMessageType, extract_text_block, find_field, find_fields, get_optional_field_value,
+    get_required_field_value,
+};
+use serde::{Deserialize, Serialize};
 
 /// MT196: Answers
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,11 +104,11 @@ impl MT196 {
 impl MTMessageType for MT196 {
     fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self> {
         let fields = extract_text_block(&blocks)?;
-        
+
         // Validate required fields are present
         let required_fields = [
             tags::SENDER_REFERENCE, // Field 20
-            "21", // Related reference
+            "21",                   // Related reference
         ];
 
         for &field_tag in &required_fields {
@@ -186,13 +189,19 @@ mod tests {
     #[test]
     fn test_answering_institution() {
         let mt196 = create_test_mt196();
-        assert_eq!(mt196.answering_institution().unwrap(), "ANSWERING BANK\nADDRESS");
+        assert_eq!(
+            mt196.answering_institution().unwrap(),
+            "ANSWERING BANK\nADDRESS"
+        );
     }
 
     #[test]
     fn test_querying_institution() {
         let mt196 = create_test_mt196();
-        assert_eq!(mt196.querying_institution().unwrap(), "QUERYING BANK\nADDRESS");
+        assert_eq!(
+            mt196.querying_institution().unwrap(),
+            "QUERYING BANK\nADDRESS"
+        );
     }
 
     #[test]
@@ -231,7 +240,10 @@ mod tests {
     #[test]
     fn test_copy_of_original_query() {
         let mt196 = create_test_mt196();
-        assert_eq!(mt196.copy_of_original_query().unwrap(), "COPY OF ORIGINAL QUERY...");
+        assert_eq!(
+            mt196.copy_of_original_query().unwrap(),
+            "COPY OF ORIGINAL QUERY..."
+        );
     }
 
     #[test]
@@ -247,4 +259,4 @@ mod tests {
         let fields = mt196.get_all_fields();
         assert_eq!(fields.len(), 14);
     }
-} 
+}

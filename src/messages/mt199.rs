@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::common::{Field, MessageBlock, tags};
 use crate::error::{MTError, Result};
-use crate::messages::{extract_text_block, find_field, find_fields, get_required_field_value, get_optional_field_value, MTMessageType};
+use crate::messages::{
+    MTMessageType, extract_text_block, find_field, find_fields, get_optional_field_value,
+    get_required_field_value,
+};
 
 /// MT199: Free Format Message
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -110,7 +113,7 @@ impl MT199 {
 impl MTMessageType for MT199 {
     fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self> {
         let fields = extract_text_block(&blocks)?;
-        
+
         // Validate required fields are present - MT199 only requires field 20
         let required_fields = [
             tags::SENDER_REFERENCE, // Field 20
@@ -196,25 +199,37 @@ mod tests {
     #[test]
     fn test_sending_institution() {
         let mt199 = create_test_mt199();
-        assert_eq!(mt199.sending_institution().unwrap(), "SENDING BANK\nADDRESS");
+        assert_eq!(
+            mt199.sending_institution().unwrap(),
+            "SENDING BANK\nADDRESS"
+        );
     }
 
     #[test]
     fn test_receiving_institution() {
         let mt199 = create_test_mt199();
-        assert_eq!(mt199.receiving_institution().unwrap(), "RECEIVING BANK\nADDRESS");
+        assert_eq!(
+            mt199.receiving_institution().unwrap(),
+            "RECEIVING BANK\nADDRESS"
+        );
     }
 
     #[test]
     fn test_sender_information() {
         let mt199 = create_test_mt199();
-        assert_eq!(mt199.sender_information().unwrap(), "SENDER COMPANY\nCONTACT INFO");
+        assert_eq!(
+            mt199.sender_information().unwrap(),
+            "SENDER COMPANY\nCONTACT INFO"
+        );
     }
 
     #[test]
     fn test_receiver_information() {
         let mt199 = create_test_mt199();
-        assert_eq!(mt199.receiver_information().unwrap(), "RECEIVER COMPANY\nCONTACT INFO");
+        assert_eq!(
+            mt199.receiver_information().unwrap(),
+            "RECEIVER COMPANY\nCONTACT INFO"
+        );
     }
 
     #[test]
@@ -266,4 +281,4 @@ mod tests {
         let fields = mt199.get_all_fields();
         assert_eq!(fields.len(), 16);
     }
-} 
+}

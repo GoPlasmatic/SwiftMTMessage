@@ -45,7 +45,7 @@ pub mod validation;
 pub use error::{MTError, Result};
 pub use messages::MTMessage;
 pub use parser::parse_message;
-pub use validation::{validate_message, ValidationLevel, ValidationResult};
+pub use validation::{ValidationLevel, ValidationResult, validate_message};
 
 // Re-export common types that users might need
 pub use common::{Field, MessageBlock, Tag};

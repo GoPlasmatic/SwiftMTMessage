@@ -1,9 +1,12 @@
 //! MT192: Request for Cancellation
 
-use serde::{Deserialize, Serialize};
 use crate::common::{Field, MessageBlock, tags};
 use crate::error::{MTError, Result};
-use crate::messages::{extract_text_block, find_field, find_fields, get_required_field_value, get_optional_field_value, MTMessageType};
+use crate::messages::{
+    MTMessageType, extract_text_block, find_field, find_fields, get_optional_field_value,
+    get_required_field_value,
+};
+use serde::{Deserialize, Serialize};
 
 /// MT192: Request for Cancellation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -65,11 +68,11 @@ impl MT192 {
 impl MTMessageType for MT192 {
     fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self> {
         let fields = extract_text_block(&blocks)?;
-        
+
         // Validate required fields are present
         let required_fields = [
             tags::SENDER_REFERENCE, // Field 20
-            "21", // Related reference
+            "21",                   // Related reference
         ];
 
         for &field_tag in &required_fields {
@@ -133,7 +136,10 @@ mod tests {
     #[test]
     fn test_reason_for_cancellation() {
         let mt192 = create_test_mt192();
-        assert_eq!(mt192.reason_for_cancellation().unwrap(), "DUPLICATE PAYMENT");
+        assert_eq!(
+            mt192.reason_for_cancellation().unwrap(),
+            "DUPLICATE PAYMENT"
+        );
     }
 
     #[test]
@@ -145,13 +151,19 @@ mod tests {
     #[test]
     fn test_requesting_institution() {
         let mt192 = create_test_mt192();
-        assert_eq!(mt192.requesting_institution().unwrap(), "REQUESTING BANK\nADDRESS");
+        assert_eq!(
+            mt192.requesting_institution().unwrap(),
+            "REQUESTING BANK\nADDRESS"
+        );
     }
 
     #[test]
     fn test_receiving_institution() {
         let mt192 = create_test_mt192();
-        assert_eq!(mt192.receiving_institution().unwrap(), "RECEIVING BANK\nADDRESS");
+        assert_eq!(
+            mt192.receiving_institution().unwrap(),
+            "RECEIVING BANK\nADDRESS"
+        );
     }
 
     #[test]
@@ -166,7 +178,10 @@ mod tests {
     #[test]
     fn test_copy_of_original_message() {
         let mt192 = create_test_mt192();
-        assert_eq!(mt192.copy_of_original_message().unwrap(), "COPY OF ORIGINAL MT103 MESSAGE...");
+        assert_eq!(
+            mt192.copy_of_original_message().unwrap(),
+            "COPY OF ORIGINAL MT103 MESSAGE..."
+        );
     }
 
     #[test]
@@ -182,4 +197,4 @@ mod tests {
         let fields = mt192.get_all_fields();
         assert_eq!(fields.len(), 9);
     }
-} 
+}

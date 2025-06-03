@@ -14,6 +14,8 @@ pub mod mt196;
 pub mod mt197;
 pub mod mt199;
 pub mod mt202;
+pub mod mt202cov;
+pub mod mt210;
 pub mod mt940;
 pub mod mt941;
 pub mod mt942;
@@ -27,6 +29,8 @@ pub use mt196::MT196;
 pub use mt197::MT197;
 pub use mt199::MT199;
 pub use mt202::MT202;
+pub use mt202cov::MT202COV;
+pub use mt210::MT210;
 pub use mt940::MT940;
 pub use mt941::MT941;
 pub use mt942::MT942;
@@ -50,6 +54,10 @@ pub enum MTMessage {
     MT199(MT199),
     /// MT202: General Financial Institution Transfer
     MT202(MT202),
+    /// MT202COV: General Financial Institution Transfer (Cover)
+    MT202COV(MT202COV),
+    /// MT210: Notice to Receive
+    MT210(MT210),
     /// MT940: Customer Statement Message
     MT940(MT940),
     /// MT941: Balance Report Message
@@ -70,6 +78,8 @@ impl MTMessage {
             MTMessage::MT197(_) => "197",
             MTMessage::MT199(_) => "199",
             MTMessage::MT202(_) => "202",
+            MTMessage::MT202COV(_) => "202COV",
+            MTMessage::MT210(_) => "210",
             MTMessage::MT940(_) => "940",
             MTMessage::MT941(_) => "941",
             MTMessage::MT942(_) => "942",
@@ -87,6 +97,8 @@ impl MTMessage {
             MTMessage::MT197(msg) => msg.get_field(tag),
             MTMessage::MT199(msg) => msg.get_field(tag),
             MTMessage::MT202(msg) => msg.get_field(tag),
+            MTMessage::MT202COV(msg) => msg.get_field(tag),
+            MTMessage::MT210(msg) => msg.get_field(tag),
             MTMessage::MT940(msg) => msg.get_field(tag),
             MTMessage::MT941(msg) => msg.get_field(tag),
             MTMessage::MT942(msg) => msg.get_field(tag),
@@ -104,6 +116,8 @@ impl MTMessage {
             MTMessage::MT197(msg) => msg.get_fields(tag),
             MTMessage::MT199(msg) => msg.get_fields(tag),
             MTMessage::MT202(msg) => msg.get_fields(tag),
+            MTMessage::MT202COV(msg) => msg.get_fields(tag),
+            MTMessage::MT210(msg) => msg.get_fields(tag),
             MTMessage::MT940(msg) => msg.get_fields(tag),
             MTMessage::MT941(msg) => msg.get_fields(tag),
             MTMessage::MT942(msg) => msg.get_fields(tag),
@@ -121,6 +135,8 @@ impl MTMessage {
             MTMessage::MT197(msg) => msg.get_all_fields(),
             MTMessage::MT199(msg) => msg.get_all_fields(),
             MTMessage::MT202(msg) => msg.get_all_fields(),
+            MTMessage::MT202COV(msg) => msg.get_all_fields(),
+            MTMessage::MT210(msg) => msg.get_all_fields(),
             MTMessage::MT940(msg) => msg.get_all_fields(),
             MTMessage::MT941(msg) => msg.get_all_fields(),
             MTMessage::MT942(msg) => msg.get_all_fields(),
@@ -129,11 +145,9 @@ impl MTMessage {
 }
 
 /// Common trait for all MT message types
-pub trait MTMessageType {
-    /// Create message from parsed blocks
-    fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self>
-    where
-        Self: Sized;
+pub trait MTMessageType: Sized {
+    /// Create an MT message from parsed blocks
+    fn from_blocks(blocks: Vec<MessageBlock>) -> Result<Self>;
 
     /// Get a field by tag
     fn get_field(&self, tag: &str) -> Option<&Field>;
@@ -144,7 +158,7 @@ pub trait MTMessageType {
     /// Get all fields
     fn get_all_fields(&self) -> Vec<&Field>;
 
-    /// Get the text block fields
+    /// Get the text fields (from block 4)
     fn text_fields(&self) -> &[Field];
 }
 
@@ -167,7 +181,10 @@ pub fn find_field<'a>(fields: &'a [Field], tag: &str) -> Option<&'a Field> {
 
 /// Helper function to find all fields with a specific tag
 pub fn find_fields<'a>(fields: &'a [Field], tag: &str) -> Vec<&'a Field> {
-    fields.iter().filter(|field| field.tag.as_str() == tag).collect()
+    fields
+        .iter()
+        .filter(|field| field.tag.as_str() == tag)
+        .collect()
 }
 
 /// Helper function to get required field value
@@ -180,4 +197,4 @@ pub fn get_required_field_value(fields: &[Field], tag: &str) -> Result<String> {
 /// Helper function to get optional field value
 pub fn get_optional_field_value(fields: &[Field], tag: &str) -> Option<String> {
     find_field(fields, tag).map(|field| field.value().to_string())
-} 
+}

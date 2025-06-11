@@ -1,0 +1,148 @@
+{
+  "fields": {
+    "20": {
+      "format": "16x",
+      "description": "Transaction Reference Number",
+      "options": null,
+      "mandatory_for": ["103", "102", "202"]
+    },
+    "21": {
+      "format": "16x",
+      "description": "Related Reference",
+      "options": null,
+      "mandatory_for": []
+    },
+    "23B": {
+      "format": "4!c",
+      "description": "Bank Operation Code",
+      "options": null,
+      "mandatory_for": ["103", "102"]
+    },
+    "23E": {
+      "format": "4!c[/30x]",
+      "description": "Instruction Code",
+      "options": null,
+      "mandatory_for": []
+    },
+    "32A": {
+      "format": "6!n3!a15d",
+      "description": "Value Date, Currency Code, Amount",
+      "options": null,
+      "mandatory_for": ["103", "102", "202"]
+    },
+    "33B": {
+      "format": "3!a15d",
+      "description": "Currency Code, Amount",
+      "options": null,
+      "mandatory_for": []
+    },
+    "50A": {
+      "format": "[/34x]4*35x",
+      "description": "Ordering Customer (Option A - BIC)",
+      "options": {
+        "A": "Account and BIC",
+        "F": "Party Identifier",
+        "K": "Name and Address"
+      },
+      "mandatory_for": []
+    },
+    "50F": {
+      "format": "4*35x",
+      "description": "Ordering Customer (Option F - Party Identifier)",
+      "options": {
+        "A": "Account and BIC",
+        "F": "Party Identifier", 
+        "K": "Name and Address"
+      },
+      "mandatory_for": []
+    },
+    "50K": {
+      "format": "4*35x",
+      "description": "Ordering Customer (Option K - Name and Address)",
+      "options": {
+        "A": "Account and BIC",
+        "F": "Party Identifier",
+        "K": "Name and Address"
+      },
+      "mandatory_for": []
+    },
+    "52A": {
+      "format": "[/34x]4!a2!a2!c[3!c]",
+      "description": "Ordering Institution (Option A)",
+      "options": null,
+      "mandatory_for": []
+    },
+    "53A": {
+      "format": "[/34x]4!a2!a2!c[3!c]",
+      "description": "Sender's Correspondent (Option A)",
+      "options": null,
+      "mandatory_for": []
+    },
+    "54A": {
+      "format": "[/34x]4!a2!a2!c[3!c]",
+      "description": "Receiver's Correspondent (Option A)",
+      "options": null,
+      "mandatory_for": []
+    },
+    "56A": {
+      "format": "[/34x]4!a2!a2!c[3!c]",
+      "description": "Intermediary Institution (Option A)",
+      "options": null,
+      "mandatory_for": []
+    },
+    "57A": {
+      "format": "[/34x]4!a2!a2!c[3!c]",
+      "description": "Account With Institution (Option A)",
+      "options": null,
+      "mandatory_for": []
+    },
+    "59": {
+      "format": "4*35x",
+      "description": "Beneficiary Customer",
+      "options": null,
+      "mandatory_for": ["103"]
+    },
+    "59A": {
+      "format": "[/34x]4!a2!a2!c[3!c]",
+      "description": "Beneficiary Customer (Option A)",
+      "options": null,
+      "mandatory_for": []
+    },
+    "70": {
+      "format": "4*35x",
+      "description": "Remittance Information",
+      "options": null,
+      "mandatory_for": []
+    },
+    "71A": {
+      "format": "3!a",
+      "description": "Details of Charges",
+      "options": null,
+      "mandatory_for": ["103"]
+    },
+    "71F": {
+      "format": "3!a15d",
+      "description": "Sender's Charges",
+      "options": null,
+      "mandatory_for": []
+    },
+    "71G": {
+      "format": "3!a15d",
+      "description": "Receiver's Charges",
+      "options": null,
+      "mandatory_for": []
+    },
+    "72": {
+      "format": "6*35x",
+      "description": "Sender to Receiver Information",
+      "options": null,
+      "mandatory_for": []
+    },
+    "77B": {
+      "format": "3*35x",
+      "description": "Regulatory Reporting",
+      "options": null,
+      "mandatory_for": []
+    }
+  }
+} 

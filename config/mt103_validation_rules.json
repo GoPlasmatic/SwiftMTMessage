@@ -1,0 +1,224 @@
+{
+  "rules": [
+    {
+      "name": "C1 - Exchange Rate Rule",
+      "logic": {
+        "if": [
+          {
+            "and": [
+              { "exists": ["fields", "33B"] },
+              { "!=": [{ "var": "fields.33B.currency" }, { "var": "fields.32A.currency" }] }
+            ]
+          },
+          { "exists": ["fields", "36"] },
+          { "!": { "exists": ["fields", "36"] } }
+        ]
+      },
+      "message": "C1: If 33B is present and its currency differs from 32A, then 36 must be present; otherwise, 36 must not be present"
+    },
+    {
+      "name": "C3a - SPRI Instruction Code Restriction",
+      "logic": {
+        "if": [
+          { "==": [{ "var": "fields.23B.bank_operation_code" }, "SPRI"] },
+          {
+            "if": [
+              { "exists": ["fields", "23E"] },
+              {
+                "in": [
+                  { "var": "fields.23E.instruction_code" },
+                  ["SDVA", "TELB", "PHOB", "INTC"]
+                ]
+              },
+              true
+            ]
+          },
+          true
+        ]
+      },
+      "message": "C3: If 23B = SPRI, then 23E can only contain SDVA, TELB, PHOB, INTC"
+    },
+    {
+      "name": "C3b - SSTD/SPAY Instruction Code Restriction",
+      "logic": {
+        "if": [
+          {
+            "in": [
+              { "var": "fields.23B.bank_operation_code" },
+              ["SSTD", "SPAY"]
+            ]
+          },
+          { "!": { "exists": ["fields", "23E"] } },
+          true
+        ]
+      },
+      "message": "C3: If 23B = SSTD/SPAY, then 23E must not be used"
+    },
+    {
+      "name": "C7 - Third Reimbursement Institution Rule",
+      "logic": {
+        "if": [
+          { "exists": ["fields", "55A"] },
+          {
+            "and": [
+              { "exists": ["fields", "53A"] },
+              { "exists": ["fields", "54A"] }
+            ]
+          },
+          true
+        ]
+      },
+      "message": "C7: If 55a is present, then both 53a and 54a become mandatory"
+    },
+    {
+      "name": "C9 - Intermediary Institution Rule",
+      "logic": {
+        "if": [
+          { "exists": ["fields", "56A"] },
+          { "exists": ["fields", "57A"] },
+          true
+        ]
+      },
+      "message": "C9: If 56a is present, then 57a becomes mandatory"
+    },
+    {
+      "name": "C10a - SPRI Intermediary Restriction",
+      "logic": {
+        "if": [
+          { "==": [{ "var": "fields.23B.bank_operation_code" }, "SPRI"] },
+          { "!": { "exists": ["fields", "56A"] } },
+          true
+        ]
+      },
+      "message": "C10: If 23B = SPRI, then 56a not allowed"
+    },
+    {
+      "name": "C12 - Account Subfield Mandatory Rule",
+      "logic": {
+        "if": [
+          {
+            "in": [
+              { "var": "fields.23B.bank_operation_code" },
+              ["SPRI", "SSTD", "SPAY"]
+            ]
+          },
+          { "exists": ["fields", "59A", "account"] },
+          true
+        ]
+      },
+      "message": "C12: If 23B = SPRI/SSTD/SPAY, then Account subfield in 59a becomes mandatory"
+    },
+    {
+      "name": "C13 - CHQB Account Restriction",
+      "logic": {
+        "if": [
+          { "==": [{ "var": "fields.23E.instruction_code" }, "CHQB"] },
+          { "!": { "exists": ["fields", "59A", "account"] } },
+          true
+        ]
+      },
+      "message": "C13: If 23E = CHQB, then Account subfield in 59a must not be used"
+    },
+    {
+      "name": "C14a - OUR Charges Rule",
+      "logic": {
+        "if": [
+          { "==": [{ "var": "fields.71A.details_of_charges" }, "OUR"] },
+          { "!": { "exists": ["fields", "71F"] } },
+          true
+        ]
+      },
+      "message": "C14: If 71A = OUR, then 71F not allowed"
+    },
+    {
+      "name": "C14b - SHA Charges Rule",
+      "logic": {
+        "if": [
+          { "==": [{ "var": "fields.71A.details_of_charges" }, "SHA"] },
+          { "!": { "exists": ["fields", "71G"] } },
+          true
+        ]
+      },
+      "message": "C14: If 71A = SHA, then 71G not allowed"
+    },
+    {
+      "name": "C14c - BEN Charges Rule",
+      "logic": {
+        "if": [
+          { "==": [{ "var": "fields.71A.details_of_charges" }, "BEN"] },
+          {
+            "and": [
+              { "exists": ["fields", "71F"] },
+              { "!": { "exists": ["fields", "71G"] } }
+            ]
+          },
+          true
+        ]
+      },
+      "message": "C14: If 71A = BEN, then 71F mandatory and 71G not allowed"
+    },
+    {
+      "name": "C15 - Charges Currency Mandatory Rule",
+      "logic": {
+        "if": [
+          {
+            "or": [
+              { "exists": ["fields", "71F"] },
+              { "exists": ["fields", "71G"] }
+            ]
+          },
+          { "exists": ["fields", "33B"] },
+          true
+        ]
+      },
+      "message": "C15: If either 71F or 71G is present, then 33B becomes mandatory"
+    },
+    {
+      "name": "C16 - TELI/PHOI Instruction Restriction",
+      "logic": {
+        "if": [
+          { "!": { "exists": ["fields", "56A"] } },
+          {
+            "!": {
+              "in": [
+                { "var": "fields.23E.instruction_code" },
+                ["TELI", "PHOI"]
+              ]
+            }
+          },
+          true
+        ]
+      },
+      "message": "C16: If 56a not present, then 23E cannot contain TELI or PHOI"
+    },
+    {
+      "name": "C17 - TELE/PHON Instruction Restriction",
+      "logic": {
+        "if": [
+          { "!": { "exists": ["fields", "57A"] } },
+          {
+            "!": {
+              "in": [
+                { "var": "fields.23E.instruction_code" },
+                ["TELE", "PHON"]
+              ]
+            }
+          },
+          true
+        ]
+      },
+      "message": "C17: If 57a not present, then 23E cannot contain TELE or PHON"
+    },
+    {
+      "name": "C18 - Currency Match Rule",
+      "logic": {
+        "if": [
+          { "exists": ["fields", "71G"] },
+          { "==": [{ "var": "fields.71G.currency" }, { "var": "fields.32A.currency" }] },
+          true
+        ]
+      },
+      "message": "C18: Currency codes in 71G and 32A must match"
+    }
+  ]
+} 

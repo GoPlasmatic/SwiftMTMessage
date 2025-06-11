@@ -1,36 +1,37 @@
 # Swift MT Message Parser
 
-A comprehensive Rust library for parsing SWIFT MT (Message Type) messages and extracting their fields. This library focuses purely on parsing and field extraction, providing type-safe access to message data without message building or transformation capabilities.
+A modern Rust library for parsing SWIFT MT (Message Type) messages with strong typing, comprehensive field validation, and JSON conversion capabilities. This library provides both high-level message parsing and low-level field access with excellent error reporting.
 
 ## Features
 
-- **🚀 Pure Parsing Library**: Focused exclusively on parsing and field extraction
-- **📋 Complete MT Support**: Full implementation of 11 MT message types with specific field extraction methods
-- **🔒 Type-Safe Field Access**: Strongly typed field extraction with proper error handling
-- **⚡ Zero-Copy Parsing**: Efficient parsing with minimal memory allocation where possible
-- **🛡️ Comprehensive Validation**: Multi-level validation framework (Basic, Standard, Strict)
-- **📊 Advanced Parsing**: Complex field parsing for amounts, dates, balances, and statement lines
-- **🎯 Extensible Architecture**: Easy to add new message types
-- **📖 Rich Documentation**: Comprehensive examples and API documentation
-- **🧪 Thoroughly Tested**: 151+ unit tests covering all functionality
+- **🚀 Type-Safe Field Parsing**: Dedicated field structs with proper validation
+- **🔧 Extensible Field Registry**: Register custom field parsers for specialized use cases
+- **🛡️ Comprehensive Validation**: SWIFT format rules with configurable validation levels
+- **📊 Rich Error Diagnostics**: Detailed error context with line/column information
+- **🔄 JSON Conversion**: Bidirectional SWIFT ↔ JSON transformation
+- **⚡ Efficient Parsing**: Zero-copy parsing where possible with minimal allocations
+- **🎯 Generic Message Support**: Handle unknown message types gracefully
+- **📖 Well Documented**: Comprehensive examples and API documentation
+- **🧪 Thoroughly Tested**: 204+ unit tests covering all functionality
 
 ## Supported Message Types
 
+### Currently Implemented
 | Message Type | Description | Implementation Status |
 |--------------|-------------|----------------------|
-| **MT102** | Multiple Customer Credit Transfer | ✅ Complete |
-| **MT103** | Single Customer Credit Transfer | ✅ Complete |
-| **MT192** | Request for Cancellation | ✅ Complete |
-| **MT195** | Queries | ✅ Complete |
-| **MT196** | Answers | ✅ Complete |
-| **MT197** | Copy of a Message | ✅ Complete |
-| **MT199** | Free Format Message | ✅ Complete |
-| **MT202** | General Financial Institution Transfer | ✅ Complete |
-| **MT202COV** | General Financial Institution Transfer (Cover) | ✅ Complete |
-| **MT210** | Notice to Receive | ✅ Complete |
-| **MT940** | Customer Statement Message | ✅ Complete |
-| **MT941** | Balance Report Message | ✅ Complete |
-| **MT942** | Interim Transaction Report | ✅ Complete |
+| **MT102** | Multiple Customer Credit Transfer | ❌ Not Implemented |
+| **MT103** | Single Customer Credit Transfer | ✅ **Complete** |
+| **MT192** | Request for Cancellation | ❌ Not Implemented |
+| **MT195** | Queries | ❌ Not Implemented |
+| **MT196** | Answers | ❌ Not Implemented |
+| **MT197** | Copy of a Message | ❌ Not Implemented |
+| **MT199** | Free Format Message | ❌ Not Implemented |
+| **MT202** | General Financial Institution Transfer | 🚧 **Partial** |
+| **MT202COV** | General Financial Institution Transfer (Cover) | ❌ Not Implemented |
+| **MT210** | Notice to Receive | ❌ Not Implemented |
+| **MT940** | Customer Statement Message | ❌ Not Implemented |
+| **MT941** | Balance Report Message | ❌ Not Implemented |
+| **MT942** | Interim Transaction Report | ❌ Not Implemented |
 
 ## CBPR+ (Cross-Border Payments & Reporting Plus) Support
 
@@ -59,13 +60,18 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-swift-mt-message = "0.1.1"
+swift-mt-message = "1.0.0"
 ```
 
 ## Quick Start
 
+### Basic Message Parsing
+
 ```rust
-use swift_mt_message::{parse_message, MTMessage};
+use swift_mt_message::{
+    field_parser::SwiftMessage,
+    mt_models::mt103::MT103,
+};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let message_text = r#"{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:
@@ -77,37 +83,142 @@ COMPANY ABC
 :59:BENEFICIARY CUSTOMER
 COMPANY XYZ
 :70:INVOICE PAYMENT
+:71A:OUR
 -}"#;
 
-    // Parse the message
-    let message = parse_message(message_text)?;
+    // Parse as generic SWIFT message
+    let message = SwiftMessage::parse(message_text)?;
+    println!("Message type: {}", message.message_type);
+    println!("Number of fields: {}", message.fields.len());
     
-    println!("Message type: {}", message.message_type());
+    // Convert to specific MT103 structure
+    let mt103 = MT103::from_swift_message(message)?;
+    println!("Transaction reference: {}", mt103.field_20.transaction_reference);
+    println!("Amount: {} {}", mt103.field_32a.amount, mt103.field_32a.currency);
     
-    // Extract fields with type-safe methods
-    if let MTMessage::MT103(mt103) = message {
-        println!("Sender Reference: {}", mt103.sender_reference()?);
-        
-        let amount = mt103.amount()?;
-        println!("Amount: {} {}", amount.value, amount.currency);
-        
-        println!("Value Date: {}", mt103.value_date()?);
-        println!("Ordering Customer: {}", mt103.ordering_customer()?);
-        println!("Beneficiary: {}", mt103.beneficiary()?);
+    Ok(())
+}
+```
+
+### Field-Level Access
+
+```rust
+use swift_mt_message::field_parser::{SwiftMessage, SwiftFieldContainer};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let message_text = r#"{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:
+:20:FT21234567890
+:23B:CRED
+:32A:210315EUR1234567,89
+:50K:JOHN DOE
+:59:JANE SMITH
+:71A:OUR
+-}"#;
+
+    let message = SwiftMessage::parse(message_text)?;
+    
+    // Access individual fields
+    for (tag, field) in &message.fields {
+        println!("{}: {}", tag, field.to_swift_string());
+    }
+    
+    // Get specific field
+    if let Some(field) = message.get_field("20") {
+        println!("Transaction Reference: {}", field.to_swift_string());
     }
     
     Ok(())
 }
 ```
 
-## Detailed Usage Examples
+## JSON Conversion
 
-### Payment Messages
+The library provides comprehensive bidirectional conversion between SWIFT MT messages and JSON format.
 
-#### MT103 - Single Customer Credit Transfer
+### Key JSON Features
+
+- **🔄 Bidirectional Conversion**: Convert SWIFT ↔ JSON with full data preservation
+- **📊 Structured Data**: Human-readable JSON format with organized field structure
+- **🔧 Field Preservation**: Maintain field order and all original data
+- **📈 Metadata Support**: Include parsing context and validation status
+- **⚡ Multiple Formats**: Support for both pretty-printed and compact JSON
+
+### JSON Structure
+
+The JSON format preserves all SWIFT message information:
+
+```json
+{
+  "message_type": "103",
+  "blocks": {
+    "block1": "F01BANKDEFFAXXX0123456789",
+    "block2": "I103BANKDEFFAXXXU3003",
+    "block4": ":20:FT21234567890\n:23B:CRED\n..."
+  },
+  "fields": {
+    "20": {
+        "transaction_reference": "FT21234567890"
+    },
+    "32A": {
+        "value_date": "2021-03-15",
+        "currency": "EUR",
+        "amount": 1234567.89
+    },
+  },
+  "field_order": ["20", "23B", "32A", "50K", "59", "71A"]
+}
+```
+
+### Conversion Examples
+
+#### Method 1: Direct Conversion
 
 ```rust
-use swift_mt_message::{parse_message, MTMessage};
+use swift_mt_message::{
+    field_parser::SwiftMessage,
+    json::{ToJson, FromJson}
+};
+
+// SWIFT → JSON
+let message = SwiftMessage::parse(swift_text)?;
+let json_string = message.to_json_string()?;
+
+// JSON → SWIFT
+let parsed_back = SwiftMessage::from_json_string(&json_string)?;
+```
+
+#### Method 2: Utility Functions
+
+```rust
+use swift_mt_message::json::utils;
+
+// One-line conversions
+let json = utils::swift_to_json(swift_text)?;
+let swift = utils::json_to_swift(&json)?;
+```
+
+#### Method 3: MT103 Specific
+
+```rust
+use swift_mt_message::{
+    mt_models::mt103::MT103,
+    json::{ToJson, FromJson}
+};
+
+// Parse to MT103, then convert to JSON
+let mt103 = MT103::from_swift_message(message)?;
+let json = mt103.to_json_string()?;
+
+// Parse JSON directly to MT103
+let mt103_back = MT103::from_json_string(&json)?;
+```
+
+## Detailed Usage Examples
+
+### MT103 - Single Customer Credit Transfer
+
+```rust
+use swift_mt_message::{field_parser::SwiftMessage, mt_models::mt103::MT103};
 
 let mt103_message = r#"{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:
 :20:MT103REF123456
@@ -121,394 +232,65 @@ COMPANY XYZ
 :71A:OUR
 -}"#;
 
-let message = parse_message(mt103_message)?;
+let message = SwiftMessage::parse(mt103_message)?;
+let mt103 = MT103::from_swift_message(message)?;
 
-if let MTMessage::MT103(mt103) = message {
-    // Required fields
-    println!("Reference: {}", mt103.sender_reference()?);
-    println!("Bank Operation: {}", mt103.bank_operation_code()?);
-    
-    // Parsed amount with currency extraction
-    let amount = mt103.amount()?;
-    println!("Amount: {} {}", amount.value, amount.currency);
-    
-    // Date parsing
-    println!("Value Date: {}", mt103.value_date()?);
-    
-    // Customer information
-    println!("Ordering Customer: {}", mt103.ordering_customer()?);
-    println!("Beneficiary: {}", mt103.beneficiary()?);
-    
-    // Optional fields
-    if let Some(remittance) = mt103.remittance_information() {
-        println!("Remittance: {}", remittance);
-    }
-    
-    if let Some(charges) = mt103.details_of_charges() {
-        println!("Charges: {}", charges);
-    }
+// Access required fields
+println!("Reference: {}", mt103.field_20.transaction_reference);
+println!("Bank Operation: {}", mt103.field_23b.bank_operation_code);
+println!("Amount: {} {}", mt103.field_32a.amount, mt103.field_32a.currency);
+
+// Access optional fields
+if let Some(field_70) = &mt103.field_70 {
+    println!("Remittance Info: {:?}", field_70.information);
 }
 ```
 
-#### MT102 - Multiple Customer Credit Transfer
+### Field Access Patterns
 
 ```rust
-if let MTMessage::MT102(mt102) = message {
-    println!("Transaction Type: {:?}", mt102.transaction_type_code());
-    println!("Number of Transactions: {:?}", mt102.number_of_transactions());
-    
-    let total_amount = mt102.amount()?;
-    println!("Total Amount: {} {}", total_amount.value, total_amount.currency);
-    
-    // Multiple beneficiaries
-    let beneficiaries = mt102.beneficiaries();
-    println!("Beneficiaries: {}", beneficiaries.len());
-    
-    // Multiple transaction references
-    let references = mt102.transaction_references();
-    println!("Transaction References: {:?}", references);
-}
-```
+use swift_mt_message::field_parser::SwiftMessage;
 
-#### MT202 - General Financial Institution Transfer
+let message = SwiftMessage::parse(message_text)?;
 
-```rust
-if let MTMessage::MT202(mt202) = message {
-    println!("Transaction Reference: {}", mt202.transaction_reference()?);
-    
-    let amount = mt202.amount()?;
-    println!("Amount: {} {}", amount.value, amount.currency);
-    
-    println!("Beneficiary Institution: {}", mt202.beneficiary_institution()?);
-    
-    // Multiple institution format support
-    if let Some(ordering) = mt202.ordering_institution() {
-        println!("Ordering Institution (52A): {}", ordering);
-    }
-    if let Some(ordering_d) = mt202.ordering_institution_d() {
-        println!("Ordering Institution (52D): {}", ordering_d);
-    }
-}
-```
-
-#### MT202COV - General Financial Institution Transfer (Cover)
-
-```rust
-if let MTMessage::MT202COV(mt202cov) = message {
-    println!("Cover Transaction Reference: {}", mt202cov.transaction_reference()?);
-    
-    let amount = mt202cov.amount()?;
-    println!("Cover Amount: {} {}", amount.value, amount.currency);
-    
-    // Cover messages include underlying customer details
-    println!("Ordering Customer: {}", mt202cov.ordering_customer()?);
-    println!("Beneficiary Customer: {}", mt202cov.beneficiary_customer()?);
-    
-    println!("Beneficiary Institution: {}", mt202cov.beneficiary_institution()?);
-    
-    // Check if this is a cover message
-    if mt202cov.is_cover_message() {
-        println!("This is a cover message for underlying customer transfer");
-    }
-    
-    // Related underlying customer transfer reference
-    if let Some(underlying_ref) = mt202cov.underlying_customer_credit_transfer() {
-        println!("Underlying Transfer Reference: {}", underlying_ref);
-    }
-    
-    // Full institutional chain support
-    if let Some(ordering_inst) = mt202cov.ordering_institution() {
-        println!("Ordering Institution: {}", ordering_inst);
-    }
-    if let Some(senders_corr) = mt202cov.senders_correspondent() {
-        println!("Sender's Correspondent: {}", senders_corr);
-    }
-    if let Some(receivers_corr) = mt202cov.receivers_correspondent() {
-        println!("Receiver's Correspondent: {}", receivers_corr);
-    }
-}
-```
-
-#### MT210 - Notice to Receive
-
-```rust
-if let MTMessage::MT210(mt210) = message {
-    println!("Notice Reference: {}", mt210.transaction_reference()?);
-    
-    // Pre-notification details
-    if let Some(notice_ref) = mt210.notice_reference() {
-        println!("Notice Reference: {}", notice_ref);
-    }
-    
-    // Expected incoming transfer details
-    let expected_amount = mt210.expected_incoming_amount()?;
-    println!("Expected Amount: {} {}", expected_amount.value, expected_amount.currency);
-    
-    let expected_date = mt210.expected_value_date()?;
-    println!("Expected Value Date: {}", expected_date);
-    
-    // Account information
-    if let Some(account) = mt210.account_identification() {
-        println!("Beneficiary Account: {}", account);
-    }
-    
-    // Customer details (optional in MT210)
-    if let Some(ordering_customer) = mt210.ordering_customer() {
-        println!("Ordering Customer: {}", ordering_customer);
-    }
-    if let Some(beneficiary_customer) = mt210.beneficiary_customer() {
-        println!("Beneficiary Customer: {}", beneficiary_customer);
-    }
-    
-    println!("Beneficiary Institution: {}", mt210.beneficiary_institution()?);
-    
-    // Notification details
-    if let Some(notification) = mt210.notification_details() {
-        println!("Notification: {}", notification);
-    }
-    
-    // All notification details (can be multiple)
-    let all_notifications = mt210.all_notification_details();
-    for notification in all_notifications {
-        println!("Notification Detail: {}", notification);
-    }
-    
-    // MT210 is always a pre-notification
-    println!("Is Pre-notification: {}", mt210.is_pre_notification());
-}
-```
-
-### System Messages
-
-#### MT192 - Request for Cancellation
-
-```rust
-if let MTMessage::MT192(mt192) = message {
-    println!("Cancellation Reference: {}", mt192.transaction_reference()?);
-    println!("Original Reference: {}", mt192.related_reference()?);
-    
-    if let Some(reason) = mt192.reason_for_cancellation() {
-        println!("Cancellation Reason: {}", reason);
-    }
-    
-    if let Some(msg_type) = mt192.original_message_type() {
-        println!("Original Message Type: MT{}", msg_type);
-    }
-    
-    // Multiple narrative support
-    let narratives = mt192.narratives();
-    for (i, narrative) in narratives.iter().enumerate() {
-        println!("Narrative {}: {}", i + 1, narrative);
-    }
-}
-```
-
-#### MT199 - Free Format Message
-
-```rust
-if let MTMessage::MT199(mt199) = message {
-    println!("Reference: {}", mt199.transaction_reference()?);
-    
-    if let Some(subject) = mt199.message_subject() {
-        println!("Subject: {}", subject);
-    }
-    
-    // Multiple free format text fields
-    let free_texts = mt199.all_free_format_text();
-    for text in free_texts {
-        println!("Free Text: {}", text);
-    }
-    
-    // Message categories
-    let categories = mt199.all_message_categories();
-    println!("Categories: {:?}", categories);
-}
-```
-
-### Statement Messages
-
-#### MT940 - Customer Statement Message
-
-```rust
-if let MTMessage::MT940(mt940) = message {
-    println!("Statement Reference: {}", mt940.transaction_reference()?);
-    println!("Account: {}", mt940.account_identification()?);
-    println!("Statement Number: {}", mt940.statement_number()?);
-    
-    // Balance parsing with D/C indicator, date, currency, and amount
-    let (dc, date, currency, amount) = mt940.parse_opening_balance()?;
-    println!("Opening Balance: {} {} {} {}", dc, date, currency, amount);
-    
-    let (dc, date, currency, amount) = mt940.parse_closing_balance()?;
-    println!("Closing Balance: {} {} {} {}", dc, date, currency, amount);
-    
-    // Statement lines with complex parsing
-    let lines = mt940.statement_lines();
-    println!("Statement Lines: {}", lines.len());
-    
-    // Parse individual statement lines
-    for line in lines {
-        if let Ok(parsed) = mt940.parse_statement_line(&line) {
-            println!("Transaction Date: {}", parsed.value_date);
-            if let Some(entry_date) = parsed.entry_date {
-                println!("Entry Date: {}", entry_date);
-            }
-        }
-    }
-    
-    // Information to account owner
-    let info_lines = mt940.information_to_account_owner();
-    for info in info_lines {
-        println!("Info: {}", info);
-    }
-}
-```
-
-#### MT941 - Balance Report Message
-
-```rust
-if let MTMessage::MT941(mt941) = message {
-    // Comprehensive balance summary
-    let summary = mt941.balance_summary()?;
-    
-    println!("Opening: {} {} {} {}", 
-             summary.opening_balance.0, 
-             summary.opening_balance.1, 
-             summary.opening_balance.2, 
-             summary.opening_balance.3);
-    
-    println!("Closing: {} {} {} {}", 
-             summary.closing_balance.0, 
-             summary.closing_balance.1, 
-             summary.closing_balance.2, 
-             summary.closing_balance.3);
-    
-    if let Some(available) = summary.closing_available_balance {
-        println!("Available: {} {} {} {}", available.0, available.1, available.2, available.3);
-    }
-    
-    println!("Forward Balances: {}", summary.forward_available_balances.len());
-}
-```
-
-#### MT942 - Interim Transaction Report
-
-```rust
-if let MTMessage::MT942(mt942) = message {
-    if let Some(date_time) = mt942.date_time_indication() {
-        println!("Date/Time: {}", date_time);
-    }
-    
-    // Floor limit parsing
-    if let Some(Ok((currency, amount))) = mt942.parse_floor_limit() {
-        println!("Floor Limit: {} {}", currency, amount);
-    }
-    
-    // Interim summary with transaction count
-    let summary = mt942.interim_summary()?;
-    println!("Transactions Above Floor Limit: {}", summary.transaction_count);
-    
-    // Only transactions above floor limit are reported
-    let lines = mt942.statement_lines();
-    for line in lines {
-        println!("Large Transaction: {}", line);
-    }
-}
-```
-
-## Generic Field Access
-
-All message types implement the `MTMessageType` trait for generic field access:
-
-```rust
-use swift_mt_message::messages::MTMessageType;
-
-// Works with any message type
-fn print_field_20(message: &dyn MTMessageType) {
-    if let Some(field) = message.get_field("20") {
-        println!("Transaction Reference: {}", field.value());
-    }
-}
-
-// Get multiple fields with the same tag
-let narrative_fields = message.get_fields("72");
-for field in narrative_fields {
-    println!("Narrative: {}", field.value());
-}
-
-// Get all fields
+// Get all fields in order
 let all_fields = message.get_all_fields();
 for field in all_fields {
-    println!("Field {}: {}", field.tag().as_str(), field.value());
+    println!("Field: {}", field.to_swift_string());
+}
+
+// Check if specific field exists
+if let Some(_field) = message.get_field("71F") {
+    println!("Sender's charges field present");
 }
 ```
 
 ## Validation Framework
 
+The library includes a comprehensive validation system with configurable rules:
+
 ```rust
-use swift_mt_message::{validate_message, ValidationLevel};
+use swift_mt_message::{
+    field_parser::SwiftMessage,
+    mt_models::mt103::MT103,
+};
 
-let message = parse_message(message_text)?;
+let message = SwiftMessage::parse(message_text)?;
+let mt103 = MT103::from_swift_message(message)?;
 
-// Different validation levels
-let basic_result = validate_message(&message, ValidationLevel::Basic);
-let standard_result = validate_message(&message, ValidationLevel::Standard);
-let strict_result = validate_message(&message, ValidationLevel::Strict);
-
-if standard_result.is_valid() {
-    println!("Message is valid");
-} else {
-    for error in standard_result.errors() {
-        println!("Validation error: {}", error.message);
+// Validate business rules (requires rules configuration)
+match mt103.validate_business_rules() {
+    Ok(report) => {
+        println!("Valid: {}", report.overall_valid);
+        println!("Failed rules: {}", report.failure_count());
+        
+        for result in &report.results {
+            let status = if result.passed { "✅" } else { "❌" };
+            println!("{} {}", status, result.rule_name);
+        }
     }
+    Err(e) => println!("Validation error: {}", e),
 }
-
-// Handle warnings
-if standard_result.has_warnings() {
-    for warning in standard_result.warnings() {
-        println!("Warning: {}", warning.message);
-    }
-}
-```
-
-## Advanced Features
-
-### Amount and Currency Parsing
-
-```rust
-// Automatic currency extraction and amount parsing
-let amount = mt103.amount()?;
-println!("Value: {}", amount.value);      // f64
-println!("Currency: {}", amount.currency); // String (e.g., "EUR", "USD")
-
-// Works with all amount fields across message types
-let total_amount = mt102.sum_of_amounts()?;
-let floor_limit = mt942.parse_floor_limit().unwrap()?;
-```
-
-### Date Parsing
-
-```rust
-use chrono::Datelike;
-
-// Automatic SWIFT date parsing (YYMMDD format)
-let value_date = mt103.value_date()?;
-println!("Year: {}", value_date.year());
-println!("Month: {}", value_date.month());
-println!("Day: {}", value_date.day());
-
-// Also supports YYYYMMDD format where applicable
-```
-
-### Balance Parsing
-
-```rust
-// Complex balance field parsing with D/C indicator
-let (debit_credit, date, currency, amount) = mt940.parse_opening_balance()?;
-println!("Type: {}", debit_credit); // "D" or "C"
-println!("Date: {}", date);
-println!("Currency: {}", currency);
-println!("Amount: {}", amount);
 ```
 
 ## Error Handling
@@ -516,47 +298,64 @@ println!("Amount: {}", amount);
 Comprehensive error types with detailed context:
 
 ```rust
-use swift_mt_message::MTError;
+use swift_mt_message::errors::ParseError;
 
-match parse_message(invalid_message) {
+match SwiftMessage::parse(invalid_message) {
     Ok(message) => { /* handle success */ }
-    Err(MTError::ParseError { line, column, message }) => {
-        println!("Parse error at {}:{}: {}", line, column, message);
+    Err(ParseError::MissingRequiredField { tag, message_type }) => {
+        println!("Missing required field {} for MT{}", tag, message_type);
     }
-    Err(MTError::UnsupportedMessageType { message_type }) => {
-        println!("Unsupported message type: {}", message_type);
+    Err(ParseError::InvalidFieldFormat { tag, expected, actual }) => {
+        println!("Invalid format in field {}: expected {}, got {}", tag, expected, actual);
     }
-    Err(MTError::MissingRequiredField { field_tag }) => {
-        println!("Missing required field: {}", field_tag);
-    }
-    Err(MTError::InvalidFieldFormat { field, message }) => {
-        println!("Invalid format in field {}: {}", field, message);
-    }
-    Err(MTError::ValidationError { field, message }) => {
-        println!("Validation error in field {}: {}", field, message);
-    }
-    Err(MTError::FieldNotFound { field_tag }) => {
-        println!("Field not found: {}", field_tag);
+    Err(ParseError::InvalidBlockFormat { message, line, column }) => {
+        println!("Block format error at {}:{}: {}", line, column, message);
     }
     Err(err) => {
-        println!("Other error: {}", err);
+        println!("Parse error: {}", err);
     }
 }
 ```
 
+## Configuration
+
+The library supports external configuration for validation rules and mandatory fields:
+
+### Loading Configuration
+
+```rust
+use swift_mt_message::config::Config;
+
+// Load from default config files
+let config = Config::load_default()?;
+
+// Load from custom file
+let config = Config::load_from_file("path/to/config.json")?;
+
+// Get mandatory fields for a message type
+let mandatory_fields = config.get_mandatory_fields("103");
+println!("MT103 mandatory fields: {:?}", mandatory_fields);
+```
+
+### Custom Field Registration
+
+```rust
+use swift_mt_message::field_parser::{register_field_parser, SwiftFieldContainer};
+
+// Register a custom field parser
+register_field_parser("99Z", |content| {
+    // Custom parsing logic
+    Ok(SwiftFieldContainer::Unknown(content.to_string()))
+});
+```
+
 ## Examples
 
-Run the included examples to see the library in action:
+Run the included example to see the library in action:
 
 ```bash
-# Basic parsing example
-cargo run --example basic_parsing
-
-# Comprehensive demo of all message types
-cargo run --example comprehensive_demo
-
-# CBPR+ (Cross-Border Payments & Reporting Plus) demo
-cargo run --example cbpr_plus_demo
+# Run the comprehensive MT103 example
+cargo run --example mt103_example
 
 # Run all tests
 cargo test
@@ -565,21 +364,42 @@ cargo test
 cargo test -- --nocapture
 ```
 
-## Performance
+## Current Implementation Status
 
-- **Zero-copy parsing** where possible for optimal performance
-- **Minimal allocations** during field extraction
-- **Efficient regex patterns** for field parsing
-- **151+ unit tests** ensuring reliability and correctness
+### ✅ Fully Implemented
+
+- **Core Parser**: Complete SWIFT message block extraction and field parsing
+- **MT103 Model**: Full implementation with all standard fields
+- **Field Types**: 20+ field types with proper validation
+- **JSON Conversion**: Bidirectional SWIFT ↔ JSON transformation
+- **Error Handling**: Comprehensive error types with context
+- **Configuration**: External rule configuration support
+- **Validation**: Basic field validation with format rules
+
+### 🚧 Partially Implemented
+
+- **MT202 Model**: Basic structure, needs field completion
+- **Business Rules**: Framework ready, needs rule definitions
+- **Additional MT Types**: Configuration exists, models needed
+
+### 📋 Planned Features
+
+- **Complete MT202 Implementation**: All fields and validation
+- **Additional Message Types**: MT102, MT192, MT195, MT196, MT197, MT199, MT940, MT941, MT942
+- **Enhanced Validation**: Cross-field validation rules
+- **Performance Optimizations**: Streaming parser for large messages
+- **Documentation**: More comprehensive field guides
 
 ## Dependencies
 
-Minimal and carefully chosen dependencies:
+Carefully chosen minimal dependencies:
 
-- `chrono` - Date and time handling
-- `serde` - Serialization support
-- `thiserror` - Error handling
+- `chrono` - Date and time handling with serde support
+- `serde` / `serde_json` - Serialization and JSON support
+- `thiserror` - Ergonomic error handling
 - `regex` - Pattern matching for field parsing
+- `once_cell` - Lazy static initialization
+- `datalogic-rs` - JSONLogic rule evaluation
 
 ## Contributing
 
@@ -587,12 +407,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Adding New Message Types
 
-1. Create a new file in `src/messages/` (e.g., `mt104.rs`)
-2. Implement the `MTMessageType` trait with specific field extraction methods
-3. Add the message type to the `MTMessage` enum in `src/messages/mod.rs`
-4. Update the parser in `src/parser.rs` to handle the new message type
-5. Add comprehensive tests and documentation
-6. Update this README with the new message type
+1. Create field definitions in `src/mt_models/fields/`
+2. Create message model in `src/mt_models/mt_xxx.rs`
+3. Add to exports in `src/mt_models/mod.rs` and `src/lib.rs`
+4. Add configuration in `config/mandatory_fields.json`
+5. Add comprehensive tests and examples
+6. Update documentation
 
 ### Development Guidelines
 
@@ -601,7 +421,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Include documentation examples that compile and run
 - Use type-safe field extraction methods
 - Handle errors gracefully with detailed error messages
+- Update configuration files for new fields and validation rules
 
 ## License
 
-This project is licensed under the Apache License v2 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License v2.0 - see the [LICENSE](LICENSE) file for details.

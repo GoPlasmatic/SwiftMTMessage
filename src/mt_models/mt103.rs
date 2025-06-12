@@ -55,7 +55,17 @@ impl MT103 {
     }
 
     /// Create MT103 from generic SwiftMessage, preserving headers for later use
-    pub fn from_swift_message_preserving_headers(message: SwiftMessage) -> Result<(Self, (Option<crate::tokenizer::BasicHeader>, Option<crate::tokenizer::ApplicationHeader>, Option<crate::tokenizer::UserHeader>, Option<crate::tokenizer::Trailer>))> {
+    pub fn from_swift_message_preserving_headers(
+        message: SwiftMessage,
+    ) -> Result<(
+        Self,
+        (
+            Option<crate::tokenizer::BasicHeader>,
+            Option<crate::tokenizer::ApplicationHeader>,
+            Option<crate::tokenizer::UserHeader>,
+            Option<crate::tokenizer::Trailer>,
+        ),
+    )> {
         if message.message_type != "103" {
             return Err(ParseError::WrongMessageType {
                 expected: "103".to_string(),

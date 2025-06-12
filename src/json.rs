@@ -15,7 +15,7 @@ use crate::mt_models::fields::institutions::{
 };
 use crate::mt_models::fields::ordering_customer::Field50;
 use crate::mt_models::mt103::MT103;
-use crate::tokenizer::{SwiftMessageBlocks, BasicHeader, ApplicationHeader, UserHeader, Trailer};
+use crate::tokenizer::{ApplicationHeader, BasicHeader, SwiftMessageBlocks, Trailer, UserHeader};
 
 /// JSON representation of a SWIFT message
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -177,22 +177,30 @@ impl FromJson<SwiftMessage> for SwiftMessage {
 
         // Use headers from JSON if available, otherwise parse from blocks
         let basic_header = json_message.basic_header.or_else(|| {
-            blocks.block_1.as_ref()
+            blocks
+                .block_1
+                .as_ref()
                 .and_then(|block1| crate::tokenizer::parse_basic_header(block1).ok())
         });
 
         let application_header = json_message.application_header.or_else(|| {
-            blocks.block_2.as_ref()
+            blocks
+                .block_2
+                .as_ref()
                 .and_then(|block2| crate::tokenizer::parse_application_header(block2).ok())
         });
 
         let user_header = json_message.user_header.or_else(|| {
-            blocks.block_3.as_ref()
+            blocks
+                .block_3
+                .as_ref()
                 .and_then(|block3| crate::tokenizer::parse_user_header(block3).ok())
         });
 
         let trailer_block = json_message.trailer_block.or_else(|| {
-            blocks.block_5.as_ref()
+            blocks
+                .block_5
+                .as_ref()
                 .and_then(|block5| crate::tokenizer::parse_trailer_block(block5).ok())
         });
 

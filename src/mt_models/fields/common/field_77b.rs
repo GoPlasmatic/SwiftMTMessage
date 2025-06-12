@@ -55,7 +55,7 @@ impl Field77B {
         // TRADE RELATED TRANSACTION
         let mut ordering_country = None;
         let mut beneficiary_country = None;
-        if let Some(first_line) = information.get(0) {
+        if let Some(first_line) = information.first() {
             if first_line.starts_with("/ORDERRES/") {
                 ordering_country = Some(first_line.split("/").nth(2).unwrap_or("").to_string());
             }
@@ -64,7 +64,11 @@ impl Field77B {
             }
         }
 
-        Ok(Field77B { information, ordering_country, beneficiary_country })
+        Ok(Field77B {
+            information,
+            ordering_country,
+            beneficiary_country,
+        })
     }
 
     /// Create from a single string, splitting on newlines

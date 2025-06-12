@@ -9,7 +9,7 @@
 //! MT103-STP has enhanced validation rules for automatic processing without manual intervention.
 
 use swift_mt_message::{
-    field_parser::{SwiftMessage, SwiftField},
+    field_parser::{SwiftField, SwiftMessage},
     json::ToJson,
     mt_models::mt103_stp::MT103STP,
 };
@@ -55,7 +55,7 @@ TRADE RELATED TRANSACTION
     // Step 1: Parse the SWIFT message
     println!("📝 Step 1: Parsing SWIFT Message");
     println!("--------------------------------");
-    
+
     let swift_message = SwiftMessage::parse(mt103_stp_message)?;
     println!("✅ Successfully parsed SWIFT message");
     println!("   Message Type: {}", swift_message.message_type);
@@ -71,7 +71,7 @@ TRADE RELATED TRANSACTION
     // Step 2: Convert to MT103-STP structure
     println!("🏗️  Step 2: Converting to MT103-STP Structure");
     println!("---------------------------------------------");
-    
+
     let mt103_stp = MT103STP::from_swift_message(swift_message.clone())?;
     println!("✅ Successfully converted to MT103-STP");
     println!();
@@ -79,14 +79,20 @@ TRADE RELATED TRANSACTION
     // Step 3: STP Compliance Validation
     println!("🔍 Step 3: STP Compliance Validation");
     println!("------------------------------------");
-    
-    println!("🚀 STP Compliance Status: {}", 
-             if mt103_stp.is_stp_compliant() { "✅ COMPLIANT" } else { "❌ NON-COMPLIANT" });
-    
+
+    println!(
+        "🚀 STP Compliance Status: {}",
+        if mt103_stp.is_stp_compliant() {
+            "✅ COMPLIANT"
+        } else {
+            "❌ NON-COMPLIANT"
+        }
+    );
+
     let stp_report = mt103_stp.validate_stp_rules()?;
     println!("   Rule Violations: {}", stp_report.rule_violations.len());
     println!("   Warnings: {}", stp_report.warnings.len());
-    
+
     if !stp_report.rule_violations.is_empty() {
         println!("\n❌ STP RULE VIOLATIONS:");
         for violation in &stp_report.rule_violations {
@@ -94,14 +100,14 @@ TRADE RELATED TRANSACTION
             println!("     Affected fields: {:?}", violation.affected_fields);
         }
     }
-    
+
     if !stp_report.warnings.is_empty() {
         println!("\n⚠️  STP WARNINGS:");
         for warning in &stp_report.warnings {
             println!("   • {}", warning);
         }
     }
-    
+
     if stp_report.is_stp_compliant {
         println!("\n✅ STP CONDITIONAL RULES VERIFIED:");
         println!("   • C1: Currency/Exchange Rate validation ✅");
@@ -116,102 +122,170 @@ TRADE RELATED TRANSACTION
     // Step 4: Display field details
     println!("📋 Step 4: Field Details");
     println!("------------------------");
-    
+
     // Required fields
     println!("🔴 MANDATORY FIELDS:");
-    println!("   20 (Sender's Reference): {}", mt103_stp.field_20.transaction_reference);
-    println!("   23B (Bank Operation Code): {}", mt103_stp.field_23b.bank_operation_code);
-    println!("   32A (Value Date/Currency/Amount): {} {} {:.2}", 
-             mt103_stp.field_32a.format_date(), mt103_stp.field_32a.currency, mt103_stp.field_32a.amount);
-    println!("   50 (Ordering Customer): {}", mt103_stp.field_50.to_swift_string().lines().next().unwrap_or(""));
-    
-         // Handle Field59 enum properly for STP
-     match &mt103_stp.field_59 {
-         swift_mt_message::mt_models::fields::beneficiary::Field59::A(field) => {
-             println!("   59A (Beneficiary - STP): {} (BIC: {})", 
-                      field.account.as_ref().unwrap_or(&"No account".to_string()), field.bic);
-         }
-         swift_mt_message::mt_models::fields::beneficiary::Field59::NoOption(field) => {
-             println!("   59 (Beneficiary): {}", field.beneficiary_customer.first().unwrap_or(&"".to_string()));
-         }
-     }
-    
-    println!("   71A (Details of Charges): {}", mt103_stp.field_71a.details_of_charges);
+    println!(
+        "   20 (Sender's Reference): {}",
+        mt103_stp.field_20.transaction_reference
+    );
+    println!(
+        "   23B (Bank Operation Code): {}",
+        mt103_stp.field_23b.bank_operation_code
+    );
+    println!(
+        "   32A (Value Date/Currency/Amount): {} {} {:.2}",
+        mt103_stp.field_32a.format_date(),
+        mt103_stp.field_32a.currency,
+        mt103_stp.field_32a.amount
+    );
+    println!(
+        "   50 (Ordering Customer): {}",
+        mt103_stp
+            .field_50
+            .to_swift_string()
+            .lines()
+            .next()
+            .unwrap_or("")
+    );
+
+    // Handle Field59 enum properly for STP
+    match &mt103_stp.field_59 {
+        swift_mt_message::mt_models::fields::beneficiary::Field59::A(field) => {
+            println!(
+                "   59A (Beneficiary - STP): {} (BIC: {})",
+                field.account.as_ref().unwrap_or(&"No account".to_string()),
+                field.bic
+            );
+        }
+        swift_mt_message::mt_models::fields::beneficiary::Field59::NoOption(field) => {
+            println!(
+                "   59 (Beneficiary): {}",
+                field
+                    .beneficiary_customer
+                    .first()
+                    .unwrap_or(&"".to_string())
+            );
+        }
+    }
+
+    println!(
+        "   71A (Details of Charges): {}",
+        mt103_stp.field_71a.details_of_charges
+    );
     println!();
 
     // Optional fields with STP significance
     println!("🔵 OPTIONAL FIELDS (STP-Enhanced):");
     if let Some(field) = &mt103_stp.field_13c {
-        println!("   13C (Time Indication): {} {} {}", field.time(), field.utc_offset1(), field.utc_offset2());
+        println!(
+            "   13C (Time Indication): {} {} {}",
+            field.time(),
+            field.utc_offset1(),
+            field.utc_offset2()
+        );
     }
     if let Some(field) = &mt103_stp.field_23e {
-        println!("   23E (Instruction Code): {} [STP Rule C3 applies]", field.instruction_code);
+        println!(
+            "   23E (Instruction Code): {} [STP Rule C3 applies]",
+            field.instruction_code
+        );
     }
     if let Some(field) = &mt103_stp.field_26t {
-        println!("   26T (Transaction Type Code): {}", field.transaction_type_code);
+        println!(
+            "   26T (Transaction Type Code): {}",
+            field.transaction_type_code
+        );
     }
     if let Some(field) = &mt103_stp.field_33b {
-        println!("   33B (Currency/Instructed Amount): {} {:.2} [STP Rules C1,C2,C8 apply]", 
-                 field.currency, field.amount);
+        println!(
+            "   33B (Currency/Instructed Amount): {} {:.2} [STP Rules C1,C2,C8 apply]",
+            field.currency, field.amount
+        );
     }
     if let Some(field) = &mt103_stp.field_36 {
-        println!("   36 (Exchange Rate): {:.6} [STP Rule C1 applies]", field.rate());
+        println!(
+            "   36 (Exchange Rate): {:.6} [STP Rule C1 applies]",
+            field.rate()
+        );
     }
-         if let Some(_field) = &mt103_stp.field_52a {
-         println!("   52A (Ordering Institution): Present");
-     }
-    
+    if let Some(_field) = &mt103_stp.field_52a {
+        println!("   52A (Ordering Institution): Present");
+    }
+
     // Correspondent banking chain (STP Rules C4, C5, C6)
     println!("\n🏦 CORRESPONDENT BANKING CHAIN:");
-    if let Some(_) = &mt103_stp.field_53a {
+    if mt103_stp.field_53a.is_some() {
         println!("   53A (Sender's Correspondent): Present [STP Rule C4]");
     }
-    if let Some(_) = &mt103_stp.field_54a {
+    if mt103_stp.field_54a.is_some() {
         println!("   54A (Receiver's Correspondent): Present [STP Rule C4]");
     }
-    if let Some(_) = &mt103_stp.field_55a {
+    if mt103_stp.field_55a.is_some() {
         println!("   55A (Third Reimbursement Institution): Present [Triggers C4]");
     }
-    if let Some(_) = &mt103_stp.field_56a {
+    if mt103_stp.field_56a.is_some() {
         println!("   56A (Intermediary Institution): Present [STP Rules C5,C6]");
     }
-    if let Some(_) = &mt103_stp.field_57a {
+    if mt103_stp.field_57a.is_some() {
         println!("   57A (Account With Institution): Present [STP Rules C5,C10]");
     }
-    
+
     // Information fields
     if let Some(field) = &mt103_stp.field_70 {
         println!("\n📄 INFORMATION FIELDS:");
-        println!("   70 (Remittance Information): {} lines", field.information.len());
+        println!(
+            "   70 (Remittance Information): {} lines",
+            field.information.len()
+        );
     }
-    
+
     // Charges (STP Rules C7, C8, C9)
     println!("\n💰 CHARGES INFORMATION:");
     if let Some(field) = &mt103_stp.field_71f {
-        println!("   71F (Sender's Charges): {} {:.2} [STP Rules C7,C8]", field.currency, field.amount);
+        println!(
+            "   71F (Sender's Charges): {} {:.2} [STP Rules C7,C8]",
+            field.currency, field.amount
+        );
     }
     if let Some(field) = &mt103_stp.field_71g {
-        println!("   71G (Receiver's Charges): {} {:.2} [STP Rules C7,C8,C9]", field.currency, field.amount);
+        println!(
+            "   71G (Receiver's Charges): {} {:.2} [STP Rules C7,C8,C9]",
+            field.currency, field.amount
+        );
     }
-    
+
     // Additional information
     if let Some(field) = &mt103_stp.field_72 {
         println!("\n📨 ADDITIONAL INFORMATION:");
-        println!("   72 (Sender to Receiver Info): {} lines [No REJT/RETN for STP]", field.information.len());
+        println!(
+            "   72 (Sender to Receiver Info): {} lines [No REJT/RETN for STP]",
+            field.information.len()
+        );
     }
     if let Some(field) = &mt103_stp.field_77b {
-        println!("   77B (Regulatory Reporting): {} lines", field.information.len());
+        println!(
+            "   77B (Regulatory Reporting): {} lines",
+            field.information.len()
+        );
     }
     println!();
 
     // Step 5: Validate business rules
     println!("✅ Step 5: Business Rules Validation");
     println!("------------------------------------");
-    
+
     match mt103_stp.validate_business_rules() {
         Ok(report) => {
             println!("📊 Validation Results:");
-            println!("   Overall Valid: {}", if report.overall_valid { "✅ YES" } else { "❌ NO" });
+            println!(
+                "   Overall Valid: {}",
+                if report.overall_valid {
+                    "✅ YES"
+                } else {
+                    "❌ NO"
+                }
+            );
             println!("   Total Rules Checked: {}", report.results.len());
             println!("   Failed Rules: {}", report.failure_count());
 
@@ -244,36 +318,57 @@ TRADE RELATED TRANSACTION
     // Step 6: Convert to JSON and display
     println!("🔄 Step 6: JSON Conversion");
     println!("--------------------------");
-    
+
     match swift_message.to_json_string() {
         Ok(json_string) => {
             println!("✅ Successfully converted to JSON");
-            
+
             // Parse and pretty-print a subset of the JSON (not the full output for readability)
             let json_value: serde_json::Value = serde_json::from_str(&json_string)?;
-            
+
             println!("\n📄 JSON Summary:");
             if let Some(fields) = json_value.get("fields") {
-                println!("   Fields in JSON: {}", fields.as_object().map(|o| o.len()).unwrap_or(0));
-                
+                println!(
+                    "   Fields in JSON: {}",
+                    fields.as_object().map(|o| o.len()).unwrap_or(0)
+                );
+
                 // Show key STP fields
                 if let Some(field_20) = fields.get("20") {
-                    println!("   • Transaction Reference: {:?}", field_20.get("transaction_reference"));
+                    println!(
+                        "   • Transaction Reference: {:?}",
+                        field_20.get("transaction_reference")
+                    );
                 }
                 if let Some(field_32a) = fields.get("32A") {
-                    println!("   • Amount: {} {}", 
-                             field_32a.get("currency").and_then(|v| v.as_str()).unwrap_or(""),
-                             field_32a.get("amount").and_then(|v| v.as_f64()).unwrap_or(0.0));
+                    println!(
+                        "   • Amount: {} {}",
+                        field_32a
+                            .get("currency")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or(""),
+                        field_32a
+                            .get("amount")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(0.0)
+                    );
                 }
                 if let Some(field_33b) = fields.get("33B") {
-                    println!("   • Instructed Amount: {} {} [STP Cross-Currency]", 
-                             field_33b.get("currency").and_then(|v| v.as_str()).unwrap_or(""),
-                             field_33b.get("amount").and_then(|v| v.as_f64()).unwrap_or(0.0));
+                    println!(
+                        "   • Instructed Amount: {} {} [STP Cross-Currency]",
+                        field_33b
+                            .get("currency")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or(""),
+                        field_33b
+                            .get("amount")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(0.0)
+                    );
                 }
             }
             println!("{}", json_string);
             println!("\n💾 Full JSON available for further processing");
-
         }
         Err(e) => {
             println!("❌ JSON conversion error: {}", e);
@@ -300,4 +395,4 @@ mod tests {
         // Ensure the example runs without errors
         assert!(main().is_ok());
     }
-} 
+}

@@ -9,7 +9,7 @@
 //! This combines functionality from all other examples into one simple demonstration.
 
 use swift_mt_message::{
-    field_parser::{SwiftMessage, SwiftField},
+    field_parser::{SwiftField, SwiftMessage},
     json::ToJson,
     mt_models::mt103::MT103,
 };
@@ -53,7 +53,7 @@ TRADE FINANCE RELATED
     // Step 1: Parse the SWIFT message
     println!("📝 Step 1: Parsing SWIFT Message");
     println!("--------------------------------");
-    
+
     let swift_message = SwiftMessage::parse(mt103_message)?;
     println!("✅ Successfully parsed SWIFT message");
     println!("   Message Type: {}", swift_message.message_type);
@@ -64,7 +64,7 @@ TRADE FINANCE RELATED
     // Step 2: Convert to MT103 structure
     println!("🏗️  Step 2: Converting to MT103 Structure");
     println!("------------------------------------------");
-    
+
     let mt103 = MT103::from_swift_message(swift_message.clone())?;
     println!("✅ Successfully converted to MT103");
     println!();
@@ -72,26 +72,53 @@ TRADE FINANCE RELATED
     // Step 3: Display field details
     println!("📋 Step 3: Field Details");
     println!("------------------------");
-    
+
     // Required fields
     println!("🔴 MANDATORY FIELDS:");
-    println!("   20 (Transaction Reference): {}", mt103.field_20.transaction_reference);
-    println!("   23B (Bank Operation Code): {}", mt103.field_23b.bank_operation_code);
-    println!("   32A (Value Date/Currency/Amount): {} {} {:.2}", 
-             mt103.field_32a.format_date(), mt103.field_32a.currency, mt103.field_32a.amount);
-    println!("   50 (Ordering Customer): {}", mt103.field_50.to_swift_string().lines().next().unwrap_or(""));
-    
+    println!(
+        "   20 (Transaction Reference): {}",
+        mt103.field_20.transaction_reference
+    );
+    println!(
+        "   23B (Bank Operation Code): {}",
+        mt103.field_23b.bank_operation_code
+    );
+    println!(
+        "   32A (Value Date/Currency/Amount): {} {} {:.2}",
+        mt103.field_32a.format_date(),
+        mt103.field_32a.currency,
+        mt103.field_32a.amount
+    );
+    println!(
+        "   50 (Ordering Customer): {}",
+        mt103
+            .field_50
+            .to_swift_string()
+            .lines()
+            .next()
+            .unwrap_or("")
+    );
+
     // Handle Field59 enum properly
     match &mt103.field_59 {
         swift_mt_message::mt_models::fields::beneficiary::Field59::A(field) => {
             println!("   59A (Beneficiary): {}", field.bic);
         }
         swift_mt_message::mt_models::fields::beneficiary::Field59::NoOption(field) => {
-            println!("   59 (Beneficiary): {}", field.beneficiary_customer.first().unwrap_or(&"".to_string()));
+            println!(
+                "   59 (Beneficiary): {}",
+                field
+                    .beneficiary_customer
+                    .first()
+                    .unwrap_or(&"".to_string())
+            );
         }
     }
-    
-    println!("   71A (Details of Charges): {}", mt103.field_71a.details_of_charges);
+
+    println!(
+        "   71A (Details of Charges): {}",
+        mt103.field_71a.details_of_charges
+    );
     println!();
 
     // Optional fields
@@ -106,7 +133,10 @@ TRADE FINANCE RELATED
         println!("   26T (Transaction Type Code): {}", field);
     }
     if let Some(field) = &mt103.field_33b {
-        println!("   33B (Currency/Instructed Amount): {} {:.2}", field.currency, field.amount);
+        println!(
+            "   33B (Currency/Instructed Amount): {} {:.2}",
+            field.currency, field.amount
+        );
     }
     if let Some(field) = &mt103.field_36 {
         println!("   36 (Exchange Rate): {:.6}", field.rate());
@@ -115,30 +145,52 @@ TRADE FINANCE RELATED
         println!("   51A (Sending Institution): {}", field);
     }
     if let Some(field) = &mt103.field_70 {
-        println!("   70 (Remittance Information): {} lines", field.information.len());
+        println!(
+            "   70 (Remittance Information): {} lines",
+            field.information.len()
+        );
     }
     if let Some(field) = &mt103.field_71f {
-        println!("   71F (Sender's Charges): {} {:.2}", field.currency, field.amount);
+        println!(
+            "   71F (Sender's Charges): {} {:.2}",
+            field.currency, field.amount
+        );
     }
     if let Some(field) = &mt103.field_71g {
-        println!("   71G (Receiver's Charges): {} {:.2}", field.currency, field.amount);
+        println!(
+            "   71G (Receiver's Charges): {} {:.2}",
+            field.currency, field.amount
+        );
     }
     if let Some(field) = &mt103.field_72 {
-        println!("   72 (Sender to Receiver Info): {} lines", field.information.len());
+        println!(
+            "   72 (Sender to Receiver Info): {} lines",
+            field.information.len()
+        );
     }
     if let Some(field) = &mt103.field_77b {
-        println!("   77B (Regulatory Reporting): {} lines", field.information.len());
+        println!(
+            "   77B (Regulatory Reporting): {} lines",
+            field.information.len()
+        );
     }
     println!();
 
     // Step 4: Validate business rules
     println!("✅ Step 4: Business Rules Validation");
     println!("------------------------------------");
-    
+
     match mt103.validate_business_rules() {
         Ok(report) => {
             println!("📊 Validation Results:");
-            println!("   Overall Valid: {}", if report.overall_valid { "✅ YES" } else { "❌ NO" });
+            println!(
+                "   Overall Valid: {}",
+                if report.overall_valid {
+                    "✅ YES"
+                } else {
+                    "❌ NO"
+                }
+            );
             println!("   Total Rules Checked: {}", report.results.len());
             println!("   Failed Rules: {}", report.failure_count());
 
@@ -164,15 +216,15 @@ TRADE FINANCE RELATED
     // Step 5: Convert to JSON and display
     println!("🔄 Step 5: JSON Conversion");
     println!("--------------------------");
-    
+
     match swift_message.to_json_string() {
         Ok(json_string) => {
             println!("✅ Successfully converted to JSON");
-            
+
             // Parse and pretty-print the JSON
             let json_value: serde_json::Value = serde_json::from_str(&json_string)?;
             let pretty_json = serde_json::to_string_pretty(&json_value)?;
-            
+
             println!("\n📄 JSON Output:");
             println!("{}", pretty_json);
         }
@@ -199,4 +251,4 @@ mod tests {
         // Ensure the example runs without errors
         assert!(main().is_ok());
     }
-} 
+}

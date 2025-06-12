@@ -13,8 +13,8 @@ use crate::mt_models::fields::institutions::{
     Field52, Field53, Field54, Field55, Field56, Field57,
 };
 use crate::mt_models::fields::{
-    Field13C, Field20, Field23B, Field23E, Field26T, Field32A, Field33B, Field36, Field50,
-    Field59, Field70, Field71A, Field71F, Field71G, Field72, Field77B,
+    Field13C, Field20, Field23B, Field23E, Field26T, Field32A, Field33B, Field36, Field50, Field59,
+    Field70, Field71A, Field71F, Field71G, Field72, Field77B,
 };
 use crate::validation::{ValidationReport, validate_mt_message_with_rules};
 
@@ -74,7 +74,17 @@ impl MT103STP {
     }
 
     /// Create MT103-STP from generic SwiftMessage, preserving headers for later use
-    pub fn from_swift_message_preserving_headers(message: SwiftMessage) -> Result<(Self, (Option<crate::tokenizer::BasicHeader>, Option<crate::tokenizer::ApplicationHeader>, Option<crate::tokenizer::UserHeader>, Option<crate::tokenizer::Trailer>))> {
+    pub fn from_swift_message_preserving_headers(
+        message: SwiftMessage,
+    ) -> Result<(
+        Self,
+        (
+            Option<crate::tokenizer::BasicHeader>,
+            Option<crate::tokenizer::ApplicationHeader>,
+            Option<crate::tokenizer::UserHeader>,
+            Option<crate::tokenizer::Trailer>,
+        ),
+    )> {
         if message.message_type != "103" {
             return Err(ParseError::WrongMessageType {
                 expected: "103".to_string(),
@@ -172,61 +182,171 @@ impl MT103STP {
         let mut field_order = Vec::new();
 
         // Add mandatory fields in standard order
-        self.add_field(&mut fields, &mut field_order, "20", SwiftFieldContainer::Field20(self.field_20.clone()));
-        self.add_field(&mut fields, &mut field_order, "23B", SwiftFieldContainer::Field23B(self.field_23b.clone()));
-        self.add_field(&mut fields, &mut field_order, "32A", SwiftFieldContainer::Field32A(self.field_32a.clone()));
-        self.add_field(&mut fields, &mut field_order, "50", SwiftFieldContainer::Field50(self.field_50.clone()));
-        self.add_field(&mut fields, &mut field_order, "59", SwiftFieldContainer::Field59(self.field_59.clone()));
-        self.add_field(&mut fields, &mut field_order, "71A", SwiftFieldContainer::Field71A(self.field_71a.clone()));
+        self.add_field(
+            &mut fields,
+            &mut field_order,
+            "20",
+            SwiftFieldContainer::Field20(self.field_20.clone()),
+        );
+        self.add_field(
+            &mut fields,
+            &mut field_order,
+            "23B",
+            SwiftFieldContainer::Field23B(self.field_23b.clone()),
+        );
+        self.add_field(
+            &mut fields,
+            &mut field_order,
+            "32A",
+            SwiftFieldContainer::Field32A(self.field_32a.clone()),
+        );
+        self.add_field(
+            &mut fields,
+            &mut field_order,
+            "50",
+            SwiftFieldContainer::Field50(self.field_50.clone()),
+        );
+        self.add_field(
+            &mut fields,
+            &mut field_order,
+            "59",
+            SwiftFieldContainer::Field59(self.field_59.clone()),
+        );
+        self.add_field(
+            &mut fields,
+            &mut field_order,
+            "71A",
+            SwiftFieldContainer::Field71A(self.field_71a.clone()),
+        );
 
         // Add optional fields if present
         if let Some(field) = &self.field_13c {
-            self.add_field(&mut fields, &mut field_order, "13C", SwiftFieldContainer::Field13C(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "13C",
+                SwiftFieldContainer::Field13C(field.clone()),
+            );
         }
         if let Some(field) = &self.field_23e {
-            self.add_field(&mut fields, &mut field_order, "23E", SwiftFieldContainer::Field23E(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "23E",
+                SwiftFieldContainer::Field23E(field.clone()),
+            );
         }
         if let Some(field) = &self.field_26t {
-            self.add_field(&mut fields, &mut field_order, "26T", SwiftFieldContainer::Field26T(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "26T",
+                SwiftFieldContainer::Field26T(field.clone()),
+            );
         }
         if let Some(field) = &self.field_33b {
-            self.add_field(&mut fields, &mut field_order, "33B", SwiftFieldContainer::Field33B(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "33B",
+                SwiftFieldContainer::Field33B(field.clone()),
+            );
         }
         if let Some(field) = &self.field_36 {
-            self.add_field(&mut fields, &mut field_order, "36", SwiftFieldContainer::Field36(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "36",
+                SwiftFieldContainer::Field36(field.clone()),
+            );
         }
         if let Some(field) = &self.field_52a {
-            self.add_field(&mut fields, &mut field_order, "52A", SwiftFieldContainer::Field52(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "52A",
+                SwiftFieldContainer::Field52(field.clone()),
+            );
         }
         if let Some(field) = &self.field_53a {
-            self.add_field(&mut fields, &mut field_order, "53A", SwiftFieldContainer::Field53(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "53A",
+                SwiftFieldContainer::Field53(field.clone()),
+            );
         }
         if let Some(field) = &self.field_54a {
-            self.add_field(&mut fields, &mut field_order, "54A", SwiftFieldContainer::Field54(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "54A",
+                SwiftFieldContainer::Field54(field.clone()),
+            );
         }
         if let Some(field) = &self.field_55a {
-            self.add_field(&mut fields, &mut field_order, "55A", SwiftFieldContainer::Field55(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "55A",
+                SwiftFieldContainer::Field55(field.clone()),
+            );
         }
         if let Some(field) = &self.field_56a {
-            self.add_field(&mut fields, &mut field_order, "56A", SwiftFieldContainer::Field56(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "56A",
+                SwiftFieldContainer::Field56(field.clone()),
+            );
         }
         if let Some(field) = &self.field_57a {
-            self.add_field(&mut fields, &mut field_order, "57A", SwiftFieldContainer::Field57(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "57A",
+                SwiftFieldContainer::Field57(field.clone()),
+            );
         }
         if let Some(field) = &self.field_70 {
-            self.add_field(&mut fields, &mut field_order, "70", SwiftFieldContainer::Field70(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "70",
+                SwiftFieldContainer::Field70(field.clone()),
+            );
         }
         if let Some(field) = &self.field_71f {
-            self.add_field(&mut fields, &mut field_order, "71F", SwiftFieldContainer::Field71F(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "71F",
+                SwiftFieldContainer::Field71F(field.clone()),
+            );
         }
         if let Some(field) = &self.field_71g {
-            self.add_field(&mut fields, &mut field_order, "71G", SwiftFieldContainer::Field71G(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "71G",
+                SwiftFieldContainer::Field71G(field.clone()),
+            );
         }
         if let Some(field) = &self.field_72 {
-            self.add_field(&mut fields, &mut field_order, "72", SwiftFieldContainer::Field72(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "72",
+                SwiftFieldContainer::Field72(field.clone()),
+            );
         }
         if let Some(field) = &self.field_77b {
-            self.add_field(&mut fields, &mut field_order, "77B", SwiftFieldContainer::Field77B(field.clone()));
+            self.add_field(
+                &mut fields,
+                &mut field_order,
+                "77B",
+                SwiftFieldContainer::Field77B(field.clone()),
+            );
         }
 
         SwiftMessage {
@@ -242,7 +362,13 @@ impl MT103STP {
     }
 
     /// Helper method to add fields in order
-    fn add_field(&self, fields: &mut HashMap<String, SwiftFieldContainer>, field_order: &mut Vec<String>, tag: &str, container: SwiftFieldContainer) {
+    fn add_field(
+        &self,
+        fields: &mut HashMap<String, SwiftFieldContainer>,
+        field_order: &mut Vec<String>,
+        tag: &str,
+        container: SwiftFieldContainer,
+    ) {
         fields.insert(tag.to_string(), container);
         field_order.push(tag.to_string());
     }
@@ -258,14 +384,20 @@ impl MT103STP {
                 if self.field_36.is_none() {
                     violations.push(STPRuleViolation {
                         rule: "C1".to_string(),
-                        description: "If 33B currency differs from 32A, field 36 must be present".to_string(),
-                        affected_fields: vec!["33B".to_string(), "32A".to_string(), "36".to_string()],
+                        description: "If 33B currency differs from 32A, field 36 must be present"
+                            .to_string(),
+                        affected_fields: vec![
+                            "33B".to_string(),
+                            "32A".to_string(),
+                            "36".to_string(),
+                        ],
                     });
                 }
             } else if self.field_36.is_some() {
                 violations.push(STPRuleViolation {
                     rule: "C1".to_string(),
-                    description: "If 33B currency matches 32A, field 36 must not be present".to_string(),
+                    description: "If 33B currency matches 32A, field 36 must not be present"
+                        .to_string(),
                     affected_fields: vec!["33B".to_string(), "32A".to_string(), "36".to_string()],
                 });
             }
@@ -278,7 +410,8 @@ impl MT103STP {
                     if !matches!(field_23e.instruction_code.as_str(), "SDVA" | "INTC") {
                         violations.push(STPRuleViolation {
                             rule: "C3".to_string(),
-                            description: "If 23B = SPRI, 23E can only contain SDVA or INTC".to_string(),
+                            description: "If 23B = SPRI, 23E can only contain SDVA or INTC"
+                                .to_string(),
                             affected_fields: vec!["23B".to_string(), "23E".to_string()],
                         });
                     }
@@ -297,14 +430,12 @@ impl MT103STP {
         }
 
         // C4: Correspondent Bank Chain Validation
-        if self.field_55a.is_some() {
-            if self.field_53a.is_none() || self.field_54a.is_none() {
-                violations.push(STPRuleViolation {
-                    rule: "C4".to_string(),
-                    description: "If 55A is present, both 53A and 54A become mandatory".to_string(),
-                    affected_fields: vec!["55A".to_string(), "53A".to_string(), "54A".to_string()],
-                });
-            }
+        if self.field_55a.is_some() && (self.field_53a.is_none() || self.field_54a.is_none()) {
+            violations.push(STPRuleViolation {
+                rule: "C4".to_string(),
+                description: "If 55A is present, both 53A and 54A become mandatory".to_string(),
+                affected_fields: vec!["55A".to_string(), "53A".to_string(), "54A".to_string()],
+            });
         }
 
         // C5: Intermediary and Account With Institution Validation
@@ -390,7 +521,9 @@ impl MT103STP {
         // Note: Full IBAN validation would require country-specific logic
         if self.field_57a.is_none() {
             // For EU/EEA countries, IBAN would be mandatory in 59a
-            warnings.push("For EU/EEA countries, IBAN may be required in 59a when 57A is absent".to_string());
+            warnings.push(
+                "For EU/EEA countries, IBAN may be required in 59a when 57A is absent".to_string(),
+            );
         }
 
         Ok(STPValidationReport {
@@ -440,14 +573,18 @@ impl MT103STP {
     fn extract_field_23b(message: &SwiftMessage) -> Result<Field23B> {
         match message.get_field("23B") {
             Some(SwiftFieldContainer::Field23B(field)) => Ok(field.clone()),
-            _ => Err(ParseError::missing_required_field_for_type("23B", "103-STP")),
+            _ => Err(ParseError::missing_required_field_for_type(
+                "23B", "103-STP",
+            )),
         }
     }
 
     fn extract_field_32a(message: &SwiftMessage) -> Result<Field32A> {
         match message.get_field("32A") {
             Some(SwiftFieldContainer::Field32A(field)) => Ok(field.clone()),
-            _ => Err(ParseError::missing_required_field_for_type("32A", "103-STP")),
+            _ => Err(ParseError::missing_required_field_for_type(
+                "32A", "103-STP",
+            )),
         }
     }
 
@@ -484,7 +621,9 @@ impl MT103STP {
     fn extract_field_71a(message: &SwiftMessage) -> Result<Field71A> {
         match message.get_field("71A") {
             Some(SwiftFieldContainer::Field71A(field)) => Ok(field.clone()),
-            _ => Err(ParseError::missing_required_field_for_type("71A", "103-STP")),
+            _ => Err(ParseError::missing_required_field_for_type(
+                "71A", "103-STP",
+            )),
         }
     }
 
@@ -634,8 +773,11 @@ ORDERING CUSTOMER
         let swift_message = SwiftMessage::parse(message_text).expect("Should parse");
         let mt103_stp = MT103STP::from_swift_message(swift_message);
 
-        assert!(mt103_stp.is_ok(), "MT103-STP should be created successfully");
-        
+        assert!(
+            mt103_stp.is_ok(),
+            "MT103-STP should be created successfully"
+        );
+
         let stp = mt103_stp.unwrap();
         assert_eq!(stp.field_20.transaction_reference, "STP123456789");
         assert_eq!(stp.field_23b.bank_operation_code, "CRED");
@@ -658,7 +800,10 @@ ORDERING CUSTOMER
         let mt103_stp = MT103STP::from_swift_message(swift_message);
 
         // Should fail due to C1 rule violation (33B currency differs from 32A but no 36)
-        assert!(mt103_stp.is_err(), "Should fail STP validation due to C1 rule");
+        assert!(
+            mt103_stp.is_err(),
+            "Should fail STP validation due to C1 rule"
+        );
     }
 
     #[test]
@@ -677,7 +822,10 @@ ORDERING CUSTOMER
         let mt103_stp = MT103STP::from_swift_message(swift_message);
 
         // Should fail due to C7 rule violation (71A = BEN requires 71F)
-        assert!(mt103_stp.is_err(), "Should fail STP validation due to C7 rule");
+        assert!(
+            mt103_stp.is_err(),
+            "Should fail STP validation due to C7 rule"
+        );
     }
 
     #[test]
@@ -697,12 +845,15 @@ ORDERING CUSTOMER
         let swift_message = SwiftMessage::parse(message_text).expect("Should parse");
         let mt103_stp = MT103STP::from_swift_message(swift_message);
 
-        assert!(mt103_stp.is_ok(), "Should pass STP validation with valid correspondent chain");
-        
+        assert!(
+            mt103_stp.is_ok(),
+            "Should pass STP validation with valid correspondent chain"
+        );
+
         let stp = mt103_stp.unwrap();
         assert!(stp.is_stp_compliant());
         assert!(stp.field_53a.is_some());
         assert!(stp.field_54a.is_some());
         assert!(stp.field_55a.is_some());
     }
-} 
+}

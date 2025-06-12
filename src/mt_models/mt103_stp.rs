@@ -70,6 +70,11 @@ pub struct STPValidationReport {
 impl MT103STP {
     /// Create MT103-STP from generic SwiftMessage
     pub fn from_swift_message(message: SwiftMessage) -> Result<Self> {
+        Self::from_swift_message_preserving_headers(message).map(|(mt103_stp, _headers)| mt103_stp)
+    }
+
+    /// Create MT103-STP from generic SwiftMessage, preserving headers for later use
+    pub fn from_swift_message_preserving_headers(message: SwiftMessage) -> Result<(Self, (Option<crate::tokenizer::BasicHeader>, Option<crate::tokenizer::ApplicationHeader>, Option<crate::tokenizer::UserHeader>, Option<crate::tokenizer::Trailer>))> {
         if message.message_type != "103" {
             return Err(ParseError::WrongMessageType {
                 expected: "103".to_string(),
@@ -102,6 +107,14 @@ impl MT103STP {
         let field_71g = Self::extract_optional_field_71g(&message);
         let field_72 = Self::extract_optional_field_72(&message);
         let field_77b = Self::extract_optional_field_77b(&message);
+
+        // Preserve headers
+        let headers = (
+            message.basic_header.clone(),
+            message.application_header.clone(),
+            message.user_header.clone(),
+            message.trailer_block.clone(),
+        );
 
         let mt103_stp = MT103STP {
             field_20,
@@ -139,11 +152,22 @@ impl MT103STP {
             });
         }
 
-        Ok(mt103_stp)
+        Ok((mt103_stp, headers))
     }
 
     /// Convert back to generic SwiftMessage
     pub fn to_swift_message(&self) -> SwiftMessage {
+        self.to_swift_message_with_headers(None, None, None, None)
+    }
+
+    /// Convert back to generic SwiftMessage with headers
+    pub fn to_swift_message_with_headers(
+        &self,
+        basic_header: Option<crate::tokenizer::BasicHeader>,
+        application_header: Option<crate::tokenizer::ApplicationHeader>,
+        user_header: Option<crate::tokenizer::UserHeader>,
+        trailer_block: Option<crate::tokenizer::Trailer>,
+    ) -> SwiftMessage {
         let mut fields = HashMap::new();
         let mut field_order = Vec::new();
 
@@ -207,6 +231,10 @@ impl MT103STP {
 
         SwiftMessage {
             message_type: "103".to_string(),
+            basic_header,
+            application_header,
+            user_header,
+            trailer_block,
             blocks: crate::tokenizer::SwiftMessageBlocks::default(),
             fields,
             field_order,

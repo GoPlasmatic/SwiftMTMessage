@@ -63,6 +63,11 @@ TRADE RELATED TRANSACTION
     println!("   Fields: {:?}", swift_message.field_order);
     println!();
 
+    println!("Basic Header: {:?}", swift_message.basic_header);
+    println!("Application Header: {:?}", swift_message.application_header);
+    println!("User Header: {:?}", swift_message.user_header);
+    println!("Trailer Block: {:?}", swift_message.trailer_block);
+
     // Step 2: Convert to MT103-STP structure
     println!("🏗️  Step 2: Converting to MT103-STP Structure");
     println!("---------------------------------------------");
@@ -266,8 +271,9 @@ TRADE RELATED TRANSACTION
                              field_33b.get("amount").and_then(|v| v.as_f64()).unwrap_or(0.0));
                 }
             }
-            
+            println!("{}", json_string);
             println!("\n💾 Full JSON available for further processing");
+
         }
         Err(e) => {
             println!("❌ JSON conversion error: {}", e);

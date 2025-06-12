@@ -250,6 +250,10 @@ pub fn parse_field_from_registry(tag: &str, content: &str) -> Result<SwiftFieldC
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwiftMessage {
     pub message_type: String,
+    pub basic_header: Option<crate::tokenizer::BasicHeader>,
+    pub application_header: Option<crate::tokenizer::ApplicationHeader>,
+    pub user_header: Option<crate::tokenizer::UserHeader>,
+    pub trailer_block: Option<crate::tokenizer::Trailer>,
     pub blocks: crate::tokenizer::SwiftMessageBlocks,
     pub fields: HashMap<String, SwiftFieldContainer>,
     pub field_order: Vec<String>, // Preserve field order
@@ -260,6 +264,26 @@ impl SwiftMessage {
     pub fn parse(raw_message: &str) -> Result<Self> {
         let blocks = crate::tokenizer::extract_blocks(raw_message)?;
         let message_type = crate::tokenizer::extract_message_type(&blocks)?;
+
+        let mut basic_header = None;
+        if let Some(block1) = &blocks.block_1 {
+            basic_header = Some(crate::tokenizer::parse_basic_header(block1)?);
+        }
+
+        let mut application_header = None;
+        if let Some(block2) = &blocks.block_2 {
+            application_header = Some(crate::tokenizer::parse_application_header(block2)?);
+        }
+
+        let mut user_header = None;
+        if let Some(block3) = &blocks.block_3 {
+            user_header = Some(crate::tokenizer::parse_user_header(block3)?);
+        }
+
+        let mut trailer_block = None;
+        if let Some(block5) = &blocks.block_5 {
+            trailer_block = Some(crate::tokenizer::parse_trailer_block(block5)?);
+        }
 
         let parsed_fields = if let Some(block4) = &blocks.block_4 {
             crate::tokenizer::parse_block4_fields(block4)?
@@ -279,6 +303,10 @@ impl SwiftMessage {
 
         Ok(SwiftMessage {
             message_type,
+            basic_header,
+            application_header,
+            user_header,
+            trailer_block,
             blocks,
             fields,
             field_order,

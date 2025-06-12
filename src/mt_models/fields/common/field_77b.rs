@@ -12,6 +12,8 @@ use serde::{Deserialize, Serialize};
 pub struct Field77B {
     /// Regulatory reporting information lines (up to 3 lines of 35 characters each)
     pub information: Vec<String>,
+    pub ordering_country: Option<String>,
+    pub beneficiary_country: Option<String>,
 }
 
 impl Field77B {
@@ -48,7 +50,21 @@ impl Field77B {
             }
         }
 
-        Ok(Field77B { information })
+        // /ORDERRES/DE//REGULATORY INFO
+        // SOFTWARE LICENSE COMPLIANCE
+        // TRADE RELATED TRANSACTION
+        let mut ordering_country = None;
+        let mut beneficiary_country = None;
+        if let Some(first_line) = information.get(0) {
+            if first_line.starts_with("/ORDERRES/") {
+                ordering_country = Some(first_line.split("/").nth(2).unwrap_or("").to_string());
+            }
+            if first_line.starts_with("/BENEFRES/") {
+                beneficiary_country = Some(first_line.split("/").nth(2).unwrap_or("").to_string());
+            }
+        }
+
+        Ok(Field77B { information, ordering_country, beneficiary_country })
     }
 
     /// Create from a single string, splitting on newlines

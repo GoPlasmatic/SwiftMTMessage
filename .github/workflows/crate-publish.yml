@@ -84,8 +84,10 @@ jobs:
           git commit -m "chore: bump version to $(cargo ws list --json | jq -r '.[0].version')" || echo "No changes to commit"
 
       - name: Create git tag
+        id: create_tag
         run: |
           VERSION=$(cargo ws list --json | jq -r '.[0].version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           git tag -a "v$VERSION" -m "Release v$VERSION"
 
       - name: Publish crates to crates.io
@@ -105,8 +107,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v$(cargo ws list --json | jq -r '.[0].version')
-          name: Release v$(cargo ws list --json | jq -r '.[0].version')
+          tag_name: v${{ steps.create_tag.outputs.version }}
+          name: Release v${{ steps.create_tag.outputs.version }}
           body: |
             ## Changes
             
@@ -114,7 +116,7 @@ jobs:
             - swift-mt-message
             - swift-mt-message-macros
             
-            All crates have been updated to version $(cargo ws list --json | jq -r '.[0].version').
+            All crates have been updated to version ${{ steps.create_tag.outputs.version }}.
             
             ### Installation
             

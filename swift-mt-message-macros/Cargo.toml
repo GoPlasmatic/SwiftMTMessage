@@ -5,6 +5,12 @@ edition = "2024"
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
 license = "Apache-2.0"
 description = "Derive macros for SWIFT MT message parsing library"
+homepage = "https://github.com/GoPlasmatic/SwiftMTMessage"
+repository = "https://github.com/GoPlasmatic/SwiftMTMessage"
+documentation = "https://docs.rs/swift-mt-message-macros"
+keywords = ["swift", "mt", "macro", "derive", "parsing"]
+categories = ["development-tools::procedural-macro-helpers", "parsing"]
+readme = "../README.md"
 
 [lib]
 proc-macro = true

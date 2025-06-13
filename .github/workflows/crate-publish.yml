@@ -4,6 +4,17 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 jobs:
   release:
@@ -11,29 +22,108 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install cargo-release
+      - name: Install cargo-workspaces
         uses: baptiste0928/cargo-install@v3
         with:
-          crate: cargo-release
-          version: '^0.25'
+          crate: cargo-workspaces
+          version: '^0.4'
 
       - name: Configure git
         run: |
-          git config user.name "GitHub Actions"
+          git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
 
-      - name: Run tests
-        run: cargo test
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Release and publish crates
+      - name: Run tests
+        run: cargo test --workspace --all-features
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy
+        run: cargo clippy --workspace --all-features -- -D warnings
+
+      - name: Determine release type
+        id: release_type
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "type=${{ github.event.inputs.release_type }}" >> $GITHUB_OUTPUT
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Version all workspace crates
+        run: |
+          echo "Updating versions for all workspace crates..."
+          cargo ws version ${{ steps.release_type.outputs.type }} --all --no-git-commit --force '*'
+          
+      - name: Show version changes
+        run: |
+          echo "Version changes:"
+          git diff --name-only | grep Cargo.toml | xargs -I {} sh -c 'echo "=== {} ===" && git diff {}'
+
+      - name: Commit version changes
+        run: |
+          git add .
+          git commit -m "chore: bump version to $(cargo ws list --json | jq -r '.[0].version')" || echo "No changes to commit"
+
+      - name: Create git tag
+        run: |
+          VERSION=$(cargo ws list --json | jq -r '.[0].version')
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+
+      - name: Publish crates to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+        run: |
+          echo "Publishing all workspace crates..."
+          cargo ws publish --all --from-git --skip-published
+
+      - name: Push changes and tags
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: cargo release patch --execute --no-confirm
+        run: |
+          git push origin main
+          git push origin --tags
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v$(cargo ws list --json | jq -r '.[0].version')
+          name: Release v$(cargo ws list --json | jq -r '.[0].version')
+          body: |
+            ## Changes
+            
+            This release includes updates to all workspace crates:
+            - swift-mt-message
+            - swift-mt-message-macros
+            
+            All crates have been updated to version $(cargo ws list --json | jq -r '.[0].version').
+            
+            ### Installation
+            
+            ```bash
+            cargo add swift-mt-message
+            ```
+            
+            See the [CHANGELOG.md](CHANGELOG.md) for detailed changes.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

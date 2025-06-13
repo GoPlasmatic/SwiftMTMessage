@@ -1,0 +1,15 @@
+[package]
+name = "swift-mt-message-macros"
+version = "2.0.0"
+edition = "2024"
+authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
+license = "Apache-2.0"
+description = "Derive macros for SWIFT MT message parsing library"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true } 

@@ -1,0 +1,37 @@
+[package]
+name = "swift-mt-message"
+version = "2.0.0"
+edition = "2024"
+exclude = [".DS_Store", "/target", ".vscode", ".github"]
+authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
+license = "Apache-2.0"
+description = "A fast, type-safe Rust implementation of SWIFT MT message parsing with comprehensive field support, derive macros, and validation."
+readme = "../README.md"
+homepage = "https://github.com/GoPlasmatic/SwiftMTMessage"
+repository = "https://github.com/GoPlasmatic/SwiftMTMessage"
+keywords = ["swift", "mt", "message", "parsing", "macro"]
+categories = ["data-structures", "development-tools", "parsing"]
+
+[dependencies]
+# Macro crate
+swift-mt-message-macros = { path = "../swift-mt-message-macros" }
+
+# Core serialization and parsing
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+
+# Error handling and utilities
+thiserror = { workspace = true }
+regex = { workspace = true }
+once_cell = { workspace = true }
+
+# Data validation
+datalogic-rs = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = "1.0"
+
+[[example]]
+name = "parse_mt103"
+path = "../examples/parse_mt103.rs" 

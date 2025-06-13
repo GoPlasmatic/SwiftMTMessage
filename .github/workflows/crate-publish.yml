@@ -71,7 +71,7 @@ jobs:
       - name: Version all workspace crates
         run: |
           echo "Updating versions for all workspace crates..."
-          cargo ws version ${{ steps.release_type.outputs.type }} --all --no-git-commit --force '*'
+          cargo ws version ${{ steps.release_type.outputs.type }} --all --no-git-commit --force '*' --yes
           
       - name: Show version changes
         run: |
@@ -93,7 +93,7 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
         run: |
           echo "Publishing all workspace crates..."
-          cargo ws publish --all --from-git --skip-published
+          cargo ws publish --all --from-git --skip-published --yes
 
       - name: Push changes and tags
         env:

@@ -14,7 +14,7 @@ categories = ["data-structures", "development-tools", "parsing"]
 
 [dependencies]
 # Macro crate
-swift-mt-message-macros = { path = "../swift-mt-message-macros" }
+swift-mt-message-macros = { version = "2.0.0", path = "../swift-mt-message-macros" }
 
 # Core serialization and parsing
 serde = { workspace = true }

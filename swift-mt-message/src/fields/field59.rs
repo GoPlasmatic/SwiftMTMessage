@@ -241,11 +241,10 @@ impl<'de> Deserialize<'de> for Field59 {
 
 impl SwiftField for Field59A {
     fn parse(content: &str) -> Result<Self, ParseError> {
-        // Handle input that includes field tag prefix
-        let content = if content.starts_with(":59A:") {
-            &content[5..]
-        } else if content.starts_with("59A:") {
-            &content[4..]
+        let content = if let Some(stripped) = content.strip_prefix(":59A:") {
+            stripped
+        } else if let Some(stripped) = content.strip_prefix("59A:") {
+            stripped
         } else {
             content
         };
@@ -306,11 +305,10 @@ impl SwiftField for Field59A {
 
 impl SwiftField for Field59Basic {
     fn parse(content: &str) -> Result<Self, ParseError> {
-        // Handle input that includes field tag prefix
-        let content = if content.starts_with(":59:") {
-            &content[4..]
-        } else if content.starts_with("59:") {
-            &content[3..]
+        let content = if let Some(stripped) = content.strip_prefix(":59:") {
+            stripped
+        } else if let Some(stripped) = content.strip_prefix("59:") {
+            stripped
         } else {
             content
         };

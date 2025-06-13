@@ -207,13 +207,12 @@ impl Field53A {
 
 impl SwiftField for Field53A {
     fn parse(value: &str) -> Result<Self, crate::ParseError> {
-        // Handle input that includes field tag prefix (e.g., ":53A:/1234567890\nDEUTDEFF")
-        let content = if value.starts_with(":53A:") {
-            &value[5..] // Remove ":53A:" prefix
-        } else if value.starts_with("53A:") {
-            &value[4..] // Remove "53A:" prefix
+        let content = if let Some(stripped) = value.strip_prefix(":53A:") {
+            stripped // Remove ":53A:" prefix
+        } else if let Some(stripped) = value.strip_prefix("53A:") {
+            stripped // Remove "53A:" prefix
         } else {
-            value // Use as-is if no prefix
+            value
         };
 
         let content = content.trim();
@@ -324,13 +323,13 @@ impl SwiftField for Field53A {
         }
 
         // Validate BIC
-        if let Err(e) = Self::validate_bic(&self.bic) {
-            if let crate::ParseError::InvalidFieldFormat { message, .. } = e {
-                errors.push(ValidationError::FormatValidation {
-                    field_tag: "53A".to_string(),
-                    message,
-                });
-            }
+        if let Err(crate::ParseError::InvalidFieldFormat { message, .. }) =
+            Self::validate_bic(&self.bic)
+        {
+            errors.push(ValidationError::FormatValidation {
+                field_tag: "53A".to_string(),
+                message,
+            });
         }
 
         ValidationResult {

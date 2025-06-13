@@ -206,7 +206,7 @@ pub fn derive_swift_field(input: TokenStream) -> TokenStream {
                     .unwrap_or_else(|| variant_name.to_string());
 
                 if let syn::Fields::Unnamed(fields) = &variant.fields {
-                    if fields.unnamed.len() > 0 {
+                    if !fields.unnamed.is_empty() {
                         quote! {
                             #name::#variant_name(inner) => {
                                 format!("{}{}", #option_letter, inner.to_swift_string())
@@ -228,7 +228,7 @@ pub fn derive_swift_field(input: TokenStream) -> TokenStream {
                 let variant_name = &variant.ident;
 
                 if let syn::Fields::Unnamed(fields) = &variant.fields {
-                    if fields.unnamed.len() > 0 {
+                    if !fields.unnamed.is_empty() {
                         quote! {
                             #name::#variant_name(inner) => inner.validate()
                         }
@@ -398,12 +398,12 @@ pub fn derive_swift_message(input: TokenStream) -> TokenStream {
                     // Combine all field parsing
                     let all_field_parsing = required_field_parsing
                         .into_iter()
-                        .chain(optional_field_parsing.into_iter());
+                        .chain(optional_field_parsing);
 
                     // Combine all field serialization
                     let all_field_serialization = required_field_serialization
                         .into_iter()
-                        .chain(optional_field_serialization.into_iter());
+                        .chain(optional_field_serialization);
 
                     let expanded = quote! {
                         impl crate::SwiftMessageBody for #name {

@@ -23,14 +23,13 @@ pub struct Field32A {
 }
 
 impl SwiftField for Field32A {
-    fn parse(value: &str) -> crate::Result<Self> {
-        // Handle input that includes field tag prefix (e.g., ":32A:241231USD1500000,00")
-        let content = if value.starts_with(":32A:") {
-            &value[5..] // Remove ":32A:" prefix
-        } else if value.starts_with("32A:") {
-            &value[4..] // Remove "32A:" prefix
+    fn parse(value: &str) -> Result<Self, crate::ParseError> {
+        let content = if let Some(stripped) = value.strip_prefix(":32A:") {
+            stripped // Remove ":32A:" prefix
+        } else if let Some(stripped) = value.strip_prefix("32A:") {
+            stripped // Remove "32A:" prefix
         } else {
-            value // Use as-is if no prefix
+            value
         };
 
         let content = content.trim();

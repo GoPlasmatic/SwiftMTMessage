@@ -179,10 +179,10 @@ impl Field56A {
 
 impl SwiftField for Field56A {
     fn parse(value: &str) -> Result<Self, crate::ParseError> {
-        let content = if value.starts_with(":56A:") {
-            &value[5..]
-        } else if value.starts_with("56A:") {
-            &value[4..]
+        let content = if let Some(stripped) = value.strip_prefix(":56A:") {
+            stripped
+        } else if let Some(stripped) = value.strip_prefix("56A:") {
+            stripped
         } else {
             value
         };
@@ -256,13 +256,14 @@ impl SwiftField for Field56A {
             }
         }
 
-        if let Err(e) = Self::validate_bic(&self.bic) {
-            if let crate::ParseError::InvalidFieldFormat { message, .. } = e {
-                errors.push(ValidationError::FormatValidation {
-                    field_tag: "56A".to_string(),
-                    message,
-                });
-            }
+        // Validate BIC
+        if let Err(crate::ParseError::InvalidFieldFormat { message, .. }) =
+            Self::validate_bic(&self.bic)
+        {
+            errors.push(ValidationError::FormatValidation {
+                field_tag: "56A".to_string(),
+                message,
+            });
         }
 
         ValidationResult {

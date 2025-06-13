@@ -104,13 +104,12 @@ impl Field36 {
 
 impl SwiftField for Field36 {
     fn parse(value: &str) -> Result<Self, crate::ParseError> {
-        // Handle input that includes field tag prefix (e.g., ":36:1,2345")
-        let content = if value.starts_with(":36:") {
-            &value[4..] // Remove ":36:" prefix
-        } else if value.starts_with("36:") {
-            &value[3..] // Remove "36:" prefix
+        let content = if let Some(stripped) = value.strip_prefix(":36:") {
+            stripped // Remove ":36:" prefix
+        } else if let Some(stripped) = value.strip_prefix("36:") {
+            stripped // Remove "36:" prefix
         } else {
-            value // Use as-is if no prefix
+            value
         };
 
         let content = content.trim();

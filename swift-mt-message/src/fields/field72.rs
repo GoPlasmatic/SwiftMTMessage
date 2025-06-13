@@ -110,13 +110,12 @@ impl Field72 {
 
 impl SwiftField for Field72 {
     fn parse(value: &str) -> Result<Self, crate::ParseError> {
-        // Handle input that includes field tag prefix (e.g., ":72:/INS/CHGS/SHA")
-        let content = if value.starts_with(":72:") {
-            &value[4..] // Remove ":72:" prefix
-        } else if value.starts_with("72:") {
-            &value[3..] // Remove "72:" prefix
+        let content = if let Some(stripped) = value.strip_prefix(":72:") {
+            stripped // Remove ":72:" prefix
+        } else if let Some(stripped) = value.strip_prefix("72:") {
+            stripped // Remove "72:" prefix
         } else {
-            value // Use as-is if no prefix
+            value
         };
 
         let content = content.trim();

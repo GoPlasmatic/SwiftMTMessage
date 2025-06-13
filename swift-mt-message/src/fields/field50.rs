@@ -329,11 +329,10 @@ impl<'de> Deserialize<'de> for Field50 {
 
 impl SwiftField for Field50A {
     fn parse(content: &str) -> Result<Self, ParseError> {
-        // Handle input that includes field tag prefix
-        let content = if content.starts_with(":50A:") {
-            &content[5..]
-        } else if content.starts_with("50A:") {
-            &content[4..]
+        let content = if let Some(stripped) = content.strip_prefix(":50A:") {
+            stripped
+        } else if let Some(stripped) = content.strip_prefix("50A:") {
+            stripped
         } else {
             content
         };
@@ -396,11 +395,10 @@ impl SwiftField for Field50A {
 
 impl SwiftField for Field50F {
     fn parse(content: &str) -> Result<Self, ParseError> {
-        // Handle input that includes field tag prefix
-        let content = if content.starts_with(":50F:") {
-            &content[5..]
-        } else if content.starts_with("50F:") {
-            &content[4..]
+        let content = if let Some(stripped) = content.strip_prefix(":50F:") {
+            stripped
+        } else if let Some(stripped) = content.strip_prefix("50F:") {
+            stripped
         } else {
             content
         };
@@ -454,11 +452,10 @@ impl SwiftField for Field50F {
 
 impl SwiftField for Field50K {
     fn parse(content: &str) -> Result<Self, ParseError> {
-        // Handle input that includes field tag prefix
-        let content = if content.starts_with(":50K:") {
-            &content[5..]
-        } else if content.starts_with("50K:") {
-            &content[4..]
+        let content = if let Some(stripped) = content.strip_prefix(":50K:") {
+            stripped
+        } else if let Some(stripped) = content.strip_prefix("50K:") {
+            stripped
         } else {
             content
         };

@@ -163,13 +163,12 @@ impl Field77B {
 
 impl SwiftField for Field77B {
     fn parse(value: &str) -> Result<Self, crate::ParseError> {
-        // Handle input that includes field tag prefix (e.g., ":77B:/ORDERRES/DE")
-        let content = if value.starts_with(":77B:") {
-            &value[5..] // Remove ":77B:" prefix
-        } else if value.starts_with("77B:") {
-            &value[4..] // Remove "77B:" prefix
+        let content = if let Some(stripped) = value.strip_prefix(":77B:") {
+            stripped // Remove ":77B:" prefix
+        } else if let Some(stripped) = value.strip_prefix("77B:") {
+            stripped // Remove "77B:" prefix
         } else {
-            value // Use as-is if no prefix
+            value
         };
 
         let content = content.trim();

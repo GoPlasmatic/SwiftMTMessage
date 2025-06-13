@@ -20,23 +20,13 @@ pub struct Field13C {
 }
 
 impl SwiftField for Field13C {
-    fn parse(value: &str) -> crate::Result<Self> {
-        let value = value.trim();
-
-        if value.is_empty() {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "13C".to_string(),
-                message: "Field content cannot be empty".to_string(),
-            });
-        }
-
-        // Handle input that includes field tag prefix (e.g., ":13C:/153045+1/+0100/-0500")
-        let content = if value.starts_with(":13C:") {
-            &value[5..] // Remove ":13C:" prefix
-        } else if value.starts_with("13C:") {
-            &value[4..] // Remove "13C:" prefix
+    fn parse(value: &str) -> Result<Self, crate::ParseError> {
+        let content = if let Some(stripped) = value.strip_prefix(":13C:") {
+            stripped // Remove ":13C:" prefix
+        } else if let Some(stripped) = value.strip_prefix("13C:") {
+            stripped // Remove "13C:" prefix
         } else {
-            value // Use as-is if no prefix
+            value
         };
 
         if content.is_empty() {

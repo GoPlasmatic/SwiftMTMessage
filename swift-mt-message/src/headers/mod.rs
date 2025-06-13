@@ -67,10 +67,12 @@ impl BasicHeader {
             sequence_number,
         })
     }
+}
 
-    /// Convert back to block 1 string format
-    pub fn to_string(&self) -> String {
-        format!(
+impl std::fmt::Display for BasicHeader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
             "{}{}{}{}{}",
             self.application_id,
             self.service_id,
@@ -141,23 +143,24 @@ impl ApplicationHeader {
             obsolescence_period,
         })
     }
+}
 
-    /// Convert back to block 2 string format
-    pub fn to_string(&self) -> String {
+impl std::fmt::Display for ApplicationHeader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = format!(
             "{}{}{}{}",
             self.direction, self.message_type, self.destination_address, self.priority
         );
 
-        if let Some(ref dm) = self.delivery_monitoring {
-            result.push_str(dm);
+        if let Some(ref delivery_monitoring) = self.delivery_monitoring {
+            result.push_str(delivery_monitoring);
         }
 
-        if let Some(ref op) = self.obsolescence_period {
-            result.push_str(op);
+        if let Some(ref obsolescence_period) = self.obsolescence_period {
+            result.push_str(obsolescence_period);
         }
 
-        result
+        write!(f, "{}", result)
     }
 }
 
@@ -469,61 +472,43 @@ impl UserHeader {
             None
         }
     }
+}
 
-    /// Convert back to block 3 string format
-    pub fn to_string(&self) -> String {
+impl std::fmt::Display for UserHeader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = String::new();
 
         if let Some(ref service_id) = self.service_identifier {
             result.push_str(&format!("{{103:{}}}", service_id));
         }
 
-        if let Some(ref banking_prio) = self.banking_priority {
-            result.push_str(&format!("{{113:{}}}", banking_prio));
+        if let Some(ref banking_priority) = self.banking_priority {
+            result.push_str(&format!("{{113:{}}}", banking_priority));
         }
 
-        if let Some(ref msg_user_ref) = self.message_user_reference {
-            result.push_str(&format!("{{108:{}}}", msg_user_ref));
+        if let Some(ref message_user_ref) = self.message_user_reference {
+            result.push_str(&format!("{{108:{}}}", message_user_ref));
         }
 
         if let Some(ref validation_flag) = self.validation_flag {
             result.push_str(&format!("{{119:{}}}", validation_flag));
         }
 
-        if let Some(ref balance_checkpoint) = self.balance_checkpoint {
-            let mut value = format!("{}{}", balance_checkpoint.date, balance_checkpoint.time);
-            if let Some(ref hundredths) = balance_checkpoint.hundredths_of_second {
-                value.push_str(hundredths);
+        if let Some(ref unique_end_to_end_ref) = self.unique_end_to_end_reference {
+            result.push_str(&format!("{{121:{}}}", unique_end_to_end_ref));
+        }
+
+        if let Some(ref service_type_id) = self.service_type_identifier {
+            result.push_str(&format!("{{111:{}}}", service_type_id));
+        }
+
+        if let Some(ref payment_controls) = self.payment_controls_info {
+            let mut value = payment_controls.code_word.clone();
+            if let Some(ref additional) = payment_controls.additional_info {
+                value.push('/');
+                value.push_str(additional);
             }
-            result.push_str(&format!("{{423:{}}}", value));
-        }
-
-        if let Some(ref mir) = self.message_input_reference {
-            let value = format!(
-                "{}{}{}{}{}",
-                mir.date,
-                mir.lt_identifier,
-                mir.branch_code,
-                mir.session_number,
-                mir.sequence_number
-            );
-            result.push_str(&format!("{{106:{}}}", value));
-        }
-
-        if let Some(ref related_ref) = self.related_reference {
-            result.push_str(&format!("{{424:{}}}", related_ref));
-        }
-
-        if let Some(ref service_type) = self.service_type_identifier {
-            result.push_str(&format!("{{111:{}}}", service_type));
-        }
-
-        if let Some(ref unique_ref) = self.unique_end_to_end_reference {
-            result.push_str(&format!("{{121:{}}}", unique_ref));
-        }
-
-        if let Some(ref addressee_info) = self.addressee_information {
-            result.push_str(&format!("{{115:{}}}", addressee_info));
+            result.push_str(&format!("{{434:{}}}", value));
         }
 
         if let Some(ref payment_release) = self.payment_release_information {
@@ -544,16 +529,7 @@ impl UserHeader {
             result.push_str(&format!("{{433:{}}}", value));
         }
 
-        if let Some(ref payment_controls) = self.payment_controls_info {
-            let mut value = payment_controls.code_word.clone();
-            if let Some(ref additional) = payment_controls.additional_info {
-                value.push('/');
-                value.push_str(additional);
-            }
-            result.push_str(&format!("{{434:{}}}", value));
-        }
-
-        result
+        write!(f, "{}", result)
     }
 }
 
@@ -667,9 +643,10 @@ impl Trailer {
 
         Ok(trailer)
     }
+}
 
-    /// Convert back to block 5 string format
-    pub fn to_string(&self) -> String {
+impl std::fmt::Display for Trailer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = String::new();
 
         if let Some(ref checksum) = self.checksum {
@@ -684,12 +661,22 @@ impl Trailer {
             result.push_str("{DLM}");
         }
 
+        if let Some(ref possible_duplicate_emission) = self.possible_duplicate_emission {
+            result.push_str(&format!(
+                "{{PDE:{}}}",
+                possible_duplicate_emission.time.as_deref().unwrap_or("")
+            ));
+        }
+
+        if let Some(ref message_reference) = self.message_reference {
+            result.push_str(&format!("{{MRF:{}}}", message_reference.date));
+        }
+
         if let Some(ref mac) = self.mac {
             result.push_str(&format!("{{MAC:{}}}", mac));
         }
 
-        // Add other structured tags as needed
-        result
+        write!(f, "{}", result)
     }
 }
 

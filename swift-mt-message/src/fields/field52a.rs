@@ -124,15 +124,13 @@ impl SwiftField for Field52A {
             });
         }
 
-        // Handle input that includes field tag prefix (e.g., ":52A:BNPAFRPPXXX")
-        let content = if content.starts_with(":52A:") {
-            &content[5..] // Remove ":52A:" prefix
-        } else if content.starts_with("52A:") {
-            &content[4..] // Remove "52A:" prefix
+        let content = if let Some(stripped) = content.strip_prefix(":52A:") {
+            stripped // Remove ":52A:" prefix
+        } else if let Some(stripped) = content.strip_prefix("52A:") {
+            stripped // Remove "52A:" prefix
         } else {
-            content // Use as-is if no prefix
-        }
-        .trim();
+            content
+        };
 
         let mut account_line_indicator = None;
         let mut account_number = None;

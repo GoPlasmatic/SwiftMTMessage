@@ -1,11 +1,114 @@
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// Field 71F: Sender's Charges
+/// # Field 71F: Sender's Charges
 ///
-/// Format: 3!a15d (3 alphabetic characters for currency + amount with up to 15 digits)
+/// ## Overview
+/// Field 71F specifies the charges borne by the sender in SWIFT payment messages. This field
+/// contains the currency and amount of charges that the ordering customer or sending institution
+/// pays for processing the payment transaction. These charges are separate from the main payment
+/// amount and provide transparency in fee allocation, particularly important for correspondent
+/// banking arrangements and regulatory compliance.
 ///
-/// This field specifies the charges borne by the sender.
+/// ## Format Specification
+/// **Format**: `3!a15d`
+/// - **3!a**: Currency code (3 alphabetic characters, ISO 4217)
+/// - **15d**: Amount with up to 15 digits (including decimal places)
+/// - **Decimal separator**: Comma (,) as per SWIFT standards
+/// - **Amount format**: No thousands separators, up to 2 decimal places
+///
+/// ## Structure
+/// ```text
+/// USD25,50
+/// │││└──┘
+/// │││  └─ Amount (25.50)
+/// └┴┴─── Currency (USD)
+/// ```
+///
+/// ## Field Components
+/// - **Currency Code**: ISO 4217 three-letter currency code
+///   - Must be valid and recognized currency
+///   - Alphabetic characters only
+///   - Case-insensitive but normalized to uppercase
+/// - **Charge Amount**: Monetary amount of sender's charges
+///   - Maximum 15 digits including decimal places
+///   - Comma as decimal separator
+///   - Non-negative values only
+///
+/// ## Usage Context
+/// Field 71F is used in:
+/// - **MT103**: Single Customer Credit Transfer
+/// - **MT200**: Financial Institution Transfer
+/// - **MT202**: General Financial Institution Transfer
+/// - **MT202COV**: Cover for customer credit transfer
+/// - **MT205**: Financial Institution Transfer for its own account
+///
+/// ### Business Applications
+/// - **Charge transparency**: Detailed fee disclosure
+/// - **Cost accounting**: Accurate charge tracking
+/// - **Correspondent banking**: Fee settlement between banks
+/// - **Regulatory compliance**: Charge reporting requirements
+/// - **Customer billing**: Separate charge invoicing
+/// - **Audit trails**: Complete transaction cost records
+///
+/// ## Examples
+/// ```text
+/// :71F:USD25,50
+/// └─── USD 25.50 in sender's charges
+///
+/// :71F:EUR15,00
+/// └─── EUR 15.00 in processing fees
+///
+/// :71F:GBP10,75
+/// └─── GBP 10.75 in correspondent charges
+///
+/// :71F:CHF50,00
+/// └─── CHF 50.00 in urgent transfer fees
+///
+/// :71F:JPY2500,00
+/// └─── JPY 2,500.00 in international charges
+/// ```
+///
+/// ## Charge Types
+/// - **Processing fees**: Basic transaction processing charges
+/// - **Correspondent charges**: Fees for correspondent bank services
+/// - **Urgent transfer fees**: Premium charges for same-day processing
+/// - **Regulatory fees**: Charges for compliance and reporting
+/// - **Network fees**: SWIFT network usage charges
+/// - **Investigation fees**: Charges for payment inquiries or investigations
+///
+/// ## Currency Guidelines
+/// - **ISO 4217 compliance**: Must use standard currency codes
+/// - **Active currencies**: Should use currently active currency codes
+/// - **Major currencies**: USD, EUR, GBP, JPY, CHF commonly used
+/// - **Local currencies**: Domestic currency for local charges
+/// - **Consistency**: Should align with payment currency where appropriate
+///
+/// ## Amount Formatting
+/// - **Decimal places**: Typically 2 decimal places for most currencies
+/// - **Japanese Yen**: Usually no decimal places (whole numbers)
+/// - **Precision**: Up to 15 total digits including decimals
+/// - **Range**: Must be non-negative (zero or positive)
+/// - **Separator**: Comma (,) for decimal separation
+///
+/// ## Validation Rules
+/// 1. **Currency format**: Must be exactly 3 alphabetic characters
+/// 2. **Currency validity**: Must be valid ISO 4217 currency code
+/// 3. **Amount format**: Must follow SWIFT decimal format with comma
+/// 4. **Amount range**: Must be non-negative
+/// 5. **Length limits**: Total field length within SWIFT limits
+/// 6. **Character validation**: Only allowed characters in amount
+///
+/// ## Network Validated Rules (SWIFT Standards)
+/// - Currency must be valid ISO 4217 code (Error: T52)
+/// - Amount must be properly formatted (Error: T40)
+/// - Amount cannot be negative (Error: T13)
+/// - Decimal separator must be comma (Error: T41)
+/// - Maximum 15 digits in amount (Error: T50)
+/// - Currency must be alphabetic only (Error: T15)
+/// - Field format must comply with specification (Error: T26)
+///
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Field71F {
     /// Currency code (3 letters, ISO 4217)

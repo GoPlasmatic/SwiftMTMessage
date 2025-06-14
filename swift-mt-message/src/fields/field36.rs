@@ -1,12 +1,51 @@
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// Field 36: Exchange Rate
+/// # Field 36: Exchange Rate
 ///
-/// Format: 12d (up to 12 digits including decimal)
+/// ## Overview
+/// Field 36 specifies the exchange rate to be applied between the currencies in Field 33B
+/// (Instructed Currency and Amount) and Field 32A (Value Date/Currency/Amount) in SWIFT
+/// payment messages. This field is only present when the currency codes in these two fields
+/// differ, indicating a foreign exchange transaction is required.
 ///
-/// Rate of exchange between the currency codes in Field 33B and Field 32A.
-/// Only present when Field 33B currency differs from Field 32A currency.
+/// ## Format Specification
+/// **Format**: `12d`
+/// - **12d**: Up to 12 digits including decimal separator
+/// - **Decimal separator**: Comma (,) as per SWIFT convention
+/// - **Precision**: Up to 6 decimal places (trailing zeros removed)
+/// - **Character set**: Digits 0-9 and comma (,)
+/// - **Validation**: Must be positive, non-zero value
+///
+/// ## Usage Context
+/// Field 36 is commonly used in:
+/// - **MT103**: Single Customer Credit Transfer (when currency conversion required)
+/// - **MT202**: General Financial Institution Transfer (FX transactions)
+/// - **MT202COV**: Cover for customer credit transfer with FX
+/// - **MT200**: Financial Institution Transfer (simple FX)
+///
+/// ### Business Applications
+/// - **Currency conversion**: Applying agreed exchange rates to international payments
+/// - **FX transparency**: Providing clear rate information to receiving institutions
+/// - **Reconciliation**: Enabling accurate settlement calculations
+/// - **Compliance**: Meeting regulatory requirements for FX rate disclosure
+/// - **Audit trails**: Maintaining records of applied exchange rates
+///
+/// ## Examples
+/// ```text
+/// :36:1,2345
+/// └─── USD/EUR rate of 1.2345 (1 USD = 1.2345 EUR)
+///
+/// :36:0,8765
+/// └─── EUR/USD rate of 0.8765 (1 EUR = 0.8765 USD)
+///
+/// :36:110,5
+/// └─── USD/JPY rate of 110.5 (1 USD = 110.5 JPY)
+///
+/// :36:1
+/// └─── 1:1 rate (special cases, same currency family)
+/// ```
+///
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Field36 {
     /// Exchange rate value

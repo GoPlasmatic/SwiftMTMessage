@@ -3,9 +3,107 @@ use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 
-/// Field 50A: Ordering Customer (Option A)
+/// # Field 50: Ordering Customer
 ///
-/// Format: [/account]\nBIC
+/// ## Overview
+/// Field 50 identifies the ordering customer (originator) of a SWIFT payment message.
+/// This field is crucial for identifying the party who initiated the payment instruction
+/// and is used for compliance, audit, and customer relationship purposes. The field
+/// supports multiple format options (A, F, K) to accommodate different identification
+/// methods and regulatory requirements.
+///
+/// ## Format Specification
+/// Field 50 supports three format options:
+///
+/// ### Option A (50A): BIC-based Identification
+/// **Format**: `[/account]BIC`
+/// - **account**: Optional account number (max 34 characters, preceded by /)
+/// - **BIC**: Bank Identifier Code (8 or 11 characters)
+/// - **Structure**: Account and BIC on separate lines if account present
+///
+/// ### Option F (50F): Party Identifier with Name/Address
+/// **Format**: `party_identifier + 4*35x`
+/// - **party_identifier**: Unique party identifier (max 35 characters)
+/// - **name_and_address**: Up to 4 lines of 35 characters each
+/// - **Usage**: For structured party identification with full name/address
+///
+/// ### Option K (50K): Name and Address Only
+/// **Format**: `4*35x`
+/// - **name_and_address**: Up to 4 lines of 35 characters each
+/// - **Usage**: Simple name/address format without structured identifiers
+/// - **Most common**: Default option when no BIC or party ID available
+///
+/// ## Usage Context
+/// Field 50 is mandatory in most SWIFT payment messages:
+/// - **MT103**: Single Customer Credit Transfer
+/// - **MT200**: Financial Institution Transfer
+/// - **MT202**: General Financial Institution Transfer
+/// - **MT202COV**: Cover for customer credit transfer
+///
+/// ### Regulatory Applications
+/// - **AML/KYC**: Customer identification for anti-money laundering compliance
+/// - **Sanctions screening**: Identifying parties for sanctions compliance
+/// - **FATCA/CRS**: Tax reporting requirements
+/// - **Audit trails**: Maintaining originator information for investigations
+/// - **Customer due diligence**: Enhanced due diligence requirements
+///
+/// ## Examples
+/// ```text
+/// :50A:/1234567890
+/// DEUTDEFFXXX
+/// └─── Customer with account 1234567890 at Deutsche Bank Frankfurt
+///
+/// :50A:CHASUS33XXX
+/// └─── Customer identified by BIC only (JPMorgan Chase New York)
+///
+/// :50F:PARTY123456789
+/// JOHN DOE ENTERPRISES
+/// 123 BUSINESS AVENUE
+/// NEW YORK NY 10001
+/// UNITED STATES
+/// └─── Customer with party identifier and full address
+///
+/// :50K:ACME CORPORATION
+/// 456 INDUSTRIAL DRIVE
+/// CHICAGO IL 60601
+/// UNITED STATES
+/// └─── Customer with name and address only
+/// ```
+///
+/// ## Option Selection Guidelines
+/// - **Use 50A when**: Customer has account at known financial institution with BIC
+/// - **Use 50F when**: Structured party identification required (regulatory compliance)
+/// - **Use 50K when**: Simple name/address sufficient, no structured ID available
+/// - **Preference order**: 50A > 50F > 50K (from most to least structured)
+///
+/// ## Validation Rules
+/// ### Option A (50A):
+/// 1. **BIC validation**: Must be valid 8 or 11 character BIC format
+/// 2. **Account format**: If present, max 34 characters, must start with /
+/// 3. **BIC structure**: 4!a2!a2!c[3!c] format required
+///
+/// ### Option F (50F):
+/// 1. **Party identifier**: Cannot be empty, max 35 characters
+/// 2. **Address lines**: Minimum 1, maximum 4 lines
+/// 3. **Line length**: Each line max 35 characters
+/// 4. **Character set**: Printable ASCII characters only
+///
+/// ### Option K (50K):
+/// 1. **Address lines**: Minimum 1, maximum 4 lines
+/// 2. **Line length**: Each line max 35 characters
+/// 3. **Character set**: Printable ASCII characters only
+/// 4. **Content validation**: Must contain meaningful customer information
+///
+/// ## Network Validated Rules (SWIFT Standards)
+/// - Field 50 is mandatory in customer payment messages (Error: C23)
+/// - BIC in option A must be valid format (Error: T27)
+/// - Account number cannot exceed 34 characters (Error: T15)
+/// - Name/address lines cannot exceed 35 characters each (Error: T14)
+/// - Maximum 4 name/address lines allowed (Error: T16)
+/// - Characters must be from SWIFT character set (Error: T61)
+///
+///
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Field50A {
     /// Optional account number (starting with /)

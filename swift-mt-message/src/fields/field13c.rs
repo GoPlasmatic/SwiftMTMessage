@@ -1,21 +1,116 @@
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// Field 13C: Time Indication
+/// # Field 13C: Time Indication
 ///
-/// Format: /8c/4!n1!x4!n (time/sign+offset/sign+offset)
+/// ## Overview
+/// Field 13C specifies time indication(s) related to the processing of payment instructions
+/// in SWIFT MT messages. This field is used to indicate specific timing requirements or
+/// constraints for transaction processing, particularly in time-sensitive payment scenarios.
 ///
-/// Time at which the transaction should be processed, with UTC offset indication.
-/// Example: /153045+1/+0100/-0500
+/// ## Format Specification
+/// **Format**: `/8c/4!n1!x4!n`
+/// - **8c**: Time portion (8 characters: HHMMSS + 2 additional characters)
+/// - **4!n1!x4!n**: UTC offset (4 digits + sign + 4 digits, format: ±HHMM)
+/// - **4!n1!x4!n**: Second UTC offset (4 digits + sign + 4 digits, format: ±HHMM)
+///
+/// ## Structure
+/// ```text
+/// /HHMMSS+D/±HHMM/±HHMM
+/// │└─────┘│ │    │ │
+/// │  Time │ │    │ └── Second UTC offset
+/// │       │ │    └──── First UTC offset  
+/// │       │ └───────── Time remainder/indicator
+/// │       └─────────── Time (HHMMSS)
+/// └─────────────────── Field delimiter
+/// ```
+///
+/// ## Time Codes and Indicators
+/// The time portion consists of:
+/// - **HH**: Hours (00-23)
+/// - **MM**: Minutes (00-59)
+/// - **SS**: Seconds (00-59)
+/// - **+D**: Additional indicator (varies by usage context)
+///
+/// Common time indicators include:
+/// - `+0`, `+1`, `+2`, etc.: Numeric indicators
+/// - `+D`: Day indicator
+/// - `+X`: Special processing indicator
+///
+/// ## UTC Offset Format
+/// UTC offsets must follow the format `±HHMM`:
+/// - **±**: Plus (+) or minus (-) sign
+/// - **HH**: Hours offset from UTC (00-14)
+/// - **MM**: Minutes offset (00-59, typically 00 or 30)
+///
+/// ## Usage Context
+/// Field 13C is commonly used in:
+/// - **MT103**: Single Customer Credit Transfer
+/// - **MT202**: General Financial Institution Transfer
+/// - **MT202COV**: Cover for customer credit transfer
+///
+/// ### Business Applications
+/// - **Cut-off times**: Specify latest processing time
+/// - **Value dating**: Indicate when funds should be available
+/// - **Time zone coordination**: Handle cross-border payments
+/// - **STP processing**: Ensure straight-through processing timing
+///
+/// ## Examples
+/// ```text
+/// :13C:/CLSTIME/153045+1/+0100/-0500
+/// └─── CLS Bank cut-off time at 15:30:45+1, CET (+0100), EST (-0500)
+///
+/// :13C:/RNCTIME/090000+0/+0000/+0900  
+/// └─── TARGET receive time at 09:00:00, UTC (+0000), JST (+0900)
+///
+/// :13C:/SNDTIME/235959+D/+0200/-0800
+/// └─── Send time at 23:59:59+D, CEST (+0200), PST (-0800)
+/// ```
+///
+/// ## Validation Rules
+/// 1. **Time format**: Must be exactly 8 characters (HHMMSS + 2 chars)
+/// 2. **Time values**: Hours (00-23), Minutes (00-59), Seconds (00-59)
+/// 3. **UTC offsets**: Must be ±HHMM format with valid ranges
+/// 4. **Structure**: Must have exactly 3 parts separated by '/'
+/// 5. **Leading slash**: Field content must start with '/'
+///
+/// ## Network Validated Rules (SWIFT Standards)
+/// - Time indication must be a valid time expressed as HHMM (Error: T38)
+/// - Sign must be either "+" or "-" (Error: T15)
+/// - Time offset hours must be 00-13, minutes 00-59 (Error: T16)
+/// - Format must comply with SWIFT field specifications
+///
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Field13C {
-    /// Time portion (format: HHMMSS+DD, 8 characters)
+    /// Time portion (8 characters: HHMMSS + 2 additional characters)
+    ///
+    /// Format: HHMMSS+D where:
+    /// - HH: Hours (00-23)
+    /// - MM: Minutes (00-59)
+    /// - SS: Seconds (00-59)
+    /// - +D: Additional indicator (context-dependent)
+    ///
+    /// Examples: "153045+1", "090000+0", "235959+D"
     pub time: String,
 
-    /// First UTC offset (format: +HHMM or -HHMM)
+    /// First UTC offset (format: ±HHMM)
+    ///
+    /// Represents the UTC offset for the first timezone reference.
+    /// Format: ±HHMM where:
+    /// - ±: Plus (+) or minus (-) sign
+    /// - HH: Hours offset from UTC (00-14)
+    /// - MM: Minutes offset (00-59, typically 00 or 30)
+    ///
+    /// Examples: "+0100" (CET), "-0500" (EST), "+0000" (UTC)
     pub utc_offset1: String,
 
-    /// Second UTC offset (format: +HHMM or -HHMM)
+    /// Second UTC offset (format: ±HHMM)
+    ///
+    /// Represents the UTC offset for the second timezone reference.
+    /// Used for cross-timezone coordination or dual time indication.
+    /// Same format as utc_offset1.
+    ///
+    /// Examples: "-0800" (PST), "+0900" (JST), "+0530" (IST)
     pub utc_offset2: String,
 }
 
@@ -168,7 +263,30 @@ impl SwiftField for Field13C {
 }
 
 impl Field13C {
-    /// Create a new Field13C with validation
+    /// Create a new Field13C with comprehensive validation
+    ///
+    /// # Arguments
+    /// * `time` - Time portion (8 characters: HHMMSS + 2 additional chars)
+    /// * `utc_offset1` - First UTC offset (±HHMM format)
+    /// * `utc_offset2` - Second UTC offset (±HHMM format)
+    ///
+    /// # Examples
+    /// ```rust
+    /// use swift_mt_message::fields::Field13C;
+    ///
+    /// // CLS Bank cut-off time
+    /// let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+    ///
+    /// // TARGET processing time
+    /// let field = Field13C::new("090000+0", "+0000", "+0900").unwrap();
+    /// ```
+    ///
+    /// # Errors
+    /// Returns `ParseError` if:
+    /// - Time is not exactly 8 characters
+    /// - Hours, minutes, or seconds are out of valid range
+    /// - UTC offsets are not in ±HHMM format
+    /// - UTC offset values are out of valid range
     pub fn new(
         time: impl Into<String>,
         utc_offset1: impl Into<String>,
@@ -266,7 +384,19 @@ impl Field13C {
         })
     }
 
-    /// Validate UTC offset format (+HHMM or -HHMM)
+    /// Validate UTC offset format according to SWIFT standards
+    ///
+    /// Validates that the UTC offset follows the ±HHMM format with realistic values:
+    /// - Sign must be + or -
+    /// - Hours must be 00-14 (covers all real-world timezones)
+    /// - Minutes must be 00-59 (typically 00, 15, 30, or 45)
+    ///
+    /// # Arguments
+    /// * `offset` - The UTC offset string to validate
+    /// * `context` - Description for error messages
+    ///
+    /// # Returns
+    /// `Ok(())` if valid, `Err(String)` with error description if invalid
     fn validate_utc_offset(offset: &str, context: &str) -> Result<(), String> {
         if offset.len() != 5 {
             return Err(format!(
@@ -303,39 +433,184 @@ impl Field13C {
         Ok(())
     }
 
-    /// Get the time portion
+    /// Get the complete time portion
+    ///
+    /// Returns the full 8-character time string including the time indicator.
+    ///
+    /// # Returns
+    /// The time string in format HHMMSS+D
+    ///
+    /// # Example
+    /// ```rust
+    /// # use swift_mt_message::fields::Field13C;
+    /// let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+    /// assert_eq!(field.time(), "153045+1");
+    /// ```
     pub fn time(&self) -> &str {
         &self.time
     }
 
     /// Get the first UTC offset
+    ///
+    /// Returns the first UTC offset in ±HHMM format.
+    ///
+    /// # Returns
+    /// The first UTC offset string
+    ///
+    /// # Example
+    /// ```rust
+    /// # use swift_mt_message::fields::Field13C;
+    /// let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+    /// assert_eq!(field.utc_offset1(), "+0100");
+    /// ```
     pub fn utc_offset1(&self) -> &str {
         &self.utc_offset1
     }
 
     /// Get the second UTC offset
+    ///
+    /// Returns the second UTC offset in ±HHMM format.
+    ///
+    /// # Returns
+    /// The second UTC offset string
+    ///
+    /// # Example
+    /// ```rust
+    /// # use swift_mt_message::fields::Field13C;
+    /// let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+    /// assert_eq!(field.utc_offset2(), "-0500");
+    /// ```
     pub fn utc_offset2(&self) -> &str {
         &self.utc_offset2
     }
 
-    /// Parse hours from time
+    /// Extract hours from the time portion
+    ///
+    /// Parses and returns the hours component (00-23) from the time string.
+    ///
+    /// # Returns
+    /// Hours as u32, or 0 if parsing fails
+    ///
+    /// # Example
+    /// ```rust
+    /// # use swift_mt_message::fields::Field13C;
+    /// let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+    /// assert_eq!(field.hours(), 15);
+    /// ```
     pub fn hours(&self) -> u32 {
         self.time[0..2].parse().unwrap_or(0)
     }
 
-    /// Parse minutes from time
+    /// Extract minutes from the time portion
+    ///
+    /// Parses and returns the minutes component (00-59) from the time string.
+    ///
+    /// # Returns
+    /// Minutes as u32, or 0 if parsing fails
+    ///
+    /// # Example
+    /// ```rust
+    /// # use swift_mt_message::fields::Field13C;
+    /// let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+    /// assert_eq!(field.minutes(), 30);
+    /// ```
     pub fn minutes(&self) -> u32 {
         self.time[2..4].parse().unwrap_or(0)
     }
 
-    /// Parse seconds from time
+    /// Extract seconds from the time portion
+    ///
+    /// Parses and returns the seconds component (00-59) from the time string.
+    ///
+    /// # Returns
+    /// Seconds as u32, or 0 if parsing fails
+    ///
+    /// # Example
+    /// ```rust
+    /// # use swift_mt_message::fields::Field13C;
+    /// let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+    /// assert_eq!(field.seconds(), 45);
+    /// ```
     pub fn seconds(&self) -> u32 {
         self.time[4..6].parse().unwrap_or(0)
     }
 
-    /// Get the time remainder (last 2 characters)
+    /// Get the time remainder/indicator
+    ///
+    /// Returns the last 2 characters of the time string, which typically
+    /// contain additional time indicators or processing codes.
+    ///
+    /// # Returns
+    /// The time remainder string (2 characters)
+    ///
+    /// # Example
+    /// ```rust
+    /// # use swift_mt_message::fields::Field13C;
+    /// let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+    /// assert_eq!(field.time_remainder(), "+1");
+    /// ```
     pub fn time_remainder(&self) -> &str {
         &self.time[6..8]
+    }
+
+    /// Check if this is a CLS Bank time indication
+    ///
+    /// Determines if this field represents a CLS Bank cut-off time
+    /// based on common patterns and indicators.
+    ///
+    /// # Returns
+    /// `true` if this appears to be a CLS time indication
+    pub fn is_cls_time(&self) -> bool {
+        // CLS times often use specific indicators
+        matches!(self.time_remainder(), "+1" | "+0" | "+C")
+    }
+
+    /// Check if this is a TARGET system time indication
+    ///
+    /// Determines if this field represents a TARGET (Trans-European Automated
+    /// Real-time Gross Settlement Express Transfer) system time indication.
+    ///
+    /// # Returns
+    /// `true` if this appears to be a TARGET time indication
+    pub fn is_target_time(&self) -> bool {
+        // TARGET times often use +0 indicator and CET timezone
+        self.time_remainder() == "+0"
+            && (self.utc_offset1 == "+0100" || self.utc_offset1 == "+0200")
+    }
+
+    /// Get a human-readable description of the time indication
+    ///
+    /// Returns a descriptive string explaining what this time indication
+    /// represents based on common SWIFT usage patterns.
+    ///
+    /// # Returns
+    /// A descriptive string
+    ///
+    /// # Example
+    /// ```rust
+    /// # use swift_mt_message::fields::Field13C;
+    /// let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+    /// println!("{}", field.description());
+    /// ```
+    pub fn description(&self) -> String {
+        let time_desc = if self.is_target_time() {
+            "TARGET system time"
+        } else if self.is_cls_time() {
+            "CLS Bank cut-off time"
+        } else {
+            "Time indication"
+        };
+
+        format!(
+            "{} at {:02}:{:02}:{:02}{} (UTC{}/UTC{})",
+            time_desc,
+            self.hours(),
+            self.minutes(),
+            self.seconds(),
+            self.time_remainder(),
+            self.utc_offset1,
+            self.utc_offset2
+        )
     }
 }
 
@@ -491,5 +766,123 @@ mod tests {
         assert_eq!(field.minutes(), 37);
         assert_eq!(field.seconds(), 25);
         assert_eq!(field.time_remainder(), "+2");
+    }
+
+    #[test]
+    fn test_field13c_cls_time_detection() {
+        // Test CLS Bank time detection
+        let cls_field1 = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+        assert!(cls_field1.is_cls_time());
+
+        let cls_field2 = Field13C::new("090000+0", "+0000", "+0900").unwrap();
+        assert!(cls_field2.is_cls_time());
+
+        let cls_field3 = Field13C::new("120000+C", "+0200", "-0800").unwrap();
+        assert!(cls_field3.is_cls_time());
+
+        let non_cls_field = Field13C::new("143725+D", "+0100", "-0800").unwrap();
+        assert!(!non_cls_field.is_cls_time());
+    }
+
+    #[test]
+    fn test_field13c_target_time_detection() {
+        // Test TARGET system time detection
+        let target_field1 = Field13C::new("090000+0", "+0100", "+0900").unwrap();
+        assert!(target_field1.is_target_time());
+
+        let target_field2 = Field13C::new("160000+0", "+0200", "-0500").unwrap();
+        assert!(target_field2.is_target_time());
+
+        let non_target_field1 = Field13C::new("090000+1", "+0100", "+0900").unwrap();
+        assert!(!non_target_field1.is_target_time());
+
+        let non_target_field2 = Field13C::new("090000+0", "+0000", "+0900").unwrap();
+        assert!(!non_target_field2.is_target_time());
+    }
+
+    #[test]
+    fn test_field13c_description_generation() {
+        // Test CLS Bank description
+        let cls_field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+        let description = cls_field.description();
+        assert!(description.contains("CLS Bank cut-off time"));
+        assert!(description.contains("15:30:45+1"));
+        assert!(description.contains("UTC+0100"));
+        assert!(description.contains("UTC-0500"));
+
+        // Test TARGET system description
+        let target_field = Field13C::new("090000+0", "+0100", "+0900").unwrap();
+        let description = target_field.description();
+        assert!(description.contains("TARGET system time"));
+        assert!(description.contains("09:00:00+0"));
+
+        // Test generic time indication
+        let generic_field = Field13C::new("143725+D", "+0200", "-0800").unwrap();
+        let description = generic_field.description();
+        assert!(description.contains("Time indication"));
+        assert!(description.contains("14:37:25+D"));
+    }
+
+    #[test]
+    fn test_field13c_real_world_examples() {
+        // CLS Bank cut-off time example
+        let cls_example = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+        assert_eq!(cls_example.to_swift_string(), ":13C:/153045+1/+0100/-0500");
+        assert!(cls_example.is_cls_time());
+        assert!(!cls_example.is_target_time());
+
+        // TARGET system time example
+        let target_example = Field13C::new("090000+0", "+0100", "+0900").unwrap();
+        assert_eq!(
+            target_example.to_swift_string(),
+            ":13C:/090000+0/+0100/+0900"
+        );
+        assert!(target_example.is_target_time());
+        assert!(target_example.is_cls_time()); // +0 is also a CLS indicator
+
+        // Generic processing time
+        let generic_example = Field13C::new("235959+D", "+0200", "-0800").unwrap();
+        assert_eq!(
+            generic_example.to_swift_string(),
+            ":13C:/235959+D/+0200/-0800"
+        );
+        assert!(!generic_example.is_cls_time());
+        assert!(!generic_example.is_target_time());
+    }
+
+    #[test]
+    fn test_field13c_edge_cases() {
+        // Test midnight
+        let midnight = Field13C::new("000000+0", "+0000", "+0000").unwrap();
+        assert_eq!(midnight.hours(), 0);
+        assert_eq!(midnight.minutes(), 0);
+        assert_eq!(midnight.seconds(), 0);
+
+        // Test end of day
+        let end_of_day = Field13C::new("235959+X", "+1400", "-1200").unwrap();
+        assert_eq!(end_of_day.hours(), 23);
+        assert_eq!(end_of_day.minutes(), 59);
+        assert_eq!(end_of_day.seconds(), 59);
+
+        // Test extreme timezone offsets
+        let extreme_positive = Field13C::new("120000+Z", "+1400", "+1200").unwrap();
+        assert_eq!(extreme_positive.utc_offset1(), "+1400");
+
+        let extreme_negative = Field13C::new("120000+A", "-1200", "-1100").unwrap();
+        assert_eq!(extreme_negative.utc_offset1(), "-1200");
+    }
+
+    #[test]
+    fn test_field13c_serialization() {
+        let field = Field13C::new("153045+1", "+0100", "-0500").unwrap();
+
+        // Test JSON serialization
+        let json = serde_json::to_string(&field).unwrap();
+        let deserialized: Field13C = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(field, deserialized);
+        assert_eq!(field.time(), deserialized.time());
+        assert_eq!(field.utc_offset1(), deserialized.utc_offset1());
+        assert_eq!(field.utc_offset2(), deserialized.utc_offset2());
     }
 }

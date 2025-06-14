@@ -1,11 +1,122 @@
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// Field 55A: Third Reimbursement Institution
+/// # Field 55A: Third Reimbursement Institution
 ///
-/// Format: [/34x]4!a2!a2!c[3!c] (optional account + BIC)
+/// ## Overview
+/// Field 55A identifies the third reimbursement institution in SWIFT payment messages.
+/// This field specifies a financial institution in the reimbursement chain that acts as
+/// an intermediary or correspondent in the settlement process. It is used in complex
+/// correspondent banking arrangements where multiple institutions are involved in the
+/// payment settlement, particularly in multi-hop correspondent relationships.
 ///
-/// This field specifies the third reimbursement institution.
+/// ## Format Specification
+/// **Format**: `[/34x]4!a2!a2!c[3!c]`
+/// - **34x**: Optional account number (up to 34 characters)
+/// - **4!a2!a2!c[3!c]**: BIC code (8 or 11 characters)
+///   - **4!a**: Bank code (4 alphabetic characters)
+///   - **2!a**: Country code (2 alphabetic characters, ISO 3166-1)
+///   - **2!c**: Location code (2 alphanumeric characters)
+///   - **3!c**: Optional branch code (3 alphanumeric characters)
+///
+/// ## Structure
+/// ```text
+/// /1234567890123456789012345678901234
+/// DEUTDEFF500
+/// │       │││
+/// │       │└┴─ Branch code (optional, 500)
+/// │       └┴── Location code (2 chars, FF)
+/// │     └┴──── Country code (2 chars, DE)
+/// │ └┴┴┴────── Bank code (4 chars, DEUT)
+/// └─────────── Account number (optional)
+/// ```
+///
+/// ## Field Components
+/// - **Account Number**: Institution's account for reimbursement (optional)
+/// - **BIC Code**: Business Identifier Code for institution identification
+/// - **Bank Code**: 4-letter code identifying the bank
+/// - **Country Code**: 2-letter ISO country code
+/// - **Location Code**: 2-character location identifier
+/// - **Branch Code**: 3-character branch identifier (optional)
+///
+/// ## Usage Context
+/// Field 55A is used in:
+/// - **MT202**: General Financial Institution Transfer
+/// - **MT202COV**: Cover for customer credit transfer
+/// - **MT205**: Financial Institution Transfer for its own account
+/// - **MT103**: Single Customer Credit Transfer (in complex routing)
+/// - **MT200**: Financial Institution Transfer
+///
+/// ### Business Applications
+/// - **Complex correspondent chains**: Multi-hop correspondent banking
+/// - **Reimbursement routing**: Directing reimbursement through specific institutions
+/// - **Settlement optimization**: Optimizing settlement paths through correspondents
+/// - **Regional hubs**: Using regional correspondent hubs for efficiency
+/// - **Regulatory compliance**: Meeting regulatory requirements for correspondent chains
+/// - **Risk management**: Distributing settlement risk across multiple institutions
+/// - **Liquidity management**: Optimizing liquidity across correspondent networks
+///
+/// ## Examples
+/// ```text
+/// :55A:CHASUS33
+/// └─── JPMorgan Chase Bank, New York (BIC only)
+///
+/// :55A:/1234567890123456789012345678901234
+/// DEUTDEFF500
+/// └─── Deutsche Bank AG, Frankfurt with reimbursement account
+///
+/// :55A:BARCGB22
+/// └─── Barclays Bank PLC, London (8-character BIC)
+///
+/// :55A:/REIMBURSEMENT001
+/// BNPAFRPP
+/// └─── BNP Paribas, Paris with reimbursement account
+/// ```
+///
+/// ## BIC Code Structure
+/// - **8-character BIC**: BANKCCLL (Bank-Country-Location)
+/// - **11-character BIC**: BANKCCLLBBB (Bank-Country-Location-Branch)
+/// - **Bank Code**: 4 letters identifying the institution
+/// - **Country Code**: 2 letters (ISO 3166-1 alpha-2)
+/// - **Location Code**: 2 alphanumeric characters
+/// - **Branch Code**: 3 alphanumeric characters (optional)
+///
+/// ## Account Number Guidelines
+/// - **Format**: Up to 34 alphanumeric characters
+/// - **Content**: Reimbursement account number or identifier
+/// - **Usage**: When specific account designation is required
+/// - **Omission**: When only institution identification is needed
+/// - **Purpose**: Facilitates direct reimbursement processing
+///
+/// ## Reimbursement Chain Context
+/// In multi-institution reimbursement chains:
+/// - **Field 53A/B/D**: Sender's correspondent (first institution)
+/// - **Field 54A/B/D**: Receiver's correspondent (second institution)
+/// - **Field 55A/B/D**: Third reimbursement institution (third institution)
+/// - **Field 56A/C/D**: Intermediary institution (fourth institution)
+/// - **Field 57A/B/C/D**: Account with institution (final institution)
+///
+/// ## Validation Rules
+/// 1. **BIC format**: Must be valid 8 or 11 character BIC code
+/// 2. **Bank code**: Must be 4 alphabetic characters
+/// 3. **Country code**: Must be 2 alphabetic characters
+/// 4. **Location code**: Must be 2 alphanumeric characters
+/// 5. **Branch code**: Must be 3 alphanumeric characters (if present)
+/// 6. **Account number**: Maximum 34 characters (if present)
+/// 7. **Character validation**: All components must be printable ASCII
+///
+/// ## Network Validated Rules (SWIFT Standards)
+/// - BIC must be valid and registered in SWIFT network (Error: T10)
+/// - BIC format must comply with ISO 13616 standards (Error: T11)
+/// - Account number cannot exceed 34 characters (Error: T14)
+/// - Bank code must be alphabetic only (Error: T15)
+/// - Country code must be valid ISO 3166-1 code (Error: T16)
+/// - Location code must be alphanumeric (Error: T17)
+/// - Branch code must be alphanumeric if present (Error: T18)
+/// - Field 55A alternative to 55B/55D (Error: C55)
+/// - Institution must be in reimbursement chain (Error: C56)
+///
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Field55A {
     /// Account line indicator (optional, 1 character)

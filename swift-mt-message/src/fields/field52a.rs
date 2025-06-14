@@ -1,11 +1,91 @@
 use crate::{SwiftField, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// Field 52A: Ordering Institution
+/// # Field 52A: Ordering Institution
 ///
-/// Format: [/1!a][/34x]4!a2!a2!c[3!c] (optional account line indicator + account number + BIC)
+/// ## Overview
+/// Field 52A identifies the ordering institution in SWIFT payment messages. This field
+/// specifies the financial institution that is acting on behalf of the ordering customer
+/// (Field 50) to initiate the payment. It represents the first institution in the payment
+/// chain and is crucial for routing, settlement, and compliance purposes.
 ///
-/// This field identifies the ordering institution.
+/// ## Format Specification
+/// **Format**: `[/1!a][/34x]4!a2!a2!c[3!c]`
+/// - **1!a**: Optional account line indicator (1 character)
+/// - **34x**: Optional account number (up to 34 characters)
+/// - **4!a2!a2!c[3!c]**: BIC code (8 or 11 characters)
+///
+/// ### BIC Structure
+/// ```text
+/// DEUTDEFF500
+/// ││││││││└┴┴─ Branch Code (3 characters, optional)
+/// ││││││└┴──── Location Code (2 characters)
+/// ││││└┴────── Country Code (2 letters)
+/// └┴┴┴──────── Bank Code (4 letters)
+/// ```
+///
+/// ## Field Components
+/// - **Account Line Indicator**: Single character qualifier for account number type
+/// - **Account Number**: Institution's account number for settlement
+/// - **BIC**: Bank Identifier Code uniquely identifying the institution
+///
+/// ## Usage Context
+/// Field 52A is used in:
+/// - **MT103**: Single Customer Credit Transfer
+/// - **MT200**: Financial Institution Transfer
+/// - **MT202**: General Financial Institution Transfer
+/// - **MT202COV**: Cover for customer credit transfer
+///
+/// ### Business Applications
+/// - **Payment routing**: Identifying the institution to route payment through
+/// - **Settlement**: Providing account information for settlement processes
+/// - **Compliance**: Meeting regulatory requirements for institution identification
+/// - **Correspondent banking**: Managing relationships between correspondent banks
+/// - **Risk management**: Assessing counterparty risk and limits
+///
+/// ## Examples
+/// ```text
+/// :52A:DEUTDEFFXXX
+/// └─── Deutsche Bank Frankfurt (no account information)
+///
+/// :52A:/C/1234567890
+/// CHASUS33XXX
+/// └─── JPMorgan Chase New York with checking account 1234567890
+///
+/// :52A:/A/GB12ABCD12345678901234
+/// ABCDEFGHJKL
+/// └─── Bank with account line indicator A and IBAN account
+///
+/// :52A:/S/SWIFT001234567890
+/// BNPAFRPPXXX
+/// └─── BNP Paribas with SWIFT account identifier
+/// ```
+///
+/// ## Account Line Indicators
+/// Common account line indicators include:
+/// - **A**: Account identifier (generic)
+/// - **B**: Beneficiary account
+/// - **C**: Checking account
+/// - **D**: Deposit account
+/// - **S**: SWIFT account identifier
+/// - **T**: Trust account
+///
+/// ## Validation Rules
+/// 1. **BIC format**: Must be valid 8 or 11 character BIC
+/// 2. **BIC structure**: 4!a2!a2!c[3!c] format required
+/// 3. **Account line indicator**: If present, exactly 1 character
+/// 4. **Account number**: If present, max 34 characters
+/// 5. **Character validation**: All components must use valid character sets
+///
+/// ## Network Validated Rules (SWIFT Standards)
+/// - BIC must be valid format and registered (Error: T27)
+/// - Account line indicator must be single character (Error: T12)
+/// - Account number cannot exceed 34 characters (Error: T15)
+/// - BIC country code must be valid ISO country code (Error: T28)
+/// - Characters must be from SWIFT character set (Error: T61)
+/// - Field 52A is mandatory in most payment message types (Error: C52)
+///
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Field52A {
     /// Account line indicator (optional, 1 character)

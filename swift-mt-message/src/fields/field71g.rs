@@ -1,11 +1,114 @@
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// Field 71G: Receiver's Charges
+/// # Field 71G: Receiver's Charges
 ///
-/// Format: 3!a15d (3 alphabetic characters for currency + amount with up to 15 digits)
+/// ## Overview
+/// Field 71G specifies the charges borne by the receiver in SWIFT payment messages. This field
+/// contains the currency and amount of charges that the beneficiary or receiving institution
+/// pays for processing the payment transaction. These charges are deducted from the payment
+/// amount or billed separately, providing transparency in fee allocation and supporting
+/// accurate payment reconciliation and regulatory compliance requirements.
 ///
-/// This field specifies charges borne by the receiver.
+/// ## Format Specification
+/// **Format**: `3!a15d`
+/// - **3!a**: Currency code (3 alphabetic characters, ISO 4217)
+/// - **15d**: Amount with up to 15 digits (including decimal places)
+/// - **Decimal separator**: Comma (,) as per SWIFT standards
+/// - **Amount format**: No thousands separators, up to 2 decimal places
+///
+/// ## Structure
+/// ```text
+/// EUR12,75
+/// │││└──┘
+/// │││  └─ Amount (12.75)
+/// └┴┴─── Currency (EUR)
+/// ```
+///
+/// ## Field Components
+/// - **Currency Code**: ISO 4217 three-letter currency code
+///   - Must be valid and recognized currency
+///   - Alphabetic characters only
+///   - Case-insensitive but normalized to uppercase
+/// - **Charge Amount**: Monetary amount of receiver's charges
+///   - Maximum 15 digits including decimal places
+///   - Comma as decimal separator
+///   - Non-negative values only
+///
+/// ## Usage Context
+/// Field 71G is used in:
+/// - **MT103**: Single Customer Credit Transfer
+/// - **MT200**: Financial Institution Transfer
+/// - **MT202**: General Financial Institution Transfer
+/// - **MT202COV**: Cover for customer credit transfer
+/// - **MT205**: Financial Institution Transfer for its own account
+///
+/// ### Business Applications
+/// - **Charge transparency**: Detailed fee disclosure for receivers
+/// - **Payment reconciliation**: Accurate net amount calculation
+/// - **Correspondent banking**: Fee settlement with receiving banks
+/// - **Regulatory compliance**: Charge reporting and disclosure
+/// - **Customer communication**: Clear fee breakdown for beneficiaries
+/// - **Audit trails**: Complete transaction cost documentation
+///
+/// ## Examples
+/// ```text
+/// :71G:EUR12,75
+/// └─── EUR 12.75 in receiver's charges
+///
+/// :71G:USD20,00
+/// └─── USD 20.00 in beneficiary bank fees
+///
+/// :71G:GBP8,50
+/// └─── GBP 8.50 in receiving charges
+///
+/// :71G:CHF15,25
+/// └─── CHF 15.25 in processing fees
+///
+/// :71G:JPY1500,00
+/// └─── JPY 1,500.00 in local charges
+/// ```
+///
+/// ## Charge Types
+/// - **Receiving fees**: Basic charges for incoming payments
+/// - **Processing charges**: Fees for payment processing and crediting
+/// - **Correspondent fees**: Charges from correspondent banking arrangements
+/// - **Regulatory fees**: Compliance and reporting related charges
+/// - **Investigation fees**: Charges for payment inquiries or research
+/// - **Account maintenance**: Fees related to account services
+///
+/// ## Currency Guidelines
+/// - **ISO 4217 compliance**: Must use standard currency codes
+/// - **Local currency**: Often in receiving country's currency
+/// - **Payment currency**: May match main payment currency
+/// - **Active currencies**: Should use currently active currency codes
+/// - **Consistency**: Should align with local banking practices
+///
+/// ## Amount Calculation
+/// - **Deduction method**: Typically deducted from payment amount
+/// - **Separate billing**: May be billed separately to beneficiary
+/// - **Net amount**: Payment amount minus receiver's charges
+/// - **Currency conversion**: May involve currency conversion costs
+/// - **Rate application**: Applied at current exchange rates
+///
+/// ## Validation Rules
+/// 1. **Currency format**: Must be exactly 3 alphabetic characters
+/// 2. **Currency validity**: Must be valid ISO 4217 currency code
+/// 3. **Amount format**: Must follow SWIFT decimal format with comma
+/// 4. **Amount range**: Must be non-negative
+/// 5. **Length limits**: Total field length within SWIFT limits
+/// 6. **Character validation**: Only allowed characters in amount
+///
+/// ## Network Validated Rules (SWIFT Standards)
+/// - Currency must be valid ISO 4217 code (Error: T52)
+/// - Amount must be properly formatted (Error: T40)
+/// - Amount cannot be negative (Error: T13)
+/// - Decimal separator must be comma (Error: T41)
+/// - Maximum 15 digits in amount (Error: T50)
+/// - Currency must be alphabetic only (Error: T15)
+/// - Field format must comply with specification (Error: T26)
+///
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Field71G {
     /// Currency code (3 letters, ISO 4217)

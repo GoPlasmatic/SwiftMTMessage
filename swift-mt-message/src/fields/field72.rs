@@ -1,12 +1,137 @@
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// Field 72: Sender to Receiver Information
+/// # Field 72: Sender to Receiver Information
 ///
-/// Format: 6*35x (up to 6 lines of 35 characters each)
+/// ## Overview
+/// Field 72 contains sender to receiver information in SWIFT payment messages, providing
+/// additional instructions, codes, or information that the sending institution wants to
+/// communicate to the receiving institution. This field serves as a communication channel
+/// for operational instructions, regulatory codes, special handling requirements, and other
+/// relevant information that supports proper payment processing and compliance.
 ///
-/// Information from the sender to the receiver.
-/// Note: Only coded information is allowed in MT103.
+/// ## Format Specification
+/// **Format**: `6*35x`
+/// - **6*35x**: Up to 6 lines of 35 characters each
+/// - **Line structure**: Free-form text for instructions and information
+/// - **Character set**: SWIFT character set (A-Z, 0-9, and limited special characters)
+/// - **Line separation**: Each line on separate row
+///
+/// ## Structure
+/// ```text
+/// /ACC/BENEFICIARY ACCOUNT DETAILS
+/// /BNF/ADDITIONAL BENEFICIARY INFO
+/// /INS/SPECIAL HANDLING REQUIRED
+/// /REC/REGULATORY REPORTING CODE
+/// /FEE/CHARGE INSTRUCTIONS
+/// /REM/ADDITIONAL REMITTANCE INFO
+/// │                              │
+/// └──────────────────────────────┘
+///        Up to 35 characters per line
+///        Maximum 6 lines
+/// ```
+///
+/// ## Field Components
+/// - **Instruction Codes**: Structured codes for specific instructions
+/// - **Regulatory Information**: Compliance and reporting codes
+/// - **Processing Instructions**: Special handling requirements
+/// - **Additional Details**: Supplementary payment information
+/// - **Communication Messages**: Bank-to-bank communications
+///
+/// ## Usage Context
+/// Field 72 is used in:
+/// - **MT103**: Single Customer Credit Transfer
+/// - **MT200**: Financial Institution Transfer
+/// - **MT202**: General Financial Institution Transfer
+/// - **MT202COV**: Cover for customer credit transfer
+/// - **MT205**: Financial Institution Transfer for its own account
+///
+/// ### Business Applications
+/// - **Operational instructions**: Special processing requirements
+/// - **Regulatory compliance**: Required reporting codes and information
+/// - **Payment routing**: Additional routing or handling instructions
+/// - **Fee instructions**: Charge allocation and billing details
+/// - **Beneficiary information**: Additional beneficiary details
+/// - **Investigation support**: Information for payment inquiries
+///
+/// ## Common Instruction Codes
+/// ### /ACC/ - Account Information
+/// - Additional account details or instructions
+/// - Alternative account numbers or references
+/// - Account-specific processing requirements
+///
+/// ### /BNF/ - Beneficiary Information
+/// - Additional beneficiary identification
+/// - Alternative beneficiary details
+/// - Beneficiary-specific instructions
+///
+/// ### /INS/ - Special Instructions
+/// - Processing instructions for receiving bank
+/// - Handling requirements or restrictions
+/// - Operational guidance
+///
+/// ### /REC/ - Regulatory Information
+/// - Regulatory reporting codes
+/// - Compliance-related information
+/// - Authority-required data
+///
+/// ### /FEE/ - Fee Instructions
+/// - Charge allocation instructions
+/// - Fee payment arrangements
+/// - Billing-related information
+///
+/// ### /REM/ - Additional Remittance
+/// - Supplementary remittance information
+/// - Extended payment descriptions
+/// - Reference details
+///
+/// ## Examples
+/// ```text
+/// :72:/ACC/CREDIT TO ACCOUNT 123456789
+/// └─── Account crediting instruction
+///
+/// :72:/BNF/JOHN DOE TRADING COMPANY
+/// /INS/URGENT PROCESSING REQUIRED
+/// /REC/REGULATORY CODE ABC123
+/// └─── Multi-line instructions with codes
+///
+/// :72:/FEE/CHARGES TO BE SHARED
+/// /REM/INVOICE REF INV-2024-001
+/// └─── Fee and remittance instructions
+///
+/// :72:CORRESPONDENT BANK CHARGES APPLY
+/// BENEFICIARY BANK TO DEDUCT FEES
+/// PAYMENT FOR TRADE SETTLEMENT
+/// └─── Free-form instructions without codes
+/// ```
+///
+/// ## Information Categories
+/// - **Processing instructions**: How to handle the payment
+/// - **Regulatory codes**: Required compliance information
+/// - **Routing details**: Additional routing or correspondent instructions
+/// - **Charge information**: Fee allocation and payment instructions
+/// - **Reference data**: Additional reference numbers or codes
+/// - **Special requirements**: Urgent processing, holds, or restrictions
+///
+/// ## Validation Rules
+/// 1. **Line count**: Maximum 6 lines
+/// 2. **Line length**: Maximum 35 characters per line
+/// 3. **Character set**: SWIFT character set only
+/// 4. **Content**: Should contain meaningful instructions or information
+/// 5. **Empty lines**: Generally avoided for clarity
+/// 6. **Control characters**: Not allowed
+/// 7. **Special characters**: Limited to SWIFT-approved set
+///
+/// ## Network Validated Rules (SWIFT Standards)
+/// - Maximum 6 lines allowed (Error: T26)
+/// - Each line maximum 35 characters (Error: T50)
+/// - Must use SWIFT character set only (Error: T61)
+/// - Content should be meaningful (Error: T40)
+/// - No control characters permitted (Error: T35)
+/// - Field is optional but widely used (Warning: W72)
+/// - Structured codes should follow conventions (Warning: W73)
+///
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Field72 {
     /// Information lines (up to 6 lines of 35 characters each)

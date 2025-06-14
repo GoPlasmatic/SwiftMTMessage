@@ -1,11 +1,133 @@
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// Field 77B: Regulatory Reporting
+/// # Field 77B: Regulatory Reporting
 ///
-/// Format: 3*35x (up to 3 lines of 35 characters each)
+/// ## Overview
+/// Field 77B contains regulatory reporting information in SWIFT payment messages, providing
+/// data required by regulatory authorities for compliance, monitoring, and statistical purposes.
+/// This field supports various regulatory requirements including anti-money laundering (AML),
+/// know your customer (KYC), foreign exchange reporting, and other jurisdiction-specific
+/// compliance obligations. The information helps authorities track cross-border payments
+/// and ensure compliance with local and international regulations.
 ///
-/// Free text field for regulatory information.
+/// ## Format Specification
+/// **Format**: `3*35x`
+/// - **3*35x**: Up to 3 lines of 35 characters each
+/// - **Line structure**: Structured regulatory codes and information
+/// - **Character set**: SWIFT character set (A-Z, 0-9, and limited special characters)
+/// - **Line separation**: Each line on separate row
+///
+/// ## Structure
+/// ```text
+/// /ORDERRES/US/1234567890123456
+/// /BENEFRES/DE/9876543210987654
+/// /PURP/TRADE
+/// │                              │
+/// └──────────────────────────────┘
+///        Up to 35 characters per line
+///        Maximum 3 lines
+/// ```
+///
+/// ## Field Components
+/// - **Ordering Country**: Country code of ordering customer
+/// - **Beneficiary Country**: Country code of beneficiary customer
+/// - **Purpose Code**: Transaction purpose or category
+/// - **Regulatory Codes**: Authority-specific reporting codes
+/// - **Additional Information**: Supplementary compliance data
+///
+/// ## Usage Context
+/// Field 77B is used in:
+/// - **MT103**: Single Customer Credit Transfer
+/// - **MT200**: Financial Institution Transfer
+/// - **MT202**: General Financial Institution Transfer
+/// - **MT202COV**: Cover for customer credit transfer
+/// - **MT205**: Financial Institution Transfer for its own account
+///
+/// ### Business Applications
+/// - **Regulatory compliance**: Meeting reporting requirements
+/// - **AML/KYC reporting**: Anti-money laundering compliance
+/// - **Foreign exchange reporting**: FX transaction monitoring
+/// - **Statistical reporting**: Economic and trade statistics
+/// - **Sanctions screening**: Compliance with sanctions regimes
+/// - **Tax reporting**: Supporting tax authority requirements
+///
+/// ## Common Regulatory Codes
+/// ### /ORDERRES/ - Ordering Customer Residence
+/// - **Format**: `/ORDERRES/CC/identifier`
+/// - **CC**: ISO 3166-1 two-letter country code
+/// - **identifier**: Customer identification number
+/// - **Purpose**: Identifies ordering customer's country of residence
+///
+/// ### /BENEFRES/ - Beneficiary Residence
+/// - **Format**: `/BENEFRES/CC/identifier`
+/// - **CC**: ISO 3166-1 two-letter country code
+/// - **identifier**: Beneficiary identification number
+/// - **Purpose**: Identifies beneficiary's country of residence
+///
+/// ### /PURP/ - Purpose Code
+/// - **Format**: `/PURP/code`
+/// - **code**: Transaction purpose code
+/// - **Examples**: TRADE, SALA, PENS, DIVI, LOAN
+/// - **Purpose**: Categorizes transaction purpose
+///
+/// ## Examples
+/// ```text
+/// :77B:/ORDERRES/US/1234567890
+/// └─── US ordering customer with ID
+///
+/// :77B:/ORDERRES/DE/9876543210
+/// /BENEFRES/GB/5555666677
+/// /PURP/TRADE
+/// └─── Complete regulatory reporting with purpose
+///
+/// :77B:/BENEFRES/JP/1111222233
+/// /PURP/SALA
+/// └─── Japanese beneficiary for salary payment
+///
+/// :77B:/ORDERRES/CH/7777888899
+/// /BENEFRES/FR/4444555566
+/// └─── Cross-border payment reporting
+/// ```
+///
+/// ## Purpose Codes
+/// - **TRADE**: Trade-related payments
+/// - **SALA**: Salary and wage payments
+/// - **PENS**: Pension payments
+/// - **DIVI**: Dividend payments
+/// - **LOAN**: Loan-related payments
+/// - **RENT**: Rental payments
+/// - **ROYALTY**: Royalty payments
+/// - **FEES**: Professional fees
+/// - **INSUR**: Insurance payments
+/// - **INVEST**: Investment-related payments
+///
+/// ## Country Code Guidelines
+/// - **ISO 3166-1**: Must use standard two-letter country codes
+/// - **Active codes**: Should use currently valid country codes
+/// - **Residence**: Based on customer's country of residence
+/// - **Jurisdiction**: May differ from bank location
+/// - **Compliance**: Must align with regulatory requirements
+///
+/// ## Validation Rules
+/// 1. **Line count**: Maximum 3 lines
+/// 2. **Line length**: Maximum 35 characters per line
+/// 3. **Character set**: SWIFT character set only
+/// 4. **Country codes**: Must be valid ISO 3166-1 codes
+/// 5. **Format structure**: Must follow structured format
+/// 6. **Content validation**: Codes must be meaningful
+/// 7. **Regulatory compliance**: Must meet jurisdiction requirements
+///
+/// ## Network Validated Rules (SWIFT Standards)
+/// - Maximum 3 lines allowed (Error: T26)
+/// - Each line maximum 35 characters (Error: T50)
+/// - Must use SWIFT character set only (Error: T61)
+/// - Country codes must be valid (Error: T52)
+/// - Format must follow regulatory structure (Error: T77)
+/// - Purpose codes should be recognized (Warning: W77)
+/// - Field required for certain jurisdictions (Error: M77)
+///
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Field77B {
     /// Regulatory reporting information lines (up to 3 lines of 35 characters each)

@@ -1,12 +1,112 @@
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// Field 53A: Sender's Correspondent
+/// # Field 53A: Sender's Correspondent
 ///
-/// Format: [/1!c][/34x]BIC
+/// ## Overview
+/// Field 53A identifies the sender's correspondent institution in SWIFT payment messages.
+/// This field specifies the financial institution that acts as a correspondent for the
+/// message sender, facilitating the payment routing and settlement process. The correspondent
+/// relationship is crucial for cross-border payments and correspondent banking arrangements.
 ///
-/// This field specifies the sender's correspondent institution.
-/// The BIC format is: 4 letters (bank code) + 2 letters (country) + 2 alphanumeric (location) + optional 3 alphanumeric (branch)
+/// ## Format Specification
+/// **Format**: `[/1!c][/34x]4!a2!a2!c[3!c]`
+/// - **1!c**: Optional account line indicator (1 character)
+/// - **34x**: Optional account number (up to 34 characters)
+/// - **4!a2!a2!c[3!c]**: BIC code (8 or 11 characters)
+///
+/// ### BIC Structure
+/// ```text
+/// CHASUS33XXX
+/// ││││││││└┴┴─ Branch Code (3 characters, optional)
+/// ││││││└┴──── Location Code (2 characters)
+/// ││││└┴────── Country Code (2 letters)
+/// └┴┴┴──────── Bank Code (4 letters)
+/// ```
+///
+/// ## Field Components
+/// - **Account Line Indicator**: Optional qualifier for account type or purpose
+/// - **Account Number**: Correspondent account number for settlement
+/// - **BIC**: Bank Identifier Code of the correspondent institution
+///
+/// ## Usage Context
+/// Field 53A is used in:
+/// - **MT103**: Single Customer Credit Transfer
+/// - **MT200**: Financial Institution Transfer
+/// - **MT202**: General Financial Institution Transfer
+/// - **MT202COV**: Cover for customer credit transfer
+///
+/// ### Business Applications
+/// - **Correspondent banking**: Identifying correspondent bank relationships
+/// - **Payment routing**: Providing routing instructions for payment processing
+/// - **Settlement**: Facilitating settlement through correspondent accounts
+/// - **Risk management**: Managing correspondent banking exposure and limits
+/// - **Compliance**: Meeting regulatory requirements for correspondent relationships
+///
+/// ## Examples
+/// ```text
+/// :53A:CHASUS33XXX
+/// └─── JPMorgan Chase New York as correspondent
+///
+/// :53A:/C/1234567890
+/// DEUTDEFFXXX
+/// └─── Deutsche Bank with checking account 1234567890
+///
+/// :53A:/N/LORO12345678901234567890
+/// BNPAFRPPXXX
+/// └─── BNP Paribas with nostro account identifier
+///
+/// :53A:/V/VOSTRO001234567890123456
+/// ABCDEFGHJKL
+/// └─── Correspondent with vostro account reference
+/// ```
+///
+/// ## Account Line Indicators
+/// Common account line indicators for correspondent relationships:
+/// - **C**: Correspondent account (checking)
+/// - **D**: Deposit account
+/// - **L**: Loan account
+/// - **N**: Nostro account (our account with them)
+/// - **S**: Settlement account
+/// - **V**: Vostro account (their account with us)
+///
+/// ## BIC Components Analysis
+/// ### Bank Code (Characters 1-4)
+/// - Must be 4 alphabetic characters
+/// - Identifies the specific financial institution
+/// - Assigned by SWIFT registration authority
+///
+/// ### Country Code (Characters 5-6)
+/// - Must be valid ISO 3166-1 alpha-2 country code
+/// - Identifies the country of the institution
+/// - Must match BIC registration country
+///
+/// ### Location Code (Characters 7-8)
+/// - Alphanumeric characters identifying location within country
+/// - Often represents city or administrative division
+/// - Used for routing within correspondent networks
+///
+/// ### Branch Code (Characters 9-11)
+/// - Optional 3-character branch identifier
+/// - Identifies specific branch or department
+/// - XXX indicates head office if present
+///
+/// ## Validation Rules
+/// 1. **BIC format**: Must be valid 8 or 11 character BIC
+/// 2. **BIC structure**: 4!a2!a2!c[3!c] format required
+/// 3. **Account line indicator**: If present, exactly 1 character
+/// 4. **Account number**: If present, max 34 characters
+/// 5. **Character validation**: All components must use valid character sets
+///
+/// ## Network Validated Rules (SWIFT Standards)
+/// - BIC must be valid format and registered (Error: T27)
+/// - Account line indicator must be single character (Error: T12)
+/// - Account number cannot exceed 34 characters (Error: T15)
+/// - BIC country code must be valid ISO country code (Error: T28)
+/// - Characters must be from SWIFT character set (Error: T61)
+/// - Field 53A is conditional based on message type (Error: C53)
+///
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Field53A {
     /// Account line indicator (optional, 1 character)

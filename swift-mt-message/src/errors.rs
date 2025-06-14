@@ -22,6 +22,9 @@ pub enum ParseError {
     #[error("Invalid block structure: {message}")]
     InvalidBlockStructure { message: String },
 
+    #[error("Unsupported message type: {message_type}")]
+    UnsupportedMessageType { message_type: String },
+
     #[error("Field validation failed: {errors:?}")]
     ValidationFailed { errors: Vec<ValidationError> },
 

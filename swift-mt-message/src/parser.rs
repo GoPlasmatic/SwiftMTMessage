@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use crate::errors::{ParseError, Result};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
-use crate::{RawBlocks, SwiftMessage, SwiftMessageBody};
+use crate::messages::{MT103, MT202};
+use crate::{ParsedSwiftMessage, RawBlocks, SwiftMessage, SwiftMessageBody};
 
 /// Type alias for the complex return type of field parsing
 type FieldParseResult = Result<(HashMap<String, Vec<String>>, Vec<String>)>;
@@ -59,8 +60,34 @@ impl SwiftParser {
         })
     }
 
+    /// Parse a raw SWIFT message string with automatic message type detection
+    pub fn parse_auto(raw_message: &str) -> Result<ParsedSwiftMessage> {
+        // First, extract blocks to get the message type
+        let blocks = Self::extract_blocks(raw_message)?;
+
+        // Parse application header to get message type
+        let application_header =
+            ApplicationHeader::parse(&blocks.block2.clone().unwrap_or_default())?;
+        let message_type = &application_header.message_type;
+
+        // Route to appropriate parser based on message type
+        match message_type.as_str() {
+            "103" => {
+                let parsed = Self::parse::<MT103>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT103(Box::new(parsed)))
+            }
+            "202" => {
+                let parsed = Self::parse::<MT202>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT202(Box::new(parsed)))
+            }
+            _ => Err(ParseError::UnsupportedMessageType {
+                message_type: message_type.clone(),
+            }),
+        }
+    }
+
     /// Extract message blocks from raw SWIFT message
-    fn extract_blocks(raw_message: &str) -> Result<RawBlocks> {
+    pub fn extract_blocks(raw_message: &str) -> Result<RawBlocks> {
         let mut blocks = RawBlocks::default();
 
         // Find block boundaries
@@ -406,6 +433,51 @@ HAUPTSTRASSE 1
         // Let's manually check what character is at different positions
         for (i, ch) in test_str.char_indices() {
             println!("Position {}: '{}'", i, ch);
+        }
+    }
+
+    #[test]
+    fn test_parse_auto_mt103() {
+        let raw_mt103 = r#"{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:
+:20:FT21234567890
+:23B:CRED
+:32A:210315EUR1234567,89
+:50K:ACME CORPORATION
+123 BUSINESS AVENUE
+NEW YORK NY 10001
+:52A:BANKDEFF
+:57A:DEUTDEFF
+:59A:/DE89370400440532013000
+DEUTDEFF
+:70:PAYMENT FOR SERVICES
+:71A:OUR
+-}"#;
+
+        let parsed = SwiftParser::parse_auto(raw_mt103).unwrap();
+
+        // Check that it detected the correct message type
+        assert_eq!(parsed.message_type(), "103");
+
+        // Check that we can extract the MT103 message
+        let mt103_msg = parsed.as_mt103().unwrap();
+        assert_eq!(mt103_msg.message_type, "103");
+
+        println!("Successfully parsed MT103 message with auto-detection");
+    }
+
+    #[test]
+    fn test_parse_auto_unsupported_type() {
+        let raw_message = r#"{1:F01BANKDEFFAXXX0123456789}{2:I999BANKDEFFAXXXU3003}{4:
+:20:FT21234567890
+-}"#;
+
+        let result = SwiftParser::parse_auto(raw_message);
+        assert!(result.is_err());
+
+        if let Err(ParseError::UnsupportedMessageType { message_type }) = result {
+            assert_eq!(message_type, "999");
+        } else {
+            panic!("Expected UnsupportedMessageType error");
         }
     }
 }

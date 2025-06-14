@@ -248,6 +248,56 @@ pub mod common {
     }
 }
 
+/// Enumeration of all supported SWIFT message types for automatic parsing
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "message_type")]
+pub enum ParsedSwiftMessage {
+    #[serde(rename = "103")]
+    MT103(Box<SwiftMessage<messages::MT103>>),
+    #[serde(rename = "202")]
+    MT202(Box<SwiftMessage<messages::MT202>>),
+}
+
+impl ParsedSwiftMessage {
+    /// Get the message type as a string
+    pub fn message_type(&self) -> &'static str {
+        match self {
+            ParsedSwiftMessage::MT103(_) => "103",
+            ParsedSwiftMessage::MT202(_) => "202",
+        }
+    }
+
+    /// Convert to a specific message type if it matches
+    pub fn as_mt103(&self) -> Option<&SwiftMessage<messages::MT103>> {
+        match self {
+            ParsedSwiftMessage::MT103(msg) => Some(msg),
+            _ => None,
+        }
+    }
+
+    pub fn as_mt202(&self) -> Option<&SwiftMessage<messages::MT202>> {
+        match self {
+            ParsedSwiftMessage::MT202(msg) => Some(msg),
+            _ => None,
+        }
+    }
+
+    /// Convert into a specific message type if it matches
+    pub fn into_mt103(self) -> Option<SwiftMessage<messages::MT103>> {
+        match self {
+            ParsedSwiftMessage::MT103(msg) => Some(*msg),
+            _ => None,
+        }
+    }
+
+    pub fn into_mt202(self) -> Option<SwiftMessage<messages::MT202>> {
+        match self {
+            ParsedSwiftMessage::MT202(msg) => Some(*msg),
+            _ => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

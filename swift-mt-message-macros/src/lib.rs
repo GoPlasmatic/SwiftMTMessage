@@ -359,36 +359,100 @@ pub fn derive_swift_message(input: TokenStream) -> TokenStream {
                             .expect("All fields must have #[field(\"tag\")]");
 
                         if is_option_type(field_type) {
-                            // Optional field
                             let inner_type = extract_option_inner_type(field_type)
                                 .expect("Failed to extract inner type from Option");
 
-                            optional_field_parsing.push(quote! {
-                                #field_name: if let Some(field_value) = fields.get(#field_tag) {
-                                    Some(<#inner_type as crate::SwiftField>::parse(field_value)?)
-                                } else {
-                                    None
-                                }
-                            });
+                            if is_vec_type(inner_type) {
+                                // Optional Vec field: Option<Vec<T>>
+                                let vec_inner_type = extract_vec_inner_type(inner_type)
+                                    .expect("Failed to extract inner type from Vec");
 
-                            optional_field_serialization.push(quote! {
-                                if let Some(ref field_value) = self.#field_name {
-                                    fields.insert(#field_tag.to_string(), crate::SwiftField::to_swift_string(field_value));
-                                }
-                            });
+                                optional_field_parsing.push(quote! {
+                                    #field_name: if let Some(field_values) = fields.get(#field_tag) {
+                                        let mut parsed_fields = Vec::new();
+                                        for field_value in field_values {
+                                            parsed_fields.push(<#vec_inner_type as crate::SwiftField>::parse(field_value)?);
+                                        }
+                                        if parsed_fields.is_empty() {
+                                            None
+                                        } else {
+                                            Some(parsed_fields)
+                                        }
+                                    } else {
+                                        None
+                                    }
+                                });
+
+                                optional_field_serialization.push(quote! {
+                                    if let Some(ref field_values) = self.#field_name {
+                                        let mut serialized_values = Vec::new();
+                                        for field_value in field_values {
+                                            serialized_values.push(crate::SwiftField::to_swift_string(field_value));
+                                        }
+                                        fields.insert(#field_tag.to_string(), serialized_values);
+                                    }
+                                });
+                            } else {
+                                // Optional single field: Option<T>
+                                optional_field_parsing.push(quote! {
+                                    #field_name: if let Some(field_value) = fields.get(#field_tag) {
+                                        Some(<#inner_type as crate::SwiftField>::parse(&field_value[0])?)
+                                    } else {
+                                        None
+                                    }
+                                });
+
+                                optional_field_serialization.push(quote! {
+                                    if let Some(ref field_value) = self.#field_name {
+                                        fields.insert(#field_tag.to_string(), vec![crate::SwiftField::to_swift_string(field_value)]);
+                                    }
+                                });
+                            }
 
                             optional_field_tags.push(quote! { #field_tag });
-                        } else {
-                            // Required field
+                        } else if is_vec_type(field_type) {
+                            // Required Vec field: Vec<T>
+                            let vec_inner_type = extract_vec_inner_type(field_type)
+                                .expect("Failed to extract inner type from Vec");
+
                             required_field_parsing.push(quote! {
-                                #field_name: <#field_type as crate::SwiftField>::parse(fields.get(#field_tag)
-                                    .ok_or_else(|| crate::ParseError::MissingRequiredField {
-                                        field_tag: #field_tag.to_string(),
-                                    })?)?
+                                #field_name: {
+                                    let field_values = fields.get(#field_tag)
+                                        .ok_or_else(|| crate::ParseError::MissingRequiredField {
+                                            field_tag: #field_tag.to_string(),
+                                        })?;
+                                    let mut parsed_fields = Vec::new();
+                                    for field_value in field_values {
+                                        parsed_fields.push(<#vec_inner_type as crate::SwiftField>::parse(field_value)?);
+                                    }
+                                    parsed_fields
+                                }
                             });
 
                             required_field_serialization.push(quote! {
-                                fields.insert(#field_tag.to_string(), crate::SwiftField::to_swift_string(&self.#field_name));
+                                {
+                                    let mut serialized_values = Vec::new();
+                                    for field_value in &self.#field_name {
+                                        serialized_values.push(crate::SwiftField::to_swift_string(field_value));
+                                    }
+                                    fields.insert(#field_tag.to_string(), serialized_values);
+                                }
+                            });
+
+                            required_field_tags.push(quote! { #field_tag });
+                        } else {
+                            // Required single field: T
+                            required_field_parsing.push(quote! {
+                                #field_name: <#field_type as crate::SwiftField>::parse(
+                                    &fields.get(#field_tag)
+                                        .ok_or_else(|| crate::ParseError::MissingRequiredField {
+                                            field_tag: #field_tag.to_string(),
+                                        })?[0]
+                                )?
+                            });
+
+                            required_field_serialization.push(quote! {
+                                fields.insert(#field_tag.to_string(), vec![crate::SwiftField::to_swift_string(&self.#field_name)]);
                             });
 
                             required_field_tags.push(quote! { #field_tag });
@@ -411,13 +475,13 @@ pub fn derive_swift_message(input: TokenStream) -> TokenStream {
                                 #message_type
                             }
 
-                            fn from_fields(fields: std::collections::HashMap<String, String>) -> crate::Result<Self> {
+                            fn from_fields(fields: std::collections::HashMap<String, Vec<String>>) -> crate::Result<Self> {
                                 Ok(Self {
                                     #(#all_field_parsing,)*
                                 })
                             }
 
-                            fn to_fields(&self) -> std::collections::HashMap<String, String> {
+                            fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
                                 let mut fields = std::collections::HashMap::new();
                                 #(#all_field_serialization)*
                                 fields
@@ -458,11 +522,37 @@ fn is_option_type(ty: &Type) -> bool {
     false
 }
 
+/// Check if a type is Vec<T>
+fn is_vec_type(ty: &Type) -> bool {
+    if let Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "Vec";
+        }
+    }
+    false
+}
+
 /// Extract the inner type T from Option<T>
 fn extract_option_inner_type(ty: &Type) -> Option<&Type> {
     if let Type::Path(type_path) = ty {
         if let Some(segment) = type_path.path.segments.last() {
             if segment.ident == "Option" {
+                if let PathArguments::AngleBracketed(args) = &segment.arguments {
+                    if let Some(GenericArgument::Type(inner_type)) = args.args.first() {
+                        return Some(inner_type);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Extract the inner type T from Vec<T>
+fn extract_vec_inner_type(ty: &Type) -> Option<&Type> {
+    if let Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            if segment.ident == "Vec" {
                 if let PathArguments::AngleBracketed(args) = &segment.arguments {
                     if let Some(GenericArgument::Type(inner_type)) = args.args.first() {
                         return Some(inner_type);

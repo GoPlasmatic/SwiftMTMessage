@@ -4,6 +4,9 @@ use crate::errors::{ParseError, Result};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 use crate::{RawBlocks, SwiftMessage, SwiftMessageBody};
 
+/// Type alias for the complex return type of field parsing
+type FieldParseResult = Result<(HashMap<String, Vec<String>>, Vec<String>)>;
+
 /// Main parser for SWIFT MT messages
 pub struct SwiftParser;
 
@@ -123,8 +126,8 @@ impl SwiftParser {
     }
 
     /// Parse block 4 fields into a field map and preserve field order
-    fn parse_block4_fields(block4: &str) -> Result<(HashMap<String, String>, Vec<String>)> {
-        let mut field_map = HashMap::new();
+    fn parse_block4_fields(block4: &str) -> FieldParseResult {
+        let mut field_map: HashMap<String, Vec<String>> = HashMap::new();
         let mut field_order = Vec::new();
 
         // Remove leading/trailing whitespace and newlines
@@ -159,8 +162,16 @@ impl SwiftParser {
                     // Store the complete field string including tag prefix for compatibility
                     let complete_field_string = format!(":{}:{}", raw_field_tag, field_value);
 
-                    field_map.insert(field_tag.clone(), complete_field_string);
-                    field_order.push(field_tag);
+                    // Add to existing Vec or create new Vec for this field tag
+                    field_map
+                        .entry(field_tag.clone())
+                        .or_default()
+                        .push(complete_field_string);
+
+                    // Only add to field_order if this is the first occurrence of this field
+                    if !field_order.contains(&field_tag) {
+                        field_order.push(field_tag);
+                    }
 
                     current_pos = value_end;
                 } else {
@@ -196,7 +207,7 @@ impl SwiftParser {
             // For certain field numbers, preserve the option letter to avoid conflicts
             match numeric_part.as_str() {
                 "13" | "23" | "26" | "32" | "33" | "52" | "53" | "54" | "55" | "56" | "57"
-                | "71" | "77" => {
+                | "58" | "71" | "77" => {
                     // Keep option letters for fields that have multiple variants or specific formats
                     // 13C (Time Indication)
                     // 23B (Bank Operation Code) vs 23E (Instruction Code)
@@ -280,11 +291,14 @@ mod tests {
         let block4 = "\n:20:FT21234567890\n:23B:CRED\n:32A:210315EUR1234567,89\n";
         let (field_map, field_order) = SwiftParser::parse_block4_fields(block4).unwrap();
 
-        assert_eq!(field_map.get("20"), Some(&":20:FT21234567890".to_string()));
-        assert_eq!(field_map.get("23B"), Some(&":23B:CRED".to_string()));
+        assert_eq!(
+            field_map.get("20"),
+            Some(&vec![":20:FT21234567890".to_string()])
+        );
+        assert_eq!(field_map.get("23B"), Some(&vec![":23B:CRED".to_string()]));
         assert_eq!(
             field_map.get("32A"),
-            Some(&":32A:210315EUR1234567,89".to_string())
+            Some(&vec![":32A:210315EUR1234567,89".to_string()])
         );
 
         assert_eq!(field_order, vec!["20", "23B", "32A"]);
@@ -312,8 +326,8 @@ HAUPTSTRASSE 1
         let (field_map, field_order) = SwiftParser::parse_block4_fields(block4).unwrap();
 
         println!("Extracted fields:");
-        for (tag, value) in &field_map {
-            println!("  {}: {}", tag, value);
+        for (tag, values) in &field_map {
+            println!("  {}: {:?}", tag, values);
         }
         println!("Field order: {:?}", field_order);
 

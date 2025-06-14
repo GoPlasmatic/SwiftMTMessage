@@ -99,12 +99,12 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize {
     fn message_type() -> &'static str;
 
     /// Create from field map
-    fn from_fields(fields: HashMap<String, String>) -> SwiftResult<Self>
+    fn from_fields(fields: HashMap<String, Vec<String>>) -> SwiftResult<Self>
     where
         Self: Sized;
 
     /// Convert to field map
-    fn to_fields(&self) -> HashMap<String, String>;
+    fn to_fields(&self) -> HashMap<String, Vec<String>>;
 
     /// Get required field tags for this message type
     fn required_fields() -> Vec<&'static str>;

@@ -204,9 +204,6 @@ pub struct MT202 {
     #[field("58A")]
     pub field_58a: Field58A,
 
-    // ================================
-    // OPTIONAL FIELDS (Enhanced processing and routing support)
-    // ================================
     /// **Time Indication** - Field 13C (Optional, Repetitive)
     ///
     /// Provides specific timing instructions for transfer processing, including
@@ -292,10 +289,6 @@ pub struct MT202 {
     #[field("72")]
     pub field_72: Option<Field72>,
 
-    // ================================
-    // MT202.COV SPECIFIC FIELDS (Cover Message Support)
-    // These fields are used when MT202 serves as a cover for customer transfers
-    // ================================
     /// **Ordering Customer** - Field 50A (Optional, Cover Messages)
     ///
     /// Identifies the ultimate ordering customer when MT202 is used as a cover

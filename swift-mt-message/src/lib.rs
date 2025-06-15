@@ -123,9 +123,11 @@ pub struct SwiftMessage<T: SwiftMessageBody> {
     pub application_header: ApplicationHeader,
 
     /// User Header (Block 3) - Optional
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub user_header: Option<UserHeader>,
 
     /// Trailer (Block 5) - Optional
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub trailer: Option<Trailer>,
 
     /// Raw message blocks for preservation
@@ -144,10 +146,14 @@ pub struct SwiftMessage<T: SwiftMessageBody> {
 /// Raw message blocks for preservation and reconstruction
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RawBlocks {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub block1: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub block2: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub block3: Option<String>,
     pub block4: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub block5: Option<String>,
 }
 

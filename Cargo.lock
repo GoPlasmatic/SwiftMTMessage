@@ -285,7 +285,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "swift-mt-message"
-version = "2.0.11"
+version = "2.0.12"
 dependencies = [
  "chrono",
  "datalogic-rs",
@@ -300,7 +300,7 @@ dependencies = [
 
 [[package]]
 name = "swift-mt-message-macros"
-version = "2.0.11"
+version = "2.0.12"
 dependencies = [
  "proc-macro2",
  "quote",

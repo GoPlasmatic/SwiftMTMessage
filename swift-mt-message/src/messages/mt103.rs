@@ -1394,7 +1394,7 @@ mod tests {
         let field_32a = Field32A::new(
             NaiveDate::from_ymd_opt(2024, 3, 15).unwrap(),
             "USD".to_string(),
-            1000000.00
+            1000000.00,
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
         let field_59 =

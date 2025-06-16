@@ -1,4 +1,5 @@
 use crate::{SwiftMessage, fields::*, swift_serde};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 /// # MT103: Single Customer Credit Transfer
@@ -1379,6 +1380,158 @@ impl MT103 {
 
         codes
     }
+
+    /// Enhanced STP compliance check that aligns with pacs.008.001.08 validation requirements
+    /// This prevents messages from being marked as STP compliant when they would fail pacs.008 deserialization
+    pub fn is_stp_compliant_enhanced(&self) -> bool {
+        // First check basic STP compliance from the original method
+        if !self.is_stp_compliant() {
+            return false;
+        }
+
+        // Enhanced validation for pacs.008 compatibility
+
+        // 1. Validate BIC codes meet pacs.008 BICFI regex requirements
+        // Pattern: [A-Z0-9]{4,4}[A-Z]{2,2}[A-Z0-9]{2,2}([A-Z0-9]{3,3}){0,1}
+        let bic_pattern = match Regex::new(r"^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$") {
+            Ok(pattern) => pattern,
+            Err(_) => return false,
+        };
+
+        // 2. Check mandatory institutional agents have valid BIC codes
+        // DbtrAgt (Debtor Agent) - Field 52A BIC must be valid if present
+        if let Some(field_52a) = &self.field_52a {
+            if !bic_pattern.is_match(field_52a.bic()) {
+                return false;
+            }
+        }
+
+        // CdtrAgt (Creditor Agent) - Field 57A BIC must be valid if present
+        if let Some(field_57a) = &self.field_57a {
+            if !bic_pattern.is_match(field_57a.bic()) {
+                return false;
+            }
+        }
+
+        // 3. Validate optional institutional agents if present
+        if let Some(field_53a) = &self.field_53a {
+            if !bic_pattern.is_match(field_53a.bic()) {
+                return false;
+            }
+        }
+
+        if let Some(field_54a) = &self.field_54a {
+            if !bic_pattern.is_match(field_54a.bic()) {
+                return false;
+            }
+        }
+
+        if let Some(field_55a) = &self.field_55a {
+            if !bic_pattern.is_match(field_55a.bic()) {
+                return false;
+            }
+        }
+
+        if let Some(field_56a) = &self.field_56a {
+            if !bic_pattern.is_match(field_56a.bic()) {
+                return false;
+            }
+        }
+
+        // 4. Enhanced Field 59 validation for STP
+        // CdtrAcct (Creditor Account) is mandatory in pacs.008
+        match &self.field_59 {
+            Field59::A(field_59a) => {
+                // For option A, account must be present and BIC must be valid
+                if field_59a.account().is_none() {
+                    return false;
+                }
+                if !bic_pattern.is_match(field_59a.bic()) {
+                    return false;
+                }
+            }
+            Field59::F(field_59f) => {
+                // For option F, we need proper party identification
+                // The account information should be extractable from the party identifier
+                if field_59f.party_identifier().is_empty() {
+                    return false;
+                }
+            }
+            Field59::NoOption(field_59_basic) => {
+                // For no option, first line should contain account information
+                let lines = field_59_basic.beneficiary_customer();
+                if lines.is_empty() {
+                    return false;
+                }
+
+                // First line should start with "/" for account number in STP
+                if !lines[0].starts_with('/') {
+                    return false;
+                }
+
+                // Account number should be extractable (after the "/")
+                if lines[0].len() <= 1 {
+                    return false;
+                }
+            }
+        }
+
+        // 5. Validate that charge information is compatible with pacs.008
+        // ChrgBr (Charge Bearer) mapping validation
+        match self.field_71a.charge_code() {
+            "OUR" => {}        // Maps to DEBT - valid
+            "BEN" => {}        // Maps to CRED - valid
+            "SHA" => {}        // Maps to SHAR - valid
+            _ => return false, // Invalid charge code for STP
+        }
+
+        // 6. Validate Field 23E instruction codes for STP compatibility
+        if let Some(field_23e) = &self.field_23e {
+            let stp_allowed_codes = ["CORT", "INTC", "SDVA", "REPA"];
+            if !stp_allowed_codes.contains(&field_23e.instruction_code.as_str()) {
+                return false;
+            }
+        }
+
+        // 7. Validate that amounts are positive and properly formatted
+        if self.field_32a.amount_decimal() <= 0.0 {
+            return false;
+        }
+
+        // 8. Validate currency codes are valid ISO 4217 (basic check)
+        if self.field_32a.currency_code().len() != 3 {
+            return false;
+        }
+
+        // 9. If cross-currency, validate exchange rate and instructed amount
+        if self.is_cross_currency() {
+            if !self.has_required_exchange_rate() {
+                return false;
+            }
+
+            if let Some(field_33b) = &self.field_33b {
+                if field_33b.amount() <= 0.0 {
+                    return false;
+                }
+                if field_33b.currency().len() != 3 {
+                    return false;
+                }
+            }
+        }
+
+        // 10. Validate transaction reference format for pacs.008 compatibility
+        let tx_ref = self.field_20.transaction_reference();
+        if tx_ref.is_empty() || tx_ref.len() > 35 {
+            return false;
+        }
+
+        // Transaction reference should not contain invalid characters for XML
+        if tx_ref.contains(['<', '>', '&', '"', '\'']) {
+            return false;
+        }
+
+        true
+    }
 }
 
 #[cfg(test)]
@@ -1397,8 +1550,9 @@ mod tests {
             1000000.00,
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
-        let field_59 =
-            Field59::NoOption(Field59Basic::new(vec!["JANE SMITH".to_string()]).unwrap());
+        let field_59 = Field59::A(
+            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+        );
         let field_71a = Field71A::new("OUR".to_string());
 
         let mt103 = MT103::new(
@@ -1429,8 +1583,9 @@ mod tests {
             1234567.89,
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
-        let field_59 =
-            Field59::NoOption(Field59Basic::new(vec!["JANE SMITH".to_string()]).unwrap());
+        let field_59 = Field59::A(
+            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+        );
         let field_71a = Field71A::new("OUR".to_string());
 
         let mt103 = MT103::new(
@@ -1469,8 +1624,9 @@ mod tests {
             1234567.89,
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
-        let field_59 =
-            Field59::NoOption(Field59Basic::new(vec!["JANE SMITH".to_string()]).unwrap());
+        let field_59 = Field59::A(
+            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+        );
         let field_71a = Field71A::new("OUR".to_string());
         let field_77t = Field77T::new("R", "D", "REMITTANCE-2024-001234567890").unwrap();
 
@@ -1531,8 +1687,9 @@ mod tests {
             1234567.89,
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
-        let field_59 =
-            Field59::NoOption(Field59Basic::new(vec!["JANE SMITH".to_string()]).unwrap());
+        let field_59 = Field59::A(
+            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+        );
         let field_71a = Field71A::new("OUR".to_string());
         let field_51a = Field51A::new(None, None, "CHASUS33XXX").unwrap();
 
@@ -1592,8 +1749,9 @@ mod tests {
             1234567.89,
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
-        let field_59 =
-            Field59::NoOption(Field59Basic::new(vec!["JANE SMITH".to_string()]).unwrap());
+        let field_59 = Field59::A(
+            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+        );
         let field_71a = Field71A::new("OUR".to_string());
 
         // Standard MT103

@@ -1172,33 +1172,55 @@ impl MT103 {
 
     /// Check if this is an STP (Straight Through Processing) compliant message
     pub fn is_stp_compliant(&self) -> bool {
-        // STP compliance requirements:
-        // 1. All institutional fields (52, 53, 54, 55, 56, 57) must use option A if present
-        // 2. Field 23E may only contain specific codes (CORT, INTC, SDVA, REPA)
-        // 3. Field 72 must not contain REJT/RETN codes
-        // 4. No ERI information in field 72
-        // 5. Field 51A is not allowed in STP
+        // STP compliance requirements based on MT103.STP specifications:
+        // 1. Field 51A is not allowed in STP
+        // 2. Fields 52, 54, 55, 56, 57 may only use option A
+        // 3. Field 53 may only use options A and B (not D)
+        // 4. If field 53B is used, Party Identifier must be present
+        // 5. Field 23E may only contain codes CORT, INTC, SDVA, REPA
+        // 6. Field 72 codes REJT/RETN must not be used
+        // 7. Field 72 must not include ERI information
+        // 8. Subfield 1 (Account) of field 59a is always mandatory in STP
 
         // Field 51A is not allowed in STP
         if self.field_51a.is_some() {
             return false;
         }
 
-        // Check institutional fields - only option A is allowed for STP
-        let non_a_institutional_fields = self.field_52d.is_some()
-            || self.field_53b.is_some()
-            || self.field_53d.is_some()
-            || self.field_54b.is_some()
-            || self.field_54d.is_some()
-            || self.field_55b.is_some()
-            || self.field_55d.is_some()
-            || self.field_56c.is_some()
-            || self.field_56d.is_some()
-            || self.field_57b.is_some()
-            || self.field_57c.is_some()
-            || self.field_57d.is_some();
+        // Check institutional fields - only specific options allowed for STP
+        // Field 52: Only option A allowed (D is prohibited)
+        if self.field_52d.is_some() {
+            return false;
+        }
 
-        if non_a_institutional_fields {
+        // Field 53: Options A and B allowed (D is prohibited)
+        if self.field_53d.is_some() {
+            return false;
+        }
+
+        // If field 53B is used, Party Identifier must be present
+        if let Some(field_53b) = &self.field_53b {
+            // Check if Party Identifier is present and not empty
+            if field_53b.party_identifier().is_empty() {
+                return false;
+            }
+        }
+
+        // Fields 54, 55: Only option A allowed (B and D are prohibited)
+        if self.field_54b.is_some() || self.field_54d.is_some() {
+            return false;
+        }
+
+        if self.field_55b.is_some() || self.field_55d.is_some() {
+            return false;
+        }
+
+        // Fields 56, 57: Only option A allowed (C and D are prohibited)
+        if self.field_56c.is_some() || self.field_56d.is_some() {
+            return false;
+        }
+
+        if self.field_57b.is_some() || self.field_57c.is_some() || self.field_57d.is_some() {
             return false;
         }
 
@@ -1213,6 +1235,30 @@ impl MT103 {
         // Check field 72 for REJT/RETN codes (not allowed in STP)
         if self.has_return_codes() || self.has_reject_codes() {
             return false;
+        }
+
+        // Field 59: Account subfield is mandatory in STP
+        match &self.field_59 {
+            Field59::A(field_59a) => {
+                // For option A, account is optional but becomes mandatory in STP
+                if field_59a.account().is_none() {
+                    return false;
+                }
+            }
+            Field59::F(_field_59f) => {
+                // For option F, we don't have an account field, but we need at least party identifier
+                // In STP context, Field 59F is typically used with proper party identification
+                // which is validated in the constructor, so we just continue
+            }
+            Field59::NoOption(field_59_basic) => {
+                // For no option, we need to check if beneficiary customer lines are present
+                // This is a simplified check - the lines should contain account information
+                if field_59_basic.beneficiary_customer().is_empty() {
+                    return false;
+                }
+                // Note: More sophisticated parsing would be needed for full account validation
+                // in the no-option format, but basic presence check is done here
+            }
         }
 
         true
@@ -1346,9 +1392,9 @@ mod tests {
         let field_20 = Field20::new("FT21234567890".to_string());
         let field_23b = Field23B::new("CRED".to_string());
         let field_32a = Field32A::new(
-            NaiveDate::from_ymd_opt(2021, 3, 15).unwrap(),
-            "EUR".to_string(),
-            1234567.89,
+            NaiveDate::from_ymd_opt(2024, 3, 15).unwrap(),
+            "USD".to_string(),
+            1000000.00
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
         let field_59 =
@@ -1361,7 +1407,7 @@ mod tests {
 
         assert_eq!(mt103.transaction_reference(), "FT21234567890");
         assert_eq!(mt103.operation_code(), "CRED");
-        assert_eq!(mt103.currency_code(), "EUR");
+        assert_eq!(mt103.currency_code(), "USD");
         assert_eq!(mt103.charge_code(), "OUR");
     }
 

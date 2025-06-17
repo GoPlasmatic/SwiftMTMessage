@@ -76,3 +76,6 @@ pub use field71g::Field71G;
 pub use field72::Field72;
 pub use field77b::Field77B;
 pub use field77t::Field77T;
+
+// Re-export common types for convenience
+pub use crate::common::BIC;

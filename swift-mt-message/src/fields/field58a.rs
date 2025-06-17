@@ -1,3 +1,4 @@
+use crate::common::BIC;
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
@@ -129,7 +130,8 @@ pub struct Field58A {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_number: Option<String>,
     /// BIC code (8 or 11 characters)
-    pub bic: String,
+    #[serde(flatten)]
+    pub bic: BIC,
 }
 
 impl Field58A {
@@ -189,13 +191,13 @@ impl Field58A {
             }
         }
 
-        // Validate BIC
-        Self::validate_bic(&bic)?;
+        // Parse and validate BIC using the common structure
+        let parsed_bic = BIC::parse(&bic, Some("58A"))?;
 
         Ok(Field58A {
             account_line_indicator,
             account_number,
-            bic: bic.to_string(),
+            bic: parsed_bic,
         })
     }
 
@@ -211,118 +213,43 @@ impl Field58A {
 
     /// Get the BIC code
     pub fn bic(&self) -> &str {
-        &self.bic
+        self.bic.value()
     }
 
     /// Check if this is a full BIC (11 characters) or short BIC (8 characters)
     pub fn is_full_bic(&self) -> bool {
-        self.bic.len() == 11
+        self.bic.is_full_bic()
     }
 
     /// Get the bank code component of the BIC
     pub fn bank_code(&self) -> &str {
-        if self.bic.len() >= 4 {
-            &self.bic[0..4]
-        } else {
-            ""
-        }
+        self.bic.bank_code()
     }
 
     /// Get the country code component of the BIC
     pub fn country_code(&self) -> &str {
-        if self.bic.len() >= 6 {
-            &self.bic[4..6]
-        } else {
-            ""
-        }
+        self.bic.country_code()
     }
 
     /// Get the location code component of the BIC
     pub fn location_code(&self) -> &str {
-        if self.bic.len() >= 8 {
-            &self.bic[6..8]
-        } else {
-            ""
-        }
+        self.bic.location_code()
     }
 
     /// Get the branch code component of the BIC (if present)
     pub fn branch_code(&self) -> Option<&str> {
-        if self.bic.len() == 11 {
-            Some(&self.bic[8..11])
-        } else {
-            None
-        }
-    }
-
-    /// Validate BIC according to SWIFT standards
-    fn validate_bic(bic: &str) -> Result<(), crate::ParseError> {
-        if bic.is_empty() {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "58A".to_string(),
-                message: "BIC cannot be empty".to_string(),
-            });
-        }
-
-        if bic.len() != 8 && bic.len() != 11 {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "58A".to_string(),
-                message: "BIC must be 8 or 11 characters".to_string(),
-            });
-        }
-
-        let bank_code = &bic[0..4];
-        let country_code = &bic[4..6];
-        let location_code = &bic[6..8];
-
-        if !bank_code.chars().all(|c| c.is_alphabetic() && c.is_ascii()) {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "58A".to_string(),
-                message: "BIC bank code (first 4 characters) must be alphabetic".to_string(),
-            });
-        }
-
-        if !country_code
-            .chars()
-            .all(|c| c.is_alphabetic() && c.is_ascii())
-        {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "58A".to_string(),
-                message: "BIC country code (characters 5-6) must be alphabetic".to_string(),
-            });
-        }
-
-        if !location_code
-            .chars()
-            .all(|c| c.is_alphanumeric() && c.is_ascii())
-        {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "58A".to_string(),
-                message: "BIC location code (characters 7-8) must be alphanumeric".to_string(),
-            });
-        }
-
-        if bic.len() == 11 {
-            let branch_code = &bic[8..11];
-            if !branch_code
-                .chars()
-                .all(|c| c.is_alphanumeric() && c.is_ascii())
-            {
-                return Err(crate::ParseError::InvalidFieldFormat {
-                    field_tag: "58A".to_string(),
-                    message: "BIC branch code (characters 9-11) must be alphanumeric".to_string(),
-                });
-            }
-        }
-
-        Ok(())
+        self.bic.branch_code()
     }
 
     /// Get human-readable description
     pub fn description(&self) -> String {
         match &self.account_number {
-            Some(account) => format!("Beneficiary Institution: {} ({})", self.bic, account),
-            None => format!("Beneficiary Institution: {}", self.bic),
+            Some(account) => format!(
+                "Beneficiary Institution: {} ({})",
+                self.bic.value(),
+                account
+            ),
+            None => format!("Beneficiary Institution: {}", self.bic.value()),
         }
     }
 
@@ -482,8 +409,8 @@ impl SwiftField for Field58A {
 
     fn to_swift_string(&self) -> String {
         match &self.account_number {
-            Some(account) => format!(":58A:/{}\n{}", account, self.bic),
-            None => format!(":58A:{}", self.bic),
+            Some(account) => format!(":58A:/{}\n{}", account, self.bic.value()),
+            None => format!(":58A:{}", self.bic.value()),
         }
     }
 
@@ -508,14 +435,10 @@ impl SwiftField for Field58A {
             }
         }
 
-        // Validate BIC
-        if let Err(crate::ParseError::InvalidFieldFormat { message, .. }) =
-            Self::validate_bic(&self.bic)
-        {
-            errors.push(ValidationError::FormatValidation {
-                field_tag: "58A".to_string(),
-                message,
-            });
+        // Validate BIC format using the common BIC validation
+        let bic_validation = self.bic.validate();
+        if !bic_validation.is_valid {
+            errors.extend(bic_validation.errors);
         }
 
         // Add business logic warnings
@@ -538,8 +461,8 @@ impl SwiftField for Field58A {
 impl std::fmt::Display for Field58A {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.account_number {
-            Some(account) => write!(f, "/{} {}", account, self.bic),
-            None => write!(f, "{}", self.bic),
+            Some(account) => write!(f, "/{} {}", account, self.bic.value()),
+            None => write!(f, "{}", self.bic.value()),
         }
     }
 }
@@ -809,17 +732,9 @@ mod tests {
         let validation = valid_field.validate();
         assert!(validation.is_valid);
 
-        // Test invalid BIC
-        let invalid_field = Field58A::new(None, None, "INVALID").unwrap_or_else(|_| {
-            // This should fail in constructor, but if it somehow passes, validation should catch it
-            Field58A {
-                account_line_indicator: None,
-                account_number: None,
-                bic: "INVALID".to_string(),
-            }
-        });
-        let validation = invalid_field.validate();
-        assert!(!validation.is_valid);
+        // Test invalid BIC - this should fail in constructor
+        let result = Field58A::new(None, None, "INVALID");
+        assert!(result.is_err());
     }
 
     #[test]

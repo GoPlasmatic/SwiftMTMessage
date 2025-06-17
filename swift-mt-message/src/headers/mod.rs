@@ -122,13 +122,13 @@ impl ApplicationHeader {
         let destination_address = block2[4..16].to_string();
         let priority = block2[16..17].to_string();
 
-        let delivery_monitoring = if block2.len() > 17 {
+        let delivery_monitoring = if block2.len() >= 18 {
             Some(block2[17..18].to_string())
         } else {
             None
         };
 
-        let obsolescence_period = if block2.len() > 18 {
+        let obsolescence_period = if block2.len() >= 21 {
             Some(block2[18..21].to_string())
         } else {
             None

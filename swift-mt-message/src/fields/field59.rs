@@ -1,3 +1,4 @@
+use crate::common::BIC;
 use crate::{SwiftField, ValidationResult, errors::ParseError};
 use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -122,28 +123,17 @@ pub struct Field59A {
     /// Account number (optional)
     pub account: Option<String>,
     /// BIC (Bank Identifier Code)
-    pub bic: String,
+    #[serde(flatten)]
+    pub bic: BIC,
 }
 
 impl Field59A {
     /// Create a new Field59A with validation
     pub fn new(account: Option<String>, bic: impl Into<String>) -> Result<Self, ParseError> {
-        let bic = bic.into().trim().to_string();
+        let bic_str = bic.into().trim().to_string();
 
-        if bic.is_empty() {
-            return Err(ParseError::InvalidFieldFormat {
-                field_tag: "59A".to_string(),
-                message: "BIC cannot be empty".to_string(),
-            });
-        }
-
-        // Basic BIC validation (8 or 11 characters)
-        if bic.len() != 8 && bic.len() != 11 {
-            return Err(ParseError::InvalidFieldFormat {
-                field_tag: "59A".to_string(),
-                message: "BIC must be 8 or 11 characters".to_string(),
-            });
-        }
+        // Parse and validate BIC using the common structure
+        let parsed_bic = BIC::parse(&bic_str, Some("59A"))?;
 
         // Validate account if present
         if let Some(ref acc) = account {
@@ -162,7 +152,10 @@ impl Field59A {
             }
         }
 
-        Ok(Field59A { account, bic })
+        Ok(Field59A {
+            account,
+            bic: parsed_bic,
+        })
     }
 
     /// Get the account number
@@ -172,15 +165,15 @@ impl Field59A {
 
     /// Get the BIC code
     pub fn bic(&self) -> &str {
-        &self.bic
+        self.bic.value()
     }
 }
 
 impl std::fmt::Display for Field59A {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.account {
-            Some(account) => write!(f, "Account: {}, BIC: {}", account, self.bic),
-            None => write!(f, "BIC: {}", self.bic),
+            Some(account) => write!(f, "Account: {}, BIC: {}", account, self.bic.value()),
+            None => write!(f, "BIC: {}", self.bic.value()),
         }
     }
 }
@@ -631,8 +624,8 @@ impl SwiftField for Field59A {
 
     fn to_swift_string(&self) -> String {
         match &self.account {
-            Some(account) => format!(":59A:/{}\n{}", account, self.bic),
-            None => format!(":59A:{}", self.bic),
+            Some(account) => format!(":59A:/{}\n{}", account, self.bic.value()),
+            None => format!(":59A:{}", self.bic.value()),
         }
     }
 
@@ -641,12 +634,10 @@ impl SwiftField for Field59A {
 
         let mut errors = Vec::new();
 
-        // Validate BIC length
-        if self.bic.len() != 8 && self.bic.len() != 11 {
-            errors.push(ValidationError::FormatValidation {
-                field_tag: "59A".to_string(),
-                message: "BIC must be 8 or 11 characters".to_string(),
-            });
+        // Validate BIC format using the common BIC validation
+        let bic_validation = self.bic.validate();
+        if !bic_validation.is_valid {
+            errors.extend(bic_validation.errors);
         }
 
         // Validate account length if present

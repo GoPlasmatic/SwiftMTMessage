@@ -193,23 +193,319 @@ impl ValidationResult {
 
 /// Common data types used across multiple fields
 pub mod common {
+    use crate::ValidationResult;
+    use crate::errors::{ParseError, ValidationError};
     use serde::{Deserialize, Serialize};
 
-    /// SWIFT BIC (Bank Identifier Code)
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    /// SWIFT BIC (Bank Identifier Code) with comprehensive validation and utilities
+    ///
+    /// A Bank Identifier Code (BIC) is used to identify financial institutions in SWIFT messages.
+    /// It consists of either 8 or 11 characters:
+    /// - Bank Code (4 characters): Alphabetic
+    /// - Country Code (2 characters): Alphabetic (ISO 3166-1 alpha-2)
+    /// - Location Code (2 characters): Alphanumeric
+    /// - Branch Code (3 characters, optional): Alphanumeric
+    ///
+    /// # Examples
+    /// - `CHASUS33XXX` - Chase Bank, US, New York, Branch: XXX
+    /// - `DEUTDEFF` - Deutsche Bank, Germany, Frankfurt (8-character format)
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
     pub struct BIC {
+        /// The full BIC code (8 or 11 characters)
+        #[serde(rename = "bic")]
         pub value: String,
     }
 
     impl BIC {
-        pub fn new(value: String) -> Self {
-            Self { value }
+        /// Create a new BIC with validation
+        ///
+        /// # Arguments
+        /// * `value` - The BIC string to validate and store
+        ///
+        /// # Returns
+        /// * `Result<BIC, ParseError>` - The validated BIC or an error
+        ///
+        /// # Examples
+        /// ```
+        /// use swift_mt_message::common::BIC;
+        /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+        /// let bic = BIC::new("CHASUS33XXX".to_string())?;
+        /// assert_eq!(bic.bank_code(), "CHAS");
+        /// # Ok(())
+        /// # }
+        /// ```
+        pub fn new(value: impl Into<String>) -> Result<Self, ParseError> {
+            let value = value.into().to_uppercase();
+            let bic = Self { value };
+            bic.validate_strict()?;
+            Ok(bic)
         }
 
-        pub fn validate(&self) -> bool {
-            // BIC validation logic: 8 or 11 characters, alphanumeric
-            let len = self.value.len();
-            (len == 8 || len == 11) && self.value.chars().all(|c| c.is_alphanumeric())
+        /// Create a BIC without validation (for internal use)
+        pub fn new_unchecked(value: impl Into<String>) -> Self {
+            Self {
+                value: value.into().to_uppercase(),
+            }
+        }
+
+        /// Parse a BIC from a string with optional field tag context
+        pub fn parse(value: &str, field_tag: Option<&str>) -> Result<Self, ParseError> {
+            let value = value.trim().to_uppercase();
+
+            if value.is_empty() {
+                return Err(ParseError::InvalidFieldFormat {
+                    field_tag: field_tag.unwrap_or("BIC").to_string(),
+                    message: "BIC cannot be empty".to_string(),
+                });
+            }
+
+            let bic = Self::new_unchecked(value);
+            bic.validate_with_context(field_tag)?;
+            Ok(bic)
+        }
+
+        /// Strict validation that returns ParseError for use in constructors
+        fn validate_strict(&self) -> Result<(), ParseError> {
+            self.validate_with_context(None)
+        }
+
+        /// Validation with field context for better error messages
+        fn validate_with_context(&self, field_tag: Option<&str>) -> Result<(), ParseError> {
+            let field_name = field_tag.unwrap_or("BIC");
+
+            if self.value.len() != 8 && self.value.len() != 11 {
+                return Err(ParseError::InvalidFieldFormat {
+                    field_tag: field_name.to_string(),
+                    message: "BIC must be 8 or 11 characters".to_string(),
+                });
+            }
+
+            let bank_code = &self.value[0..4];
+            let country_code = &self.value[4..6];
+            let location_code = &self.value[6..8];
+
+            // Validate bank code (4 alphabetic characters)
+            if !bank_code.chars().all(|c| c.is_ascii_alphabetic()) {
+                return Err(ParseError::InvalidFieldFormat {
+                    field_tag: field_name.to_string(),
+                    message: "BIC bank code (first 4 characters) must be alphabetic".to_string(),
+                });
+            }
+
+            // Validate country code (2 alphabetic characters)
+            if !country_code.chars().all(|c| c.is_ascii_alphabetic()) {
+                return Err(ParseError::InvalidFieldFormat {
+                    field_tag: field_name.to_string(),
+                    message: "BIC country code (characters 5-6) must be alphabetic".to_string(),
+                });
+            }
+
+            // Validate location code (2 alphanumeric characters)
+            if !location_code.chars().all(|c| c.is_ascii_alphanumeric()) {
+                return Err(ParseError::InvalidFieldFormat {
+                    field_tag: field_name.to_string(),
+                    message: "BIC location code (characters 7-8) must be alphanumeric".to_string(),
+                });
+            }
+
+            // Validate branch code if present (3 alphanumeric characters)
+            if self.value.len() == 11 {
+                let branch_code = &self.value[8..11];
+                if !branch_code.chars().all(|c| c.is_ascii_alphanumeric()) {
+                    return Err(ParseError::InvalidFieldFormat {
+                        field_tag: field_name.to_string(),
+                        message: "BIC branch code (characters 9-11) must be alphanumeric"
+                            .to_string(),
+                    });
+                }
+            }
+
+            Ok(())
+        }
+
+        /// Validate BIC and return ValidationResult for field validation
+        pub fn validate(&self) -> ValidationResult {
+            match self.validate_strict() {
+                Ok(()) => ValidationResult::valid(),
+                Err(ParseError::InvalidFieldFormat { message, .. }) => {
+                    ValidationResult::with_error(ValidationError::FormatValidation {
+                        field_tag: "BIC".to_string(),
+                        message,
+                    })
+                }
+                Err(e) => ValidationResult::with_error(ValidationError::FormatValidation {
+                    field_tag: "BIC".to_string(),
+                    message: e.to_string(),
+                }),
+            }
+        }
+
+        /// Get the full BIC value
+        pub fn value(&self) -> &str {
+            &self.value
+        }
+
+        /// Get the bank code (first 4 characters)
+        pub fn bank_code(&self) -> &str {
+            &self.value[0..4]
+        }
+
+        /// Get the country code (characters 5-6)
+        pub fn country_code(&self) -> &str {
+            &self.value[4..6]
+        }
+
+        /// Get the location code (characters 7-8)
+        pub fn location_code(&self) -> &str {
+            &self.value[6..8]
+        }
+
+        /// Get the branch code if present (characters 9-11)
+        pub fn branch_code(&self) -> Option<&str> {
+            if self.value.len() == 11 {
+                Some(&self.value[8..11])
+            } else {
+                None
+            }
+        }
+
+        /// Check if this is a full BIC (11 characters) vs short BIC (8 characters)
+        pub fn is_full_bic(&self) -> bool {
+            self.value.len() == 11
+        }
+
+        /// Check if this institution is in a major financial center
+        pub fn is_major_financial_center(&self) -> bool {
+            let country = self.country_code();
+            let location = self.location_code();
+
+            matches!(
+                (country, location),
+                ("US", "33") | // New York
+                ("GB", "22") | // London
+                ("DE", "FF") | // Frankfurt
+                ("JP", "22") | // Tokyo
+                ("HK", "HK") | // Hong Kong
+                ("SG", "SG") | // Singapore
+                ("FR", "PP") | // Paris
+                ("CH", "ZZ") | // Zurich
+                ("CA", "TT") | // Toronto
+                ("AU", "MM") // Melbourne/Sydney
+            )
+        }
+
+        /// Check if this is a retail banking institution (heuristic based on common bank codes)
+        pub fn is_retail_bank(&self) -> bool {
+            let bank_code = self.bank_code();
+
+            // Common retail bank codes (this is a simplified check)
+            matches!(
+                bank_code,
+                "CHAS" | // Chase
+                "BOFA" | // Bank of America
+                "WELL" | // Wells Fargo
+                "CITI" | // Citibank
+                "HSBC" | // HSBC
+                "BARC" | // Barclays
+                "LLOY" | // Lloyds
+                "NATS" | // NatWest
+                "DEUT" | // Deutsche Bank
+                "COMM" | // Commerzbank
+                "BNPA" | // BNP Paribas
+                "CRED" | // Credit Agricole
+                "UBSW" | // UBS
+                "CRSU" | // Credit Suisse
+                "ROYA" | // Royal Bank of Canada
+                "TDOM" | // TD Bank
+                "ANZI" | // ANZ
+                "CTBA" | // Commonwealth Bank
+                "WEST" | // Westpac
+                "MUFG" | // MUFG Bank
+                "SMBC" | // Sumitomo Mitsui
+                "MIZB" // Mizuho Bank
+            )
+        }
+
+        /// Check if this institution's country supports real-time payments
+        pub fn supports_real_time_payments(&self) -> bool {
+            let country = self.country_code();
+
+            // Countries with major real-time payment systems
+            matches!(
+                country,
+                "US" | // FedNow, RTP
+                "GB" | // Faster Payments
+                "DE" | // Instant Payments
+                "NL" | // iDEAL
+                "SE" | // Swish
+                "DK" | // MobilePay
+                "AU" | // NPP
+                "SG" | // FAST
+                "IN" | // UPI
+                "BR" | // PIX
+                "MX" | // SPEI
+                "JP" | // Zengin
+                "KR" | // KFTC
+                "CN" // CIPS
+            )
+        }
+
+        /// Get the regulatory jurisdiction for this institution
+        pub fn regulatory_jurisdiction(&self) -> &'static str {
+            match self.country_code() {
+                "US" => "Federal Reserve / OCC / FDIC",
+                "GB" => "Bank of England / PRA / FCA",
+                "DE" => "BaFin / ECB",
+                "FR" => "ACPR / ECB",
+                "JP" => "JFSA / Bank of Japan",
+                "CH" => "FINMA / SNB",
+                "CA" => "OSFI / Bank of Canada",
+                "AU" => "APRA / RBA",
+                "SG" => "MAS",
+                "HK" => "HKMA",
+                "CN" => "PBOC / CBIRC",
+                "IN" => "RBI",
+                "BR" => "Central Bank of Brazil",
+                "MX" => "CNBV / Banxico",
+                _ => "Other National Authority",
+            }
+        }
+
+        /// Get a human-readable description of this BIC
+        pub fn description(&self) -> String {
+            format!(
+                "Bank: {} | Country: {} | Location: {} | Branch: {}",
+                self.bank_code(),
+                self.country_code(),
+                self.location_code(),
+                self.branch_code().unwrap_or("XXX (Head Office)")
+            )
+        }
+    }
+
+    impl std::fmt::Display for BIC {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.value)
+        }
+    }
+
+    impl std::str::FromStr for BIC {
+        type Err = ParseError;
+
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            Self::parse(s, None)
+        }
+    }
+
+    impl From<BIC> for String {
+        fn from(bic: BIC) -> String {
+            bic.value
+        }
+    }
+
+    impl AsRef<str> for BIC {
+        fn as_ref(&self) -> &str {
+            &self.value
         }
     }
 
@@ -250,6 +546,83 @@ pub mod common {
 
         pub fn to_decimal(&self) -> Result<f64, std::num::ParseFloatError> {
             self.value.replace(',', ".").parse()
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn test_bic_creation() {
+            let bic = BIC::new("CHASUS33XXX").unwrap();
+            assert_eq!(bic.value(), "CHASUS33XXX");
+            assert_eq!(bic.bank_code(), "CHAS");
+            assert_eq!(bic.country_code(), "US");
+            assert_eq!(bic.location_code(), "33");
+            assert_eq!(bic.branch_code(), Some("XXX"));
+            assert!(bic.is_full_bic());
+        }
+
+        #[test]
+        fn test_bic_short_format() {
+            let bic = BIC::new("DEUTDEFF").unwrap();
+            assert_eq!(bic.value(), "DEUTDEFF");
+            assert_eq!(bic.bank_code(), "DEUT");
+            assert_eq!(bic.country_code(), "DE");
+            assert_eq!(bic.location_code(), "FF");
+            assert_eq!(bic.branch_code(), None);
+            assert!(!bic.is_full_bic());
+        }
+
+        #[test]
+        fn test_bic_validation_errors() {
+            // Too short
+            assert!(BIC::new("CHAS").is_err());
+
+            // Too long
+            assert!(BIC::new("CHASUS33XXXX").is_err());
+
+            // Invalid bank code (numeric)
+            assert!(BIC::new("1234US33").is_err());
+
+            // Invalid country code (numeric)
+            assert!(BIC::new("CHAS22XX").is_err());
+
+            // Invalid location code (special chars)
+            assert!(BIC::new("CHASUS@#").is_err());
+        }
+
+        #[test]
+        fn test_bic_case_normalization() {
+            let bic = BIC::new("chasus33xxx").unwrap();
+            assert_eq!(bic.value(), "CHASUS33XXX");
+        }
+
+        #[test]
+        fn test_bic_utilities() {
+            let bic = BIC::new("CHASUS33XXX").unwrap();
+            assert!(bic.is_major_financial_center());
+            assert!(bic.is_retail_bank());
+            assert!(bic.supports_real_time_payments());
+            assert_eq!(
+                bic.regulatory_jurisdiction(),
+                "Federal Reserve / OCC / FDIC"
+            );
+        }
+
+        #[test]
+        fn test_bic_display_and_description() {
+            let bic = BIC::new("CHASUS33XXX").unwrap();
+            assert_eq!(bic.to_string(), "CHASUS33XXX");
+            assert!(bic.description().contains("CHAS"));
+            assert!(bic.description().contains("US"));
+        }
+
+        #[test]
+        fn test_bic_from_str() {
+            let bic: BIC = "CHASUS33XXX".parse().unwrap();
+            assert_eq!(bic.value(), "CHASUS33XXX");
         }
     }
 }

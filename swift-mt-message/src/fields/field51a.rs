@@ -1,3 +1,4 @@
+use crate::common::BIC;
 use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
@@ -113,7 +114,8 @@ pub struct Field51A {
     pub account_number: Option<String>,
 
     /// BIC code (8 or 11 characters)
-    pub bic: String,
+    #[serde(flatten)]
+    pub bic: BIC,
 }
 
 impl SwiftField for Field51A {
@@ -170,9 +172,13 @@ impl SwiftField for Field51A {
             bic_line = lines[1];
         }
 
-        let bic = bic_line.trim().to_string();
+        let bic = BIC::parse(bic_line.trim(), Some("51A"))?;
 
-        Self::new(account_line_indicator, account_number, bic)
+        Ok(Self {
+            account_line_indicator,
+            account_number,
+            bic,
+        })
     }
 
     fn to_swift_string(&self) -> String {
@@ -193,19 +199,17 @@ impl SwiftField for Field51A {
             result.push('\n');
         }
 
-        result.push_str(&self.bic);
+        result.push_str(self.bic.value());
         result
     }
 
     fn validate(&self) -> ValidationResult {
         let mut errors = Vec::new();
 
-        // Validate BIC format
-        if let Err(e) = Self::validate_bic(&self.bic) {
-            errors.push(ValidationError::FormatValidation {
-                field_tag: "51A".to_string(),
-                message: format!("BIC validation failed: {}", e),
-            });
+        // Validate BIC format using the common BIC validation
+        let bic_validation = self.bic.validate();
+        if !bic_validation.is_valid {
+            errors.extend(bic_validation.errors);
         }
 
         // Validate account line indicator if present
@@ -284,13 +288,9 @@ impl Field51A {
     ) -> crate::Result<Self> {
         let account_line_indicator = account_line_indicator.map(|s| s.trim().to_string());
         let account_number = account_number.map(|s| s.trim().to_string());
-        let bic = bic.into().trim().to_uppercase();
 
-        // Validate BIC
-        Self::validate_bic(&bic).map_err(|msg| crate::ParseError::InvalidFieldFormat {
-            field_tag: "51A".to_string(),
-            message: format!("BIC validation failed: {}", msg),
-        })?;
+        // Parse and validate BIC using the common structure
+        let bic = BIC::parse(&bic.into(), Some("51A"))?;
 
         // Validate account line indicator if present
         if let Some(ref indicator) = account_line_indicator {
@@ -329,49 +329,13 @@ impl Field51A {
         Ok(Field51A {
             account_line_indicator,
             account_number,
-            bic: bic.to_string(),
+            bic,
         })
-    }
-
-    /// Validate BIC format according to SWIFT standards
-    fn validate_bic(bic: &str) -> Result<(), String> {
-        if bic.len() != 8 && bic.len() != 11 {
-            return Err("BIC must be 8 or 11 characters".to_string());
-        }
-
-        let bank_code = &bic[0..4];
-        let country_code = &bic[4..6];
-        let location_code = &bic[6..8];
-
-        // Validate bank code (4 alphabetic characters)
-        if !bank_code.chars().all(|c| c.is_ascii_alphabetic()) {
-            return Err("Bank code must be 4 alphabetic characters".to_string());
-        }
-
-        // Validate country code (2 alphabetic characters)
-        if !country_code.chars().all(|c| c.is_ascii_alphabetic()) {
-            return Err("Country code must be 2 alphabetic characters".to_string());
-        }
-
-        // Validate location code (2 alphanumeric characters)
-        if !location_code.chars().all(|c| c.is_ascii_alphanumeric()) {
-            return Err("Location code must be 2 alphanumeric characters".to_string());
-        }
-
-        // Validate branch code if present (3 alphanumeric characters)
-        if bic.len() == 11 {
-            let branch_code = &bic[8..11];
-            if !branch_code.chars().all(|c| c.is_ascii_alphanumeric()) {
-                return Err("Branch code must be 3 alphanumeric characters".to_string());
-            }
-        }
-
-        Ok(())
     }
 
     /// Get the BIC code
     pub fn bic(&self) -> &str {
-        &self.bic
+        self.bic.value()
     }
 
     /// Get the account line indicator if present
@@ -393,26 +357,22 @@ impl Field51A {
 
     /// Get bank code from BIC
     pub fn bank_code(&self) -> &str {
-        &self.bic[0..4]
+        self.bic.bank_code()
     }
 
     /// Get country code from BIC
     pub fn country_code(&self) -> &str {
-        &self.bic[4..6]
+        self.bic.country_code()
     }
 
     /// Get location code from BIC
     pub fn location_code(&self) -> &str {
-        &self.bic[6..8]
+        self.bic.location_code()
     }
 
     /// Get branch code from BIC if present
     pub fn branch_code(&self) -> Option<&str> {
-        if self.bic.len() == 11 {
-            Some(&self.bic[8..11])
-        } else {
-            None
-        }
+        self.bic.branch_code()
     }
 }
 
@@ -534,7 +494,7 @@ mod tests {
         let invalid_field = Field51A {
             account_line_indicator: None,
             account_number: None,
-            bic: "INVALID".to_string(),
+            bic: BIC::new_unchecked("INVALID"),
         };
         let result = invalid_field.validate();
         assert!(!result.is_valid);

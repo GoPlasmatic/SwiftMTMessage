@@ -1,4 +1,5 @@
-use crate::{SwiftField, ValidationResult};
+use crate::common::BIC;
+use crate::{SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
 /// # Field 52A: Ordering Institution
@@ -95,7 +96,8 @@ pub struct Field52A {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub account_number: Option<String>,
     /// BIC code (8 or 11 characters)
-    pub bic: String,
+    #[serde(flatten)]
+    pub bic: BIC,
 }
 
 impl Field52A {
@@ -105,22 +107,8 @@ impl Field52A {
         account_number: Option<String>,
         bic: impl Into<String>,
     ) -> Result<Self, crate::ParseError> {
-        let bic = bic.into().to_uppercase();
-
-        // Validate BIC
-        if bic.len() != 8 && bic.len() != 11 {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "52A".to_string(),
-                message: "BIC must be 8 or 11 characters".to_string(),
-            });
-        }
-
-        if !bic.chars().all(|c| c.is_alphanumeric()) {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "52A".to_string(),
-                message: "BIC must contain only alphanumeric characters".to_string(),
-            });
-        }
+        // Parse and validate BIC using the common structure
+        let bic = BIC::parse(&bic.into(), Some("52A"))?;
 
         // Validate account line indicator if present
         if let Some(ref indicator) = account_line_indicator {
@@ -185,12 +173,12 @@ impl Field52A {
 
     /// Get the BIC code
     pub fn bic(&self) -> &str {
-        &self.bic
+        self.bic.value()
     }
 
     /// Check if this is a full BIC (11 characters)
     pub fn is_full_bic(&self) -> bool {
-        self.bic.len() == 11
+        self.bic.is_full_bic()
     }
 }
 
@@ -242,15 +230,21 @@ impl SwiftField for Field52A {
             }
         }
 
-        let bic = bic_content.trim().to_string();
-        if bic.is_empty() {
+        let bic_str = bic_content.trim();
+        if bic_str.is_empty() {
             return Err(crate::ParseError::InvalidFieldFormat {
                 field_tag: "52A".to_string(),
                 message: "BIC code is required".to_string(),
             });
         }
 
-        Field52A::new(account_line_indicator, account_number, bic)
+        let bic = BIC::parse(bic_str, Some("52A"))?;
+
+        Ok(Field52A {
+            account_line_indicator,
+            account_number,
+            bic,
+        })
     }
 
     fn to_swift_string(&self) -> String {
@@ -269,16 +263,44 @@ impl SwiftField for Field52A {
         if !result.is_empty() {
             result.push('\n');
         }
-        result.push_str(&self.bic);
+        result.push_str(self.bic.value());
 
         format!(":52A:{}", result)
     }
 
     fn validate(&self) -> ValidationResult {
-        // Validation is done in constructor
+        let mut errors = Vec::new();
+
+        // Validate BIC format using the common BIC validation
+        let bic_validation = self.bic.validate();
+        if !bic_validation.is_valid {
+            errors.extend(bic_validation.errors);
+        }
+
+        // Additional validation for account components
+        if let Some(indicator) = &self.account_line_indicator {
+            if indicator.len() != 1 {
+                errors.push(ValidationError::LengthValidation {
+                    field_tag: "52A".to_string(),
+                    expected: "1 character".to_string(),
+                    actual: indicator.len(),
+                });
+            }
+        }
+
+        if let Some(account) = &self.account_number {
+            if account.len() > 34 {
+                errors.push(ValidationError::LengthValidation {
+                    field_tag: "52A".to_string(),
+                    expected: "max 34 characters".to_string(),
+                    actual: account.len(),
+                });
+            }
+        }
+
         ValidationResult {
-            is_valid: true,
-            errors: Vec::new(),
+            is_valid: errors.is_empty(),
+            errors,
             warnings: Vec::new(),
         }
     }

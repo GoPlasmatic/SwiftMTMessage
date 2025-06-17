@@ -714,6 +714,54 @@ impl MT202 {
             Vec::new()
         }
     }
+
+    /// Check if this message has RETN (return) indicators in field 72
+    pub fn has_return_codes(&self) -> bool {
+        // Check both sequence A and sequence B field 72 for return codes
+        let seq_a_has_return = if let Some(field_72) = &self.field_72 {
+            field_72
+                .information
+                .iter()
+                .any(|line| line.contains("/RETN/") || line.to_uppercase().contains("RETURN"))
+        } else {
+            false
+        };
+
+        let seq_b_has_return = if let Some(field_72_seq_b) = &self.field_72_seq_b {
+            field_72_seq_b
+                .information
+                .iter()
+                .any(|line| line.contains("/RETN/") || line.to_uppercase().contains("RETURN"))
+        } else {
+            false
+        };
+
+        seq_a_has_return || seq_b_has_return
+    }
+
+    /// Check if this message has REJT (reject) indicators in field 72
+    pub fn has_reject_codes(&self) -> bool {
+        // Check both sequence A and sequence B field 72 for reject codes
+        let seq_a_has_reject = if let Some(field_72) = &self.field_72 {
+            field_72
+                .information
+                .iter()
+                .any(|line| line.contains("/REJT/") || line.to_uppercase().contains("REJECT"))
+        } else {
+            false
+        };
+
+        let seq_b_has_reject = if let Some(field_72_seq_b) = &self.field_72_seq_b {
+            field_72_seq_b
+                .information
+                .iter()
+                .any(|line| line.contains("/REJT/") || line.to_uppercase().contains("REJECT"))
+        } else {
+            false
+        };
+
+        seq_a_has_reject || seq_b_has_reject
+    }
 }
 
 #[cfg(test)]
@@ -1000,5 +1048,151 @@ mod tests {
         assert_eq!(descriptions.len(), 2);
         assert!(descriptions[0].contains("CLS Bank cut-off time"));
         assert!(descriptions[1].contains("TARGET system time"));
+    }
+
+    #[test]
+    fn test_mt202_return_reject_codes() {
+        let field_20 = Field20::new("FT21234567890".to_string());
+        let field_21 = Field21::new("REL20241201001".to_string());
+        let field_32a = Field32A::new(
+            NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
+            "USD".to_string(),
+            1000000.00,
+        );
+        let field_58a = Field58A::new(None, None, "DEUTDEFFXXX").unwrap();
+
+        // Test with return codes in sequence A field 72
+        let field_72_return = Field72::new(vec![
+            "/RETN/AC01/Account id incorrect".to_string(),
+            "Additional return information".to_string(),
+        ])
+        .unwrap();
+
+        let mt202_return = MT202::new_complete(
+            field_20.clone(),
+            field_21.clone(),
+            field_32a.clone(),
+            field_58a.clone(),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(field_72_return),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+
+        assert!(mt202_return.has_return_codes());
+        assert!(!mt202_return.has_reject_codes());
+
+        // Test with reject codes in sequence B field 72
+        let field_72_reject = Field72::new(vec![
+            "/REJT/AC03/Account id invalid".to_string(),
+            "Additional reject information".to_string(),
+        ])
+        .unwrap();
+
+        let mt202_reject = MT202::new_complete(
+            field_20.clone(),
+            field_21.clone(),
+            field_32a.clone(),
+            field_58a.clone(),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(field_72_reject),
+        );
+
+        assert!(!mt202_reject.has_return_codes());
+        assert!(mt202_reject.has_reject_codes());
+
+        // Test without return/reject codes
+        let field_72_normal = Field72::new(vec![
+            "/INT/Internal transfer own accts".to_string(),
+            "Regular processing instructions".to_string(),
+        ])
+        .unwrap();
+
+        let mt202_normal = MT202::new_complete(
+            field_20,
+            field_21,
+            field_32a,
+            field_58a,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(field_72_normal),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+
+        assert!(!mt202_normal.has_return_codes());
+        assert!(!mt202_normal.has_reject_codes());
+    }
+
+    #[test]
+    fn test_mt202_cover_payment_alias() {
+        let field_20 = Field20::new("FT21234567890".to_string());
+        let field_21 = Field21::new("REL20241201001".to_string());
+        let field_32a = Field32A::new(
+            NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
+            "USD".to_string(),
+            1000000.00,
+        );
+        let field_58a = Field58A::new(None, None, "DEUTDEFFXXX").unwrap();
+        let field_50a = Field50::K(Field50K::new(vec!["ORDERING CUSTOMER".to_string()]).unwrap());
+
+        // Test cover payment detection
+        let mt202_cover = MT202::new_complete(
+            field_20,
+            field_21,
+            field_32a,
+            field_58a,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(field_50a),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+
+        assert!(mt202_cover.is_cover_message());
     }
 }

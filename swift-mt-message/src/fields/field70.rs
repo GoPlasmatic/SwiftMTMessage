@@ -1,4 +1,4 @@
-use crate::SwiftField;
+use crate::{MultiLineField, SwiftField, ValidationResult, errors::ParseError};
 use serde::{Deserialize, Serialize};
 
 /// # Field 70: Remittance Information
@@ -101,17 +101,56 @@ use serde::{Deserialize, Serialize};
 /// - Field is optional but recommended (Warning: W70)
 ///
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
-#[format("4*35x")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Field70 {
     /// Remittance information lines (up to 4 lines of 35 characters each)
-    #[format("4*35x")]
     pub information: Vec<String>,
 }
 
+impl MultiLineField for Field70 {
+    const MAX_LINES: usize = 4;
+    const FIELD_TAG: &'static str = "70";
+
+    fn lines(&self) -> &[String] {
+        &self.information
+    }
+
+    fn lines_mut(&mut self) -> &mut Vec<String> {
+        &mut self.information
+    }
+
+    fn new_with_lines(lines: Vec<String>) -> Result<Self, ParseError> {
+        Ok(Field70 { information: lines })
+    }
+}
+
 impl Field70 {
-    pub fn new(information: Vec<String>) -> Self {
-        Self { information }
+    /// Create a new Field70 with validation
+    pub fn new(information: Vec<String>) -> Result<Self, ParseError> {
+        <Self as MultiLineField>::new(information)
+    }
+
+    /// Get the information lines
+    pub fn information(&self) -> &[String] {
+        &self.information
+    }
+}
+
+impl SwiftField for Field70 {
+    fn parse(content: &str) -> Result<Self, ParseError> {
+        Self::parse_content(content)
+    }
+
+    fn to_swift_string(&self) -> String {
+        self.to_swift_format()
+    }
+
+    fn validate(&self) -> ValidationResult {
+        self.validate_multiline()
+    }
+
+    fn format_spec() -> &'static str {
+        "4*35x"
     }
 }
 
@@ -122,7 +161,7 @@ mod tests {
     #[test]
     fn test_field70_creation() {
         let info = vec!["PAYMENT FOR INVOICE 12345".to_string()];
-        let field70 = Field70::new(info.clone());
+        let field70 = Field70::new(info.clone()).unwrap();
         assert_eq!(field70.information, info);
     }
 }

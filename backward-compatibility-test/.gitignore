@@ -1,0 +1,26 @@
+# Generated output directories
+output/
+*.json
+
+# Generated reports
+compatibility_report.md
+detailed_report.md
+report.md
+
+# Rust build artifacts
+target/
+Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp 

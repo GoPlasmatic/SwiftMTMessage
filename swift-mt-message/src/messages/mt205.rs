@@ -1,4 +1,4 @@
-use crate::{SwiftMessage, fields::*, swift_serde};
+use crate::{GenericBicField, GenericCurrencyAmountField, SwiftMessage, fields::*, swift_serde};
 use serde::{Deserialize, Serialize};
 
 /// # MT205: General Financial Institution Transfer
@@ -112,7 +112,7 @@ pub struct MT205 {
     /// **MT205 Rule**: No fallback to sender BIC (always required)
     /// **Routing Role**: First institution in the transfer chain
     #[field("52A")]
-    pub field_52a: Field52A,
+    pub field_52a: GenericBicField,
 
     /// **Beneficiary Institution** - Field 58A
     ///
@@ -124,7 +124,7 @@ pub struct MT205 {
     /// **Usage**: Mandatory in all MT205 messages  
     /// **Settlement**: Final destination for fund settlement
     #[field("58A")]
-    pub field_58a: Field58A,
+    pub field_58a: GenericBicField,
 
     /// **Time Indication** - Field 13C (Optional, Repetitive)
     ///
@@ -150,7 +150,7 @@ pub struct MT205 {
     /// **Routing Role**: Intermediate institution in transfer chain
     /// **MT205 Note**: Uses METAFCT003 for settlement method determination
     #[field("53A")]
-    pub field_53a: Option<Field53A>,
+    pub field_53a: Option<GenericBicField>,
 
     /// **Intermediary Institution** - Field 56A (Optional)
     ///
@@ -162,7 +162,7 @@ pub struct MT205 {
     /// **Usage**: Optional, facilitates complex routing  
     /// **Routing Role**: Intermediate routing institution
     #[field("56A")]
-    pub field_56a: Option<Field56A>,
+    pub field_56a: Option<GenericBicField>,
 
     /// **Account With Institution** - Field 57A (Optional)
     ///
@@ -174,7 +174,7 @@ pub struct MT205 {
     /// **Usage**: Optional, enables indirect settlement  
     /// **Settlement Role**: Settlement institution for beneficiary
     #[field("57A")]
-    pub field_57a: Option<Field57A>,
+    pub field_57a: Option<GenericBicField>,
 
     /// **Sender to Receiver Information** - Field 72 (Optional)
     ///
@@ -210,7 +210,7 @@ pub struct MT205 {
     /// **Cover Role**: Ultimate beneficiary of underlying transaction  
     /// **Format**: [/account]BIC or name/address
     #[field("59A")]
-    pub field_59a: Option<Field59A>,
+    pub field_59a: Option<GenericBicField>,
 
     /// **Remittance Information** - Field 70 (Optional, Cover Messages)
     ///
@@ -234,7 +234,7 @@ pub struct MT205 {
     /// **Format**: Currency code + Amount  
     /// **Relationship**: May differ from Field 32A for FX transactions
     #[field("33B")]
-    pub field_33b: Option<Field33B>,
+    pub field_33b: Option<GenericCurrencyAmountField>,
 
     /// **Ordering Institution** - Field 52A Sequence B (Optional, Cover Messages)
     ///
@@ -246,7 +246,7 @@ pub struct MT205 {
     /// **Cover Role**: Ordering institution for underlying customer transaction  
     /// **Difference**: Distinct from Sequence A Field 52A (institutional context)
     #[field("52A_SEQ_B")]
-    pub field_52a_seq_b: Option<Field52A>,
+    pub field_52a_seq_b: Option<GenericBicField>,
 
     /// **Intermediary Institution** - Field 56A Sequence B (Optional, Cover Messages)
     ///
@@ -258,7 +258,7 @@ pub struct MT205 {
     /// **Cover Role**: Intermediary for underlying customer transaction  
     /// **Routing**: Customer transaction routing, not institutional routing
     #[field("56A_SEQ_B")]
-    pub field_56a_seq_b: Option<Field56A>,
+    pub field_56a_seq_b: Option<GenericBicField>,
 
     /// **Account With Institution** - Field 57A Sequence B (Optional, Cover Messages)
     ///
@@ -270,7 +270,7 @@ pub struct MT205 {
     /// **Cover Role**: Beneficiary's bank for underlying customer transaction  
     /// **Context**: Customer transaction settlement, not institutional settlement
     #[field("57A_SEQ_B")]
-    pub field_57a_seq_b: Option<Field57A>,
+    pub field_57a_seq_b: Option<GenericBicField>,
 
     /// **Sender to Receiver Information** - Field 72 Sequence B (Optional, Cover Messages)
     ///
@@ -291,8 +291,8 @@ impl MT205 {
         field_20: Field20,
         field_21: Field21,
         field_32a: Field32A,
-        field_52a: Field52A, // Mandatory in MT205
-        field_58a: Field58A,
+        field_52a: GenericBicField, // Mandatory in MT205
+        field_58a: GenericBicField,
     ) -> Self {
         Self {
             field_20,
@@ -322,20 +322,20 @@ impl MT205 {
         field_20: Field20,
         field_21: Field21,
         field_32a: Field32A,
-        field_52a: Field52A, // Mandatory in MT205
-        field_58a: Field58A,
+        field_52a: GenericBicField, // Mandatory in MT205
+        field_58a: GenericBicField,
         field_13c: Option<Vec<Field13C>>,
-        field_53a: Option<Field53A>,
-        field_56a: Option<Field56A>,
-        field_57a: Option<Field57A>,
+        field_53a: Option<GenericBicField>,
+        field_56a: Option<GenericBicField>,
+        field_57a: Option<GenericBicField>,
         field_72: Option<Field72>,
         field_50a: Option<Field50>,
-        field_59a: Option<Field59A>,
+        field_59a: Option<GenericBicField>,
         field_70: Option<Field70>,
-        field_33b: Option<Field33B>,
-        field_52a_seq_b: Option<Field52A>,
-        field_56a_seq_b: Option<Field56A>,
-        field_57a_seq_b: Option<Field57A>,
+        field_33b: Option<GenericCurrencyAmountField>,
+        field_52a_seq_b: Option<GenericBicField>,
+        field_56a_seq_b: Option<GenericBicField>,
+        field_57a_seq_b: Option<GenericBicField>,
         field_72_seq_b: Option<Field72>,
     ) -> Self {
         Self {
@@ -396,22 +396,22 @@ impl MT205 {
     }
 
     /// Get ordering institution (always present in MT205)
-    pub fn ordering_institution(&self) -> &Field52A {
+    pub fn ordering_institution(&self) -> &GenericBicField {
         &self.field_52a
     }
 
     /// Get sender's correspondent if present
-    pub fn senders_correspondent(&self) -> Option<&Field53A> {
+    pub fn senders_correspondent(&self) -> Option<&GenericBicField> {
         self.field_53a.as_ref()
     }
 
     /// Get intermediary institution if present
-    pub fn intermediary_institution(&self) -> Option<&Field56A> {
+    pub fn intermediary_institution(&self) -> Option<&GenericBicField> {
         self.field_56a.as_ref()
     }
 
     /// Get account with institution if present
-    pub fn account_with_institution(&self) -> Option<&Field57A> {
+    pub fn account_with_institution(&self) -> Option<&GenericBicField> {
         self.field_57a.as_ref()
     }
 
@@ -426,7 +426,7 @@ impl MT205 {
     }
 
     /// Get beneficiary customer if present (cover message)
-    pub fn beneficiary_customer(&self) -> Option<&Field59A> {
+    pub fn beneficiary_customer(&self) -> Option<&GenericBicField> {
         self.field_59a.as_ref()
     }
 
@@ -436,7 +436,7 @@ impl MT205 {
     }
 
     /// Get instructed amount if present (cover message)
-    pub fn instructed_amount(&self) -> Option<&Field33B> {
+    pub fn instructed_amount(&self) -> Option<&GenericCurrencyAmountField> {
         self.field_33b.as_ref()
     }
 
@@ -629,17 +629,17 @@ impl MT205 {
     // ================================
 
     /// Get ordering institution from sequence B if present (cover message)
-    pub fn ordering_institution_seq_b(&self) -> Option<&Field52A> {
+    pub fn ordering_institution_seq_b(&self) -> Option<&GenericBicField> {
         self.field_52a_seq_b.as_ref()
     }
 
     /// Get intermediary institution from sequence B if present (cover message)
-    pub fn intermediary_institution_seq_b(&self) -> Option<&Field56A> {
+    pub fn intermediary_institution_seq_b(&self) -> Option<&GenericBicField> {
         self.field_56a_seq_b.as_ref()
     }
 
     /// Get account with institution from sequence B if present (cover message)
-    pub fn account_with_institution_seq_b(&self) -> Option<&Field57A> {
+    pub fn account_with_institution_seq_b(&self) -> Option<&GenericBicField> {
         self.field_57a_seq_b.as_ref()
     }
 
@@ -746,8 +746,8 @@ mod tests {
             "USD".to_string(),
             1000000.00,
         );
-        let field_52a = Field52A::new(None, None, "CHASUS33XXX").unwrap();
-        let field_58a = Field58A::new(None, None, "DEUTDEFFXXX").unwrap();
+        let field_52a = GenericBicField::new(None, None, "CHASUS33XXX").unwrap();
+        let field_58a = GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap();
 
         let mt205 = MT205::new(field_20, field_21, field_32a, field_52a, field_58a);
 
@@ -799,8 +799,8 @@ mod tests {
             "USD".to_string(),
             1000000.00,
         );
-        let field_52a = Field52A::new(None, None, "CHASUS33XXX").unwrap();
-        let field_58a = Field58A::new(None, None, "DEUTDEFFXXX").unwrap();
+        let field_52a = GenericBicField::new(None, None, "CHASUS33XXX").unwrap();
+        let field_58a = GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap();
         let field_50a = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
 
         // Standard MT205
@@ -847,9 +847,9 @@ mod tests {
             "USD".to_string(),
             1000000.00,
         );
-        let field_52a = Field52A::new(None, None, "CHASUS33XXX").unwrap();
-        let field_58a = Field58A::new(None, None, "DEUTDEFFXXX").unwrap();
-        let field_53a = Field53A::new(None, None, "BARCGB22XXX").unwrap();
+        let field_52a = GenericBicField::new(None, None, "CHASUS33XXX").unwrap();
+        let field_58a = GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap();
+        let field_53a = GenericBicField::new(None, None, "BARCGB22XXX").unwrap();
 
         let mt205 = MT205::new_complete(
             field_20,
@@ -898,8 +898,8 @@ mod tests {
             "USD".to_string(),
             1000000.00,
         );
-        let field_52a = Field52A::new(None, None, "CHASUS33XXX").unwrap();
-        let field_58a = Field58A::new(None, None, "DEUTDEFFXXX").unwrap();
+        let field_52a = GenericBicField::new(None, None, "CHASUS33XXX").unwrap();
+        let field_58a = GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap();
 
         let mt205 = MT205::new(field_20, field_21, field_32a, field_52a, field_58a);
 
@@ -917,9 +917,9 @@ mod tests {
             "USD".to_string(),
             1000000.00,
         );
-        let field_52a = Field52A::new(None, None, "CHASUS33XXX").unwrap();
-        let field_58a = Field58A::new(None, None, "DEUTDEFFXXX").unwrap();
-        let field_33b = Field33B::new("EUR", 850000.00).unwrap();
+        let field_52a = GenericBicField::new(None, None, "CHASUS33XXX").unwrap();
+        let field_58a = GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap();
+        let field_33b = GenericCurrencyAmountField::new("EUR", 850000.00).unwrap();
 
         let mt205 = MT205::new_complete(
             field_20,
@@ -955,9 +955,9 @@ mod tests {
             "USD".to_string(),
             1000000.00,
         );
-        let field_52a = Field52A::new(None, None, "CHASUS33XXX").unwrap();
-        let field_58a = Field58A::new(None, None, "DEUTDEFFXXX").unwrap();
-        let field_53a = Field53A::new(None, None, "BARCGB22XXX").unwrap(); // Different correspondent
+        let field_52a = GenericBicField::new(None, None, "CHASUS33XXX").unwrap();
+        let field_58a = GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap();
+        let field_53a = GenericBicField::new(None, None, "BARCGB22XXX").unwrap(); // Different correspondent
 
         let mt205 = MT205::new_complete(
             field_20,

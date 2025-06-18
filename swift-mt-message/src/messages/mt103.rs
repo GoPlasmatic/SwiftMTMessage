@@ -1,4 +1,7 @@
-use crate::{SwiftMessage, fields::*, swift_serde};
+use crate::{
+    GenericAccountField, GenericBicField, GenericCurrencyAmountField, GenericNameAddressField,
+    GenericPartyField, SwiftMessage, fields::*, swift_serde,
+};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -206,7 +209,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Basic MT103 Creation
 /// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*};
+/// use swift_mt_message::{messages::MT103, fields::*, GenericBicField};
 /// use chrono::NaiveDate;
 ///
 /// // Create mandatory fields
@@ -222,7 +225,7 @@ use serde::{Deserialize, Serialize};
 ///     "123 BUSINESS AVENUE".to_string(),
 ///     "NEW YORK NY 10001".to_string()
 /// ]).unwrap());
-/// let field_59 = Field59::A(Field59A::new(
+/// let field_59 = Field59::A(GenericBicField::new(None,
 ///     Some("GB33BUKB20201555555555".to_string()),
 ///     "DEUTDEFF"
 /// ).unwrap());
@@ -236,7 +239,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### MT103.STP Compliant Message
 /// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*};
+/// use swift_mt_message::{messages::MT103, fields::*, GenericBicField};
+/// use swift_mt_message::fields::field59::Field59Basic;
 /// use chrono::NaiveDate;
 ///
 /// // Create required mandatory fields
@@ -260,9 +264,9 @@ use serde::{Deserialize, Serialize};
 ///     None, // field_33b
 ///     None, // field_36
 ///     None, // field_51a - NOT allowed in STP
-///     Some(Field52A::new(None, None, "CHASUS33XXX").unwrap()),
+///     Some(GenericBicField::new(None, None, "CHASUS33XXX").unwrap()),
 ///     None, // field_52d - NOT allowed in STP
-///     Some(Field53A::new(None, None, "DEUTDEFFXXX").unwrap()),
+///     Some(GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap()),
 ///     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
 /// );
 ///
@@ -272,6 +276,7 @@ use serde::{Deserialize, Serialize};
 /// ### MT103.REMIT Message
 /// ```rust
 /// use swift_mt_message::{messages::MT103, fields::*};
+/// use swift_mt_message::fields::field59::Field59Basic;
 /// use chrono::NaiveDate;
 ///
 /// // Create required mandatory fields
@@ -305,7 +310,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Cross-Currency Transaction
 /// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*};
+/// use swift_mt_message::{messages::MT103, fields::*, GenericCurrencyAmountField};
+/// use swift_mt_message::fields::field59::Field59Basic;
 /// use chrono::NaiveDate;
 ///
 /// // Create required mandatory fields
@@ -321,7 +327,7 @@ use serde::{Deserialize, Serialize};
 ///     "USD".to_string(),
 ///     1000000.00 // Settlement amount in USD
 /// );
-/// let field_33b = Field33B::new("EUR", 850000.00).unwrap(); // Original EUR amount
+/// let field_33b = GenericCurrencyAmountField::new("EUR", 850000.00).unwrap(); // Original EUR amount
 /// let field_36 = Field36::new(1.1765).unwrap(); // EUR/USD rate
 ///
 /// let mt103_fx = MT103::new_complete(
@@ -474,7 +480,7 @@ pub struct MT103 {
     /// **Audit Trail**: Provides complete transaction history  
     /// **Relationship**: Must differ from Field 32A for FX transactions
     #[field("33B")]
-    pub field_33b: Option<Field33B>,
+    pub field_33b: Option<GenericCurrencyAmountField>,
 
     /// **Exchange Rate** - Field 36 (Optional)
     ///
@@ -498,7 +504,7 @@ pub struct MT103 {
     /// **Format**: BIC code with optional account information  
     /// **Correspondent Banking**: Critical for routing and settlement
     #[field("51A")]
-    pub field_51a: Option<Field51A>,
+    pub field_51a: Option<GenericBicField>,
 
     // ================================
     // INSTITUTIONAL ROUTING FIELDS (Payment routing chain)
@@ -515,7 +521,7 @@ pub struct MT103 {
     /// **Routing Role**: First institution in the correspondent banking chain  
     /// **Business Rule**: Must have correspondent relationship with next institution
     #[field("52A")]
-    pub field_52a: Option<Field52A>,
+    pub field_52a: Option<GenericBicField>,
 
     /// **Ordering Institution** - Field 52D (Optional)
     ///
@@ -528,7 +534,7 @@ pub struct MT103 {
     /// **Processing**: Requires manual intervention for routing  
     /// **Usage**: Used when BIC is not available or for domestic routing
     #[field("52D")]
-    pub field_52d: Option<Field52D>,
+    pub field_52d: Option<GenericNameAddressField>,
 
     /// **Sender's Correspondent** - Field 53A (Optional)
     ///
@@ -541,7 +547,7 @@ pub struct MT103 {
     /// **Routing Role**: Facilitates cross-border payment routing  
     /// **Relationship**: Must have correspondent agreements with sender and receiver
     #[field("53A")]
-    pub field_53a: Option<Field53A>,
+    pub field_53a: Option<GenericBicField>,
 
     /// **Sender's Correspondent** - Field 53B (Optional)
     ///
@@ -553,7 +559,7 @@ pub struct MT103 {
     /// **Processing**: May require manual routing decisions  
     /// **Usage**: Domestic clearing systems or non-BIC routing
     #[field("53B")]
-    pub field_53b: Option<Field53B>,
+    pub field_53b: Option<GenericPartyField>,
 
     /// **Sender's Correspondent** - Field 53D (Optional)
     ///
@@ -565,7 +571,7 @@ pub struct MT103 {
     /// **Processing**: Requires manual intervention for institution identification  
     /// **Usage**: Legacy systems or domestic correspondent relationships
     #[field("53D")]
-    pub field_53d: Option<Field53D>,
+    pub field_53d: Option<GenericNameAddressField>,
 
     /// **Receiver's Correspondent** - Field 54A (Optional)
     ///
@@ -578,7 +584,7 @@ pub struct MT103 {
     /// **Routing Role**: Final correspondent before beneficiary institution  
     /// **Settlement**: Often handles final settlement to beneficiary bank
     #[field("54A")]
-    pub field_54a: Option<Field54A>,
+    pub field_54a: Option<GenericBicField>,
 
     /// **Receiver's Correspondent** - Field 54B (Optional)
     ///
@@ -590,7 +596,7 @@ pub struct MT103 {
     /// **Processing**: May require manual routing and settlement decisions  
     /// **Clearing**: Often used for domestic ACH or clearing system routing
     #[field("54B")]
-    pub field_54b: Option<Field54B>,
+    pub field_54b: Option<GenericPartyField>,
 
     /// **Receiver's Correspondent** - Field 54D (Optional)
     ///
@@ -602,7 +608,7 @@ pub struct MT103 {
     /// **Processing**: Requires manual intervention for routing  
     /// **Usage**: Complex correspondent relationships or legacy systems
     #[field("54D")]
-    pub field_54d: Option<Field54D>,
+    pub field_54d: Option<GenericNameAddressField>,
 
     /// **Third Reimbursement Institution** - Field 55A (Optional)
     ///
@@ -614,7 +620,7 @@ pub struct MT103 {
     /// **Routing Role**: Intermediate reimbursement in correspondent chain  
     /// **Usage**: Complex cross-border routing with multiple correspondents
     #[field("55A")]
-    pub field_55a: Option<Field55A>,
+    pub field_55a: Option<GenericBicField>,
 
     /// **Third Reimbursement Institution** - Field 55B (Optional)
     ///
@@ -626,7 +632,7 @@ pub struct MT103 {
     /// **Processing**: Requires manual reimbursement processing  
     /// **Complexity**: Adds additional correspondent relationship complexity
     #[field("55B")]
-    pub field_55b: Option<Field55B>,
+    pub field_55b: Option<GenericPartyField>,
 
     /// **Third Reimbursement Institution** - Field 55D (Optional)
     ///
@@ -638,7 +644,7 @@ pub struct MT103 {
     /// **Processing**: Requires manual intervention for reimbursement  
     /// **Usage**: Highly complex correspondent banking arrangements
     #[field("55D")]
-    pub field_55d: Option<Field55D>,
+    pub field_55d: Option<GenericNameAddressField>,
 
     /// **Intermediary Institution** - Field 56A (Optional)
     ///
@@ -649,7 +655,7 @@ pub struct MT103 {
     /// **Format**: Optional account indicator + optional account + BIC  
     /// **Routing Role**: Facilitates payment routing between correspondents
     #[field("56A")]
-    pub field_56a: Option<Field56A>,
+    pub field_56a: Option<GenericBicField>,
 
     /// **Intermediary Institution** - Field 56C (Optional)
     ///
@@ -661,7 +667,7 @@ pub struct MT103 {
     /// **Processing**: Requires account-based routing decisions  
     /// **Usage**: Specific account routing through intermediary banks
     #[field("56C")]
-    pub field_56c: Option<Field56C>,
+    pub field_56c: Option<GenericAccountField>,
 
     /// **Intermediary Institution** - Field 56D (Optional)
     ///
@@ -673,7 +679,7 @@ pub struct MT103 {
     /// **Processing**: Requires manual intervention for routing  
     /// **Complexity**: Adds manual processing overhead to payment chain
     #[field("56D")]
-    pub field_56d: Option<Field56D>,
+    pub field_56d: Option<GenericNameAddressField>,
 
     /// **Account With Institution** - Field 57A (Optional)
     ///
@@ -685,7 +691,7 @@ pub struct MT103 {
     /// **Routing Role**: Final destination bank for payment settlement  
     /// **Critical**: Essential for successful payment delivery
     #[field("57A")]
-    pub field_57a: Option<Field57A>,
+    pub field_57a: Option<GenericBicField>,
 
     /// **Account With Institution** - Field 57B (Optional)
     ///
@@ -697,7 +703,7 @@ pub struct MT103 {
     /// **Processing**: May require manual intervention for final delivery  
     /// **Usage**: Domestic clearing systems or non-SWIFT final settlement
     #[field("57B")]
-    pub field_57b: Option<Field57B>,
+    pub field_57b: Option<GenericPartyField>,
 
     /// **Account With Institution** - Field 57C (Optional)
     ///
@@ -709,7 +715,7 @@ pub struct MT103 {
     /// **Processing**: Requires account-based final settlement  
     /// **Usage**: Specific account routing for final payment delivery
     #[field("57C")]
-    pub field_57c: Option<Field57C>,
+    pub field_57c: Option<GenericAccountField>,
 
     /// **Account With Institution** - Field 57D (Optional)
     ///
@@ -721,7 +727,7 @@ pub struct MT103 {
     /// **Processing**: Requires manual intervention for final delivery  
     /// **Risk**: Higher risk of payment delays or delivery failures
     #[field("57D")]
-    pub field_57d: Option<Field57D>,
+    pub field_57d: Option<GenericNameAddressField>,
 
     // ================================
     // PAYMENT DETAILS AND INFORMATION FIELDS
@@ -753,7 +759,7 @@ pub struct MT103 {
     /// **Transparency**: Enables clear communication of sender charge amounts  
     /// **Accounting**: Critical for accurate charge accounting and reconciliation
     #[field("71F")]
-    pub field_71f: Option<Field71F>,
+    pub field_71f: Option<GenericCurrencyAmountField>,
 
     /// **Receiver's Charges** - Field 71G (Optional)
     ///
@@ -765,7 +771,7 @@ pub struct MT103 {
     /// **Impact**: Amount will be deducted from final payment to beneficiary  
     /// **Disclosure**: May be required for regulatory compliance and transparency
     #[field("71G")]
-    pub field_71g: Option<Field71G>,
+    pub field_71g: Option<GenericCurrencyAmountField>,
 
     // ================================
     // PROCESSING AND COMPLIANCE FIELDS
@@ -872,30 +878,30 @@ impl MT103 {
         field_13c: Option<Field13C>,
         field_23e: Option<Field23E>,
         field_26t: Option<Field26T>,
-        field_33b: Option<Field33B>,
+        field_33b: Option<GenericCurrencyAmountField>,
         field_36: Option<Field36>,
-        field_51a: Option<Field51A>,
-        field_52a: Option<Field52A>,
-        field_52d: Option<Field52D>,
-        field_53a: Option<Field53A>,
-        field_53b: Option<Field53B>,
-        field_53d: Option<Field53D>,
-        field_54a: Option<Field54A>,
-        field_54b: Option<Field54B>,
-        field_54d: Option<Field54D>,
-        field_55a: Option<Field55A>,
-        field_55b: Option<Field55B>,
-        field_55d: Option<Field55D>,
-        field_56a: Option<Field56A>,
-        field_56c: Option<Field56C>,
-        field_56d: Option<Field56D>,
-        field_57a: Option<Field57A>,
-        field_57b: Option<Field57B>,
-        field_57c: Option<Field57C>,
-        field_57d: Option<Field57D>,
+        field_51a: Option<GenericBicField>,
+        field_52a: Option<GenericBicField>,
+        field_52d: Option<GenericNameAddressField>,
+        field_53a: Option<GenericBicField>,
+        field_53b: Option<GenericPartyField>,
+        field_53d: Option<GenericNameAddressField>,
+        field_54a: Option<GenericBicField>,
+        field_54b: Option<GenericPartyField>,
+        field_54d: Option<GenericNameAddressField>,
+        field_55a: Option<GenericBicField>,
+        field_55b: Option<GenericPartyField>,
+        field_55d: Option<GenericNameAddressField>,
+        field_56a: Option<GenericBicField>,
+        field_56c: Option<GenericAccountField>,
+        field_56d: Option<GenericNameAddressField>,
+        field_57a: Option<GenericBicField>,
+        field_57b: Option<GenericPartyField>,
+        field_57c: Option<GenericAccountField>,
+        field_57d: Option<GenericNameAddressField>,
         field_70: Option<Field70>,
-        field_71f: Option<Field71F>,
-        field_71g: Option<Field71G>,
+        field_71f: Option<GenericCurrencyAmountField>,
+        field_71g: Option<GenericCurrencyAmountField>,
         field_72: Option<Field72>,
         field_77b: Option<Field77B>,
         field_77t: Option<Field77T>,
@@ -966,7 +972,7 @@ impl MT103 {
     }
 
     /// Get the instructed amount if present
-    pub fn instructed_amount(&self) -> Option<&Field33B> {
+    pub fn instructed_amount(&self) -> Option<&GenericCurrencyAmountField> {
         self.field_33b.as_ref()
     }
 
@@ -976,12 +982,12 @@ impl MT103 {
     }
 
     /// Get sender's charges if present
-    pub fn senders_charges(&self) -> Option<&Field71F> {
+    pub fn senders_charges(&self) -> Option<&GenericCurrencyAmountField> {
         self.field_71f.as_ref()
     }
 
     /// Get receiver's charges if present
-    pub fn receivers_charges(&self) -> Option<&Field71G> {
+    pub fn receivers_charges(&self) -> Option<&GenericCurrencyAmountField> {
         self.field_71g.as_ref()
     }
 
@@ -996,7 +1002,7 @@ impl MT103 {
     }
 
     /// Get sending institution if present
-    pub fn sending_institution(&self) -> Option<&Field51A> {
+    pub fn sending_institution(&self) -> Option<&GenericBicField> {
         self.field_51a.as_ref()
     }
 
@@ -1075,7 +1081,7 @@ impl MT103 {
                 .or_else(|| {
                     self.field_56d
                         .as_ref()
-                        .map(|field_56d| field_56d.name_and_address().join(" "))
+                        .map(|field_56d| field_56d.name_and_address.join(" "))
                 })
         }
     }
@@ -1096,7 +1102,7 @@ impl MT103 {
                 .or_else(|| {
                     self.field_57d
                         .as_ref()
-                        .map(|field_57d| field_57d.lines.join(" "))
+                        .map(|field_57d| field_57d.name_and_address.join(" "))
                 })
         }
     }
@@ -1242,7 +1248,7 @@ impl MT103 {
         match &self.field_59 {
             Field59::A(field_59a) => {
                 // For option A, account is optional but becomes mandatory in STP
-                if field_59a.account().is_none() {
+                if field_59a.account_number().is_none() {
                     return false;
                 }
             }
@@ -1443,7 +1449,7 @@ impl MT103 {
         match &self.field_59 {
             Field59::A(field_59a) => {
                 // For option A, account must be present and BIC must be valid
-                if field_59a.account().is_none() {
+                if field_59a.account_number().is_none() {
                     return false;
                 }
                 if !bic_pattern.is_match(field_59a.bic()) {
@@ -1551,7 +1557,8 @@ mod tests {
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
         let field_59 = Field59::A(
-            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+            GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
+                .unwrap(),
         );
         let field_71a = Field71A::new("OUR".to_string());
 
@@ -1584,7 +1591,8 @@ mod tests {
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
         let field_59 = Field59::A(
-            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+            GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
+                .unwrap(),
         );
         let field_71a = Field71A::new("OUR".to_string());
 
@@ -1625,7 +1633,8 @@ mod tests {
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
         let field_59 = Field59::A(
-            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+            GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
+                .unwrap(),
         );
         let field_71a = Field71A::new("OUR".to_string());
         let field_77t = Field77T::new("R", "D", "REMITTANCE-2024-001234567890").unwrap();
@@ -1688,10 +1697,11 @@ mod tests {
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
         let field_59 = Field59::A(
-            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+            GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
+                .unwrap(),
         );
         let field_71a = Field71A::new("OUR".to_string());
-        let field_51a = Field51A::new(None, None, "CHASUS33XXX").unwrap();
+        let field_51a = GenericBicField::new(None, None, "CHASUS33XXX").unwrap();
 
         let mt103_with_51a = MT103::new_complete(
             field_20,
@@ -1750,7 +1760,8 @@ mod tests {
         );
         let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
         let field_59 = Field59::A(
-            Field59A::new(Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF").unwrap(),
+            GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
+                .unwrap(),
         );
         let field_71a = Field71A::new("OUR".to_string());
 

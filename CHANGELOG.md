@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0]
+
+### 🐛 Bug Fixes
+
+#### Field Parsing Regression Fix
+- **Fixed field tag prefix parsing**: Resolved critical regression where `GenericNameAddressField`, `GenericPartyField`, and `GenericAccountField` types were incorrectly including field tag prefixes in parsed content
+- **Affected Fields**: 52D, 53D, 56D, and other name/address fields were showing content like `:52D:NOTPROVIDED` instead of just `NOTPROVIDED`
+- **Root Cause**: Message parsing macro was using generic `SwiftField::parse()` instead of specialized `parse_with_tag()` method for certain field types
+- **Solution**: Enhanced `derive_swift_message` macro to automatically detect field types that require tag-aware parsing and call `parse_with_tag()` with the correct field tag
+- **Backward Compatibility**: This fix restores correct parsing behavior and maintains backward compatibility with previous versions
+
+#### Backward Compatibility Testing System
+- **Added comprehensive backward compatibility test suite** in `backward-compatibility-test/` directory
+- **Automated testing**: Compares JSON outputs between published and local versions to detect breaking changes
+- **Test Coverage**: All MT103, MT202, and MT205 test data files are validated for compatibility
+- **CI Integration Ready**: Shell script for automated testing in CI/CD pipelines
+- **Detailed Reporting**: Provides specific field-level difference analysis with compatibility assessment
+
+### 🔧 Technical Improvements
+
+#### Macro Enhancements
+- **Smart Field Type Detection**: Enhanced `derive_swift_message` macro to automatically detect field types requiring specialized parsing
+- **Improved Code Generation**: Better handling of `Option<T>` and `Vec<T>` field types with tag-aware parsing
+- **Code Quality**: Improved formatting and readability of generated parsing code
+
 ## [2.0.0] - 2024-12-19
 
 ### 🚀 Major Enhancements

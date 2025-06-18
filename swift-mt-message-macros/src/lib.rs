@@ -367,21 +367,44 @@ pub fn derive_swift_message(input: TokenStream) -> TokenStream {
                                 let vec_inner_type = extract_vec_inner_type(inner_type)
                                     .expect("Failed to extract inner type from Vec");
 
-                                optional_field_parsing.push(quote! {
-                                    #field_name: if let Some(field_values) = fields.get(#field_tag) {
-                                        let mut parsed_fields = Vec::new();
-                                        for field_value in field_values {
-                                            parsed_fields.push(<#vec_inner_type as crate::SwiftField>::parse(field_value)?);
-                                        }
-                                        if parsed_fields.is_empty() {
-                                            None
+                                // Check if the vec inner type has a parse_with_tag method
+                                let vec_type_name = quote!(#vec_inner_type).to_string();
+                                if vec_type_name.contains("GenericNameAddressField")
+                                    || vec_type_name.contains("GenericPartyField")
+                                    || vec_type_name.contains("GenericAccountField")
+                                {
+                                    optional_field_parsing.push(quote! {
+                                        #field_name: if let Some(field_values) = fields.get(#field_tag) {
+                                            let mut parsed_fields = Vec::new();
+                                            for field_value in field_values {
+                                                parsed_fields.push(#vec_inner_type::parse_with_tag(field_value, #field_tag)?);
+                                            }
+                                            if parsed_fields.is_empty() {
+                                                None
+                                            } else {
+                                                Some(parsed_fields)
+                                            }
                                         } else {
-                                            Some(parsed_fields)
+                                            None
                                         }
-                                    } else {
-                                        None
-                                    }
-                                });
+                                    });
+                                } else {
+                                    optional_field_parsing.push(quote! {
+                                        #field_name: if let Some(field_values) = fields.get(#field_tag) {
+                                            let mut parsed_fields = Vec::new();
+                                            for field_value in field_values {
+                                                parsed_fields.push(<#vec_inner_type as crate::SwiftField>::parse(field_value)?);
+                                            }
+                                            if parsed_fields.is_empty() {
+                                                None
+                                            } else {
+                                                Some(parsed_fields)
+                                            }
+                                        } else {
+                                            None
+                                        }
+                                    });
+                                }
 
                                 optional_field_serialization.push(quote! {
                                     if let Some(ref field_values) = self.#field_name {
@@ -394,13 +417,28 @@ pub fn derive_swift_message(input: TokenStream) -> TokenStream {
                                 });
                             } else {
                                 // Optional single field: Option<T>
-                                optional_field_parsing.push(quote! {
-                                    #field_name: if let Some(field_value) = fields.get(#field_tag) {
-                                        Some(<#inner_type as crate::SwiftField>::parse(&field_value[0])?)
-                                    } else {
-                                        None
-                                    }
-                                });
+                                // Check if the type has a parse_with_tag method (for fields like GenericNameAddressField)
+                                let type_name = quote!(#inner_type).to_string();
+                                if type_name.contains("GenericNameAddressField")
+                                    || type_name.contains("GenericPartyField")
+                                    || type_name.contains("GenericAccountField")
+                                {
+                                    optional_field_parsing.push(quote! {
+                                        #field_name: if let Some(field_value) = fields.get(#field_tag) {
+                                            Some(#inner_type::parse_with_tag(&field_value[0], #field_tag)?)
+                                        } else {
+                                            None
+                                        }
+                                    });
+                                } else {
+                                    optional_field_parsing.push(quote! {
+                                        #field_name: if let Some(field_value) = fields.get(#field_tag) {
+                                            Some(<#inner_type as crate::SwiftField>::parse(&field_value[0])?)
+                                        } else {
+                                            None
+                                        }
+                                    });
+                                }
 
                                 optional_field_serialization.push(quote! {
                                     if let Some(ref field_value) = self.#field_name {
@@ -415,19 +453,40 @@ pub fn derive_swift_message(input: TokenStream) -> TokenStream {
                             let vec_inner_type = extract_vec_inner_type(field_type)
                                 .expect("Failed to extract inner type from Vec");
 
-                            required_field_parsing.push(quote! {
-                                #field_name: {
-                                    let field_values = fields.get(#field_tag)
-                                        .ok_or_else(|| crate::ParseError::MissingRequiredField {
-                                            field_tag: #field_tag.to_string(),
-                                        })?;
-                                    let mut parsed_fields = Vec::new();
-                                    for field_value in field_values {
-                                        parsed_fields.push(<#vec_inner_type as crate::SwiftField>::parse(field_value)?);
+                            // Check if the vec inner type has a parse_with_tag method
+                            let vec_type_name = quote!(#vec_inner_type).to_string();
+                            if vec_type_name.contains("GenericNameAddressField")
+                                || vec_type_name.contains("GenericPartyField")
+                                || vec_type_name.contains("GenericAccountField")
+                            {
+                                required_field_parsing.push(quote! {
+                                    #field_name: {
+                                        let field_values = fields.get(#field_tag)
+                                            .ok_or_else(|| crate::ParseError::MissingRequiredField {
+                                                field_tag: #field_tag.to_string(),
+                                            })?;
+                                        let mut parsed_fields = Vec::new();
+                                        for field_value in field_values {
+                                            parsed_fields.push(#vec_inner_type::parse_with_tag(field_value, #field_tag)?);
+                                        }
+                                        parsed_fields
                                     }
-                                    parsed_fields
-                                }
-                            });
+                                });
+                            } else {
+                                required_field_parsing.push(quote! {
+                                    #field_name: {
+                                        let field_values = fields.get(#field_tag)
+                                            .ok_or_else(|| crate::ParseError::MissingRequiredField {
+                                                field_tag: #field_tag.to_string(),
+                                            })?;
+                                        let mut parsed_fields = Vec::new();
+                                        for field_value in field_values {
+                                            parsed_fields.push(<#vec_inner_type as crate::SwiftField>::parse(field_value)?);
+                                        }
+                                        parsed_fields
+                                    }
+                                });
+                            }
 
                             required_field_serialization.push(quote! {
                                 {
@@ -442,14 +501,31 @@ pub fn derive_swift_message(input: TokenStream) -> TokenStream {
                             required_field_tags.push(quote! { #field_tag });
                         } else {
                             // Required single field: T
-                            required_field_parsing.push(quote! {
-                                #field_name: <#field_type as crate::SwiftField>::parse(
-                                    &fields.get(#field_tag)
-                                        .ok_or_else(|| crate::ParseError::MissingRequiredField {
-                                            field_tag: #field_tag.to_string(),
-                                        })?[0]
-                                )?
-                            });
+                            // Check if the type has a parse_with_tag method (for fields like GenericNameAddressField)
+                            let type_name = quote!(#field_type).to_string();
+                            if type_name.contains("GenericNameAddressField")
+                                || type_name.contains("GenericPartyField")
+                                || type_name.contains("GenericAccountField")
+                            {
+                                required_field_parsing.push(quote! {
+                                    #field_name: #field_type::parse_with_tag(
+                                        &fields.get(#field_tag)
+                                            .ok_or_else(|| crate::ParseError::MissingRequiredField {
+                                                field_tag: #field_tag.to_string(),
+                                            })?[0],
+                                        #field_tag
+                                    )?
+                                });
+                            } else {
+                                required_field_parsing.push(quote! {
+                                    #field_name: <#field_type as crate::SwiftField>::parse(
+                                        &fields.get(#field_tag)
+                                            .ok_or_else(|| crate::ParseError::MissingRequiredField {
+                                                field_tag: #field_tag.to_string(),
+                                            })?[0]
+                                    )?
+                                });
+                            }
 
                             required_field_serialization.push(quote! {
                                 fields.insert(#field_tag.to_string(), vec![crate::SwiftField::to_swift_string(&self.#field_name)]);

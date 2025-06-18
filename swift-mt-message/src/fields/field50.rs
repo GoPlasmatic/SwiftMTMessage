@@ -1,5 +1,4 @@
-use crate::common::BIC;
-use crate::{SwiftField, ValidationResult, errors::ParseError};
+use crate::{GenericBicField, MultiLineField, SwiftField, ValidationResult, errors::ParseError};
 use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
@@ -104,62 +103,6 @@ use std::fmt;
 /// - Characters must be from SWIFT character set (Error: T61)
 ///
 ///
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct Field50A {
-    /// Optional account number (starting with /)
-    pub account: Option<String>,
-    /// BIC code
-    #[serde(flatten)]
-    pub bic: BIC,
-}
-
-impl Field50A {
-    /// Create a new Field50A with validation
-    pub fn new(account: Option<String>, bic: impl Into<String>) -> Result<Self, ParseError> {
-        // Parse and validate BIC using the common structure
-        let bic = BIC::parse(&bic.into(), Some("50A"))?;
-
-        // Validate account if present
-        if let Some(ref acc) = account {
-            if acc.is_empty() {
-                return Err(ParseError::InvalidFieldFormat {
-                    field_tag: "50A".to_string(),
-                    message: "Account cannot be empty if specified".to_string(),
-                });
-            }
-
-            if acc.len() > 34 {
-                return Err(ParseError::InvalidFieldFormat {
-                    field_tag: "50A".to_string(),
-                    message: "Account number too long (max 34 characters)".to_string(),
-                });
-            }
-        }
-
-        Ok(Field50A { account, bic })
-    }
-
-    /// Get the account number
-    pub fn account(&self) -> Option<&str> {
-        self.account.as_deref()
-    }
-
-    /// Get the BIC code
-    pub fn bic(&self) -> &str {
-        self.bic.value()
-    }
-}
-
-impl std::fmt::Display for Field50A {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self.account {
-            Some(account) => write!(f, "Account: {}, BIC: {}", account, self.bic.value()),
-            None => write!(f, "BIC: {}", self.bic.value()),
-        }
-    }
-}
-
 /// Field 50F: Ordering Customer (Option F)
 ///
 /// Format: Party identifier and name/address lines
@@ -229,39 +172,38 @@ impl Field50F {
 /// Field 50K: Ordering Customer (Option K)
 ///
 /// Format: Name and address lines (up to 4 lines)
+///
+/// This field now implements the MultiLineField trait for consistent validation
+/// and processing while maintaining the same public API.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Field50K {
     /// Name and address lines (up to 4 lines)
     pub name_and_address: Vec<String>,
 }
 
+impl MultiLineField for Field50K {
+    const MAX_LINES: usize = 4;
+    const FIELD_TAG: &'static str = "50K";
+
+    fn lines(&self) -> &[String] {
+        &self.name_and_address
+    }
+
+    fn lines_mut(&mut self) -> &mut Vec<String> {
+        &mut self.name_and_address
+    }
+
+    fn new_with_lines(lines: Vec<String>) -> Result<Self, ParseError> {
+        Ok(Field50K {
+            name_and_address: lines,
+        })
+    }
+}
+
 impl Field50K {
     /// Create a new Field50K with validation
     pub fn new(name_and_address: Vec<String>) -> Result<Self, ParseError> {
-        if name_and_address.is_empty() {
-            return Err(ParseError::InvalidFieldFormat {
-                field_tag: "50K".to_string(),
-                message: "Name and address cannot be empty".to_string(),
-            });
-        }
-
-        if name_and_address.len() > 4 {
-            return Err(ParseError::InvalidFieldFormat {
-                field_tag: "50K".to_string(),
-                message: "Too many name/address lines (max 4)".to_string(),
-            });
-        }
-
-        for (i, line) in name_and_address.iter().enumerate() {
-            if line.len() > 35 {
-                return Err(ParseError::InvalidFieldFormat {
-                    field_tag: "50K".to_string(),
-                    message: format!("Line {} too long (max 35 characters)", i + 1),
-                });
-            }
-        }
-
-        Ok(Field50K { name_and_address })
+        <Self as MultiLineField>::new(name_and_address)
     }
 
     /// Get the name and address lines
@@ -273,7 +215,7 @@ impl Field50K {
 /// Field 50: Ordering Customer (with options A, F, and K)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Field50 {
-    A(Field50A),
+    A(GenericBicField),
     F(Field50F),
     K(Field50K),
 }
@@ -282,7 +224,12 @@ impl Field50 {
     /// Parse Field50 with a specific tag (50A, 50F, or 50K)
     pub fn parse_with_tag(tag: &str, content: &str) -> Result<Self, ParseError> {
         match tag {
-            "50A" => Ok(Field50::A(Field50A::parse(content)?)),
+            "50A" => Ok(Field50::A(GenericBicField::parse(content).map_err(
+                |e| ParseError::InvalidFieldFormat {
+                    field_tag: "50A".to_string(),
+                    message: format!("GenericBicField parse error: {}", e),
+                },
+            )?)),
             "50F" => Ok(Field50::F(Field50F::parse(content)?)),
             "50K" => Ok(Field50::K(Field50K::parse(content)?)),
             _ => Err(ParseError::InvalidFieldFormat {
@@ -312,7 +259,7 @@ impl std::fmt::Display for Field50 {
                 field.party_identifier,
                 field.name_and_address.join(", ")
             ),
-            Field50::K(field) => write!(f, "50K: {}", field.name_and_address.join(", ")),
+            Field50::K(field) => write!(f, "50K: {}", field.name_and_address().join(", ")),
         }
     }
 }
@@ -358,9 +305,13 @@ impl<'de> Deserialize<'de> for Field50 {
 
                 // Try to determine the variant based on the fields present
                 if fields.contains_key("bic") {
-                    // Field50A variant
-                    let account = fields
-                        .get("account")
+                    // Field50A variant - deserialize as GenericBicField
+                    let account_number = fields
+                        .get("account_number")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string());
+                    let account_line_indicator = fields
+                        .get("account_line_indicator")
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string());
                     let bic = fields
@@ -369,9 +320,11 @@ impl<'de> Deserialize<'de> for Field50 {
                         .ok_or_else(|| de::Error::missing_field("bic"))?
                         .to_string();
 
-                    Field50A::new(account, bic)
+                    GenericBicField::new(account_line_indicator, account_number, bic)
                         .map(Field50::A)
-                        .map_err(|e| de::Error::custom(format!("Field50A validation error: {}", e)))
+                        .map_err(|e| {
+                            de::Error::custom(format!("GenericBicField validation error: {}", e))
+                        })
                 } else if fields.contains_key("party_identifier") {
                     // Field50F variant
                     let party_identifier = fields
@@ -410,72 +363,6 @@ impl<'de> Deserialize<'de> for Field50 {
         }
 
         deserializer.deserialize_map(Field50Visitor)
-    }
-}
-
-impl SwiftField for Field50A {
-    fn parse(content: &str) -> Result<Self, ParseError> {
-        let content = if let Some(stripped) = content.strip_prefix(":50A:") {
-            stripped
-        } else if let Some(stripped) = content.strip_prefix("50A:") {
-            stripped
-        } else {
-            content
-        };
-
-        let mut lines = content.lines();
-        let first_line = lines.next().unwrap_or_default();
-
-        let (account, bic_line) = if let Some(stripped) = first_line.strip_prefix('/') {
-            (Some(stripped.to_string()), lines.next().unwrap_or_default())
-        } else {
-            (None, first_line)
-        };
-
-        let bic = BIC::parse(bic_line, Some("50A"))?;
-
-        Ok(Field50A { account, bic })
-    }
-
-    fn to_swift_string(&self) -> String {
-        let content = if let Some(ref account) = self.account {
-            format!("/{}\n{}", account, self.bic.value())
-        } else {
-            self.bic.value().to_string()
-        };
-        format!(":50A:{}", content)
-    }
-
-    fn validate(&self) -> ValidationResult {
-        use crate::errors::ValidationError;
-
-        let mut errors = Vec::new();
-
-        // Validate BIC format using the common BIC validation
-        let bic_validation = self.bic.validate();
-        if !bic_validation.is_valid {
-            errors.extend(bic_validation.errors);
-        }
-
-        // Validate account length if present
-        if let Some(ref account) = self.account {
-            if account.len() > 34 {
-                errors.push(ValidationError::FormatValidation {
-                    field_tag: "50A".to_string(),
-                    message: "Account number too long (max 34 characters)".to_string(),
-                });
-            }
-        }
-
-        ValidationResult {
-            is_valid: errors.is_empty(),
-            errors,
-            warnings: vec![],
-        }
-    }
-
-    fn format_spec() -> &'static str {
-        "[/account]bic"
     }
 }
 
@@ -538,56 +425,15 @@ impl SwiftField for Field50F {
 
 impl SwiftField for Field50K {
     fn parse(content: &str) -> Result<Self, ParseError> {
-        let content = if let Some(stripped) = content.strip_prefix(":50K:") {
-            stripped
-        } else if let Some(stripped) = content.strip_prefix("50K:") {
-            stripped
-        } else {
-            content
-        };
-
-        let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
-
-        Field50K::new(lines)
+        Self::parse_content(content)
     }
 
     fn to_swift_string(&self) -> String {
-        format!(":50K:{}", self.name_and_address.join("\n"))
+        self.to_swift_format()
     }
 
     fn validate(&self) -> ValidationResult {
-        use crate::errors::ValidationError;
-
-        let mut errors = Vec::new();
-
-        if self.name_and_address.is_empty() {
-            errors.push(ValidationError::FormatValidation {
-                field_tag: "50K".to_string(),
-                message: "Name and address cannot be empty".to_string(),
-            });
-        }
-
-        if self.name_and_address.len() > 4 {
-            errors.push(ValidationError::FormatValidation {
-                field_tag: "50K".to_string(),
-                message: "Too many lines (max 4)".to_string(),
-            });
-        }
-
-        for (i, line) in self.name_and_address.iter().enumerate() {
-            if line.len() > 35 {
-                errors.push(ValidationError::FormatValidation {
-                    field_tag: "50K".to_string(),
-                    message: format!("Line {} too long (max 35 characters)", i + 1),
-                });
-            }
-        }
-
-        ValidationResult {
-            is_valid: errors.is_empty(),
-            errors,
-            warnings: vec![],
-        }
+        self.validate_multiline()
     }
 
     fn format_spec() -> &'static str {
@@ -599,7 +445,12 @@ impl SwiftField for Field50 {
     fn parse(input: &str) -> Result<Self, ParseError> {
         // Try to determine the variant from the input
         if input.starts_with(":50A:") || input.starts_with("50A:") {
-            Ok(Field50::A(Field50A::parse(input)?))
+            Ok(Field50::A(GenericBicField::parse(input).map_err(|e| {
+                ParseError::InvalidFieldFormat {
+                    field_tag: "50A".to_string(),
+                    message: format!("GenericBicField parse error: {}", e),
+                }
+            })?))
         } else if input.starts_with(":50F:") || input.starts_with("50F:") {
             Ok(Field50::F(Field50F::parse(input)?))
         } else if input.starts_with(":50K:") || input.starts_with("50K:") {
@@ -612,7 +463,15 @@ impl SwiftField for Field50 {
 
     fn to_swift_string(&self) -> String {
         match self {
-            Field50::A(field) => field.to_swift_string(),
+            Field50::A(field) => {
+                // Convert GenericBicField to 50A format
+                let content = if let Some(account) = field.account_number() {
+                    format!("/{}\n{}", account, field.bic())
+                } else {
+                    field.bic().to_string()
+                };
+                format!(":50A:{}", content)
+            }
             Field50::F(field) => field.to_swift_string(),
             Field50::K(field) => field.to_swift_string(),
         }
@@ -637,29 +496,42 @@ mod tests {
 
     #[test]
     fn test_field50a_creation() {
-        let field = Field50A::new(Some("123456789".to_string()), "DEUTDEFFXXX").unwrap();
-        assert_eq!(field.account(), Some("123456789"));
+        let field =
+            GenericBicField::new(None, Some("123456789".to_string()), "DEUTDEFFXXX").unwrap();
+        assert_eq!(field.account_number(), Some("123456789"));
         assert_eq!(field.bic(), "DEUTDEFFXXX");
-        assert_eq!(field.to_swift_string(), ":50A:/123456789\nDEUTDEFFXXX");
+
+        let field50 = Field50::A(field);
+        assert_eq!(field50.to_swift_string(), ":50A:/123456789\nDEUTDEFFXXX");
     }
 
     #[test]
     fn test_field50a_without_account() {
-        let field = Field50A::new(None, "DEUTDEFFXXX").unwrap();
-        assert_eq!(field.account(), None);
+        let field = GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap();
+        assert_eq!(field.account_number(), None);
         assert_eq!(field.bic(), "DEUTDEFFXXX");
-        assert_eq!(field.to_swift_string(), ":50A:DEUTDEFFXXX");
+
+        let field50 = Field50::A(field);
+        assert_eq!(field50.to_swift_string(), ":50A:DEUTDEFFXXX");
     }
 
     #[test]
     fn test_field50a_parse() {
-        let field = Field50A::parse("/123456789\nDEUTDEFFXXX").unwrap();
-        assert_eq!(field.account(), Some("123456789"));
-        assert_eq!(field.bic(), "DEUTDEFFXXX");
+        let field = Field50::parse(":50A:/123456789\nDEUTDEFFXXX").unwrap();
+        if let Field50::A(bic_field) = field {
+            assert_eq!(bic_field.account_number(), Some("123456789"));
+            assert_eq!(bic_field.bic(), "DEUTDEFFXXX");
+        } else {
+            panic!("Expected Field50::A variant");
+        }
 
-        let field = Field50A::parse("DEUTDEFFXXX").unwrap();
-        assert_eq!(field.account(), None);
-        assert_eq!(field.bic(), "DEUTDEFFXXX");
+        let field = Field50::parse(":50A:DEUTDEFFXXX").unwrap();
+        if let Field50::A(bic_field) = field {
+            assert_eq!(bic_field.account_number(), None);
+            assert_eq!(bic_field.bic(), "DEUTDEFFXXX");
+        } else {
+            panic!("Expected Field50::A variant");
+        }
     }
 
     #[test]
@@ -718,7 +590,7 @@ mod tests {
 
     #[test]
     fn test_field50_tag() {
-        let field = Field50::A(Field50A::new(None, "DEUTDEFFXXX").unwrap());
+        let field = Field50::A(GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap());
         assert_eq!(field.tag(), "50A");
 
         let field = Field50::F(Field50F::new("PARTY123", vec!["JOHN DOE".to_string()]).unwrap());
@@ -730,7 +602,7 @@ mod tests {
 
     #[test]
     fn test_field50_validation() {
-        let field = Field50A::new(None, "DEUTDEFF").unwrap();
+        let field = GenericBicField::new(None, None, "DEUTDEFF").unwrap();
         let result = field.validate();
         assert!(result.is_valid);
 
@@ -758,14 +630,15 @@ mod tests {
         assert!(!json.contains("\"K\""));
 
         // Test Field50A
-        let field50a =
-            Field50::A(Field50A::new(Some("123456789".to_string()), "DEUTDEFFXXX").unwrap());
+        let field50a = Field50::A(
+            GenericBicField::new(None, Some("123456789".to_string()), "DEUTDEFFXXX").unwrap(),
+        );
 
         let json = serde_json::to_string(&field50a).unwrap();
         println!("Field50A JSON: {}", json);
 
         // Should be flattened - no "A" wrapper
-        assert!(json.contains("\"account\""));
+        assert!(json.contains("\"account_number\""));
         assert!(json.contains("\"bic\""));
         assert!(!json.contains("\"A\""));
 
@@ -789,7 +662,7 @@ mod tests {
         assert!(matches!(field, Field50::K(_)));
 
         // Test deserializing Field50A
-        let json = r#"{"account":"123456789","bic":"DEUTDEFFXXX"}"#;
+        let json = r#"{"account_number":"123456789","bic":"DEUTDEFFXXX"}"#;
         let field: Field50 = serde_json::from_str(json).unwrap();
         assert!(matches!(field, Field50::A(_)));
 

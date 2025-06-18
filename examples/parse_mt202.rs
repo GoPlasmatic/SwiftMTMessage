@@ -185,7 +185,7 @@ fn display_cover_message_fields(parsed_message: &swift_mt_message::SwiftMessage<
 
     if let Some(field_59a) = parsed_message.fields.beneficiary_customer() {
         println!("  Beneficiary Customer:");
-        if let Some(account) = &field_59a.account {
+        if let Some(account) = &field_59a.account_number {
             println!("    Account: {}", account);
         }
         println!("    BIC: {}", field_59a.bic());

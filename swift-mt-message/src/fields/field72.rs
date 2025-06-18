@@ -1,4 +1,4 @@
-use crate::{SwiftField, ValidationError, ValidationResult};
+use crate::{MultiLineField, SwiftField, ValidationResult, errors::ParseError};
 use serde::{Deserialize, Serialize};
 
 /// # Field 72: Sender to Receiver Information
@@ -138,45 +138,31 @@ pub struct Field72 {
     pub information: Vec<String>,
 }
 
+impl MultiLineField for Field72 {
+    const MAX_LINES: usize = 6;
+    const FIELD_TAG: &'static str = "72";
+
+    fn lines(&self) -> &[String] {
+        &self.information
+    }
+
+    fn lines_mut(&mut self) -> &mut Vec<String> {
+        &mut self.information
+    }
+
+    fn new_with_lines(lines: Vec<String>) -> Result<Self, ParseError> {
+        Ok(Field72 { information: lines })
+    }
+}
+
 impl Field72 {
     /// Create a new Field72 with validation
-    pub fn new(information: Vec<String>) -> Result<Self, crate::ParseError> {
-        if information.is_empty() {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "72".to_string(),
-                message: "Sender to receiver information cannot be empty".to_string(),
-            });
-        }
-
-        if information.len() > 6 {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "72".to_string(),
-                message: "Too many lines (max 6)".to_string(),
-            });
-        }
-
-        for (i, line) in information.iter().enumerate() {
-            if line.len() > 35 {
-                return Err(crate::ParseError::InvalidFieldFormat {
-                    field_tag: "72".to_string(),
-                    message: format!("Line {} too long (max 35 characters)", i + 1),
-                });
-            }
-
-            // Validate characters (printable ASCII)
-            if !line.chars().all(|c| c.is_ascii() && !c.is_control()) {
-                return Err(crate::ParseError::InvalidFieldFormat {
-                    field_tag: "72".to_string(),
-                    message: format!("Line {} contains invalid characters", i + 1),
-                });
-            }
-        }
-
-        Ok(Field72 { information })
+    pub fn new(information: Vec<String>) -> Result<Self, ParseError> {
+        <Self as MultiLineField>::new(information)
     }
 
     /// Create from a single string, splitting on newlines
-    pub fn from_string(content: impl Into<String>) -> Result<Self, crate::ParseError> {
+    pub fn from_string(content: impl Into<String>) -> Result<Self, ParseError> {
         let content = content.into();
         let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
         Self::new(lines)
@@ -198,30 +184,8 @@ impl Field72 {
     }
 
     /// Add a line of information
-    pub fn add_line(&mut self, line: String) -> Result<(), crate::ParseError> {
-        if self.information.len() >= 6 {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "72".to_string(),
-                message: "Cannot add more lines (max 6)".to_string(),
-            });
-        }
-
-        if line.len() > 35 {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "72".to_string(),
-                message: "Line too long (max 35 characters)".to_string(),
-            });
-        }
-
-        if !line.chars().all(|c| c.is_ascii() && !c.is_control()) {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "72".to_string(),
-                message: "Line contains invalid characters".to_string(),
-            });
-        }
-
-        self.information.push(line);
-        Ok(())
+    pub fn add_line(&mut self, line: String) -> Result<(), ParseError> {
+        <Self as MultiLineField>::add_line(self, line)
     }
 
     /// Get human-readable description
@@ -234,73 +198,16 @@ impl Field72 {
 }
 
 impl SwiftField for Field72 {
-    fn parse(value: &str) -> Result<Self, crate::ParseError> {
-        let content = if let Some(stripped) = value.strip_prefix(":72:") {
-            stripped // Remove ":72:" prefix
-        } else if let Some(stripped) = value.strip_prefix("72:") {
-            stripped // Remove "72:" prefix
-        } else {
-            value
-        };
-
-        let content = content.trim();
-
-        if content.is_empty() {
-            return Err(crate::ParseError::InvalidFieldFormat {
-                field_tag: "72".to_string(),
-                message: "Field content cannot be empty".to_string(),
-            });
-        }
-
-        Self::from_string(content)
+    fn parse(value: &str) -> Result<Self, ParseError> {
+        Self::parse_content(value)
     }
 
     fn to_swift_string(&self) -> String {
-        format!(":72:{}", self.information.join("\n"))
+        self.to_swift_format()
     }
 
     fn validate(&self) -> ValidationResult {
-        let mut errors = Vec::new();
-
-        // Validate line count
-        if self.information.is_empty() {
-            errors.push(ValidationError::ValueValidation {
-                field_tag: "72".to_string(),
-                message: "Information cannot be empty".to_string(),
-            });
-        }
-
-        if self.information.len() > 6 {
-            errors.push(ValidationError::LengthValidation {
-                field_tag: "72".to_string(),
-                expected: "max 6 lines".to_string(),
-                actual: self.information.len(),
-            });
-        }
-
-        // Validate each line
-        for (i, line) in self.information.iter().enumerate() {
-            if line.len() > 35 {
-                errors.push(ValidationError::LengthValidation {
-                    field_tag: "72".to_string(),
-                    expected: format!("max 35 characters for line {}", i + 1),
-                    actual: line.len(),
-                });
-            }
-
-            if !line.chars().all(|c| c.is_ascii() && !c.is_control()) {
-                errors.push(ValidationError::FormatValidation {
-                    field_tag: "72".to_string(),
-                    message: format!("Line {} contains invalid characters", i + 1),
-                });
-            }
-        }
-
-        ValidationResult {
-            is_valid: errors.is_empty(),
-            errors,
-            warnings: Vec::new(),
-        }
+        self.validate_multiline()
     }
 
     fn format_spec() -> &'static str {

@@ -635,6 +635,8 @@ pub enum ParsedSwiftMessage {
     MT103(Box<SwiftMessage<messages::MT103>>),
     #[serde(rename = "202")]
     MT202(Box<SwiftMessage<messages::MT202>>),
+    #[serde(rename = "205")]
+    MT205(Box<SwiftMessage<messages::MT205>>),
 }
 
 impl ParsedSwiftMessage {
@@ -643,6 +645,7 @@ impl ParsedSwiftMessage {
         match self {
             ParsedSwiftMessage::MT103(_) => "103",
             ParsedSwiftMessage::MT202(_) => "202",
+            ParsedSwiftMessage::MT205(_) => "205",
         }
     }
 
@@ -661,6 +664,13 @@ impl ParsedSwiftMessage {
         }
     }
 
+    pub fn as_mt205(&self) -> Option<&SwiftMessage<messages::MT205>> {
+        match self {
+            ParsedSwiftMessage::MT205(msg) => Some(msg),
+            _ => None,
+        }
+    }
+
     /// Convert into a specific message type if it matches
     pub fn into_mt103(self) -> Option<SwiftMessage<messages::MT103>> {
         match self {
@@ -672,6 +682,13 @@ impl ParsedSwiftMessage {
     pub fn into_mt202(self) -> Option<SwiftMessage<messages::MT202>> {
         match self {
             ParsedSwiftMessage::MT202(msg) => Some(*msg),
+            _ => None,
+        }
+    }
+
+    pub fn into_mt205(self) -> Option<SwiftMessage<messages::MT205>> {
+        match self {
+            ParsedSwiftMessage::MT205(msg) => Some(*msg),
             _ => None,
         }
     }

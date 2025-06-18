@@ -1256,7 +1256,7 @@ mod tests {
         // Test that cover payment fields are accessible
         assert!(mt202_cover.ordering_customer().is_some());
         assert!(mt202_cover.validate_cover_message());
-        
+
         // Cover message detection requires correspondent banks or explicit BIC comparison
         // Having just customer fields doesn't make it a cover message by the SWIFT standard
         assert!(!mt202_cover.is_cover_message_from_fields());

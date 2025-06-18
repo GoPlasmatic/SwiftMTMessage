@@ -544,9 +544,62 @@ impl MT202 {
     }
 
     /// Check if this is a cover message (MT202.COV)
-    pub fn is_cover_message(&self) -> bool {
-        // A cover message typically has ordering customer and/or beneficiary customer
-        self.field_50a.is_some() || self.field_59a.is_some()
+    ///
+    /// According to METAFCT003 specification, a message is COVER when:
+    /// - Both fields 53A and 54A are present AND
+    /// - Field 53A BIC ≠ Message Sender BIC OR Field 54A BIC ≠ Message Receiver BIC
+    ///
+    /// # Parameters
+    /// - `sender_bic`: The BIC of the message sender (from SWIFT message header)
+    /// - `receiver_bic`: The BIC of the message receiver (from SWIFT message header)
+    pub fn is_cover_message(&self, sender_bic: &str, receiver_bic: &str) -> bool {
+        if let (Some(field_53a), Some(field_54a)) = (&self.field_53a, &self.field_54a) {
+            // Get first 6 characters for BIC comparison (institution identifier)
+            let message_sender_prefix = if sender_bic.len() >= 6 {
+                &sender_bic[0..6]
+            } else {
+                sender_bic
+            };
+            let message_receiver_prefix = if receiver_bic.len() >= 6 {
+                &receiver_bic[0..6]
+            } else {
+                receiver_bic
+            };
+
+            // Get correspondent BICs from fields 53A and 54A
+            let field_53a_bic = field_53a.bic();
+            let field_54a_bic = field_54a.bic();
+
+            let field_53a_prefix = if field_53a_bic.len() >= 6 {
+                &field_53a_bic[0..6]
+            } else {
+                field_53a_bic
+            };
+            let field_54a_prefix = if field_54a_bic.len() >= 6 {
+                &field_54a_bic[0..6]
+            } else {
+                field_54a_bic
+            };
+
+            // Cover logic: If 53A ≠ Sender OR 54A ≠ Receiver, then it's COVER
+            field_53a_prefix != message_sender_prefix || field_54a_prefix != message_receiver_prefix
+        } else {
+            false // No correspondent banks = not a cover
+        }
+    }
+
+    /// Check if this is a cover message using ordering/beneficiary institutions as fallback
+    ///
+    /// This is a convenience method when message header BICs are not available.
+    /// Uses field_52a (ordering institution) as sender and field_58a (beneficiary institution) as receiver.
+    pub fn is_cover_message_from_fields(&self) -> bool {
+        // Use ordering institution (52A) as sender, or empty string if not present
+        let sender_bic = self.field_52a.as_ref().map(|f| f.bic()).unwrap_or("");
+
+        // Use beneficiary institution (58A) as receiver
+        let receiver_bic = self.field_58a.bic();
+
+        self.is_cover_message(sender_bic, receiver_bic)
     }
 
     /// Check if this is a cross-currency transfer
@@ -559,8 +612,10 @@ impl MT202 {
     }
 
     /// Get the message variant type
+    ///
+    /// Uses the fallback method since header BICs are not available at this level
     pub fn get_variant(&self) -> &'static str {
-        if self.is_cover_message() {
+        if self.is_cover_message_from_fields() {
             "MT202.COV"
         } else {
             "MT202"
@@ -610,7 +665,7 @@ impl MT202 {
 
     /// Validate cover message requirements
     pub fn validate_cover_message(&self) -> bool {
-        if self.is_cover_message() {
+        if self.is_cover_message_from_fields() {
             // Cover messages should have meaningful cover information
             self.field_50a.is_some() || self.field_59a.is_some() || self.field_70.is_some()
         } else {
@@ -885,10 +940,14 @@ mod tests {
             field_32a.clone(),
             field_58a.clone(),
         );
-        assert!(!mt202_standard.is_cover_message());
+        // Test with sample BICs - should not be cover since no 53A/54A fields
+        assert!(!mt202_standard.is_cover_message("BANKUS33XXX", "BANKDE55XXX"));
         assert_eq!(mt202_standard.get_variant(), "MT202");
 
-        // MT202.COV with ordering customer
+        // MT202.COV with ordering customer and correspondent banks
+        let field_53a = Field53A::new(None, None, "CHASUS33XXX").unwrap();
+        let field_54a = Field54A::new(None, None, "RBOSGGSGXXX").unwrap();
+
         let mt202_cover = MT202::new_complete(
             field_20,
             field_21,
@@ -896,8 +955,8 @@ mod tests {
             field_58a,
             None,
             None,
-            None,
-            None,
+            Some(field_53a),
+            Some(field_54a),
             None,
             None,
             None,
@@ -910,7 +969,8 @@ mod tests {
             None,
             None,
         );
-        assert!(mt202_cover.is_cover_message());
+        // Test with different sender/receiver BICs to trigger cover detection
+        assert!(mt202_cover.is_cover_message("BANKUS33XXX", "BANKDE55XXX"));
         assert_eq!(mt202_cover.get_variant(), "MT202.COV");
     }
 
@@ -1170,7 +1230,7 @@ mod tests {
         let field_58a = Field58A::new(None, None, "DEUTDEFFXXX").unwrap();
         let field_50a = Field50::K(Field50K::new(vec!["ORDERING CUSTOMER".to_string()]).unwrap());
 
-        // Test cover payment detection
+        // Test cover payment fields presence
         let mt202_cover = MT202::new_complete(
             field_20,
             field_21,
@@ -1193,6 +1253,12 @@ mod tests {
             None,
         );
 
-        assert!(mt202_cover.is_cover_message());
+        // Test that cover payment fields are accessible
+        assert!(mt202_cover.ordering_customer().is_some());
+        assert!(mt202_cover.validate_cover_message());
+        
+        // Cover message detection requires correspondent banks or explicit BIC comparison
+        // Having just customer fields doesn't make it a cover message by the SWIFT standard
+        assert!(!mt202_cover.is_cover_message_from_fields());
     }
 }

@@ -173,7 +173,7 @@ fn display_institutional_fields(parsed_message: &swift_mt_message::SwiftMessage<
 }
 
 fn display_cover_message_fields(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
-    if !parsed_message.fields.is_cover_message() {
+    if !parsed_message.fields.is_cover_message_from_fields() {
         return;
     }
 
@@ -244,7 +244,7 @@ fn display_routing_analysis(parsed_message: &swift_mt_message::SwiftMessage<MT20
     }
 
     // Customer routing chain (if cover message)
-    if parsed_message.fields.is_cover_message() {
+    if parsed_message.fields.is_cover_message_from_fields() {
         let customer_chain = parsed_message.fields.get_customer_routing_chain();
         if !customer_chain.is_empty() {
             println!("  Customer Transaction Chain:");
@@ -327,7 +327,7 @@ fn validate_mt202_fields(parsed_message: &swift_mt_message::SwiftMessage<MT202>)
     }
 
     // Cover message specific validations
-    if parsed_message.fields.is_cover_message() {
+    if parsed_message.fields.is_cover_message_from_fields() {
         if let Some(field_50a) = &parsed_message.fields.field_50a {
             let validation = field_50a.validate();
             print_field_validation("Field 50A (Cover)", &validation);

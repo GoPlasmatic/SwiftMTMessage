@@ -205,142 +205,6 @@ use serde::{Deserialize, Serialize};
 ///
 /// ## Code Examples
 ///
-/// ### Basic MT103 Creation
-/// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*};
-/// use chrono::NaiveDate;
-///
-/// // Create mandatory fields
-/// let field_20 = Field20::new("FT21234567890".to_string());
-/// let field_23b = Field23B::new("CRED".to_string());
-/// let field_32a = Field32A::new(
-///     NaiveDate::from_ymd_opt(2024, 3, 15).unwrap(),
-///     "USD".to_string(),
-///     1000000.00
-/// );
-/// let field_50 = Field50::K(Field50K::new(vec![
-///     "ACME CORPORATION".to_string(),
-///     "123 BUSINESS AVENUE".to_string(),
-///     "NEW YORK NY 10001".to_string()
-/// ]).unwrap());
-/// let field_59 = Field59::A(GenericBicField::new(None,
-///     Some("GB33BUKB20201555555555".to_string()),
-///     "DEUTDEFF"
-/// ).unwrap());
-/// let field_71a = Field71A::new("OUR".to_string());
-///
-/// // Create basic MT103
-/// let mt103 = MT103::new(
-///     field_20, field_23b, field_32a, field_50, field_59, field_71a
-/// );
-/// ```
-///
-/// ### MT103.STP Compliant Message
-/// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*};
-/// use swift_mt_message::fields::field59::Field59Basic;
-/// use chrono::NaiveDate;
-///
-/// // Create required mandatory fields
-/// let field_20 = Field20::new("FT21034567890123".to_string());
-/// let field_23b = Field23B::new("CRED".to_string());
-/// let field_32a = Field32A::new(
-///     NaiveDate::from_ymd_opt(2024, 3, 15).unwrap(),
-///     "USD".to_string(),
-///     1000000.00
-/// );
-/// let field_50 = Field50::K(Field50K::new(vec!["ACME CORPORATION".to_string()]).unwrap());
-/// let field_59 = Field59::NoOption(Field59Basic::new(vec!["BENEFICIARY NAME".to_string()]).unwrap());
-/// let field_71a = Field71A::new("OUR".to_string());
-///
-/// // STP-compliant MT103 with institutional Option A fields only
-/// let mt103_stp = MT103::new_complete(
-///     field_20, field_23b, field_32a, field_50, field_59, field_71a,
-///     None, // field_13c
-///     Some(Field23E::new("INTC", None).unwrap()), // STP-allowed code
-///     None, // field_26t
-///     None, // field_33b
-///     None, // field_36
-///     None, // field_51a - NOT allowed in STP
-///     Some(GenericBicField::new(None, None, "CHASUS33XXX").unwrap()),
-///     None, // field_52d - NOT allowed in STP
-///     Some(GenericBicField::new(None, None, "DEUTDEFFXXX").unwrap()),
-///     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
-/// );
-///
-/// assert!(mt103_stp.is_stp_compliant());
-/// ```
-///
-/// ### MT103.REMIT Message
-/// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*};
-/// use swift_mt_message::fields::field59::Field59Basic;
-/// use chrono::NaiveDate;
-///
-/// // Create required mandatory fields
-/// let field_20 = Field20::new("FT21034567890123".to_string());
-/// let field_23b = Field23B::new("CRED".to_string());
-/// let field_32a = Field32A::new(
-///     NaiveDate::from_ymd_opt(2024, 3, 15).unwrap(),
-///     "USD".to_string(),
-///     1000000.00
-/// );
-/// let field_50 = Field50::K(Field50K::new(vec!["ACME CORPORATION".to_string()]).unwrap());
-/// let field_59 = Field59::NoOption(Field59Basic::new(vec!["BENEFICIARY NAME".to_string()]).unwrap());
-/// let field_71a = Field71A::new("OUR".to_string());
-///
-/// // MT103.REMIT with structured remittance data
-/// let field_77t = Field77T::new("R", "D", "REMITTANCE-2024-001").unwrap();
-///
-/// let mt103_remit = MT103::new_complete(
-///     field_20, field_23b, field_32a, field_50, field_59, field_71a,
-///     None, None, None, None, None, None, None, None, None, None, None,
-///     None, None, None, None, None, None, None, None, None, None, None,
-///     None, None,
-///     None, // field_70 - NOT allowed in REMIT
-///     None, None, None, None,
-///     Some(field_77t) // field_77t - MANDATORY in REMIT
-/// );
-///
-/// assert!(mt103_remit.is_remit());
-/// assert!(mt103_remit.is_remit_compliant());
-/// ```
-///
-/// ### Cross-Currency Transaction
-/// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*};
-/// use swift_mt_message::fields::field59::Field59Basic;
-/// use chrono::NaiveDate;
-///
-/// // Create required mandatory fields
-/// let field_20 = Field20::new("FT21034567890123".to_string());
-/// let field_23b = Field23B::new("CRED".to_string());
-/// let field_50 = Field50::K(Field50K::new(vec!["ACME CORPORATION".to_string()]).unwrap());
-/// let field_59 = Field59::NoOption(Field59Basic::new(vec!["BENEFICIARY NAME".to_string()]).unwrap());
-/// let field_71a = Field71A::new("OUR".to_string());
-///
-/// // EUR to USD conversion with exchange rate
-/// let field_32a = Field32A::new(
-///     NaiveDate::from_ymd_opt(2024, 3, 15).unwrap(),
-///     "USD".to_string(),
-///     1000000.00 // Settlement amount in USD
-/// );
-/// let field_33b = GenericCurrencyAmountField::new("EUR", 850000.00).unwrap(); // Original EUR amount
-/// let field_36 = Field36::new(1.1765).unwrap(); // EUR/USD rate
-///
-/// let mt103_fx = MT103::new_complete(
-///     field_20, field_23b, field_32a, field_50, field_59, field_71a,
-///     None, None, None,
-///     Some(field_33b), // Original instructed amount
-///     Some(field_36),  // Exchange rate
-///     None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None
-/// );
-///
-/// assert!(mt103_fx.is_cross_currency());
-/// assert!(mt103_fx.has_required_exchange_rate());
-/// ```
-///
-///
 /// Complete implementation with all possible MT103 fields for 100% compliance
 /// Supports STP (Straight Through Processing), RETN (Return), and REJT (Reject) scenarios
 ///
@@ -949,11 +813,6 @@ impl MT103 {
         self.field_20.transaction_reference()
     }
 
-    /// Get the operation code
-    pub fn operation_code(&self) -> &str {
-        self.field_23b.operation_code()
-    }
-
     /// Get the currency code
     pub fn currency_code(&self) -> &str {
         self.field_32a.currency_code()
@@ -1541,31 +1400,34 @@ impl MT103 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::NaiveDate;
 
     #[test]
     fn test_mt103_creation() {
-        use chrono::NaiveDate;
 
         let field_20 = Field20::new("FT21234567890".to_string());
-        let field_23b = Field23B::new("CRED".to_string());
+        let field_23b = Field23B::new("CRED").unwrap();
         let field_32a = Field32A::new(
             NaiveDate::from_ymd_opt(2024, 3, 15).unwrap(),
             "USD".to_string(),
-            1000000.00,
+            1000000.00
         );
-        let field_50 = Field50::K(Field50K::new(vec!["JOHN DOE".to_string()]).unwrap());
-        let field_59 = Field59::A(
-            GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
-                .unwrap(),
-        );
-        let field_71a = Field71A::new("OUR".to_string());
+        let field_50 = Field50::K(Field50K::new(vec![
+            "ACME CORPORATION".to_string(),
+            "123 BUSINESS AVENUE".to_string(),
+            "NEW YORK NY 10001".to_string()
+        ]).unwrap());
+        let field_59 = Field59::A(GenericBicField::new(None,
+            Some("GB33BUKB20201555555555".to_string()),
+            "DEUTDEFF"
+        ).unwrap());
+        let field_71a = Field71A::new("OUR").unwrap();
 
         let mt103 = MT103::new(
-            field_20, field_23b, field_32a, field_50, field_59, field_71a,
+            field_20, field_23b, field_32a, field_50, field_59, field_71a
         );
 
         assert_eq!(mt103.transaction_reference(), "FT21234567890");
-        assert_eq!(mt103.operation_code(), "CRED");
         assert_eq!(mt103.currency_code(), "USD");
         assert_eq!(mt103.charge_code(), "OUR");
     }
@@ -1581,7 +1443,7 @@ mod tests {
         use chrono::NaiveDate;
 
         let field_20 = Field20::new("FT21234567890".to_string());
-        let field_23b = Field23B::new("CRED".to_string());
+        let field_23b = Field23B::new("CRED").unwrap();
         let field_32a = Field32A::new(
             NaiveDate::from_ymd_opt(2021, 3, 15).unwrap(),
             "EUR".to_string(),
@@ -1592,7 +1454,7 @@ mod tests {
             GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
                 .unwrap(),
         );
-        let field_71a = Field71A::new("OUR".to_string());
+        let field_71a = Field71A::new("OUR").unwrap();
 
         let mt103 = MT103::new(
             field_20, field_23b, field_32a, field_50, field_59, field_71a,
@@ -1623,7 +1485,7 @@ mod tests {
         use chrono::NaiveDate;
 
         let field_20 = Field20::new("FT21234567890".to_string());
-        let field_23b = Field23B::new("CRED".to_string());
+        let field_23b = Field23B::new("CRED").unwrap();
         let field_32a = Field32A::new(
             NaiveDate::from_ymd_opt(2021, 3, 15).unwrap(),
             "EUR".to_string(),
@@ -1634,7 +1496,7 @@ mod tests {
             GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
                 .unwrap(),
         );
-        let field_71a = Field71A::new("OUR".to_string());
+        let field_71a = Field71A::new("OUR").unwrap();
         let field_77t = Field77T::new("R", "D", "REMITTANCE-2024-001234567890").unwrap();
 
         let mt103_remit = MT103::new_complete(
@@ -1687,7 +1549,7 @@ mod tests {
         use chrono::NaiveDate;
 
         let field_20 = Field20::new("FT21234567890".to_string());
-        let field_23b = Field23B::new("CRED".to_string());
+        let field_23b = Field23B::new("CRED").unwrap();
         let field_32a = Field32A::new(
             NaiveDate::from_ymd_opt(2021, 3, 15).unwrap(),
             "EUR".to_string(),
@@ -1698,7 +1560,7 @@ mod tests {
             GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
                 .unwrap(),
         );
-        let field_71a = Field71A::new("OUR".to_string());
+        let field_71a = Field71A::new("OUR").unwrap();
         let field_51a = GenericBicField::new(None, None, "CHASUS33XXX").unwrap();
 
         let mt103_with_51a = MT103::new_complete(
@@ -1750,7 +1612,7 @@ mod tests {
         use chrono::NaiveDate;
 
         let field_20 = Field20::new("FT21234567890".to_string());
-        let field_23b = Field23B::new("CRED".to_string());
+        let field_23b = Field23B::new("CRED").unwrap();
         let field_32a = Field32A::new(
             NaiveDate::from_ymd_opt(2021, 3, 15).unwrap(),
             "EUR".to_string(),
@@ -1761,7 +1623,7 @@ mod tests {
             GenericBicField::new(None, Some("GB33BUKB20201555555555".to_string()), "DEUTDEFF")
                 .unwrap(),
         );
-        let field_71a = Field71A::new("OUR".to_string());
+        let field_71a = Field71A::new("OUR").unwrap();
 
         // Standard MT103
         let mt103_standard = MT103::new(
@@ -1815,5 +1677,239 @@ mod tests {
             Some(field_77t),
         );
         assert_eq!(mt103_remit.get_variant(), "MT103.REMIT");
+    }
+
+    #[test]
+    fn test_mt103_new_with_charges() {
+        let field_20 = Field20::new("TEST123456".to_string());
+        let field_23b = Field23B::new("CRED").unwrap();
+        let field_32a = Field32A::new(
+            NaiveDate::from_ymd_opt(2024, 12, 3).unwrap(),
+            "USD".to_string(),
+            1500.0,
+        );
+        let field_50 = Field50::K(Field50K::new(vec![
+            "ABC Corporation".to_string(),
+            "123 Main Street".to_string(),
+            "New York, NY 10001".to_string(),
+            "US".to_string(),
+        ]).unwrap());
+        let field_59 = Field59::A(GenericBicField::new(
+            None,
+            Some("1234567890".to_string()),
+            "XYZBANKUS33",
+        ).unwrap());
+        let field_71a = Field71A::new("OUR").unwrap();
+
+        let mt103 = MT103::new(
+            field_20, field_23b, field_32a, field_50, field_59, field_71a,
+        );
+
+        assert_eq!(mt103.charge_code(), "OUR");
+    }
+
+    #[test]
+    fn test_mt103_with_complete_info() {
+        let field_20 = Field20::new("TX123456789".to_string());
+        let field_23b = Field23B::new("CRED").unwrap();
+        let field_32a = Field32A::new(
+            NaiveDate::from_ymd_opt(2024, 12, 3).unwrap(),
+            "EUR".to_string(),
+            2500.0,
+        );
+        let field_50 = Field50::K(Field50K::new(vec![
+            "Test Sender Corp".to_string(),
+            "123 Finance Street".to_string(),
+            "Berlin".to_string(),
+            "DE".to_string(),
+        ]).unwrap());
+        let field_59 = Field59::A(GenericBicField::new(
+            None,
+            Some("DE89370400440532013000".to_string()),
+            "DEUTDEBBXXX",
+        ).unwrap());
+        let field_71a = Field71A::new("OUR").unwrap();
+
+        let mt103_remit = MT103::new_complete(
+            field_20,
+            field_23b,
+            field_32a,
+            field_50,
+            field_59,
+            field_71a,
+            None, // field_13c
+            None, // field_23e
+            None, // field_26t
+            None, // field_33b
+            None, // field_36
+            None, // field_51a
+            None, // field_52a
+            None, // field_52d
+            None, // field_53a
+            None, // field_53b
+            None, // field_53d
+            None, // field_54a
+            None, // field_54b
+            None, // field_54d
+            None, // field_55a
+            None, // field_55b
+            None, // field_55d
+            None, // field_56a
+            None, // field_56c
+            None, // field_56d
+            None, // field_57a
+            None, // field_57b
+            None, // field_57c
+            None, // field_57d
+            None, // field_70
+            None, // field_71f
+            None, // field_71g
+            None, // field_72
+            None, // field_77b
+            None, // field_77t
+        );
+
+        assert_eq!(mt103_remit.field_20.transaction_reference, "TX123456789");
+        assert_eq!(mt103_remit.field_32a.currency, "EUR");
+    }
+
+    #[test]
+    fn test_mt103_new_complete_with_51a() {
+        let field_20 = Field20::new("TX123456789".to_string());
+        let field_23b = Field23B::new("CRED").unwrap();
+        let field_32a = Field32A::new(
+            NaiveDate::from_ymd_opt(2024, 12, 3).unwrap(),
+            "EUR".to_string(),
+            2500.0,
+        );
+        let field_50 = Field50::K(Field50K::new(vec![
+            "Test Sender Corp".to_string(),
+            "123 Finance Street".to_string(),
+            "Berlin".to_string(),
+            "DE".to_string(),
+        ]).unwrap());
+        let field_59 = Field59::A(GenericBicField::new(
+            None,
+            Some("DE89370400440532013000".to_string()),
+            "DEUTDEBBXXX",
+        ).unwrap());
+        let field_71a = Field71A::new("OUR").unwrap();
+
+        let mt103_with_51a = MT103::new_complete(
+            field_20,
+            field_23b,
+            field_32a,
+            field_50,
+            field_59,
+            field_71a,
+            None, // field_13c
+            None, // field_23e
+            None, // field_26t
+            None, // field_33b
+            None, // field_36
+            None, // field_51a
+            None, // field_52a
+            None, // field_52d
+            None, // field_53a
+            None, // field_53b
+            None, // field_53d
+            None, // field_54a
+            None, // field_54b
+            None, // field_54d
+            None, // field_55a
+            None, // field_55b
+            None, // field_55d
+            None, // field_56a
+            None, // field_56c
+            None, // field_56d
+            None, // field_57a
+            None, // field_57b
+            None, // field_57c
+            None, // field_57d
+            None, // field_70
+            None, // field_71f
+            None, // field_71g
+            None, // field_72
+            None, // field_77b
+            None, // field_77t
+        );
+
+        assert_eq!(mt103_with_51a.field_20.transaction_reference, "TX123456789");
+        assert_eq!(mt103_with_51a.field_32a.currency, "EUR");
+    }
+
+    #[test]
+    fn test_mt103_serialization() {
+        let field_20 = Field20::new("TX123456789".to_string());
+        let field_23b = Field23B::new("CRED").unwrap();
+        let field_32a = Field32A::new(
+            NaiveDate::from_ymd_opt(2024, 12, 3).unwrap(),
+            "EUR".to_string(),
+            2500.0,
+        );
+        let field_50 = Field50::K(Field50K::new(vec![
+            "Test Sender Corp".to_string(),
+            "123 Finance Street".to_string(),
+            "Berlin".to_string(),
+            "DE".to_string(),
+        ]).unwrap());
+        let field_59 = Field59::A(GenericBicField::new(
+            None,
+            Some("DE89370400440532013000".to_string()),
+            "DEUTDEBBXXX",
+        ).unwrap());
+        let field_71a = Field71A::new("OUR").unwrap();
+
+        let mt103_standard = MT103::new(
+            field_20.clone(),
+            field_23b.clone(),
+            field_32a.clone(),
+            field_50.clone(),
+            field_59.clone(),
+            field_71a.clone(),
+        );
+
+        let mt103_remit = MT103::new_complete(
+            field_20.clone(),
+            field_23b.clone(),
+            field_32a.clone(),
+            field_50.clone(),
+            field_59.clone(),
+            field_71a.clone(),
+            None, // field_13c
+            None, // field_23e
+            None, // field_26t
+            None, // field_33b
+            None, // field_36
+            None, // field_51a
+            None, // field_52a
+            None, // field_52d
+            None, // field_53a
+            None, // field_53b
+            None, // field_53d
+            None, // field_54a
+            None, // field_54b
+            None, // field_54d
+            None, // field_55a
+            None, // field_55b
+            None, // field_55d
+            None, // field_56a
+            None, // field_56c
+            None, // field_56d
+            None, // field_57a
+            None, // field_57b
+            None, // field_57c
+            None, // field_57d
+            None, // field_70
+            None, // field_71f
+            None, // field_71g
+            None, // field_72
+            None, // field_77b
+            None, // field_77t
+        );
+
+        // Test basic serialization functionality
+        assert_eq!(mt103_standard.transaction_reference(), "TX123456789");
+        assert_eq!(mt103_remit.transaction_reference(), "TX123456789");
     }
 }

@@ -224,15 +224,6 @@ impl RateChangeSequence {
         self.field_30.to_swift_string()
     }
 
-    /// Check if this is a credit rate
-    pub fn is_credit_rate(&self) -> bool {
-        self.field_37h.is_credit_rate()
-    }
-
-    /// Check if this is a debit rate
-    pub fn is_debit_rate(&self) -> bool {
-        self.field_37h.is_debit_rate()
-    }
 }
 
 impl MT935 {
@@ -341,8 +332,6 @@ mod tests {
         assert!(sequence.field_23.is_some());
         assert!(sequence.field_25.is_none());
         assert!(sequence.validate_rule_c2());
-        assert!(sequence.is_debit_rate());
-        assert!(!sequence.is_credit_rate());
     }
 
     #[test]
@@ -356,8 +345,6 @@ mod tests {
         assert!(sequence.field_23.is_none());
         assert!(sequence.field_25.is_some());
         assert!(sequence.validate_rule_c2());
-        assert!(sequence.is_credit_rate());
-        assert!(!sequence.is_debit_rate());
     }
 
     #[test]

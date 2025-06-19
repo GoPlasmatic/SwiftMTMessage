@@ -1,4 +1,4 @@
-use crate::{SwiftField, ValidationError, ValidationResult};
+use crate::SwiftField;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -15,16 +15,12 @@ use std::fmt;
 /// - `942`: Interim Transaction Report
 /// - `950`: Customer Statement Message (consolidated)
 ///
-/// ## Example Usage
-/// ```rust
-/// # use swift_mt_message::fields::Field12;
-/// let field = Field12::new("942").unwrap();
-/// assert_eq!(field.to_swift_string(), "942");
-/// ```
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[format("3!n")]
+#[validation_rules(message_type_valid = true)]
+#[business_logic(message_analysis = true)]
 pub struct Field12 {
-    /// The requested message type (940, 941, 942, or 950)
+    #[component("3!n", validate = "message_type")]
     pub message_type: String,
 }
 
@@ -47,16 +43,22 @@ impl Field12 {
     /// let invalid = Field12::new("999");
     /// assert!(invalid.is_err());
     /// ```
-    pub fn new(message_type: &str) -> Result<Self, String> {
+    pub fn new(message_type: &str) -> Result<Self, crate::ParseError> {
         let normalized = message_type.trim();
 
         // Validate format: exactly 3 digits
         if normalized.len() != 3 {
-            return Err("Message type must be exactly 3 digits".to_string());
+            return Err(crate::ParseError::InvalidFieldFormat {
+                field_tag: "12".to_string(),
+                message: "Message type must be exactly 3 digits".to_string(),
+            });
         }
 
         if !normalized.chars().all(|c| c.is_ascii_digit()) {
-            return Err("Message type must contain only digits".to_string());
+            return Err(crate::ParseError::InvalidFieldFormat {
+                field_tag: "12".to_string(),
+                message: "Message type must contain only digits".to_string(),
+            });
         }
 
         // Validate allowed values
@@ -64,101 +66,17 @@ impl Field12 {
             "940" | "941" | "942" | "950" => Ok(Field12 {
                 message_type: normalized.to_string(),
             }),
-            _ => Err(format!(
-                "Invalid message type '{}'. Must be 940, 941, 942, or 950",
-                normalized
-            )),
+            _ => Err(crate::ParseError::InvalidFieldFormat {
+                field_tag: "12".to_string(),
+                message: format!(
+                    "Invalid message type '{}'. Must be 940, 941, 942, or 950",
+                    normalized
+                ),
+            }),
         }
     }
 
-    /// Parses Field12 from a SWIFT message string
-    ///
-    /// # Arguments
-    /// * `input` - The input string to parse
-    ///
-    /// # Returns
-    /// * `Ok(Field12)` if parsing succeeds
-    /// * `Err(String)` if parsing fails
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use swift_mt_message::fields::Field12;
-    /// let field = Field12::parse("942").unwrap();
-    /// assert_eq!(field.message_type, "942");
-    ///
-    /// let field = Field12::parse(":12:941").unwrap();
-    /// assert_eq!(field.message_type, "941");
-    /// ```
-    pub fn parse(input: &str) -> Result<Self, String> {
-        let cleaned = input
-            .trim()
-            .strip_prefix(":12:")
-            .or_else(|| input.strip_prefix("12:"))
-            .unwrap_or(input);
-
-        Self::new(cleaned)
-    }
-
-    /// Converts the field to its SWIFT string representation
-    ///
-    /// # Returns
-    /// The field formatted for SWIFT messages
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use swift_mt_message::fields::Field12;
-    /// let field = Field12::new("940").unwrap();
-    /// assert_eq!(field.to_swift_string(), "940");
-    /// ```
-    pub fn to_swift_string(&self) -> String {
-        self.message_type.clone()
-    }
-
-    /// Returns the SWIFT field format specification
-    ///
-    /// # Returns
-    /// The format specification string
-    pub fn format_spec() -> &'static str {
-        "3!n"
-    }
-
-    /// Checks if this is a request for a customer statement
-    ///
-    /// # Returns
-    /// `true` if requesting MT940 or MT950, `false` otherwise
-    pub fn is_customer_statement_request(&self) -> bool {
-        matches!(self.message_type.as_str(), "940" | "950")
-    }
-
-    /// Checks if this is a request for a balance report
-    ///
-    /// # Returns
-    /// `true` if requesting MT941, `false` otherwise
-    pub fn is_balance_report_request(&self) -> bool {
-        self.message_type == "941"
-    }
-
-    /// Checks if this is a request for an interim transaction report
-    ///
-    /// # Returns
-    /// `true` if requesting MT942, `false` otherwise
-    pub fn is_interim_report_request(&self) -> bool {
-        self.message_type == "942"
-    }
-
-    /// Returns a description of the requested message type
-    ///
-    /// # Returns
-    /// A human-readable description of the message type
-    pub fn get_description(&self) -> &'static str {
-        match self.message_type.as_str() {
-            "940" => "Customer Statement Message",
-            "941" => "Balance Report",
-            "942" => "Interim Transaction Report",
-            "950" => "Customer Statement Message (Consolidated)",
-            _ => "Unknown Message Type",
-        }
-    }
+    // All parsing, serialization and business logic methods are auto-generated by the macro
 
     /// Validates the field according to SWIFT standards
     ///
@@ -169,35 +87,47 @@ impl Field12 {
             && self.message_type.len() == 3
             && self.message_type.chars().all(|c| c.is_ascii_digit())
     }
-}
 
-impl SwiftField for Field12 {
-    fn parse(value: &str) -> Result<Self, crate::ParseError> {
-        Self::parse(value).map_err(|e| crate::ParseError::InvalidFieldFormat {
-            field_tag: "12".to_string(),
-            message: e,
-        })
-    }
-
-    fn to_swift_string(&self) -> String {
-        self.to_swift_string()
-    }
-
-    fn validate(&self) -> ValidationResult {
-        if self.is_valid() {
-            ValidationResult::valid()
-        } else {
-            ValidationResult::with_error(ValidationError::FormatValidation {
-                field_tag: "12".to_string(),
-                message: format!("Invalid message type: {}", self.message_type),
-            })
+    /// Get a human-readable description of the message type
+    ///
+    /// # Returns
+    /// A descriptive string explaining the message type
+    pub fn get_description(&self) -> &'static str {
+        match self.message_type.as_str() {
+            "940" => "Customer Statement Message",
+            "941" => "Balance Report",
+            "942" => "Interim Transaction Report",
+            "950" => "Customer Statement Message (Consolidated)",
+            _ => "Unknown Message Type",
         }
     }
 
-    fn format_spec() -> &'static str {
-        "3!n"
+    /// Check if this is a customer statement request (940 or 950)
+    ///
+    /// # Returns
+    /// `true` if the message type is 940 or 950
+    pub fn is_customer_statement_request(&self) -> bool {
+        matches!(self.message_type.as_str(), "940" | "950")
+    }
+
+    /// Check if this is a balance report request (941)
+    ///
+    /// # Returns
+    /// `true` if the message type is 941
+    pub fn is_balance_report_request(&self) -> bool {
+        self.message_type == "941"
+    }
+
+    /// Check if this is an interim report request (942)
+    ///
+    /// # Returns
+    /// `true` if the message type is 942
+    pub fn is_interim_report_request(&self) -> bool {
+        self.message_type == "942"
     }
 }
+
+// SwiftField implementation is auto-generated by the macro
 
 impl fmt::Display for Field12 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -250,7 +180,7 @@ mod tests {
     #[test]
     fn test_field12_to_swift_string() {
         let field = Field12::new("940").unwrap();
-        assert_eq!(field.to_swift_string(), "940");
+        assert_eq!(field.to_swift_string(), ":12:940");
     }
 
     #[test]

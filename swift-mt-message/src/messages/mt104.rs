@@ -374,11 +374,6 @@ impl MT104 {
         self.field_21_txn.len()
     }
 
-    /// Get the execution date
-    pub fn execution_date(&self) -> chrono::NaiveDate {
-        self.field_30.execution_date()
-    }
-
     /// Get total amount across all transactions
     pub fn total_amount(&self) -> f64 {
         self.field_32b.iter().map(|amount| amount.amount()).sum()

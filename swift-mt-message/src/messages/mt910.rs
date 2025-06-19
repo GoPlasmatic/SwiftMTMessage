@@ -521,22 +521,6 @@ impl MT910 {
         }
     }
 
-    /// Checks if this is a same-day credit confirmation
-    ///
-    /// # Returns
-    /// `true` if the value date is today
-    pub fn is_same_day_credit(&self) -> bool {
-        self.field_32a.is_same_day_value()
-    }
-
-    /// Checks if this is a forward-dated credit confirmation
-    ///
-    /// # Returns
-    /// `true` if the value date is in the future
-    pub fn is_forward_dated_credit(&self) -> bool {
-        self.field_32a.is_forward_dated()
-    }
-
     /// Checks if this is a back-dated credit confirmation
     ///
     /// # Returns
@@ -646,14 +630,6 @@ impl MT910 {
             && !self.related_reference().contains("//");
 
         basic_valid && c1_valid && business_valid
-    }
-
-    /// Gets days since the value date
-    ///
-    /// # Returns
-    /// Number of days (positive for past dates, negative for future dates, 0 for today)
-    pub fn days_since_value_date(&self) -> i64 {
-        -self.field_32a.days_until_value_date()
     }
 
     /// Checks if this confirmation is for a high-value transaction

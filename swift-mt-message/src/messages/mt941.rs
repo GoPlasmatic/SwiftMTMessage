@@ -214,6 +214,7 @@ impl SwiftMessageBody for MT941 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::SwiftField;
 
     #[test]
     fn test_mt941_message_type() {
@@ -250,10 +251,10 @@ mod tests {
         let field_60f = Field60F::new('C', "240314", "EUR", 1000.00).unwrap();
         mt941.set_opening_balance(field_60f);
 
-        let field_90d = Field90D::new(5, "EUR", 200.00).unwrap();
+        let field_90d = Field90D::parse("005EUR200,00").unwrap();
         mt941.set_sum_of_debits(field_90d);
 
-        let field_90c = Field90C::new(10, "EUR", 700.00).unwrap();
+        let field_90c = Field90C::parse("010EUR700,00").unwrap();
         mt941.set_sum_of_credits(field_90c);
 
         assert!(mt941.has_opening_balance());

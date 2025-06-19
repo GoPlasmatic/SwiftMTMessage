@@ -120,7 +120,31 @@ pub struct Field71A {
 
 impl Field71A {
     /// Create a new Field71A with the given charge code
-    pub fn new(details_of_charges: String) -> Self {
+    pub fn new(details_of_charges: &str) -> Result<Self, crate::ParseError> {
+        let normalized = details_of_charges.trim().to_uppercase();
+
+        // Validate format: exactly 3 alphabetic characters
+        if normalized.len() != 3 {
+            return Err(crate::ParseError::InvalidFieldFormat {
+                field_tag: "71A".to_string(),
+                message: "Details of charges must be exactly 3 characters".to_string(),
+            });
+        }
+
+        if !normalized.chars().all(|c| c.is_ascii_alphabetic()) {
+            return Err(crate::ParseError::InvalidFieldFormat {
+                field_tag: "71A".to_string(),
+                message: "Details of charges must contain only alphabetic characters".to_string(),
+            });
+        }
+
+        Ok(Self {
+            details_of_charges: normalized,
+        })
+    }
+
+    /// Create a new Field71A without validation (for internal use)
+    pub fn new_unchecked(details_of_charges: String) -> Self {
         Self {
             details_of_charges: details_of_charges.to_uppercase(),
         }
@@ -159,7 +183,7 @@ mod tests {
 
     #[test]
     fn test_field71a_creation() {
-        let field = Field71A::new("OUR".to_string());
+        let field = Field71A::new("OUR").unwrap();
         assert_eq!(field.charge_code(), "OUR");
         assert!(field.is_standard_code());
         assert_eq!(field.description(), "Ordering customer bears all charges");
@@ -173,7 +197,7 @@ mod tests {
 
     #[test]
     fn test_field71a_case_insensitive() {
-        let field = Field71A::new("ben".to_string());
+        let field = Field71A::new("ben").unwrap();
         assert_eq!(field.details_of_charges, "BEN");
     }
 }

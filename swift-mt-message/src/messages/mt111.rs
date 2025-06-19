@@ -93,11 +93,6 @@ impl MT111 {
         self.field_21.related_reference()
     }
 
-    /// Get the issue date
-    pub fn issue_date(&self) -> chrono::NaiveDate {
-        self.field_30.execution_date()
-    }
-
     /// Get the cheque amount
     pub fn amount(&self) -> f64 {
         self.field_32a.amount()
@@ -152,7 +147,7 @@ impl MT111 {
         mt110_currency: &str,
     ) -> bool {
         self.cheque_number() == mt110_cheque_number
-            && self.issue_date() == mt110_issue_date
+            && self.field_30.naive_date() == mt110_issue_date
             && (self.amount() - mt110_amount).abs() < 0.01
             && self.currency() == mt110_currency
     }
@@ -172,7 +167,7 @@ impl MT111 {
             self.senders_reference(),
             self.currency(),
             self.amount(),
-            self.issue_date().format("%Y-%m-%d")
+            self.field_30.format_readable()
         )
     }
 
@@ -196,7 +191,7 @@ impl MT111 {
         let mut desc = format!(
             "Stop payment request for cheque {} issued on {} for {} {}",
             self.cheque_number(),
-            self.issue_date().format("%Y-%m-%d"),
+            self.field_30.format_readable(),
             self.currency(),
             self.amount()
         );

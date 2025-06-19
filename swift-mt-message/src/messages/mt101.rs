@@ -493,11 +493,6 @@ impl MT101 {
         self.field_28d.message_index_total()
     }
 
-    /// Get the requested execution date
-    pub fn execution_date(&self) -> chrono::NaiveDate {
-        self.field_30.execution_date()
-    }
-
     /// Get the transaction reference
     pub fn transaction_reference(&self) -> &str {
         self.field_21.related_reference()
@@ -740,18 +735,6 @@ impl MT101 {
 
         chain
     }
-
-    /// Check if message is for same-day execution
-    pub fn is_same_day_execution(&self) -> bool {
-        let today = chrono::Utc::now().date_naive();
-        self.field_30.execution_date() == today
-    }
-
-    /// Check if message is for future execution
-    pub fn is_future_dated(&self) -> bool {
-        let today = chrono::Utc::now().date_naive();
-        self.field_30.execution_date() > today
-    }
 }
 
 #[cfg(test)]
@@ -769,7 +752,7 @@ mod tests {
         let field_59 = Field59::A(
             GenericBicField::new(None, Some("12345678".to_string()), "DEUTDEFF").unwrap(),
         );
-        let field_71a = Field71A::new("SHA".to_string());
+        let field_71a = Field71A::new("SHA").unwrap();
 
         let mt101 = MT101::new(
             field_20, field_28d, field_30, field_21, field_32b, field_59, field_71a,
@@ -797,7 +780,7 @@ mod tests {
         let field_59 = Field59::A(
             GenericBicField::new(None, Some("12345678".to_string()), "DEUTDEFF").unwrap(),
         );
-        let field_71a = Field71A::new("SHA".to_string());
+        let field_71a = Field71A::new("SHA").unwrap();
 
         // Test C1: If Field 36 present, Field 21F must be present
         let field_36 = Field36::new(1.1234).unwrap();
@@ -847,7 +830,7 @@ mod tests {
         let field_59 = Field59::A(
             GenericBicField::new(None, Some("12345678".to_string()), "DEUTDEFF").unwrap(),
         );
-        let field_71a = Field71A::new("SHA".to_string());
+        let field_71a = Field71A::new("SHA").unwrap();
 
         // Cross-currency with EUR original amount
         let field_33b = GenericCurrencyAmountField::new("EUR", 850.00).unwrap();
@@ -896,7 +879,7 @@ mod tests {
         let field_59 = Field59::A(
             GenericBicField::new(None, Some("12345678".to_string()), "DEUTDEFF").unwrap(),
         );
-        let field_71a = Field71A::new("SHA".to_string());
+        let field_71a = Field71A::new("SHA").unwrap();
 
         let field_52a_seq_a = GenericBicField::new(None, None, "CHASUS33XXX").unwrap();
         let field_56 = GenericBicField::new(None, None, "BARCGB22XXX").unwrap();

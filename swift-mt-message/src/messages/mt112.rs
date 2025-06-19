@@ -89,11 +89,6 @@ impl MT112 {
         self.field_21.related_reference()
     }
 
-    /// Get the issue date
-    pub fn issue_date(&self) -> chrono::NaiveDate {
-        self.field_30.execution_date()
-    }
-
     /// Get the amount
     pub fn amount(&self) -> f64 {
         self.field_32a.amount()
@@ -158,7 +153,7 @@ impl MT112 {
         summary.push_str(&format!(" - {} {}", self.currency(), self.amount()));
         summary.push_str(&format!(
             " issued on {}",
-            self.issue_date().format("%Y-%m-%d")
+            self.field_30.format_readable()
         ));
 
         summary
@@ -184,7 +179,7 @@ impl MT112 {
 
         desc.push_str(&format!(
             " (cheque dated {})",
-            self.issue_date().format("%Y-%m-%d")
+            self.field_30.format_readable()
         ));
 
         desc

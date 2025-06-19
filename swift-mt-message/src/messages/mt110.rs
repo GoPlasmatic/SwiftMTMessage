@@ -109,11 +109,6 @@ impl MT110ChequeDetails {
         self.field_21.related_reference()
     }
 
-    /// Get the issue date
-    pub fn issue_date(&self) -> chrono::NaiveDate {
-        self.field_30.execution_date()
-    }
-
     /// Get the cheque amount
     pub fn amount(&self) -> f64 {
         self.field_32a.amount()
@@ -141,7 +136,7 @@ impl MT110ChequeDetails {
             self.cheque_number(),
             self.currency(),
             self.amount(),
-            self.issue_date().format("%Y-%m-%d")
+            self.field_30.format_readable()
         )
     }
 }
@@ -188,25 +183,6 @@ impl MT110 {
     /// Get the currency (should be consistent across all cheques)
     pub fn currency(&self) -> Option<&str> {
         self.cheques.first().map(|c| c.currency())
-    }
-
-    /// Get all unique issue dates
-    pub fn issue_dates(&self) -> Vec<chrono::NaiveDate> {
-        let mut dates: Vec<chrono::NaiveDate> =
-            self.cheques.iter().map(|c| c.issue_date()).collect();
-        dates.sort_unstable();
-        dates.dedup();
-        dates
-    }
-
-    /// Get the earliest issue date
-    pub fn earliest_issue_date(&self) -> Option<chrono::NaiveDate> {
-        self.cheques.iter().map(|c| c.issue_date()).min()
-    }
-
-    /// Get the latest issue date
-    pub fn latest_issue_date(&self) -> Option<chrono::NaiveDate> {
-        self.cheques.iter().map(|c| c.issue_date()).max()
     }
 
     /// Check how many cheques have payer details
@@ -271,40 +247,6 @@ impl MT110 {
 
         self.cheques.push(cheque);
         Ok(())
-    }
-
-    /// Get cheques sorted by issue date
-    pub fn cheques_by_date(&self) -> Vec<&MT110ChequeDetails> {
-        let mut cheques: Vec<&MT110ChequeDetails> = self.cheques.iter().collect();
-        cheques.sort_by_key(|c| c.issue_date());
-        cheques
-    }
-
-    /// Get cheques sorted by amount (descending)
-    pub fn cheques_by_amount(&self) -> Vec<&MT110ChequeDetails> {
-        let mut cheques: Vec<&MT110ChequeDetails> = self.cheques.iter().collect();
-        cheques.sort_by(|a, b| {
-            b.amount()
-                .partial_cmp(&a.amount())
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-        cheques
-    }
-
-    /// Get summary statistics
-    pub fn summary(&self) -> String {
-        format!(
-            "MT110 Advice: {} cheques, {} {} total, dates {} to {}",
-            self.cheque_count(),
-            self.currency().unwrap_or("N/A"),
-            self.total_amount(),
-            self.earliest_issue_date()
-                .map(|d| d.format("%Y-%m-%d").to_string())
-                .unwrap_or("N/A".to_string()),
-            self.latest_issue_date()
-                .map(|d| d.format("%Y-%m-%d").to_string())
-                .unwrap_or("N/A".to_string())
-        )
     }
 
     /// Check if this is likely a reject/return advice
@@ -436,33 +378,6 @@ mod tests {
         assert_eq!(mt110.cheques[0].cheque_number(), "CHQ001001");
         assert_eq!(mt110.cheques[1].amount(), 1250.00);
         assert_eq!(mt110.cheques[2].currency(), "EUR");
-
-        // Check date range
-        assert_eq!(
-            mt110
-                .earliest_issue_date()
-                .unwrap()
-                .format("%y%m%d")
-                .to_string(),
-            "240314"
-        );
-        assert_eq!(
-            mt110
-                .latest_issue_date()
-                .unwrap()
-                .format("%y%m%d")
-                .to_string(),
-            "240316"
-        );
-
-        // Check sorting
-        let by_date = mt110.cheques_by_date();
-        assert_eq!(by_date[0].cheque_number(), "CHQ001003"); // 240314 - earliest
-        assert_eq!(by_date[2].cheque_number(), "CHQ001002"); // 240316 - latest
-
-        let by_amount = mt110.cheques_by_amount();
-        assert_eq!(by_amount[0].amount(), 1250.00); // Highest amount first
-        assert_eq!(by_amount[2].amount(), 500.00); // Lowest amount last
     }
 
     #[test]
@@ -597,10 +512,7 @@ mod tests {
         assert_eq!(cheque.cheque_number(), "CHQ987654");
         assert_eq!(cheque.currency(), "GBP");
         assert_eq!(cheque.amount(), 2750.50);
-        assert_eq!(
-            cheque.issue_date().format("%Y-%m-%d").to_string(),
-            "2024-03-20"
-        );
+
         assert!(!cheque.has_payer_details());
         assert!(!cheque.has_drawer_bank());
 
@@ -609,35 +521,5 @@ mod tests {
         assert!(description.contains("GBP"));
         assert!(description.contains("2750.5"));
         assert!(description.contains("2024-03-20"));
-    }
-
-    #[test]
-    fn test_mt110_summary() {
-        let field_20 = Field20::new("CHQ001".to_string());
-        let cheque1 = MT110ChequeDetails::new(
-            Field21::new("CHQ001".to_string()),
-            Field30::new("240315"),
-            GenericCurrencyAmountField::new("EUR", 1000.00).unwrap(),
-            Field59::A(
-                GenericBicField::new(None, Some("11111111".to_string()), "DEUTDEFF").unwrap(),
-            ),
-        );
-        let cheque2 = MT110ChequeDetails::new(
-            Field21::new("CHQ002".to_string()),
-            Field30::new("240318"),
-            GenericCurrencyAmountField::new("EUR", 500.00).unwrap(),
-            Field59::A(
-                GenericBicField::new(None, Some("22222222".to_string()), "DEUTDEFF").unwrap(),
-            ),
-        );
-
-        let mt110 = MT110::new(field_20, vec![cheque1, cheque2]);
-        let summary = mt110.summary();
-
-        assert!(summary.contains("2 cheques"));
-        assert!(summary.contains("EUR"));
-        assert!(summary.contains("1500")); // Total amount
-        assert!(summary.contains("2024-03-15")); // Earliest date
-        assert!(summary.contains("2024-03-18")); // Latest date
     }
 }

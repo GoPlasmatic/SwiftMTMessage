@@ -393,22 +393,6 @@ impl MT900 {
         self.field_13d.as_ref().map(|f| f.get_formatted_datetime())
     }
 
-    /// Checks if this is a same-day debit confirmation
-    ///
-    /// # Returns
-    /// `true` if the value date is today
-    pub fn is_same_day_debit(&self) -> bool {
-        self.field_32a.is_same_day_value()
-    }
-
-    /// Checks if this is a forward-dated debit confirmation
-    ///
-    /// # Returns
-    /// `true` if the value date is in the future
-    pub fn is_forward_dated_debit(&self) -> bool {
-        self.field_32a.is_forward_dated()
-    }
-
     /// Checks if this is a back-dated debit confirmation
     ///
     /// # Returns
@@ -506,14 +490,6 @@ impl MT900 {
             && !self.related_reference().contains("//");
 
         basic_valid && business_valid
-    }
-
-    /// Gets days since the value date
-    ///
-    /// # Returns
-    /// Number of days (positive for past dates, negative for future dates, 0 for today)
-    pub fn days_since_value_date(&self) -> i64 {
-        -self.field_32a.days_until_value_date()
     }
 
     /// Checks if this confirmation is for a high-value transaction

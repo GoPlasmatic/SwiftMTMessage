@@ -1,0 +1,389 @@
+use serde::{Deserialize, Serialize};
+use std::fmt;
+
+/// # Field 28C: Statement Number/Sequence Number
+///
+/// Used in MT940, MT942, MT950 for statement sequencing and multi-part message handling.
+///
+/// ## Format
+/// `5n[/5n]` (statement number optionally followed by sequence number)
+///
+/// Where:
+/// - First number: Statement number (1-99999)
+/// - Second number (optional): Sequence number for multi-part statements (1-99999)
+///
+/// ## Example Usage
+/// ```rust
+/// # use swift_mt_message::fields::Field28C;
+/// // Single statement
+/// let field = Field28C::new(1, None).unwrap();
+/// assert_eq!(field.to_swift_string(), "00001");
+///
+/// // Multi-part statement (statement 1, sequence 2)
+/// let field = Field28C::new(1, Some(2)).unwrap();
+/// assert_eq!(field.to_swift_string(), "00001/00002");
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct Field28C {
+    /// Statement number (1-99999)
+    pub statement_number: u32,
+    /// Optional sequence number for multi-part statements (1-99999)
+    pub sequence_number: Option<u32>,
+}
+
+impl Field28C {
+    /// Creates a new Field28C with validation
+    ///
+    /// # Arguments
+    /// * `statement_number` - The statement number (1-99999)
+    /// * `sequence_number` - Optional sequence number for multi-part statements (1-99999)
+    ///
+    /// # Returns
+    /// * `Ok(Field28C)` if all components are valid
+    /// * `Err(String)` if validation fails
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use swift_mt_message::fields::Field28C;
+    /// let field = Field28C::new(1, None).unwrap();
+    /// assert_eq!(field.statement_number, 1);
+    /// assert_eq!(field.sequence_number, None);
+    ///
+    /// let field = Field28C::new(123, Some(5)).unwrap();
+    /// assert_eq!(field.statement_number, 123);
+    /// assert_eq!(field.sequence_number, Some(5));
+    /// ```
+    pub fn new(statement_number: u32, sequence_number: Option<u32>) -> Result<Self, String> {
+        // Validate statement number
+        if statement_number == 0 || statement_number > 99999 {
+            return Err("Statement number must be between 1 and 99999".to_string());
+        }
+
+        // Validate sequence number if provided
+        if let Some(seq) = sequence_number {
+            if seq == 0 || seq > 99999 {
+                return Err("Sequence number must be between 1 and 99999".to_string());
+            }
+        }
+
+        Ok(Field28C {
+            statement_number,
+            sequence_number,
+        })
+    }
+
+    /// Parses Field28C from a SWIFT message string
+    ///
+    /// # Arguments
+    /// * `input` - The input string to parse (format: nnnnn or nnnnn/nnnnn)
+    ///
+    /// # Returns
+    /// * `Ok(Field28C)` if parsing succeeds
+    /// * `Err(String)` if parsing fails
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use swift_mt_message::fields::Field28C;
+    /// let field = Field28C::parse("00001").unwrap();
+    /// assert_eq!(field.statement_number, 1);
+    /// assert_eq!(field.sequence_number, None);
+    ///
+    /// let field = Field28C::parse("00123/00005").unwrap();
+    /// assert_eq!(field.statement_number, 123);
+    /// assert_eq!(field.sequence_number, Some(5));
+    /// ```
+    pub fn parse(input: &str) -> Result<Self, String> {
+        let cleaned = input
+            .trim()
+            .strip_prefix(":28C:")
+            .or_else(|| input.strip_prefix("28C:"))
+            .unwrap_or(input);
+
+        if cleaned.is_empty() {
+            return Err("Field28C cannot be empty".to_string());
+        }
+
+        // Check if there's a sequence number (contains '/')
+        if let Some(slash_pos) = cleaned.find('/') {
+            let statement_part = &cleaned[..slash_pos];
+            let sequence_part = &cleaned[slash_pos + 1..];
+
+            if statement_part.is_empty() || sequence_part.is_empty() {
+                return Err(
+                    "Both statement and sequence numbers must be provided when using '/'"
+                        .to_string(),
+                );
+            }
+
+            let statement_number: u32 = statement_part
+                .parse()
+                .map_err(|_| "Invalid statement number format")?;
+            let sequence_number: u32 = sequence_part
+                .parse()
+                .map_err(|_| "Invalid sequence number format")?;
+
+            Self::new(statement_number, Some(sequence_number))
+        } else {
+            // Only statement number
+            let statement_number: u32 = cleaned
+                .parse()
+                .map_err(|_| "Invalid statement number format")?;
+
+            Self::new(statement_number, None)
+        }
+    }
+
+    /// Converts the field to its SWIFT string representation
+    ///
+    /// # Returns
+    /// The field formatted for SWIFT messages
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use swift_mt_message::fields::Field28C;
+    /// let field = Field28C::new(1, None).unwrap();
+    /// assert_eq!(field.to_swift_string(), "00001");
+    ///
+    /// let field = Field28C::new(123, Some(5)).unwrap();
+    /// assert_eq!(field.to_swift_string(), "00123/00005");
+    /// ```
+    pub fn to_swift_string(&self) -> String {
+        match self.sequence_number {
+            Some(seq) => format!("{:05}/{:05}", self.statement_number, seq),
+            None => format!("{:05}", self.statement_number),
+        }
+    }
+
+    /// Returns the SWIFT field format specification
+    ///
+    /// # Returns
+    /// The format specification string
+    pub fn format_spec() -> &'static str {
+        "5n[/5n]"
+    }
+
+    /// Checks if this is a multi-part statement
+    ///
+    /// # Returns
+    /// `true` if sequence number is present, `false` otherwise
+    pub fn is_multi_part(&self) -> bool {
+        self.sequence_number.is_some()
+    }
+
+    /// Gets the sequence number, returning 1 if not specified
+    ///
+    /// # Returns
+    /// The sequence number, or 1 if this is not a multi-part statement
+    pub fn get_effective_sequence(&self) -> u32 {
+        self.sequence_number.unwrap_or(1)
+    }
+
+    /// Creates a new sequence in the same statement
+    ///
+    /// # Arguments
+    /// * `new_sequence` - The new sequence number
+    ///
+    /// # Returns
+    /// * `Ok(Field28C)` with the new sequence number
+    /// * `Err(String)` if the sequence number is invalid
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use swift_mt_message::fields::Field28C;
+    /// let field = Field28C::new(123, Some(1)).unwrap();
+    /// let next = field.next_sequence(2).unwrap();
+    /// assert_eq!(next.statement_number, 123);
+    /// assert_eq!(next.sequence_number, Some(2));
+    /// ```
+    pub fn next_sequence(&self, new_sequence: u32) -> Result<Self, String> {
+        Self::new(self.statement_number, Some(new_sequence))
+    }
+
+    /// Validates the field according to SWIFT standards
+    ///
+    /// # Returns
+    /// `true` if the field is valid, `false` otherwise
+    pub fn is_valid(&self) -> bool {
+        // Check statement number
+        if self.statement_number == 0 || self.statement_number > 99999 {
+            return false;
+        }
+
+        // Check sequence number if present
+        if let Some(seq) = self.sequence_number {
+            if seq == 0 || seq > 99999 {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    /// Returns a formatted display string
+    ///
+    /// # Returns
+    /// A human-readable representation of the statement/sequence
+    pub fn get_display_string(&self) -> String {
+        match self.sequence_number {
+            Some(seq) => format!("Statement {} (Sequence {})", self.statement_number, seq),
+            None => format!("Statement {}", self.statement_number),
+        }
+    }
+}
+
+impl fmt::Display for Field28C {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Field28C: {}", self.get_display_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field28c_creation_single() {
+        let field = Field28C::new(1, None).unwrap();
+        assert_eq!(field.statement_number, 1);
+        assert_eq!(field.sequence_number, None);
+        assert!(!field.is_multi_part());
+        assert_eq!(field.get_effective_sequence(), 1);
+        assert!(field.is_valid());
+    }
+
+    #[test]
+    fn test_field28c_creation_multi_part() {
+        let field = Field28C::new(123, Some(5)).unwrap();
+        assert_eq!(field.statement_number, 123);
+        assert_eq!(field.sequence_number, Some(5));
+        assert!(field.is_multi_part());
+        assert_eq!(field.get_effective_sequence(), 5);
+        assert!(field.is_valid());
+    }
+
+    #[test]
+    fn test_field28c_invalid_statement_number() {
+        let result = Field28C::new(0, None);
+        assert!(result.is_err());
+
+        let result = Field28C::new(100000, None);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_field28c_invalid_sequence_number() {
+        let result = Field28C::new(1, Some(0));
+        assert!(result.is_err());
+
+        let result = Field28C::new(1, Some(100000));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_field28c_parse_single() {
+        let field = Field28C::parse("00001").unwrap();
+        assert_eq!(field.statement_number, 1);
+        assert_eq!(field.sequence_number, None);
+
+        let field = Field28C::parse("12345").unwrap();
+        assert_eq!(field.statement_number, 12345);
+        assert_eq!(field.sequence_number, None);
+
+        let field = Field28C::parse(":28C:00123").unwrap();
+        assert_eq!(field.statement_number, 123);
+    }
+
+    #[test]
+    fn test_field28c_parse_multi_part() {
+        let field = Field28C::parse("00001/00002").unwrap();
+        assert_eq!(field.statement_number, 1);
+        assert_eq!(field.sequence_number, Some(2));
+
+        let field = Field28C::parse("12345/00678").unwrap();
+        assert_eq!(field.statement_number, 12345);
+        assert_eq!(field.sequence_number, Some(678));
+
+        let field = Field28C::parse("28C:00123/00005").unwrap();
+        assert_eq!(field.statement_number, 123);
+        assert_eq!(field.sequence_number, Some(5));
+    }
+
+    #[test]
+    fn test_field28c_parse_invalid() {
+        let result = Field28C::parse("");
+        assert!(result.is_err());
+
+        let result = Field28C::parse("12345/");
+        assert!(result.is_err());
+
+        let result = Field28C::parse("/12345");
+        assert!(result.is_err());
+
+        let result = Field28C::parse("abc");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_field28c_to_swift_string() {
+        let field = Field28C::new(1, None).unwrap();
+        assert_eq!(field.to_swift_string(), "00001");
+
+        let field = Field28C::new(12345, None).unwrap();
+        assert_eq!(field.to_swift_string(), "12345");
+
+        let field = Field28C::new(1, Some(2)).unwrap();
+        assert_eq!(field.to_swift_string(), "00001/00002");
+
+        let field = Field28C::new(12345, Some(678)).unwrap();
+        assert_eq!(field.to_swift_string(), "12345/00678");
+    }
+
+    #[test]
+    fn test_field28c_next_sequence() {
+        let field = Field28C::new(123, Some(1)).unwrap();
+        let next = field.next_sequence(2).unwrap();
+        assert_eq!(next.statement_number, 123);
+        assert_eq!(next.sequence_number, Some(2));
+
+        let result = field.next_sequence(0);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_field28c_format_spec() {
+        assert_eq!(Field28C::format_spec(), "5n[/5n]");
+    }
+
+    #[test]
+    fn test_field28c_display() {
+        let field = Field28C::new(123, None).unwrap();
+        let display = format!("{}", field);
+        assert!(display.contains("Statement 123"));
+        assert!(!display.contains("Sequence"));
+
+        let field = Field28C::new(123, Some(5)).unwrap();
+        let display = format!("{}", field);
+        assert!(display.contains("Statement 123"));
+        assert!(display.contains("Sequence 5"));
+    }
+
+    #[test]
+    fn test_field28c_serialization() {
+        let field = Field28C::new(123, Some(5)).unwrap();
+        let serialized = serde_json::to_string(&field).unwrap();
+        let deserialized: Field28C = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(field, deserialized);
+    }
+
+    #[test]
+    fn test_field28c_edge_cases() {
+        // Maximum values
+        let field = Field28C::new(99999, Some(99999)).unwrap();
+        assert_eq!(field.to_swift_string(), "99999/99999");
+
+        // Minimum values
+        let field = Field28C::new(1, Some(1)).unwrap();
+        assert_eq!(field.to_swift_string(), "00001/00001");
+    }
+}

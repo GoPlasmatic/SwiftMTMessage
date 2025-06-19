@@ -1,8 +1,38 @@
+pub mod mt101;
 pub mod mt103;
+pub mod mt104;
+pub mod mt107;
+pub mod mt110;
+pub mod mt111;
+pub mod mt112;
 pub mod mt202;
 pub mod mt205;
+pub mod mt210;
+pub mod mt900;
+pub mod mt910;
+pub mod mt920;
+pub mod mt935;
+pub mod mt940;
+pub mod mt941;
+pub mod mt942;
+pub mod mt950;
 
 // Re-export message types
+pub use mt101::MT101;
 pub use mt103::MT103;
+pub use mt104::MT104;
+pub use mt107::{MT107, MT107SettlementDetails, MT107TransactionDetails};
+pub use mt110::{MT110, MT110ChequeDetails};
+pub use mt111::MT111;
+pub use mt112::MT112;
 pub use mt202::MT202;
 pub use mt205::MT205;
+pub use mt210::MT210;
+pub use mt900::MT900;
+pub use mt910::MT910;
+pub use mt920::MT920;
+pub use mt935::{MT935, RateChangeSequence};
+pub use mt940::{MT940, StatementLine};
+pub use mt941::MT941;
+pub use mt942::{InterimStatementLine, MT942};
+pub use mt950::{ClosingBalance, MT950, OpeningBalance};

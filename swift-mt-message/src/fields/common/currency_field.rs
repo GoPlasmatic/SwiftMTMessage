@@ -89,7 +89,7 @@ impl GenericCurrencyAmountField {
     ///
     /// # Example
     /// ```rust
-    /// # use swift_mt_message::GenericCurrencyAmountField;
+    /// # use swift_mt_message::fields::GenericCurrencyAmountField;
     /// let field = GenericCurrencyAmountField::new("USD", 1234.56).unwrap();
     /// assert_eq!(field.currency(), "USD");
     /// assert_eq!(field.amount(), 1234.56);
@@ -140,7 +140,7 @@ impl GenericCurrencyAmountField {
     ///
     /// # Example
     /// ```rust
-    /// # use swift_mt_message::GenericCurrencyAmountField;
+    /// # use swift_mt_message::fields::GenericCurrencyAmountField;
     /// let field = GenericCurrencyAmountField::from_raw("EUR", "1000,50").unwrap();
     /// assert_eq!(field.raw_amount(), "1000,50");
     /// ```

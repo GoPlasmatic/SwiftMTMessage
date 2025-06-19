@@ -87,7 +87,7 @@ impl GenericAccountField {
     ///
     /// # Example
     /// ```rust
-    /// # use swift_mt_message::GenericAccountField;
+    /// # use swift_mt_message::fields::GenericAccountField;
     /// let field = GenericAccountField::new("INTERMEDIARYACCT123456").unwrap();
     /// assert_eq!(field.account_number(), "INTERMEDIARYACCT123456");
     /// ```

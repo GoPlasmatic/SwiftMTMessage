@@ -91,7 +91,7 @@ impl GenericPartyField {
     ///
     /// # Example
     /// ```rust
-    /// # use swift_mt_message::GenericPartyField;
+    /// # use swift_mt_message::fields::GenericPartyField;
     /// let field = GenericPartyField::new(
     ///     Some("C".to_string()),
     ///     Some("1234567890".to_string()),

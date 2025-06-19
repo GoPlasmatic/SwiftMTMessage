@@ -1,7 +1,5 @@
-use crate::{
-    GenericAccountField, GenericBicField, GenericCurrencyAmountField, GenericNameAddressField,
-    GenericPartyField, SwiftMessage, fields::*, swift_serde,
-};
+use crate::fields::*;
+use crate::{SwiftMessage, swift_serde};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -209,7 +207,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Basic MT103 Creation
 /// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*, GenericBicField};
+/// use swift_mt_message::{messages::MT103, fields::*};
 /// use chrono::NaiveDate;
 ///
 /// // Create mandatory fields
@@ -239,7 +237,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### MT103.STP Compliant Message
 /// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*, GenericBicField};
+/// use swift_mt_message::{messages::MT103, fields::*};
 /// use swift_mt_message::fields::field59::Field59Basic;
 /// use chrono::NaiveDate;
 ///
@@ -310,7 +308,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Cross-Currency Transaction
 /// ```rust
-/// use swift_mt_message::{messages::MT103, fields::*, GenericCurrencyAmountField};
+/// use swift_mt_message::{messages::MT103, fields::*};
 /// use swift_mt_message::fields::field59::Field59Basic;
 /// use chrono::NaiveDate;
 ///

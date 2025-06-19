@@ -59,28 +59,16 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-pub mod account_field;
-pub mod bic_field;
-pub mod currency_field;
 pub mod errors;
 pub mod fields;
 pub mod headers;
 pub mod messages;
-pub mod multiline_field;
-pub mod name_field;
 pub mod parser;
-pub mod party_field;
 
 // Re-export core types
-pub use account_field::GenericAccountField;
-pub use bic_field::GenericBicField;
-pub use currency_field::GenericCurrencyAmountField;
 pub use errors::{ParseError, Result, ValidationError};
 pub use headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
-pub use multiline_field::MultiLineField;
-pub use name_field::GenericNameAddressField;
 pub use parser::SwiftParser;
-pub use party_field::GenericPartyField;
 
 // Re-export derive macros
 pub use swift_mt_message_macros::{SwiftField, SwiftMessage, swift_serde};

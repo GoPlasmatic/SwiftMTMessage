@@ -1,5 +1,5 @@
-use crate::MultiLineField;
-use crate::{GenericBicField, SwiftField, ValidationResult, errors::ParseError};
+use crate::fields::{GenericBicField, MultiLineField};
+use crate::{SwiftField, ValidationResult, errors::ParseError};
 use serde::de::{self, MapAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;

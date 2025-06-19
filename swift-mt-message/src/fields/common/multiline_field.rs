@@ -22,7 +22,7 @@ use crate::{ValidationResult, errors::ParseError};
 ///
 /// ## Implementation Example
 /// ```rust
-/// use swift_mt_message::{MultiLineField, ParseError};
+/// use swift_mt_message::{fields::MultiLineField, ParseError};
 ///
 /// #[derive(Debug, Clone)]
 /// pub struct Field70 {

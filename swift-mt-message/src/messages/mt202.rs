@@ -1,4 +1,5 @@
-use crate::{GenericBicField, GenericCurrencyAmountField, SwiftMessage, fields::*, swift_serde};
+use crate::fields::*;
+use crate::{SwiftMessage, swift_serde};
 use serde::{Deserialize, Serialize};
 
 /// # MT202: General Financial Institution Transfer

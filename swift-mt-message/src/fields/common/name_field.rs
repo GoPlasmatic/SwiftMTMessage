@@ -76,7 +76,7 @@ impl GenericNameAddressField {
     ///
     /// # Example
     /// ```rust
-    /// # use swift_mt_message::GenericNameAddressField;
+    /// # use swift_mt_message::fields::GenericNameAddressField;
     /// let field = GenericNameAddressField::new(vec![
     ///     "DEUTSCHE BANK AG".to_string(),
     ///     "TAUNUSANLAGE 12".to_string(),
@@ -146,7 +146,7 @@ impl GenericNameAddressField {
     ///
     /// # Example
     /// ```rust
-    /// # use swift_mt_message::GenericNameAddressField;
+    /// # use swift_mt_message::fields::GenericNameAddressField;
     /// let field = GenericNameAddressField::from_string(
     ///     "DEUTSCHE BANK AG\nTAUNUSANLAGE 12\n60325 FRANKFURT AM MAIN\nGERMANY"
     /// ).unwrap();

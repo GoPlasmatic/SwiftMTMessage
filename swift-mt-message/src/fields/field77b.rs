@@ -1,4 +1,5 @@
-use crate::{MultiLineField, SwiftField, ValidationResult, errors::ParseError};
+use crate::fields::MultiLineField;
+use crate::{SwiftField, ValidationResult, errors::ParseError};
 use serde::{Deserialize, Serialize};
 
 /// # Field 77B: Regulatory Reporting

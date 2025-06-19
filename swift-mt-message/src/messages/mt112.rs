@@ -1,7 +1,5 @@
-use crate::SwiftMessageBody;
-use crate::fields::{
-    Field20, Field21, Field30, Field59, Field76, GenericBicField, GenericCurrencyAmountField,
-};
+use crate::fields::*;
+use crate::{SwiftMessage, swift_serde};
 use serde::{Deserialize, Serialize};
 
 /// # MT112: Status of Request for Stop Payment of a Cheque
@@ -21,34 +19,43 @@ use serde::{Deserialize, Serialize};
 /// - Support for partial processing scenarios
 /// - Optional additional correspondence information
 /// - Maintains audit trail for stop payment lifecycle
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[swift_serde]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[swift_message(mt = "112")]
 pub struct MT112 {
     /// **Transaction Reference Number** - Field 20 (Mandatory)
     /// Reference for this status message
+    #[field("20")]
     pub field_20: Field20,
 
     /// **Cheque Number** - Field 21 (Mandatory)
     /// Must match cheque issued in MT110/111
+    #[field("21")]
     pub field_21: Field21,
 
     /// **Date of Issue** - Field 30 (Mandatory)
     /// Must be a valid date format (YYMMDD)
+    #[field("30")]
     pub field_30: Field30,
 
     /// **Amount** - Field 32a (Mandatory)
     /// Same currency across responses; Option A for credited cases
+    #[field("32A")]
     pub field_32a: GenericCurrencyAmountField,
 
     /// **Drawer Bank** - Field 52a (Optional)
     /// National clearing codes supported
+    #[field("52A")]
     pub field_52a: Option<GenericBicField>,
 
     /// **Payee** - Field 59 (Optional)
     /// Account field must not be used
+    #[field("59")]
     pub field_59: Option<Field59>,
 
     /// **Answers** - Field 76 (Mandatory)
     /// Predefined codes with supplemental text allowed
+    #[field("76")]
     pub field_76: Field76,
 }
 
@@ -184,35 +191,10 @@ impl MT112 {
     }
 }
 
-impl SwiftMessageBody for MT112 {
-    fn message_type() -> &'static str {
-        "112"
-    }
-
-    fn from_fields(
-        _fields: std::collections::HashMap<String, Vec<String>>,
-    ) -> crate::SwiftResult<Self> {
-        // Placeholder implementation
-        todo!("MT112 field parsing not yet implemented")
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
-        // Placeholder implementation
-        todo!("MT112 field serialization not yet implemented")
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "21", "30", "32A", "76"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["52A", "52B", "52D", "59"]
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::SwiftMessageBody;
     use crate::fields::MultiLineField;
 
     #[test]

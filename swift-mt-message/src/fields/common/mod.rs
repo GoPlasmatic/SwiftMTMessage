@@ -7,7 +7,9 @@ pub mod name_field;
 pub mod party_field;
 
 pub use account_field::GenericAccountField;
-pub use balance_field::GenericBalanceField;
+pub use balance_field::{
+    Field60A, Field60F, Field62A, Field62F, Field64, Field65, GenericBalanceField,
+};
 pub use bic_field::GenericBicField;
 pub use currency_field::GenericCurrencyAmountField;
 pub use multiline_field::MultiLineField;

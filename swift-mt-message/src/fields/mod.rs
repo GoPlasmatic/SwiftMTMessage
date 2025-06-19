@@ -29,20 +29,23 @@ pub mod field77t;
 pub mod field28;
 pub mod field34f;
 pub mod field37h;
-pub mod field60a;
-pub mod field60f;
 pub mod field61;
-pub mod field62a;
-pub mod field62f;
-pub mod field64;
-pub mod field65;
 pub mod field86;
 pub mod field90c;
 pub mod field90d;
 
+// Balance field modules removed - now handled by common::balance_field
+// pub mod field60a; // Removed - replaced by macro-generated Field60A in common
+// pub mod field60f; // Removed - replaced by macro-generated Field60F in common
+// pub mod field62a; // Removed - replaced by macro-generated Field62A in common
+// pub mod field62f; // Removed - replaced by macro-generated Field62F in common
+// pub mod field64;  // Removed - replaced by macro-generated Field64 in common
+// pub mod field65;  // Removed - replaced by macro-generated Field65 in common
+
 // Re-export all field types for easy access
 pub use common::{
-    GenericAccountField, GenericBicField, GenericCurrencyAmountField, GenericNameAddressField,
+    Field60A, Field60F, Field62A, Field62F, Field64, Field65, GenericAccountField,
+    GenericBalanceField, GenericBicField, GenericCurrencyAmountField, GenericNameAddressField,
     GenericPartyField, MultiLineField,
 };
 
@@ -78,13 +81,15 @@ pub use crate::common::BIC;
 pub use field28::Field28;
 pub use field34f::Field34F;
 pub use field37h::Field37H;
-pub use field60a::Field60A;
-pub use field60f::Field60F;
 pub use field61::Field61;
-pub use field62a::Field62A;
-pub use field62f::Field62F;
-pub use field64::Field64;
-pub use field65::Field65;
 pub use field86::Field86;
 pub use field90c::Field90C;
 pub use field90d::Field90D;
+
+// Balance fields now come from common module
+// pub use field60a::Field60A; // Replaced by common::Field60A
+// pub use field60f::Field60F; // Replaced by common::Field60F
+// pub use field62a::Field62A; // Replaced by common::Field62A
+// pub use field62f::Field62F; // Replaced by common::Field62F
+// pub use field64::Field64;   // Replaced by common::Field64
+// pub use field65::Field65;   // Replaced by common::Field65

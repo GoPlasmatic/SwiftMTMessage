@@ -2,11 +2,11 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT103: Customer Credit Transfer (Standard)
+/// # MT103 STP: Customer Credit Transfer (Straight Through Processing)
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT103_VALIDATION_RULES)]
-pub struct MT103 {
+#[validation_rules(MT103_STP_VALIDATION_RULES)]
+pub struct MT103STP {
     // Mandatory Fields
     #[field("20", mandatory)]
     pub field_20: GenericReferenceField,
@@ -37,38 +37,27 @@ pub struct MT103 {
     pub field_26t: Option<GenericTextField>,
 
     #[field("33B", optional)]
-    pub field_33b: Option<Field33B>,
+    pub field_33b: Option<GenericCurrencyAmountField>,
 
     #[field("36", optional)]
     pub field_36: Option<Field36>,
 
-    #[field("51A", optional)]
-    pub field_51a: Option<GenericBicField>,
-
+    // Note: Field 51A not applicable in STP
     #[field("52A", optional)]
-    pub field_52a: Option<GenericBicField>,
+    pub field_52a: Option<GenericBicField>, // Only option A allowed in STP
 
-    #[field("52D", optional)]
-    pub field_52d: Option<GenericNameAddressField>,
-
+    // Note: Field 52D not allowed in STP (only option A)
     #[field("53A", optional)]
     pub field_53a: Option<GenericBicField>,
 
     #[field("53B", optional)]
-    pub field_53b: Option<GenericPartyField>,
+    pub field_53b: Option<GenericPartyField>, // Options A and B only in STP
 
-    #[field("53D", optional)]
-    pub field_53d: Option<GenericNameAddressField>,
-
+    // Note: Field 53D not allowed in STP
     #[field("54A", optional)]
-    pub field_54a: Option<GenericBicField>,
+    pub field_54a: Option<GenericBicField>, // Only option A allowed in STP
 
-    #[field("54B", optional)]
-    pub field_54b: Option<GenericPartyField>,
-
-    #[field("54D", optional)]
-    pub field_54d: Option<GenericNameAddressField>,
-
+    // Note: Fields 54B, 54D not allowed in STP
     #[field("55A", optional)]
     pub field_55a: Option<GenericBicField>,
 
@@ -103,10 +92,10 @@ pub struct MT103 {
     pub field_70: Option<GenericMultiLine4x35>,
 
     #[field("71F", optional)]
-    pub field_71f: Option<Field71F>,
+    pub field_71f: Option<GenericCurrencyAmountField>,
 
     #[field("71G", optional)]
-    pub field_71g: Option<Field71G>,
+    pub field_71g: Option<GenericCurrencyAmountField>,
 
     #[field("72", optional)]
     pub field_72: Option<GenericMultiLine6x35>,
@@ -118,23 +107,23 @@ pub struct MT103 {
     pub field_77t: Option<Field77T>,
 }
 
-/// MT103 Standard validation rules
-const MT103_VALIDATION_RULES: &str = r#"{
+/// MT103 STP validation rules with STP-specific restrictions
+const MT103_STP_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
       "description": "If 33B is present and its currency differs from 32A, then 36 must be present; otherwise, 36 must not be present",
       "condition": {
         "if": [
-          {"exists": ["33B"]},
+          {"var": "field_33b.is_some"},
           {
             "if": [
-              {"!=": [{"var": "33B.currency"}, {"var": "32A.currency"}]},
-              {"exists": ["36"]},
-              {"!": {"exists": ["36"]}}
+              {"!=": [{"var": "field_33b.currency"}, {"var": "field_32a.currency"}]},
+              {"var": "field_36.is_some"},
+              {"not": {"var": "field_36.is_some"}}
             ]
           },
-          {"!": {"exists": ["36"]}}
+          {"not": {"var": "field_36.is_some"}}
         ]
       }
     },
@@ -147,30 +136,40 @@ const MT103_VALIDATION_RULES: &str = r#"{
             {"in": [{"var": "message_context.sender_country"}, {"var": "EU_EEA_COUNTRIES"}]},
             {"in": [{"var": "message_context.receiver_country"}, {"var": "EU_EEA_COUNTRIES"}]}
           ]},
-          {"exists": ["33B"]},
+          {"var": "field_33b.is_some"},
           true
         ]
       }
     },
     {
-      "id": "C3",
-      "description": "Bank operation code and instruction code compatibility rules",
+      "id": "C3_STP",
+      "description": "STP: 23E instruction codes limited to CORT, INTC, SDVA, REPA",
       "condition": {
-        "and": [
-          {
-            "if": [
-              {"==": [{"var": "field_23b.value"}, "SPRI"]},
-              {"in": [{"var": "field_23e.instruction_code"}, ["SDVA", "INTC"]]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"in": [{"var": "field_23b.value"}, ["SSTD", "SPAY"]]},
-              {"not": {"var": "field_23e.is_some"}},
-              true
-            ]
-          }
+        "if": [
+          {"var": "field_23e.is_some"},
+          {"in": [{"var": "field_23e.instruction_code"}, ["CORT", "INTC", "SDVA", "REPA"]]},
+          true
+        ]
+      }
+    },
+    {
+      "id": "C4_STP",
+      "description": "STP: If 55a present → 53a and 54a are mandatory",
+      "condition": {
+        "if": [
+          {"or": [
+            {"var": "field_55a.is_some"},
+            {"var": "field_55b.is_some"},
+            {"var": "field_55d.is_some"}
+          ]},
+          {"and": [
+            {"or": [
+              {"var": "field_53a.is_some"},
+              {"var": "field_53b.is_some"}
+            ]},
+            {"var": "field_54a.is_some"}
+          ]},
+          true
         ]
       }
     },
@@ -195,8 +194,23 @@ const MT103_VALIDATION_RULES: &str = r#"{
       }
     },
     {
+      "id": "C6_STP",
+      "description": "STP: If 23B is SPRI → 56a must not be present",
+      "condition": {
+        "if": [
+          {"==": [{"var": "field_23b.value"}, "SPRI"]},
+          {"not": {"or": [
+            {"var": "field_56a.is_some"},
+            {"var": "field_56c.is_some"},
+            {"var": "field_56d.is_some"}
+          ]}},
+          true
+        ]
+      }
+    },
+    {
       "id": "C7",
-      "description": "Charge allocation rules: If 71A = OUR → 71F not allowed, 71G optional; If 71A = SHA → 71F optional, 71G not allowed; If 71A = BEN → 71F mandatory, 71G not allowed",
+      "description": "Charge allocation rules",
       "condition": {
         "and": [
           {
@@ -239,23 +253,12 @@ const MT103_VALIDATION_RULES: &str = r#"{
           true
         ]
       }
-    },
-    {
-      "id": "C9",
-      "description": "Currency codes in 71G and 32A must match",
-      "condition": {
-        "if": [
-          {"var": "field_71g.is_some"},
-          {"==": [{"var": "field_71g.currency"}, {"var": "field_32a.currency"}]},
-          true
-        ]
-      }
     }
   ],
   "constants": {
     "EU_EEA_COUNTRIES": ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO"],
     "VALID_BANK_OPERATION_CODES": ["CRED", "CRTS", "SPAY", "SPRI", "SSTD"],
     "VALID_CHARGE_CODES": ["OUR", "SHA", "BEN"],
-    "VALID_INSTRUCTION_CODES": ["CORT", "INTC", "REPA", "SDVA", "CHQB", "PHOB", "PHOI", "PHON", "TELE", "TELI", "TELB"]
+    "VALID_INSTRUCTION_CODES_STP": ["CORT", "INTC", "SDVA", "REPA"]
   }
 }"#;

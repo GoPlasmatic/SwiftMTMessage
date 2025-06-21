@@ -1,445 +1,534 @@
-use quote::quote;
+use syn::{Attribute, FieldsNamed};
 
-/// Component parser types for different SWIFT field components
+/// Component specification parsed from #[component] attribute
 #[derive(Debug, Clone)]
-pub enum ComponentParser {
-    SwiftDate,          // 6!n - YYMMDD format
-    Currency,           // 3!a - ISO 4217 currency codes
-    Amount,             // 15d - Decimal amounts with comma separator
-    DecimalAmount,      // 12d - Decimal amounts up to 12 digits
-    AlphaCode,          // 4!c - Alphanumeric codes
-    AlphaCode3,         // 3!c - 3-character alphanumeric codes
-    Alphanumeric,       // 16x - Alphanumeric strings
-    Text35,             // 35x - 35-character text strings
-    Bic,                // BIC codes
-    SingleChar,         // 1!a - Single alphabetic character
-    OptionalSingleChar, // [1!a] - Optional single alphabetic character
-    EntryCount,         // 3!n - 3-digit entry count parser
-    Numeric4,           // 4!n - 4-digit numeric pattern
-    SingleSign,         // 1!x - Single sign character (+/-)
-    EnvelopeContent,    // 1!a/1!a/35x - Envelope content pattern (Field77T)
-    InterestRate,       // 1!a[N]12d - Interest rate pattern (Field37H)
-    // New patterns for Phase 1
-    StatementSequence,  // 5n[/2n] - Statement number with optional sequence (Field28)
-    StatementSequence5, // 5n[/5n] - Statement number with optional 5-digit sequence (Field28C)
-    DateTimeOffset,     // 6!n4!n1!x4!n - Date, time, sign, offset (Field13D)
-    FunctionCodeRef,    // 3!a[2!n]11x - Function code with optional days and reference (Field23)
+pub struct ComponentSpec {
+    /// SWIFT format specification (e.g., "6!n", "3!a", "15d")
+    pub format: String,
+    /// Whether this component is optional
+    pub optional: bool,
+    /// Validation rules to apply (e.g., ["date_format", "currency_code"])
+    pub validation_rules: Vec<String>,
+    /// Field name this component applies to
+    pub field_name: String,
+    /// Field type
+    pub field_type: syn::Type,
 }
 
-impl ComponentParser {
-    pub fn from_pattern(pattern: &str) -> Option<Self> {
-        match pattern {
-            "6!n" => Some(ComponentParser::SwiftDate),
-            "3!a" => Some(ComponentParser::Currency),
-            "15d" => Some(ComponentParser::Amount),
-            "4!c" => Some(ComponentParser::AlphaCode),
-            "3!c" => Some(ComponentParser::AlphaCode3),
-            "16x" => Some(ComponentParser::Alphanumeric),
-            "1!a" => Some(ComponentParser::SingleChar),
-            "BIC" => Some(ComponentParser::Bic),
-            "3!n" => Some(ComponentParser::EntryCount), // New pattern
-            _ => None,
+/// Specification for a sequence field
+#[derive(Debug, Clone)]
+pub struct SequenceSpec {
+    /// Sequence identifier (e.g., "A", "B")
+    pub sequence_id: String,
+    /// Whether this sequence is repetitive
+    pub repetitive: bool,
+    /// Field name this sequence applies to
+    pub field_name: String,
+    /// Field type (must be Vec<T> for repetitive sequences)
+    pub field_type: syn::Type,
+}
+
+/// Field specification - either a component or a sequence
+#[derive(Debug, Clone)]
+pub enum FieldSpec {
+    Component(ComponentSpec),
+    Sequence(SequenceSpec),
+}
+
+/// Parse field specifications from struct fields
+pub fn parse_field_specs(fields: &FieldsNamed) -> Result<Vec<FieldSpec>, String> {
+    let mut specs = Vec::new();
+
+    for field in &fields.named {
+        let field_name = field
+            .ident
+            .as_ref()
+            .ok_or("Field must have a name")?
+            .to_string();
+
+        // Check for #[sequence(...)] attribute first
+        if let Some(sequence_attr) = find_sequence_attribute(&field.attrs) {
+            let spec = parse_sequence_attribute(sequence_attr, field_name, field.ty.clone())?;
+            specs.push(FieldSpec::Sequence(spec));
+        }
+        // Then check for #[component(...)] attribute
+        else if let Some(component_attr) = find_component_attribute(&field.attrs) {
+            let spec = parse_component_attribute(component_attr, field_name, field.ty.clone())?;
+            specs.push(FieldSpec::Component(spec));
+        }
+        // Check for #[field(...)] attribute (new unified approach)
+        else if let Some(field_attr) = find_field_attribute(&field.attrs) {
+            let spec = parse_field_attribute(field_attr, field_name, field.ty.clone())?;
+            specs.push(spec);
         }
     }
 
-    pub fn from_parser_name(parser: &str) -> Option<Self> {
-        match parser {
-            "swift_date" => Some(ComponentParser::SwiftDate),
-            "currency" => Some(ComponentParser::Currency),
-            "amount" => Some(ComponentParser::Amount),
-            "alpha_code" => Some(ComponentParser::AlphaCode),
-            "alphanumeric" => Some(ComponentParser::Alphanumeric),
-            "single_char" => Some(ComponentParser::SingleChar),
-            "bic" => Some(ComponentParser::Bic),
-            "entry_count" => Some(ComponentParser::EntryCount), // New parser
-            _ => None,
+    if specs.is_empty() {
+        return Err(
+            "No field attributes found. SwiftMessage requires field specifications.".to_string(),
+        );
+    }
+
+    Ok(specs)
+}
+
+/// Parse component specifications from struct fields (legacy support)
+pub fn parse_component_specs(fields: &FieldsNamed) -> Result<Vec<ComponentSpec>, String> {
+    let field_specs = parse_field_specs(fields)?;
+
+    let components: Vec<ComponentSpec> = field_specs
+        .into_iter()
+        .filter_map(|spec| match spec {
+            FieldSpec::Component(comp) => Some(comp),
+            FieldSpec::Sequence(_) => None,
+        })
+        .collect();
+
+    if components.is_empty() {
+        return Err("No component specifications found.".to_string());
+    }
+
+    Ok(components)
+}
+
+/// Find the #[sequence(...)] attribute in a list of attributes
+fn find_sequence_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
+    attrs.iter().find(|attr| attr.path().is_ident("sequence"))
+}
+
+/// Find the #[field(...)] attribute in a list of attributes
+fn find_field_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
+    attrs.iter().find(|attr| attr.path().is_ident("field"))
+}
+
+/// Parse a #[sequence(...)] attribute
+fn parse_sequence_attribute(
+    attr: &Attribute,
+    field_name: String,
+    field_type: syn::Type,
+) -> Result<SequenceSpec, String> {
+    let mut sequence_id = None;
+    let mut repetitive = false;
+
+    if let syn::Meta::List(meta_list) = &attr.meta {
+        let tokens_str = meta_list.tokens.to_string();
+
+        // Parse sequence ID (first quoted string)
+        if let Some(start) = tokens_str.find('"') {
+            if let Some(end) = tokens_str[start + 1..].find('"') {
+                sequence_id = Some(tokens_str[start + 1..start + 1 + end].to_string());
+            }
+        }
+
+        // Check for repetitive flag
+        if tokens_str.contains("repetitive") {
+            repetitive = true;
         }
     }
 
-    pub fn generate_parse_logic(
-        &self,
-        field_name: &syn::Ident,
-        start_pos: usize,
-        field_tag: &str,
-    ) -> proc_macro2::TokenStream {
-        match self {
-            ComponentParser::SwiftDate => quote! {
-                #field_name: {
-                    let date_str = &content[#start_pos..#start_pos + 6];
-                    if !date_str.chars().all(|c| c.is_ascii_digit()) {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Date must be 6 digits".to_string(),
-                        });
-                    }
+    let sequence_id = sequence_id.ok_or("Sequence must specify an ID (e.g., \"A\", \"B\")")?;
 
-                    let year = format!("20{}", &date_str[0..2]);
-                    let month = &date_str[2..4];
-                    let day = &date_str[4..6];
+    Ok(SequenceSpec {
+        sequence_id,
+        repetitive,
+        field_name,
+        field_type,
+    })
+}
 
-                    chrono::NaiveDate::parse_from_str(
-                        &format!("{}-{}-{}", year, month, day),
-                        "%Y-%m-%d"
-                    ).map_err(|_| crate::ParseError::InvalidFieldFormat {
-                        field_tag: #field_tag.to_string(),
-                        message: "Invalid date".to_string(),
-                    })?
-                }
-            },
-            ComponentParser::Currency => quote! {
-                #field_name: content[#start_pos..#start_pos + 3].to_string()
-            },
-            ComponentParser::Amount => quote! {
-                #field_name: {
-                    let amount_str = &content[#start_pos..];
+/// Parse a #[field(...)] attribute (unified approach)
+fn parse_field_attribute(
+    attr: &Attribute,
+    field_name: String,
+    field_type: syn::Type,
+) -> Result<FieldSpec, String> {
+    if let syn::Meta::List(meta_list) = &attr.meta {
+        let tokens_str = meta_list.tokens.to_string();
 
-                    // Parse SWIFT decimal format (comma as decimal separator)
-                    let normalized_amount = amount_str.replace(',', ".");
-                    normalized_amount.parse::<f64>().map_err(|_| {
-                        crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Invalid amount format".to_string(),
-                        }
-                    })?
-                }
-            },
-            ComponentParser::DecimalAmount => quote! {
-                #field_name: {
-                    let rate_str = &content[#start_pos..];
+        // Check if this is a sequence specification
+        if tokens_str.contains("repetitive") || tokens_str.contains("sequence") {
+            // Parse as sequence
+            let sequence_spec =
+                parse_sequence_from_field_attr(&tokens_str, field_name, field_type)?;
+            Ok(FieldSpec::Sequence(sequence_spec))
+        } else {
+            // Parse as component
+            let component_spec =
+                parse_component_from_field_attr(&tokens_str, field_name, field_type)?;
+            Ok(FieldSpec::Component(component_spec))
+        }
+    } else {
+        Err("Field attribute must have parameters".to_string())
+    }
+}
 
-                    // Validate length for 12d pattern (max 12 digits)
-                    if rate_str.len() > 12 {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: format!("Exchange rate too long: {} characters (max 12)", rate_str.len()),
-                        });
-                    }
+/// Parse sequence specification from #[field(...)] attribute
+fn parse_sequence_from_field_attr(
+    tokens_str: &str,
+    field_name: String,
+    field_type: syn::Type,
+) -> Result<SequenceSpec, String> {
+    let mut sequence_id = None;
+    let mut repetitive = false;
 
-                    // Check for invalid characters
-                    if !rate_str.chars().all(|c| c.is_ascii_digit() || c == ',' || c == '.') {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Exchange rate contains invalid characters".to_string(),
-                        });
-                    }
-
-                    // Parse SWIFT decimal format (comma as decimal separator)
-                    let normalized_rate = rate_str.replace(',', ".");
-                    let value = normalized_rate.parse::<f64>().map_err(|_| {
-                        crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Invalid exchange rate format".to_string(),
-                        }
-                    })?;
-
-                    // Validate positive value
-                    if value <= 0.0 {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: format!("Exchange rate must be positive, got: {}", value),
-                        });
-                    }
-
-                    value
-                }
-            },
-
-            ComponentParser::EntryCount => quote! {
-                #field_name: {
-                    let entry_count_str = &content[#start_pos..#start_pos + 3];
-                    // For Field12 message type, we keep it as String
-                    entry_count_str.to_string()
-                }
-            },
-            ComponentParser::OptionalSingleChar => quote! {
-                #field_name: {
-                    if content.len() > #start_pos {
-                        let ch = content.chars().nth(#start_pos).unwrap();
-                        if ch.is_alphabetic() && (ch == 'D' || ch == 'C') {
-                            Some(ch)
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                }
-            },
-            ComponentParser::Text35 => quote! {
-                #field_name: content[#start_pos..].to_string()
-            },
-            ComponentParser::AlphaCode => quote! {
-                #field_name: content[#start_pos..].to_string()
-            },
-            ComponentParser::AlphaCode3 => quote! {
-                #field_name: {
-                    let code_str = &content[#start_pos..#start_pos + 3];
-                    if !code_str.chars().all(|c| c.is_alphanumeric() && c.is_ascii()) {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "3-character alphanumeric code must contain only alphanumeric characters".to_string(),
-                        });
-                    }
-                    code_str.to_uppercase()
-                }
-            },
-            ComponentParser::Alphanumeric => quote! {
-                #field_name: content[#start_pos..].to_string()
-            },
-            ComponentParser::Bic => quote! {
-                #field_name: content[#start_pos..].to_string()
-            },
-            ComponentParser::SingleChar => quote! {
-                #field_name: content[#start_pos..].to_string()
-            },
-            ComponentParser::Numeric4 => quote! {
-                #field_name: {
-                    let numeric_str = &content[#start_pos..#start_pos + 4];
-                    if !numeric_str.chars().all(|c| c.is_ascii_digit()) {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "4-digit numeric field must contain only digits".to_string(),
-                        });
-                    }
-                    numeric_str.to_string()
-                }
-            },
-            ComponentParser::SingleSign => quote! {
-                #field_name: {
-                    let sign_char = &content[#start_pos..#start_pos + 1];
-                    if sign_char != "+" && sign_char != "-" {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Sign must be '+' or '-'".to_string(),
-                        });
-                    }
-                    sign_char.to_string()
-                }
-            },
-            ComponentParser::EnvelopeContent => quote! {
-                // Special handling for envelope content pattern 1!a/1!a/35x
-                envelope_type: {
-                    let envelope_type = content.chars().nth(0)
-                        .ok_or_else(|| crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Missing envelope type".to_string(),
-                        })?.to_string().to_uppercase();
-
-                    if !envelope_type.chars().all(|c| c.is_ascii_alphabetic()) {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Envelope type must be alphabetic".to_string(),
-                        });
-                    }
-                    envelope_type
-                },
-                envelope_format: {
-                    let envelope_format = content.chars().nth(1)
-                        .ok_or_else(|| crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Missing envelope format".to_string(),
-                        })?.to_string().to_uppercase();
-
-                    if !envelope_format.chars().all(|c| c.is_ascii_alphabetic()) {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Envelope format must be alphabetic".to_string(),
-                        });
-                    }
-                    envelope_format
-                },
-                envelope_identifier: {
-                    if content.len() < 4 || content.chars().nth(2) != Some('/') {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Missing separator '/' after envelope codes".to_string(),
-                        });
-                    }
-
-                    let identifier = content[3..].to_string();
-                    if identifier.is_empty() {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Envelope identifier cannot be empty".to_string(),
-                        });
-                    }
-
-                    if identifier.len() > 35 {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Envelope identifier cannot exceed 35 characters".to_string(),
-                        });
-                    }
-
-                    identifier
-                }
-            },
-            ComponentParser::InterestRate => quote! {
-                // Interest rate parsing handled specially - this shouldn't be called
-                #field_name: content.to_string()
-            },
-            ComponentParser::StatementSequence => quote! {
-                #field_name: {
-                    let statement_sequence_str = &content[#start_pos..#start_pos + 5];
-                    if !statement_sequence_str.chars().all(|c| c.is_ascii_digit()) {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Statement sequence must be numeric".to_string(),
-                        });
-                    }
-                    statement_sequence_str.parse::<u32>().map_err(|_| {
-                        crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Invalid statement sequence format".to_string(),
-                        }
-                    })?
-                }
-            },
-            ComponentParser::StatementSequence5 => quote! {
-                #field_name: {
-                    let statement_sequence_str = &content[#start_pos..#start_pos + 5];
-                    if !statement_sequence_str.chars().all(|c| c.is_ascii_digit()) {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Statement sequence must be numeric".to_string(),
-                        });
-                    }
-                    statement_sequence_str.parse::<u32>().map_err(|_| {
-                        crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Invalid statement sequence format".to_string(),
-                        }
-                    })?
-                }
-            },
-            ComponentParser::DateTimeOffset => quote! {
-                #field_name: {
-                    let date_str = &content[#start_pos..#start_pos + 6];
-                    if !date_str.chars().all(|c| c.is_ascii_digit()) {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Date must be 6 digits".to_string(),
-                        });
-                    }
-
-                    let year = format!("20{}", &date_str[0..2]);
-                    let month = &date_str[2..4];
-                    let day = &date_str[4..6];
-
-                    chrono::NaiveDate::parse_from_str(
-                        &format!("{}-{}-{}", year, month, day),
-                        "%Y-%m-%d"
-                    ).map_err(|_| crate::ParseError::InvalidFieldFormat {
-                        field_tag: #field_tag.to_string(),
-                        message: "Invalid date".to_string(),
-                    })?
-                }
-            },
-            ComponentParser::FunctionCodeRef => quote! {
-                #field_name: {
-                    let function_code_ref_str = &content[#start_pos..#start_pos + 3];
-                    if !function_code_ref_str.chars().all(|c| c.is_ascii_alphanumeric()) {
-                        return Err(crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Function code reference must be alphanumeric".to_string(),
-                        });
-                    }
-                    function_code_ref_str.to_string()
-                }
-            },
+    // Parse sequence ID (first quoted string)
+    if let Some(start) = tokens_str.find('"') {
+        if let Some(end) = tokens_str[start + 1..].find('"') {
+            sequence_id = Some(tokens_str[start + 1..start + 1 + end].to_string());
         }
     }
 
-    pub fn generate_serialize_logic(&self, field_name: &syn::Ident) -> proc_macro2::TokenStream {
-        match self {
-            ComponentParser::SwiftDate => quote! {
-                format!("{:02}{:02}{:02}", self.#field_name.year() % 100, self.#field_name.month(), self.#field_name.day())
-            },
-            ComponentParser::Currency => quote! {
-                self.#field_name.clone()
-            },
-            ComponentParser::Amount => quote! {
-                format!("{:.2}", self.#field_name).replace('.', ",")
-            },
-            ComponentParser::DecimalAmount => quote! {
-                self.raw_rate.clone()
-            },
-            ComponentParser::EntryCount => quote! {
-                format!("{:03}", self.#field_name)
-            },
-            ComponentParser::OptionalSingleChar => quote! {
-                self.#field_name.map(|c| c.to_string()).unwrap_or_else(|| String::new())
-            },
-            ComponentParser::AlphaCode => quote! {
-                self.#field_name.clone()
-            },
-            ComponentParser::AlphaCode3 => quote! {
-                self.#field_name.clone()
-            },
-            ComponentParser::Alphanumeric => quote! {
-                self.#field_name.clone()
-            },
-            ComponentParser::Bic => quote! {
-                self.#field_name.clone()
-            },
-            ComponentParser::SingleChar => quote! {
-                self.#field_name.to_string()
-            },
-            ComponentParser::Text35 => quote! {
-                self.#field_name.clone()
-            },
-            ComponentParser::Numeric4 => quote! {
-                self.#field_name.clone()
-            },
-            ComponentParser::SingleSign => quote! {
-                self.#field_name.clone()
-            },
-            ComponentParser::EnvelopeContent => quote! {
-                format!("{}{}/{}", self.envelope_type, self.envelope_format, self.envelope_identifier)
-            },
-            ComponentParser::InterestRate => quote! {
-                {
-                    let negative_part = if self.is_negative { "N" } else { "" };
-                    format!("{}{}{}", self.rate_indicator, negative_part, self.raw_rate)
-                }
-            },
-            ComponentParser::StatementSequence => quote! {
-                format!("{:05}", self.#field_name)
-            },
-            ComponentParser::StatementSequence5 => quote! {
-                format!("{:05}", self.#field_name)
-            },
-            ComponentParser::DateTimeOffset => quote! {
-                format!("{:02}{:02}{:02}", self.#field_name.year() % 100, self.#field_name.month(), self.#field_name.day())
-            },
-            ComponentParser::FunctionCodeRef => quote! {
-                self.#field_name.clone()
-            },
+    // Check for repetitive flag
+    if tokens_str.contains("repetitive") {
+        repetitive = true;
+    }
+
+    let sequence_id = sequence_id.unwrap_or_else(|| field_name.clone());
+
+    Ok(SequenceSpec {
+        sequence_id,
+        repetitive,
+        field_name,
+        field_type,
+    })
+}
+
+/// Parse component specification from #[field(...)] attribute
+fn parse_component_from_field_attr(
+    tokens_str: &str,
+    field_name: String,
+    field_type: syn::Type,
+) -> Result<ComponentSpec, String> {
+    let mut format = None;
+    let mut optional = false;
+    let mut validation_rules = Vec::new();
+
+    // Parse format string (first quoted string)
+    if let Some(start) = tokens_str.find('"') {
+        if let Some(end) = tokens_str[start + 1..].find('"') {
+            format = Some(tokens_str[start + 1..start + 1 + end].to_string());
         }
     }
 
-    pub fn component_length(&self) -> usize {
-        match self {
-            ComponentParser::SwiftDate => 6,
-            ComponentParser::Currency => 3,
-            ComponentParser::Amount => 0, // Variable length, takes rest of string
-            ComponentParser::DecimalAmount => 0, // Variable length, takes rest of string
-            ComponentParser::AlphaCode => 4,
-            ComponentParser::AlphaCode3 => 3,
-            ComponentParser::Alphanumeric => 16,
-            ComponentParser::SingleChar => 1,
-            ComponentParser::OptionalSingleChar => 1, // Optional single char
-            ComponentParser::Bic => 11,               // Max BIC length
-            ComponentParser::EntryCount => 3,         // Fixed 3-digit entry count
-            ComponentParser::Text35 => 35,            // Up to 35 characters
-            ComponentParser::Numeric4 => 4,           // Fixed 4-digit numeric
-            ComponentParser::SingleSign => 1,         // Single sign character
-            ComponentParser::EnvelopeContent => 0,    // Variable length envelope content
-            ComponentParser::InterestRate => 0,       // Variable length interest rate
-            ComponentParser::StatementSequence => 5,   // Fixed 5-digit statement sequence
-            ComponentParser::StatementSequence5 => 5,  // Fixed 5-digit statement sequence
-            ComponentParser::DateTimeOffset => 6,      // Fixed 6-digit date
-            ComponentParser::FunctionCodeRef => 3,     // Fixed 3-character function code reference
+    // Check for optional/mandatory flags
+    if tokens_str.contains("optional") {
+        optional = true;
+    }
+    // mandatory is the default, but we can be explicit
+
+    // Parse validation rules
+    if tokens_str.contains("validate") {
+        validation_rules = parse_validation_rules_from_string(tokens_str)?;
+    }
+
+    let format = format.ok_or("Field must specify a format string or be a sequence")?;
+
+    Ok(ComponentSpec {
+        format,
+        optional,
+        validation_rules,
+        field_name,
+        field_type,
+    })
+}
+
+/// Parse validation rules from the token string
+fn parse_validation_rules_from_string(tokens_str: &str) -> Result<Vec<String>, String> {
+    let mut rules = Vec::new();
+
+    // Look for validate = [...]
+    if let Some(validate_pos) = tokens_str.find("validate") {
+        let after_validate = &tokens_str[validate_pos..];
+
+        // Look for opening bracket
+        if let Some(bracket_start) = after_validate.find('[') {
+            if let Some(bracket_end) = after_validate.find(']') {
+                let rules_content = &after_validate[bracket_start + 1..bracket_end];
+
+                // Split by comma and clean up quotes
+                for rule in rules_content.split(',') {
+                    let clean_rule = rule.trim().trim_matches('"').trim();
+                    if !clean_rule.is_empty() {
+                        rules.push(clean_rule.to_string());
+                    }
+                }
+            }
+        } else {
+            // Look for single quoted rule: validate = "rule"
+            let after_equals = if let Some(eq_pos) = after_validate.find('=') {
+                &after_validate[eq_pos + 1..]
+            } else {
+                after_validate
+            };
+
+            if let Some(quote_start) = after_equals.find('"') {
+                if let Some(quote_end) = after_equals[quote_start + 1..].find('"') {
+                    let rule = &after_equals[quote_start + 1..quote_start + 1 + quote_end];
+                    rules.push(rule.to_string());
+                }
+            }
         }
     }
-} 
+
+    Ok(rules)
+}
+
+/// Generate the combined format specification from all components
+pub fn derive_format_spec(components: &[ComponentSpec]) -> String {
+    components
+        .iter()
+        .map(|comp| {
+            if comp.optional {
+                format!("[{}]", comp.format)
+            } else {
+                comp.format.clone()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("")
+}
+
+/// Check if a field type is Option<T>
+pub fn is_option_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "Option";
+        }
+    }
+    false
+}
+
+/// Extract the inner type from Option<T>
+pub fn extract_option_inner_type(ty: &syn::Type) -> Option<&syn::Type> {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            if segment.ident == "Option" {
+                if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+                    if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() {
+                        return Some(inner_type);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Check if a field type is Vec<T>
+pub fn is_vec_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "Vec";
+        }
+    }
+    false
+}
+
+/// Extract the inner type from Vec<T>
+pub fn extract_vec_inner_type(ty: &syn::Type) -> Option<&syn::Type> {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            if segment.ident == "Vec" {
+                if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+                    if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() {
+                        return Some(inner_type);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Check if a field type is u32
+pub fn is_u32_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "u32";
+        }
+    }
+    false
+}
+
+/// Check if a field type is f64
+pub fn is_f64_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "f64";
+        }
+    }
+    false
+}
+
+/// Get the base type for a field, handling Option<T> and Vec<T> wrappers
+pub fn get_base_type(ty: &syn::Type) -> &syn::Type {
+    // First check if it's Option<T>
+    if let Some(inner) = extract_option_inner_type(ty) {
+        // Could be Option<Vec<T>> or Option<u32>, etc.
+        return get_base_type(inner);
+    }
+
+    // Then check if it's Vec<T>
+    if let Some(inner) = extract_vec_inner_type(ty) {
+        return inner;
+    }
+
+    // Otherwise return the type as-is
+    ty
+}
+
+/// Check if a field type is NaiveDate
+pub fn is_naive_date_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "NaiveDate";
+        }
+    }
+    false
+}
+
+/// Check if a field type is NaiveTime
+pub fn is_naive_time_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "NaiveTime";
+        }
+    }
+    false
+}
+
+/// Check if a field type is char
+pub fn is_char_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "char";
+        }
+    }
+    false
+}
+
+/// Check if a field type is i32
+pub fn is_i32_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "i32";
+        }
+    }
+    false
+}
+
+/// Check if a field type is u8
+pub fn is_u8_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "u8";
+        }
+    }
+    false
+}
+
+/// Check if a field type is bool
+pub fn is_bool_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "bool";
+        }
+    }
+    false
+}
+
+/// Check if a type is likely a SwiftMessage (custom struct, not a field type)
+pub fn is_swift_message_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            let type_name = segment.ident.to_string();
+            // SwiftMessage types typically start with MT or are custom structs
+            // They don't start with Generic or Field prefixes
+            return type_name.starts_with("MT")
+                || (!type_name.starts_with("Generic")
+                    && !type_name.starts_with("Field")
+                    && !is_primitive_type(&type_name));
+        }
+    }
+    false
+}
+
+/// Check if a type name represents a primitive type
+fn is_primitive_type(type_name: &str) -> bool {
+    matches!(
+        type_name,
+        "u8" | "u16"
+            | "u32"
+            | "u64"
+            | "usize"
+            | "i8"
+            | "i16"
+            | "i32"
+            | "i64"
+            | "isize"
+            | "f32"
+            | "f64"
+            | "bool"
+            | "char"
+            | "String"
+            | "NaiveDate"
+            | "NaiveTime"
+            | "NaiveDateTime"
+    )
+}
+
+/// Check if a Vec<T> contains SwiftMessage types
+pub fn is_vec_of_swift_messages(ty: &syn::Type) -> bool {
+    if let Some(inner_type) = extract_vec_inner_type(ty) {
+        return is_swift_message_type(inner_type);
+    }
+    false
+}
+
+/// Find the #[component] attribute in a list of attributes
+fn find_component_attribute(attrs: &[Attribute]) -> Option<&Attribute> {
+    attrs.iter().find(|attr| attr.path().is_ident("component"))
+}
+
+/// Parse a single #[component(...)] attribute using a simplified approach
+fn parse_component_attribute(
+    attr: &Attribute,
+    field_name: String,
+    field_type: syn::Type,
+) -> Result<ComponentSpec, String> {
+    let mut format = None;
+    let mut optional = false;
+    let mut validation_rules = Vec::new();
+
+    // Simple parsing approach: parse the tokens manually
+    if let syn::Meta::List(meta_list) = &attr.meta {
+        let tokens_str = meta_list.tokens.to_string();
+
+        // Parse format string (first quoted string)
+        if let Some(start) = tokens_str.find('"') {
+            if let Some(end) = tokens_str[start + 1..].find('"') {
+                format = Some(tokens_str[start + 1..start + 1 + end].to_string());
+            }
+        }
+
+        // Check for optional flag
+        if tokens_str.contains("optional") {
+            optional = true;
+        }
+
+        // Parse validation rules (look for validate = [...])
+        if tokens_str.contains("validate") {
+            validation_rules = parse_validation_rules_from_string(&tokens_str)?;
+        }
+    }
+
+    let format = format.ok_or("Component must specify a format string")?;
+
+    Ok(ComponentSpec {
+        format,
+        optional,
+        validation_rules,
+        field_name,
+        field_type,
+    })
+}

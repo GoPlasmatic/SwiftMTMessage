@@ -1,5 +1,7 @@
 use crate::errors::{ParseError, Result};
+use crate::fields::common::BIC;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 /// Basic Header (Block 1) - Application and service identifier
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -12,6 +14,7 @@ pub struct BasicHeader {
 
     /// Logical Terminal (LT) address (12 characters)
     pub logical_terminal: String,
+    pub sender_bic: BIC,
 
     /// Session number (4 digits)
     pub session_number: String,
@@ -23,10 +26,10 @@ pub struct BasicHeader {
 impl BasicHeader {
     /// Parse basic header from block 1 string
     pub fn parse(block1: &str) -> Result<Self> {
-        if block1.len() < 14 {
+        if block1.len() < 21 {
             return Err(ParseError::InvalidBlockStructure {
                 message: format!(
-                    "Block 1 too short: expected at least 14 characters, got {}",
+                    "Block 1 too short: expected at least 21 characters, got {}",
                     block1.len()
                 ),
             });
@@ -34,35 +37,21 @@ impl BasicHeader {
 
         let application_id = block1[0..1].to_string();
         let service_id = block1[1..3].to_string();
+        let logical_terminal = block1[3..15].to_string();
+        let session_number = block1[15..19].to_string();
+        let sequence_number = block1[19..].to_string();
 
-        // Extract logical terminal - usually 11-12 characters
-        let mut logical_terminal = String::new();
-        let mut pos = 3;
-
-        // Find the end of the logical terminal (where digits start for session number)
-        while pos < block1.len() && !block1.chars().nth(pos).unwrap_or('0').is_ascii_digit() {
-            logical_terminal.push(block1.chars().nth(pos).unwrap());
-            pos += 1;
-        }
-
-        // Remaining characters are session and sequence numbers
-        let remaining = &block1[pos..];
-        let session_number = if remaining.len() >= 4 {
-            remaining[0..4].to_string()
-        } else {
-            remaining.to_string()
-        };
-
-        let sequence_number = if remaining.len() > 4 {
-            remaining[4..].to_string()
-        } else {
-            String::new()
-        };
+        // Extract BIC from logical terminal (first 8 characters for standard BIC)
+        let bic_str = &logical_terminal[0..8];
+        let sender_bic = BIC::from_str(bic_str).map_err(|e| ParseError::InvalidBlockStructure {
+            message: format!("Failed to parse BIC from logical terminal '{}': {}", bic_str, e),
+        })?;
 
         Ok(BasicHeader {
             application_id,
             service_id,
             logical_terminal,
+            sender_bic,
             session_number,
             sequence_number,
         })
@@ -94,6 +83,7 @@ pub struct ApplicationHeader {
 
     /// Destination address (12 characters)
     pub destination_address: String,
+    pub receiver_bic: BIC,
 
     /// Priority (U = Urgent, N = Normal, S = System)
     pub priority: String,
@@ -134,10 +124,15 @@ impl ApplicationHeader {
             None
         };
 
+        let receiver_bic = BIC::from_str(&destination_address[0..8]).map_err(|e| ParseError::InvalidBlockStructure {
+            message: format!("Failed to parse BIC from destination address '{}': {}", destination_address, e),
+        })?;
+
         Ok(ApplicationHeader {
             direction,
             message_type,
             destination_address,
+            receiver_bic,
             priority,
             delivery_monitoring,
             obsolescence_period,

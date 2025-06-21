@@ -2,11 +2,11 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT103: Customer Credit Transfer (Standard)
+/// # MT103 REMIT: Customer Credit Transfer (Enhanced Remittance Information)
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT103_VALIDATION_RULES)]
-pub struct MT103 {
+#[validation_rules(MT103_REMIT_VALIDATION_RULES)]
+pub struct MT103REMIT {
     // Mandatory Fields
     #[field("20", mandatory)]
     pub field_20: GenericReferenceField,
@@ -26,6 +26,9 @@ pub struct MT103 {
     #[field("71A", mandatory)]
     pub field_71a: GenericTextField,
 
+    #[field("77T", mandatory)]
+    pub field_77t: Field77T, // Mandatory in REMIT for structured remittance
+
     // Optional Fields
     #[field("13C", optional)]
     pub field_13c: Option<Field13C>,
@@ -37,7 +40,7 @@ pub struct MT103 {
     pub field_26t: Option<GenericTextField>,
 
     #[field("33B", optional)]
-    pub field_33b: Option<Field33B>,
+    pub field_33b: Option<GenericCurrencyAmountField>,
 
     #[field("36", optional)]
     pub field_36: Option<Field36>,
@@ -99,42 +102,37 @@ pub struct MT103 {
     #[field("57D", optional)]
     pub field_57d: Option<GenericNameAddressField>,
 
-    #[field("70", optional)]
-    pub field_70: Option<GenericMultiLine4x35>,
-
+    // Note: Field 70 not applicable in REMIT (replaced by 77T)
     #[field("71F", optional)]
-    pub field_71f: Option<Field71F>,
+    pub field_71f: Option<GenericCurrencyAmountField>,
 
     #[field("71G", optional)]
-    pub field_71g: Option<Field71G>,
+    pub field_71g: Option<GenericCurrencyAmountField>,
 
     #[field("72", optional)]
     pub field_72: Option<GenericMultiLine6x35>,
 
     #[field("77B", optional)]
     pub field_77b: Option<GenericMultiLine3x35>,
-
-    #[field("77T", optional)]
-    pub field_77t: Option<Field77T>,
 }
 
-/// MT103 Standard validation rules
-const MT103_VALIDATION_RULES: &str = r#"{
+/// MT103 REMIT validation rules with REMIT-specific requirements
+const MT103_REMIT_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
       "description": "If 33B is present and its currency differs from 32A, then 36 must be present; otherwise, 36 must not be present",
       "condition": {
         "if": [
-          {"exists": ["33B"]},
+          {"var": "field_33b.is_some"},
           {
             "if": [
-              {"!=": [{"var": "33B.currency"}, {"var": "32A.currency"}]},
-              {"exists": ["36"]},
-              {"!": {"exists": ["36"]}}
+              {"!=": [{"var": "field_33b.currency"}, {"var": "field_32a.currency"}]},
+              {"var": "field_36.is_some"},
+              {"not": {"var": "field_36.is_some"}}
             ]
           },
-          {"!": {"exists": ["36"]}}
+          {"not": {"var": "field_36.is_some"}}
         ]
       }
     },
@@ -147,30 +145,8 @@ const MT103_VALIDATION_RULES: &str = r#"{
             {"in": [{"var": "message_context.sender_country"}, {"var": "EU_EEA_COUNTRIES"}]},
             {"in": [{"var": "message_context.receiver_country"}, {"var": "EU_EEA_COUNTRIES"}]}
           ]},
-          {"exists": ["33B"]},
+          {"var": "field_33b.is_some"},
           true
-        ]
-      }
-    },
-    {
-      "id": "C3",
-      "description": "Bank operation code and instruction code compatibility rules",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"==": [{"var": "field_23b.value"}, "SPRI"]},
-              {"in": [{"var": "field_23e.instruction_code"}, ["SDVA", "INTC"]]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"in": [{"var": "field_23b.value"}, ["SSTD", "SPAY"]]},
-              {"not": {"var": "field_23e.is_some"}},
-              true
-            ]
-          }
         ]
       }
     },
@@ -196,7 +172,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
     },
     {
       "id": "C7",
-      "description": "Charge allocation rules: If 71A = OUR → 71F not allowed, 71G optional; If 71A = SHA → 71F optional, 71G not allowed; If 71A = BEN → 71F mandatory, 71G not allowed",
+      "description": "Charge allocation rules",
       "condition": {
         "and": [
           {
@@ -241,13 +217,12 @@ const MT103_VALIDATION_RULES: &str = r#"{
       }
     },
     {
-      "id": "C9",
-      "description": "Currency codes in 71G and 32A must match",
+      "id": "REMIT_77T",
+      "description": "REMIT: 77T is mandatory and must contain structured remittance information",
       "condition": {
-        "if": [
-          {"var": "field_71g.is_some"},
-          {"==": [{"var": "field_71g.currency"}, {"var": "field_32a.currency"}]},
-          true
+        "and": [
+          {"!=": [{"var": "field_77t"}, null]},
+          {"!=": [{"var": "field_77t.envelope_contents"}, ""]}
         ]
       }
     }

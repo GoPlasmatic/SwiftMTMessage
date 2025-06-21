@@ -1,319 +1,213 @@
-use crate::fields::{
-    Field13D, Field20, Field21, Field25, Field28C, Field34F, Field61, Field86, Field90C, Field90D,
-};
-use crate::{SwiftMessageBody, SwiftResult};
+use crate::fields::*;
 use serde::{Deserialize, Serialize};
+use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
 /// # MT942: Interim Transaction Report
 ///
-/// ## Overview
-/// MT942 is used by financial institutions to send interim transaction reports
-/// containing transaction details within specified floor limits. This message
-/// provides real-time transaction reporting for amounts above certain thresholds.
+/// This message is used by financial institutions to send periodic interim
+/// transaction reports containing summary information about account activity
+/// within a specified period. Unlike MT940, this message focuses on transaction
+/// summaries rather than detailed transaction lines.
 ///
-/// ## Message Structure
-/// - **Field 20**: Transaction Reference Number (Mandatory)
-/// - **Field 21**: Related Reference (Optional)
-/// - **Field 25**: Account Identification (Mandatory)
-/// - **Field 28C**: Statement/Sequence Number (Mandatory)
-/// - **Field 34F**: Debit/Debit+Credit Floor Limit (Mandatory)
-/// - **Field 34F**: Credit Floor Limit (Conditional C2)
-/// - **Field 13D**: Date/Time Indication (Mandatory)
-/// - **Field 61**: Statement Line (Optional, Repeating)
-/// - **Field 86**: Info to Account Owner (Optional, per transaction)
-/// - **Field 90D**: Number and Sum of Debits (Optional)
-/// - **Field 90C**: Number and Sum of Credits (Optional)
-/// - **Field 86**: Info to Account Owner (Optional, global)
+/// ## Key Features
+/// - **Interim reporting**: Regular transaction summaries between full statements
+/// - **Transaction counts**: Summary of debit and credit transaction volumes
+/// - **Floor limits**: Threshold-based reporting for significant transactions
+/// - **Balance progression**: Opening and closing balance information
+/// - **High-volume accounts**: Efficient reporting for accounts with many transactions
+/// - **Cash management**: Regular monitoring of account activity
+///
+/// ## Field Structure
+/// All fields follow the enhanced macro system with proper validation rules.
+/// The message supports optional floor limit information and transaction summaries.
 ///
 /// ## Business Rules
-/// - Floor limits in Field 34F must use comma decimal and sign indicators (D/C)
-/// - Field 28C ensures continuity across multi-part interim reports
-/// - Field 13D ensures sync with value date/timestamp for the report cutoff
-/// - Field 86 may appear twice: once per transaction (61) and once for entire message
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// - All balance fields must use the same currency
+/// - Transaction counts represent actual processed transactions
+/// - Floor limits determine which transactions are included in summaries
+/// - Entry counts should match the sum of individual transaction counts
+#[serde_swift_fields]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[validation_rules(MT942_VALIDATION_RULES)]
 pub struct MT942 {
-    /// **Transaction Reference Number** - Field 20 (Mandatory)
-    /// No '//' or slashes at ends
-    pub field_20: Field20,
+    /// **Transaction Reference Number** - Field 20
+    ///
+    /// Unique reference for this interim transaction report.
+    /// Used for tracking and referencing this specific report.
+    #[field("20", mandatory)]
+    pub field_20: GenericReferenceField,
 
     /// **Related Reference** - Field 21 (Optional)
-    /// From MT920 if present
-    pub field_21: Option<Field21>,
+    ///
+    /// Links to MT920 request if applicable.
+    /// Provides connection to report request that triggered this response.
+    #[field("21", optional)]
+    pub field_21: Option<GenericReferenceField>,
 
-    /// **Account Identification** - Field 25 (Mandatory)
-    /// BIC optional
-    pub field_25: Field25,
+    /// **Account Identification** - Field 25
+    ///
+    /// IBAN or account identifier for the reported account.
+    /// Identifies the account for which transaction summary is provided.
+    #[field("25", mandatory)]
+    pub field_25: GenericTextField,
 
-    /// **Statement/Sequence Number** - Field 28C (Mandatory)
-    /// For multi-message reports
+    /// **Statement Number** - Field 28C
+    ///
+    /// Statement sequence number and optional page number.
+    /// Enables proper sequencing of interim reports.
+    #[field("28C", mandatory)]
     pub field_28c: Field28C,
 
-    /// **Debit/Debit+Credit Floor Limit** - Field 34F (Mandatory)
-    /// Sign must be D
-    pub debit_floor_limit: Field34F,
+    /// **Floor Limit Indicator** - Field 34F (Optional)
+    ///
+    /// Minimum transaction amount for inclusion in the report.
+    /// Transactions below this threshold may be excluded from summaries.
+    #[field("34F", optional)]
+    pub field_34f: Option<Field34F>,
 
-    /// **Credit Floor Limit** - Field 34F (Conditional C2)
-    /// Sign must be C
-    pub credit_floor_limit: Option<Field34F>,
+    /// **Date/Time Indication** - Field 13D (Optional)
+    ///
+    /// Date and time when the report was generated.
+    /// Provides timestamp for report generation context.
+    #[field("13D", optional)]
+    pub field_13d: Option<Field13D>,
 
-    /// **Date/Time Indication** - Field 13D (Mandatory)
-    /// UTC Offset, mandatory validation
-    pub field_13d: Field13D,
+    /// **Opening Balance** - Field 60F
+    ///
+    /// Booked opening balance at start of reporting period.
+    /// Reference point for transaction summaries during the period.
+    #[field("60F", mandatory)]
+    pub field_60f: GenericBalanceField,
 
-    /// **Statement Lines** - Field 61 (Optional, Repeating)
-    /// Transaction lines with optional accompanying Field 86
-    pub statement_lines: Vec<InterimStatementLine>,
-
-    /// **Number and Sum of Debits** - Field 90D (Optional)
-    /// Summary line
+    /// **Sum of Debit Entries** - Field 90D (Optional)
+    ///
+    /// Total amount and count of debit transactions.
+    /// Summarizes all debit activity during the reporting period.
+    #[field("90D", optional)]
     pub field_90d: Option<Field90D>,
 
-    /// **Number and Sum of Credits** - Field 90C (Optional)
-    /// Summary line
+    /// **Sum of Credit Entries** - Field 90C (Optional)
+    ///
+    /// Total amount and count of credit transactions.
+    /// Summarizes all credit activity during the reporting period.
+    #[field("90C", optional)]
     pub field_90c: Option<Field90C>,
 
-    /// **Info to Account Owner (Global)** - Field 86 (Optional)
-    /// Summary of report
-    pub field_86_global: Option<Field86>,
-}
+    /// **Closing Balance** - Field 62F
+    ///
+    /// Booked closing balance at end of reporting period.
+    /// Final balance after all transactions during the period.
+    #[field("62F", mandatory)]
+    pub field_62f: GenericBalanceField,
 
-/// # Interim Statement Line
-///
-/// Represents a single transaction line (Field 61) with optional
-/// accompanying information (Field 86) for interim reports.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct InterimStatementLine {
-    /// **Statement Line** - Field 61 (Mandatory)
-    /// Detailed transaction info
-    pub field_61: Field61,
+    /// **Closing Available Balance** - Field 64 (Optional)
+    ///
+    /// Available funds at close of reporting period.
+    /// Shows actual spendable balance after reserves and holds.
+    #[field("64", optional)]
+    pub field_64: Option<GenericBalanceField>,
+
+    /// **Forward Available Balance** - Field 65 (Optional)
+    ///
+    /// Value-dated available balance for future periods.
+    /// Shows projected available funds considering pending transactions.
+    #[field("65", optional)]
+    pub field_65: Option<GenericBalanceField>,
 
     /// **Info to Account Owner** - Field 86 (Optional)
-    /// Contextual to preceding 61
-    pub field_86: Option<Field86>,
+    ///
+    /// Additional narrative information about the report.
+    /// Provides context or explanatory details for the transaction summary.
+    #[field("86", optional)]
+    pub field_86: Option<GenericMultiLineTextField<6, 65>>,
 }
 
-impl InterimStatementLine {
-    /// Create a new interim statement line with transaction details
-    pub fn new(field_61: Field61) -> Self {
-        Self {
-            field_61,
-            field_86: None,
-        }
+/// Enhanced validation rules for MT942
+const MT942_VALIDATION_RULES: &str = r#"{
+  "rules": [
+    {
+      "id": "CURRENCY_CONSISTENCY",
+      "description": "All balance fields must use the same currency",
+      "condition": {
+        "and": [
+          {"==": [
+            {"var": "field_60f.currency"},
+            {"var": "field_62f.currency"}
+          ]},
+          {
+            "if": [
+              {"var": "field_64.is_some"},
+              {"==": [
+                {"var": "field_60f.currency"},
+                {"var": "field_64.currency"}
+              ]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"var": "field_65.is_some"},
+              {"==": [
+                {"var": "field_60f.currency"},
+                {"var": "field_65.currency"}
+              ]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "ENTRY_CURRENCY_CONSISTENCY",
+      "description": "Entry summaries must use same currency as balances",
+      "condition": {
+        "and": [
+          {
+            "if": [
+              {"var": "field_90d.is_some"},
+              {"==": [
+                {"var": "field_60f.currency"},
+                {"var": "field_90d.currency"}
+              ]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"var": "field_90c.is_some"},
+              {"==": [
+                {"var": "field_60f.currency"},
+                {"var": "field_90c.currency"}
+              ]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "REF_FORMAT",
+      "description": "Transaction reference must not have invalid slash patterns",
+      "condition": {
+        "and": [
+          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
+          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
+          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
+        ]
+      }
+    },
+    {
+      "id": "REQUIRED_FIELDS",
+      "description": "All mandatory fields must be present and non-empty",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "field_20.value"}, ""]},
+          {"!=": [{"var": "field_25.value"}, ""]},
+          {"var": "field_28c.is_valid"},
+          {"var": "field_60f.is_valid"},
+          {"var": "field_62f.is_valid"}
+        ]
+      }
     }
-
-    /// Create a new interim statement line with transaction details and narrative
-    pub fn with_info(field_61: Field61, field_86: Field86) -> Self {
-        Self {
-            field_61,
-            field_86: Some(field_86),
-        }
-    }
-
-    /// Add narrative information to the statement line
-    pub fn add_info(&mut self, field_86: Field86) {
-        self.field_86 = Some(field_86);
-    }
-
-    /// Check if this statement line has narrative information
-    pub fn has_info(&self) -> bool {
-        self.field_86.is_some()
-    }
-}
-
-impl MT942 {
-    /// Create a new MT942 with required fields
-    pub fn new(
-        field_20: Field20,
-        field_25: Field25,
-        field_28c: Field28C,
-        debit_floor_limit: Field34F,
-        field_13d: Field13D,
-    ) -> Self {
-        Self {
-            field_20,
-            field_21: None,
-            field_25,
-            field_28c,
-            debit_floor_limit,
-            credit_floor_limit: None,
-            field_13d,
-            statement_lines: Vec::new(),
-            field_90d: None,
-            field_90c: None,
-            field_86_global: None,
-        }
-    }
-
-    /// Get the transaction reference
-    pub fn transaction_reference(&self) -> &str {
-        &self.field_20.transaction_reference
-    }
-
-    /// Get the account identification
-    pub fn account_identification(&self) -> &str {
-        &self.field_25.authorisation
-    }
-
-    /// Get the number of statement lines
-    pub fn statement_line_count(&self) -> usize {
-        self.statement_lines.len()
-    }
-
-    /// Add a statement line
-    pub fn add_statement_line(&mut self, statement_line: InterimStatementLine) {
-        self.statement_lines.push(statement_line);
-    }
-
-    /// Add a transaction with optional narrative
-    pub fn add_transaction(&mut self, field_61: Field61, field_86: Option<Field86>) {
-        let statement_line = match field_86 {
-            Some(info) => InterimStatementLine::with_info(field_61, info),
-            None => InterimStatementLine::new(field_61),
-        };
-        self.statement_lines.push(statement_line);
-    }
-
-    /// Set related reference
-    pub fn set_related_reference(&mut self, field_21: Field21) {
-        self.field_21 = Some(field_21);
-    }
-
-    /// Set credit floor limit
-    pub fn set_credit_floor_limit(&mut self, credit_floor_limit: Field34F) {
-        self.credit_floor_limit = Some(credit_floor_limit);
-    }
-
-    /// Set sum of debits
-    pub fn set_sum_of_debits(&mut self, field_90d: Field90D) {
-        self.field_90d = Some(field_90d);
-    }
-
-    /// Set sum of credits
-    pub fn set_sum_of_credits(&mut self, field_90c: Field90C) {
-        self.field_90c = Some(field_90c);
-    }
-
-    /// Set global info to account owner
-    pub fn set_global_info(&mut self, field_86: Field86) {
-        self.field_86_global = Some(field_86);
-    }
-
-    /// Check if credit floor limit is present
-    pub fn has_credit_floor_limit(&self) -> bool {
-        self.credit_floor_limit.is_some()
-    }
-
-    /// Check if entry summaries are present
-    pub fn has_entry_summaries(&self) -> bool {
-        self.field_90d.is_some() || self.field_90c.is_some()
-    }
-
-    /// Check if global narrative information is present
-    pub fn has_global_info(&self) -> bool {
-        self.field_86_global.is_some()
-    }
-
-    /// Get all statement lines with narrative information
-    pub fn statement_lines_with_info(&self) -> Vec<&InterimStatementLine> {
-        self.statement_lines
-            .iter()
-            .filter(|line| line.has_info())
-            .collect()
-    }
-
-    /// Get the total number of transactions
-    pub fn transaction_count(&self) -> usize {
-        self.statement_lines.len()
-    }
-
-    /// Validate conditional rule C2 (credit floor limit requirements)
-    pub fn validate_c2_rule(&self) -> bool {
-        // This would need proper validation logic based on business rules
-        // For now, return true as a placeholder
-        true
-    }
-}
-
-impl SwiftMessageBody for MT942 {
-    fn message_type() -> &'static str {
-        "942"
-    }
-
-    fn from_fields(_fields: std::collections::HashMap<String, Vec<String>>) -> SwiftResult<Self> {
-        // For now, return a basic implementation error
-        // This would need proper field parsing implementation
-        Err(crate::errors::ParseError::InvalidFormat {
-            message: "MT942 field parsing not yet implemented".to_string(),
-        })
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
-        // Basic implementation - would need proper field serialization
-        std::collections::HashMap::new()
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "25", "28C", "34F", "13D"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["21", "61", "86", "90D", "90C"]
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_mt942_message_type() {
-        assert_eq!(MT942::message_type(), "942");
-    }
-
-    #[test]
-    fn test_mt942_creation() {
-        let field_20 = Field20::new("INT240315001234".to_string());
-        let field_25 = Field25::new("GB33BUKB20201555555555".to_string());
-        let field_28c = Field28C::new(1, Some(1)).unwrap();
-        let debit_floor_limit = Field34F::new("EUR", Some('D'), 1000.00).unwrap();
-        let field_13d = Field13D::new("240315", "1200", "+", "0100").unwrap();
-
-        let mt942 = MT942::new(field_20, field_25, field_28c, debit_floor_limit, field_13d);
-
-        assert_eq!(mt942.transaction_reference(), "INT240315001234");
-        assert_eq!(mt942.account_identification(), "GB33BUKB20201555555555");
-        assert_eq!(mt942.statement_line_count(), 0);
-        assert!(!mt942.has_credit_floor_limit());
-        assert!(!mt942.has_entry_summaries());
-        assert!(!mt942.has_global_info());
-    }
-
-    #[test]
-    fn test_interim_statement_line_creation() {
-        // This test would need proper Field61 constructor - placeholder for now
-        // let field_61 = Field61::new(...);
-        // let field_86 = Field86::new(...);
-        // let statement_line = InterimStatementLine::with_info(field_61, field_86);
-        // assert!(statement_line.has_info());
-    }
-
-    #[test]
-    fn test_mt942_required_fields() {
-        let required = MT942::required_fields();
-        assert!(required.contains(&"20"));
-        assert!(required.contains(&"25"));
-        assert!(required.contains(&"28C"));
-        assert!(required.contains(&"34F"));
-        assert!(required.contains(&"13D"));
-    }
-
-    #[test]
-    fn test_mt942_optional_fields() {
-        let optional = MT942::optional_fields();
-        assert!(optional.contains(&"21"));
-        assert!(optional.contains(&"61"));
-        assert!(optional.contains(&"86"));
-        assert!(optional.contains(&"90D"));
-        assert!(optional.contains(&"90C"));
-    }
-}
+  ]
+}"#;

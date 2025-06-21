@@ -79,9 +79,9 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
 name = "datalogic-rs"
-version = "3.0.25"
+version = "3.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b895b5997396224f70e31ab62006acb4c5bdab5f7cdc000a8bf3646a06f5877"
+checksum = "bb4e08a94de4b717df5bceca557b5ceb8d4f1ddee2166af4206064a030624836"
 dependencies = [
  "bumpalo",
  "chrono",
@@ -302,8 +302,11 @@ dependencies = [
 name = "swift-mt-message-macros"
 version = "2.1.1"
 dependencies = [
+ "datalogic-rs",
  "proc-macro2",
  "quote",
+ "regex",
+ "serde_json",
  "syn",
 ]
 

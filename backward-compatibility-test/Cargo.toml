@@ -20,7 +20,7 @@ path = "src/compare_compatibility.rs"
 
 [dependencies]
 # Default to previous version from crates.io
-swift-mt-message = { version = "2.0.15", optional = true }
+swift-mt-message = { version = "2.1.1", optional = true }
 # Local development version
 swift-mt-message-local = { package = "swift-mt-message", path = "../swift-mt-message", optional = true }
 

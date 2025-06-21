@@ -1,282 +1,170 @@
-use crate::fields::{
-    Field20, Field21, Field25, Field28C, Field60F, Field61, Field62F, Field64, Field65, Field86,
-};
-use crate::{SwiftMessageBody, SwiftResult};
+use crate::fields::*;
 use serde::{Deserialize, Serialize};
+use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
 /// # MT940: Customer Statement Message
 ///
-/// ## Overview
-/// MT940 is used by financial institutions to send customer account statements
+/// This message is used by financial institutions to send customer account statements
 /// containing transaction details and balance information. This message provides
 /// a detailed view of account activity over a specific period.
 ///
-/// ## Message Structure
-/// - **Field 20**: Transaction Reference Number (Mandatory)
-/// - **Field 21**: Related Reference (Optional)
-/// - **Field 25**: Account Identification (Mandatory)
-/// - **Field 28C**: Statement/Sequence Number (Mandatory)
-/// - **Field 60F**: Opening Balance (Mandatory)
-/// - **Field 61**: Statement Line (Optional, Repeating)
-/// - **Field 86**: Info to Account Owner (Optional, follows Field 61)
-/// - **Field 62F**: Closing Balance (Mandatory)
-/// - **Field 64**: Closing Available Balance (Optional)
-/// - **Field 65**: Forward Available Balance (Optional)
+/// ## Key Features
+/// - **Account statements**: Detailed transaction history for customer accounts
+/// - **Balance information**: Opening and closing balance details
+/// - **Transaction details**: Individual transaction lines with narrative
+/// - **Multi-part statements**: Support for statement sequencing
+/// - **Available balance**: Optional closing available balance reporting
+/// - **Reconciliation support**: Comprehensive data for account reconciliation
+///
+/// ## Field Structure
+/// All fields follow the enhanced macro system with proper validation rules.
+/// The message supports repetitive statement lines for multiple transactions.
 ///
 /// ## Business Rules
 /// - Opening balance (60F) and closing balance (62F) must be in consistent currency
 /// - Each Field 61 (transaction line) may be followed by optional Field 86
 /// - Balances use comma as decimal separator
 /// - Statement supports multi-part statements via Field 28C
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[validation_rules(MT940_VALIDATION_RULES)]
 pub struct MT940 {
-    /// **Transaction Reference Number** - Field 20 (Mandatory)
-    /// Unique ID, no leading/trailing slashes
-    pub field_20: Field20,
+    /// **Transaction Reference Number** - Field 20
+    ///
+    /// Unique ID for this statement, no leading/trailing slashes.
+    /// Used for tracking and referencing this specific statement.
+    #[field("20", mandatory)]
+    pub field_20: GenericReferenceField,
 
     /// **Related Reference** - Field 21 (Optional)
-    /// Links to MT920 if applicable
-    pub field_21: Option<Field21>,
+    ///
+    /// Links to MT920 if applicable.
+    /// Provides connection to statement request that triggered this response.
+    #[field("21", optional)]
+    pub field_21: Option<GenericReferenceField>,
 
-    /// **Account Identification** - Field 25 (Mandatory)
-    /// IBAN, BIC optional
-    pub field_25: Field25,
+    /// **Account Identification** - Field 25
+    ///
+    /// IBAN or account identifier, BIC optional.
+    /// Identifies the account for which this statement is provided.
+    #[field("25", mandatory)]
+    pub field_25: GenericTextField,
 
-    /// **Statement/Sequence Number** - Field 28C (Mandatory)
-    /// Statement and sub-sequence
+    /// **Statement/Sequence Number** - Field 28C
+    ///
+    /// Statement and sub-sequence numbers for multi-part statements.
+    /// Enables tracking of statement parts and sequencing.
+    #[field("28C", mandatory)]
     pub field_28c: Field28C,
 
-    /// **Opening Balance** - Field 60F (Mandatory)
-    /// Booked opening balance
-    pub field_60f: Field60F,
+    /// **Opening Balance** - Field 60F
+    ///
+    /// Booked opening balance at start of statement period.
+    /// Must be consistent with currency used in closing balance.
+    #[field("60F", mandatory)]
+    pub field_60f: GenericBalanceField,
 
-    /// **Statement Lines** - Field 61 (Optional, Repeating)
-    /// Transaction lines with optional accompanying Field 86
-    pub statement_lines: Vec<StatementLine>,
+    /// **Statement Lines** (Repetitive)
+    ///
+    /// Transaction lines with optional accompanying Field 86.
+    /// Each statement line represents one transaction with optional narrative.
+    #[field("STATEMENT_LINES", repetitive)]
+    pub statement_lines: Vec<MT940StatementLine>,
 
-    /// **Closing Balance** - Field 62F (Mandatory)
-    /// Booked closing balance
-    pub field_62f: Field62F,
+    /// **Closing Balance** - Field 62F
+    ///
+    /// Booked closing balance at end of statement period.
+    /// Must be consistent with currency used in opening balance.
+    #[field("62F", mandatory)]
+    pub field_62f: GenericBalanceField,
 
     /// **Closing Available Balance** - Field 64 (Optional)
-    /// Cash availability balance
-    pub field_64: Option<Field64>,
+    ///
+    /// Cash availability balance showing funds available for use.
+    /// Provides additional liquidity information beyond booked balance.
+    #[field("64", optional)]
+    pub field_64: Option<GenericBalanceField>,
 
     /// **Forward Available Balance** - Field 65 (Optional)
-    /// Value-dated available funds
-    pub field_65: Option<Field65>,
+    ///
+    /// Value-dated available funds for future periods.
+    /// Shows expected available balance considering future value dates.
+    #[field("65", optional)]
+    pub field_65: Option<GenericBalanceField>,
 }
 
-/// # Statement Line
+/// # MT940 Statement Line
 ///
 /// Represents a single transaction line (Field 61) with optional
 /// accompanying information (Field 86).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct StatementLine {
-    /// **Statement Line** - Field 61 (Mandatory)
-    /// Transaction details
+/// Enhanced with SwiftMessage derive for automatic parsing and validation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[validation_rules(MT940_STATEMENT_LINE_VALIDATION_RULES)]
+pub struct MT940StatementLine {
+    /// **Statement Line** - Field 61
+    ///
+    /// Transaction details including value date, amount, and transaction type.
+    /// Contains the core transaction information.
+    #[field("61", mandatory)]
     pub field_61: Field61,
 
     /// **Info to Account Owner** - Field 86 (Optional)
-    /// Narrative details for the transaction
-    pub field_86: Option<Field86>,
+    ///
+    /// Narrative details for the transaction.
+    /// Provides additional context and description for the transaction.
+    #[field("86", optional)]
+    pub field_86: Option<GenericMultiLineTextField<6, 65>>,
 }
 
-impl StatementLine {
-    /// Create a new statement line with transaction details
-    pub fn new(field_61: Field61) -> Self {
-        Self {
-            field_61,
-            field_86: None,
-        }
+/// Enhanced validation rules for MT940
+const MT940_VALIDATION_RULES: &str = r#"{
+  "rules": [
+    {
+      "id": "CURRENCY_CONSISTENCY",
+      "description": "Opening and closing balances must have consistent currency",
+      "condition": {
+        "==": [
+          {"var": "field_60f.currency"},
+          {"var": "field_62f.currency"}
+        ]
+      }
+    },
+    {
+      "id": "REF_FORMAT",
+      "description": "Transaction reference must not have invalid slash patterns",
+      "condition": {
+        "and": [
+          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
+          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
+          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
+        ]
+      }
+    },
+    {
+      "id": "REQUIRED_FIELDS",
+      "description": "All mandatory fields must be present and non-empty",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "field_20.value"}, ""]},
+          {"!=": [{"var": "field_25.value"}, ""]},
+          {"var": "field_28c.is_valid"},
+          {"var": "field_60f.is_valid"},
+          {"var": "field_62f.is_valid"}
+        ]
+      }
     }
+  ]
+}"#;
 
-    /// Create a new statement line with transaction details and narrative
-    pub fn with_info(field_61: Field61, field_86: Field86) -> Self {
-        Self {
-            field_61,
-            field_86: Some(field_86),
-        }
+/// Validation rules specific to MT940 statement lines
+const MT940_STATEMENT_LINE_VALIDATION_RULES: &str = r#"{
+  "rules": [
+    {
+      "id": "STATEMENT_LINE_VALID",
+      "description": "Statement line must be valid",
+      "condition": {
+        "var": "field_61.is_valid"
+      }
     }
-
-    /// Add narrative information to the statement line
-    pub fn add_info(&mut self, field_86: Field86) {
-        self.field_86 = Some(field_86);
-    }
-
-    /// Check if this statement line has narrative information
-    pub fn has_info(&self) -> bool {
-        self.field_86.is_some()
-    }
-}
-
-impl MT940 {
-    /// Create a new MT940 with required fields
-    pub fn new(
-        field_20: Field20,
-        field_25: Field25,
-        field_28c: Field28C,
-        field_60f: Field60F,
-        field_62f: Field62F,
-    ) -> Self {
-        Self {
-            field_20,
-            field_21: None,
-            field_25,
-            field_28c,
-            field_60f,
-            statement_lines: Vec::new(),
-            field_62f,
-            field_64: None,
-            field_65: None,
-        }
-    }
-
-    /// Get the transaction reference
-    pub fn transaction_reference(&self) -> &str {
-        &self.field_20.transaction_reference
-    }
-
-    /// Get the account identification
-    pub fn account_identification(&self) -> &str {
-        &self.field_25.authorisation
-    }
-
-    /// Get the number of statement lines
-    pub fn statement_line_count(&self) -> usize {
-        self.statement_lines.len()
-    }
-
-    /// Add a statement line
-    pub fn add_statement_line(&mut self, statement_line: StatementLine) {
-        self.statement_lines.push(statement_line);
-    }
-
-    /// Add a transaction with optional narrative
-    pub fn add_transaction(&mut self, field_61: Field61, field_86: Option<Field86>) {
-        let statement_line = match field_86 {
-            Some(info) => StatementLine::with_info(field_61, info),
-            None => StatementLine::new(field_61),
-        };
-        self.statement_lines.push(statement_line);
-    }
-
-    /// Set related reference
-    pub fn set_related_reference(&mut self, field_21: Field21) {
-        self.field_21 = Some(field_21);
-    }
-
-    /// Set closing available balance
-    pub fn set_closing_available_balance(&mut self, field_64: Field64) {
-        self.field_64 = Some(field_64);
-    }
-
-    /// Set forward available balance
-    pub fn set_forward_available_balance(&mut self, field_65: Field65) {
-        self.field_65 = Some(field_65);
-    }
-
-    /// Check if currencies are consistent across balance fields
-    pub fn validate_currency_consistency(&self) -> bool {
-        // This would need proper currency extraction from balance fields
-        // For now, return true as a placeholder
-        true
-    }
-
-    /// Get all statement lines with narrative information
-    pub fn statement_lines_with_info(&self) -> Vec<&StatementLine> {
-        self.statement_lines
-            .iter()
-            .filter(|line| line.has_info())
-            .collect()
-    }
-
-    /// Get the total number of transactions
-    pub fn transaction_count(&self) -> usize {
-        self.statement_lines.len()
-    }
-}
-
-impl SwiftMessageBody for MT940 {
-    fn message_type() -> &'static str {
-        "940"
-    }
-
-    fn from_fields(_fields: std::collections::HashMap<String, Vec<String>>) -> SwiftResult<Self> {
-        // For now, return a basic implementation error
-        // This would need proper field parsing implementation
-        Err(crate::errors::ParseError::InvalidFormat {
-            message: "MT940 field parsing not yet implemented".to_string(),
-        })
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
-        // Basic implementation - would need proper field serialization
-        std::collections::HashMap::new()
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "25", "28C", "60F", "62F"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["21", "61", "86", "64", "65"]
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_mt940_message_type() {
-        assert_eq!(MT940::message_type(), "940");
-    }
-
-    #[test]
-    fn test_mt940_creation() {
-        let field_20 = Field20::new("STMT240315001234".to_string());
-        let field_25 = Field25::new("GB33BUKB20201555555555".to_string());
-        let field_28c = Field28C::new(1, Some(1)).unwrap();
-        let field_60f = Field60F::new('C', "240315", "EUR", 1000.00).unwrap();
-        let field_62f = Field62F::new('C', "240315", "EUR", 1500.00).unwrap();
-
-        let mt940 = MT940::new(field_20, field_25, field_28c, field_60f, field_62f);
-
-        assert_eq!(mt940.transaction_reference(), "STMT240315001234");
-        assert_eq!(mt940.account_identification(), "GB33BUKB20201555555555");
-        assert_eq!(mt940.statement_line_count(), 0);
-        assert!(mt940.field_21.is_none());
-        assert!(mt940.field_64.is_none());
-        assert!(mt940.field_65.is_none());
-    }
-
-    #[test]
-    fn test_statement_line_creation() {
-        // This test would need proper Field61 constructor - placeholder for now
-        // let field_61 = Field61::new(...);
-        // let field_86 = Field86::new(...);
-        // let statement_line = StatementLine::with_info(field_61, field_86);
-        // assert!(statement_line.has_info());
-    }
-
-    #[test]
-    fn test_mt940_required_fields() {
-        let required = MT940::required_fields();
-        assert!(required.contains(&"20"));
-        assert!(required.contains(&"25"));
-        assert!(required.contains(&"28C"));
-        assert!(required.contains(&"60F"));
-        assert!(required.contains(&"62F"));
-    }
-
-    #[test]
-    fn test_mt940_optional_fields() {
-        let optional = MT940::optional_fields();
-        assert!(optional.contains(&"21"));
-        assert!(optional.contains(&"61"));
-        assert!(optional.contains(&"86"));
-        assert!(optional.contains(&"64"));
-        assert!(optional.contains(&"65"));
-    }
-}
+  ]
+}"#;

@@ -20,350 +20,186 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 CORRESPONDENT BANKING OPERATION
 -}"#;
 
-    // Example 2: MT202.COV - Cover Message for Customer Transfer
-    let raw_mt202_cov = r#"{1:F01CHASUS33AXXX0000000000}{2:I202DEUTDEFFAXXXN}{3:{113:COV}{121:f1e2d3c4-b5a6-9087-6543-210987654321}}{4:
-:13C:/153045+1/+0100/-0500
-:20:COV2024120002
-:21:STP2024123456
-:32A:241231EUR1375000,00
-:52A:CHASUS33XXX
-:53A:BNPAFRPPXXX
+    // Example 2: Simple MT202 - Basic Transfer  
+    let raw_mt202_simple = r#"{1:F01CHASUS33AXXX0000000000}{2:I202DEUTDEFFAXXXN}{4:
+:20:FIT2024120002
+:21:REL2024119998
+:32A:241231EUR750000,00
 :58A:DEUTDEFFXXX
-:72:/COV/COVER FOR CUSTOMER TRANSFER
-/REF/MT103 STP2024123456
-INSTITUTIONAL COVER PAYMENT
-:50K:/1234567890
-GLOBAL TECH CORPORATION
-456 INNOVATION DRIVE
-SAN FRANCISCO CA 94105 US
-:59A:/DE89370400440532013000
-DEUTDEFFXXX
-:70:/INV/INVOICE-2024-Q4-789
-/RFB/SOFTWARE LICENSE PAYMENT
-ENTERPRISE SOFTWARE LICENSES
-ANNUAL SUBSCRIPTION RENEWAL
-:33B:USD1500000,00
 -}"#;
 
-    println!("🏦 Parsing MT202 Messages with SwiftMTMessage Library");
-    println!("{}", "=".repeat(70));
+    println!("🏦 MT202 Parser - Focus on JSON Conversion");
+    println!("{}", "=".repeat(60));
 
-    // Parse Example 1: Standard MT202
-    println!("\n📊 Example 1: Standard MT202 - Institutional Transfer");
+    // Parse and convert Example 1: Full MT202
+    println!("\n📊 Example 1: Full MT202 with Optional Fields");
     println!("{}", "-".repeat(50));
 
     match SwiftParser::parse::<MT202>(raw_mt202_standard) {
         Ok(parsed_message) => {
-            println!("✅ Successfully parsed standard MT202 message!");
-
-            display_message_info(&parsed_message);
-            display_institutional_fields(&parsed_message);
-            display_routing_analysis(&parsed_message);
-            display_timing_analysis(&parsed_message);
-
-            println!("\n🔄 Converting to JSON...");
-            let json_output = serde_json::to_string_pretty(&parsed_message)?;
-            println!("📄 JSON Output (truncated):");
-            println!("{}", truncate_json(&json_output, 500));
-
-            validate_mt202_fields(&parsed_message);
+            println!("✅ Successfully parsed MT202 message!");
+            
+            // Display basic information
+            display_basic_info(&parsed_message);
+            
+            // Convert to JSON and display
+            convert_to_json(&parsed_message, "Full MT202")?;
+            
+            // Show field validation
+            validate_fields(&parsed_message);
         }
         Err(e) => {
-            println!("❌ Failed to parse standard MT202: {:?}", e);
+            println!("❌ Failed to parse MT202: {:?}", e);
         }
     }
 
-    // Parse Example 2: MT202.COV Cover Message
-    println!("\n\n📋 Example 2: MT202.COV - Cover Message");
+    // Parse and convert Example 2: Simple MT202
+    println!("\n\n📋 Example 2: Simple MT202 (Minimal Fields)");
     println!("{}", "-".repeat(50));
 
-    match SwiftParser::parse::<MT202>(raw_mt202_cov) {
+    match SwiftParser::parse::<MT202>(raw_mt202_simple) {
         Ok(parsed_message) => {
-            println!("✅ Successfully parsed MT202.COV cover message!");
-
-            display_message_info(&parsed_message);
-            display_institutional_fields(&parsed_message);
-            display_cover_message_fields(&parsed_message);
-            display_routing_analysis(&parsed_message);
-            display_timing_analysis(&parsed_message);
-
-            println!("\n🔄 Converting to JSON...");
-            let json_output = serde_json::to_string_pretty(&parsed_message)?;
-            println!("📄 JSON Output (truncated):");
-            println!("{}", truncate_json(&json_output, 500));
-
-            validate_mt202_fields(&parsed_message);
+            println!("✅ Successfully parsed simple MT202 message!");
+            
+            // Display basic information
+            display_basic_info(&parsed_message);
+            
+            // Convert to JSON and display
+            convert_to_json(&parsed_message, "Simple MT202")?;
+            
+            // Show field validation
+            validate_fields(&parsed_message);
         }
         Err(e) => {
-            println!("❌ Failed to parse MT202.COV: {:?}", e);
+            println!("❌ Failed to parse simple MT202: {:?}", e);
         }
     }
+
+    // Demonstrate JSON field extraction
+    println!("\n\n🔍 JSON Field Extraction Examples");
+    println!("{}", "-".repeat(50));
+    demonstrate_json_extraction()?;
 
     Ok(())
 }
 
-fn display_message_info(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
+fn display_basic_info(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
     println!("\n📋 Message Information:");
     println!("  Message Type: {}", parsed_message.message_type);
-    println!("  Variant: {}", parsed_message.fields.get_variant());
     println!("  Basic Header: {:?}", parsed_message.basic_header);
-    println!(
-        "  Application Header: {:?}",
-        parsed_message.application_header
-    );
+    println!("  Application Header: {:?}", parsed_message.application_header);
+    
     if let Some(user_header) = &parsed_message.user_header {
         println!("  User Header: {:?}", user_header);
     }
-}
 
-fn display_institutional_fields(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
-    println!("\n💼 Core Institutional Transfer Fields:");
-    println!(
-        "  Transaction Reference: {}",
-        parsed_message.fields.transaction_reference()
-    );
-    println!(
-        "  Related Reference: {}",
-        parsed_message.fields.related_reference()
-    );
-    println!(
-        "  Value Date: {}",
-        parsed_message.fields.field_32a.value_date
-    );
-    println!(
-        "  Currency: {}",
-        parsed_message.fields.field_32a.currency_code()
-    );
-    println!(
-        "  Amount: {:.2}",
-        parsed_message.fields.field_32a.amount_decimal()
-    );
-    println!(
-        "  Beneficiary Institution: {}",
-        parsed_message.fields.beneficiary_institution_bic()
-    );
+    println!("\n💼 Core Fields:");
+    println!("  Transaction Reference (20): {}", parsed_message.fields.field_20.value);
+    println!("  Related Reference (21): {}", parsed_message.fields.field_21.value);
+    println!("  Value Date: {}", parsed_message.fields.field_32a.value_date);
+    println!("  Currency: {}", parsed_message.fields.field_32a.currency);
+    println!("  Amount: {:.2}", parsed_message.fields.field_32a.amount);
+    println!("  Beneficiary Institution (58A): {}", parsed_message.fields.field_58a.bic);
 
-    // Display optional institutional fields
-    if let Some(field_52a) = parsed_message.fields.ordering_institution() {
-        println!("  Ordering Institution: {}", field_52a.bic());
+    // Display optional fields if present
+    if let Some(time_indications) = &parsed_message.fields.field_13c {
+        println!("  Time Indications (13C): {} entries", time_indications.len());
+        for (i, time_ind) in time_indications.iter().enumerate() {
+            println!("    {}: {} {} {}", i + 1, time_ind.time_code, time_ind.time, time_ind.utc_offset);
+        }
     }
 
-    if let Some(field_53a) = parsed_message.fields.senders_correspondent() {
-        println!("  Sender's Correspondent: {}", field_53a.bic());
+    if let Some(ordering_inst) = &parsed_message.fields.field_52a {
+        println!("  Ordering Institution (52A): {}", ordering_inst.bic);
     }
 
-    if let Some(field_54a) = parsed_message.fields.receivers_correspondent() {
-        println!("  Receiver's Correspondent: {}", field_54a.bic());
+    if let Some(sender_corr) = &parsed_message.fields.field_53a {
+        println!("  Sender's Correspondent (53A): {}", sender_corr.bic);
     }
 
-    if let Some(field_56a) = parsed_message.fields.intermediary_institution() {
-        println!("  Intermediary Institution: {}", field_56a.bic());
+    if let Some(receiver_corr) = &parsed_message.fields.field_54a {
+        println!("  Receiver's Correspondent (54A): {}", receiver_corr.bic);
     }
 
-    if let Some(field_57a) = parsed_message.fields.account_with_institution() {
-        println!("  Account With Institution: {}", field_57a.bic());
+    if let Some(intermediary) = &parsed_message.fields.field_56a {
+        println!("  Intermediary Institution (56A): {}", intermediary.bic);
     }
 
-    if let Some(field_72) = parsed_message.fields.sender_to_receiver_info() {
-        println!("  Processing Instructions:");
-        for info in &field_72.information {
-            println!("    - {}", info);
+    if let Some(account_with) = &parsed_message.fields.field_57a {
+        println!("  Account With Institution (57A): {}", account_with.bic);
+    }
+
+    if let Some(sender_info) = &parsed_message.fields.field_72 {
+        println!("  Sender to Receiver Info (72): {} lines", sender_info.lines.len());
+        for (i, line) in sender_info.lines.iter().enumerate() {
+            println!("    {}: {}", i + 1, line);
         }
     }
 }
 
-fn display_cover_message_fields(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
-    if !parsed_message.fields.is_cover_message_from_fields() {
-        return;
-    }
+fn convert_to_json(parsed_message: &swift_mt_message::SwiftMessage<MT202>, title: &str) -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n🔄 Converting {} to JSON:", title);
+    
+    // Convert complete message to JSON
+    let full_json = serde_json::to_string_pretty(parsed_message)?;
+    println!("\n📄 Complete Message JSON:");
+    println!("{}", truncate_json(&full_json, 800));
+    
+    // Convert just the fields to JSON  
+    let fields_json = serde_json::to_string_pretty(&parsed_message.fields)?;
+    println!("\n📋 Fields Only JSON:");
+    println!("{}", truncate_json(&fields_json, 600));
+    
+    // Convert specific field to JSON (Field 32A)
+    let field_32a_json = serde_json::to_string_pretty(&parsed_message.fields.field_32a)?;
+    println!("\n💰 Field 32A (Value Date/Currency/Amount) JSON:");
+    println!("{}", field_32a_json);
 
-    println!("\n🎯 Cover Message Fields (Sequence B):");
+    // Show JSON sizes
+    println!("\n📊 JSON Sizes:");
+    println!("  Complete Message: {} bytes", full_json.len());
+    println!("  Fields Only: {} bytes", fields_json.len());
+    println!("  Field 32A Only: {} bytes", field_32a_json.len());
 
-    if let Some(field_50a) = parsed_message.fields.ordering_customer() {
-        println!("  Ordering Customer: {:?}", field_50a);
-    }
-
-    if let Some(field_59a) = parsed_message.fields.beneficiary_customer() {
-        println!("  Beneficiary Customer:");
-        if let Some(account) = &field_59a.account_number {
-            println!("    Account: {}", account);
-        }
-        println!("    BIC: {}", field_59a.bic());
-    }
-
-    if let Some(field_70) = parsed_message.fields.remittance_information() {
-        println!("  Remittance Information:");
-        for info in &field_70.information {
-            println!("    - {}", info);
-        }
-    }
-
-    if let Some(field_33b) = parsed_message.fields.instructed_amount() {
-        println!(
-            "  Original Instructed Amount: {} {:.2}",
-            field_33b.currency(),
-            field_33b.amount()
-        );
-        if parsed_message.fields.is_cross_currency() {
-            println!("  ⚡ Cross-currency transfer detected!");
-        }
-    }
-
-    // Sequence B institutional fields
-    if let Some(field_52a_seq_b) = parsed_message.fields.ordering_institution_seq_b() {
-        println!("  Customer Ordering Institution: {}", field_52a_seq_b.bic());
-    }
-
-    if let Some(field_56a_seq_b) = parsed_message.fields.intermediary_institution_seq_b() {
-        println!("  Customer Intermediary: {}", field_56a_seq_b.bic());
-    }
-
-    if let Some(field_57a_seq_b) = parsed_message.fields.account_with_institution_seq_b() {
-        println!(
-            "  Customer Account With Institution: {}",
-            field_57a_seq_b.bic()
-        );
-    }
-
-    if let Some(field_72_seq_b) = parsed_message.fields.sender_to_receiver_info_seq_b() {
-        println!("  Customer Processing Instructions:");
-        for info in &field_72_seq_b.information {
-            println!("    - {}", info);
-        }
-    }
+    Ok(())
 }
 
-fn display_routing_analysis(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
-    println!("\n🛣️  Routing Analysis:");
+fn validate_fields(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
+    println!("\n✅ Field Validation:");
+    
+    // Validate required fields
+    let field_20_validation = parsed_message.fields.field_20.validate();
+    print_validation_result("Field 20 (Transaction Reference)", &field_20_validation);
+    
+    let field_21_validation = parsed_message.fields.field_21.validate();
+    print_validation_result("Field 21 (Related Reference)", &field_21_validation);
+    
+    let field_32a_validation = parsed_message.fields.field_32a.validate();
+    print_validation_result("Field 32A (Value Date/Currency/Amount)", &field_32a_validation);
+    
+    let field_58a_validation = parsed_message.fields.field_58a.validate();
+    print_validation_result("Field 58A (Beneficiary Institution)", &field_58a_validation);
 
-    // Institutional routing chain
-    let institutional_chain = parsed_message.fields.get_routing_chain();
-    println!("  Institutional Transfer Chain:");
-    for (index, (role, bic)) in institutional_chain.iter().enumerate() {
-        println!("    {}. {}: {}", index + 1, role, bic);
-    }
-
-    // Customer routing chain (if cover message)
-    if parsed_message.fields.is_cover_message_from_fields() {
-        let customer_chain = parsed_message.fields.get_customer_routing_chain();
-        if !customer_chain.is_empty() {
-            println!("  Customer Transaction Chain:");
-            for (index, (role, bic)) in customer_chain.iter().enumerate() {
-                println!("    {}. {}: {}", index + 1, role, bic);
-            }
-        }
-    }
-}
-
-fn display_timing_analysis(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
-    if let Some(time_indications) = parsed_message.fields.time_indications() {
-        println!("\n⏰ Timing Requirements:");
-
-        for (index, field_13c) in time_indications.iter().enumerate() {
-            println!("  {}. {}", index + 1, field_13c.description());
-        }
-
-        if parsed_message.fields.has_cls_timing() {
-            println!("  🔄 CLS (Continuous Linked Settlement) timing detected");
-        }
-
-        if parsed_message.fields.has_target_timing() {
-            println!("  🎯 TARGET system timing detected");
-        }
-    }
-}
-
-fn validate_mt202_fields(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
-    println!("\n✅ Validation Results:");
-
-    // Required fields validation
-    let required_validations = [
-        ("Field 20", parsed_message.fields.field_20.validate()),
-        ("Field 21", parsed_message.fields.field_21.validate()),
-        ("Field 32A", parsed_message.fields.field_32a.validate()),
-        ("Field 58A", parsed_message.fields.field_58a.validate()),
-    ];
-
-    for (field_name, validation) in required_validations {
-        if validation.is_valid {
-            println!("  ✅ {}: Valid", field_name);
-        } else {
-            println!("  ❌ {}: Invalid", field_name);
-            for error in &validation.errors {
-                println!("     - {}", error);
-            }
+    // Validate optional fields if present
+    if let Some(time_indications) = &parsed_message.fields.field_13c {
+        for (i, time_ind) in time_indications.iter().enumerate() {
+            let validation = time_ind.validate();
+            print_validation_result(&format!("Field 13C[{}] (Time Indication)", i), &validation);
         }
     }
 
-    // Optional fields validation
     if let Some(field_52a) = &parsed_message.fields.field_52a {
         let validation = field_52a.validate();
-        print_field_validation("Field 52A", &validation);
-    }
-
-    if let Some(field_53a) = &parsed_message.fields.field_53a {
-        let validation = field_53a.validate();
-        print_field_validation("Field 53A", &validation);
-    }
-
-    if let Some(field_54a) = &parsed_message.fields.field_54a {
-        let validation = field_54a.validate();
-        print_field_validation("Field 54A", &validation);
-    }
-
-    if let Some(field_56a) = &parsed_message.fields.field_56a {
-        let validation = field_56a.validate();
-        print_field_validation("Field 56A", &validation);
-    }
-
-    if let Some(field_57a) = &parsed_message.fields.field_57a {
-        let validation = field_57a.validate();
-        print_field_validation("Field 57A", &validation);
+        print_validation_result("Field 52A (Ordering Institution)", &validation);
     }
 
     if let Some(field_72) = &parsed_message.fields.field_72 {
         let validation = field_72.validate();
-        print_field_validation("Field 72", &validation);
-    }
-
-    // Cover message specific validations
-    if parsed_message.fields.is_cover_message_from_fields() {
-        if let Some(field_50a) = &parsed_message.fields.field_50a {
-            let validation = field_50a.validate();
-            print_field_validation("Field 50A (Cover)", &validation);
-        }
-
-        if let Some(field_59a) = &parsed_message.fields.field_59a {
-            let validation = field_59a.validate();
-            print_field_validation("Field 59A (Cover)", &validation);
-        }
-
-        if let Some(field_70) = &parsed_message.fields.field_70 {
-            let validation = field_70.validate();
-            print_field_validation("Field 70 (Cover)", &validation);
-        }
-
-        if let Some(field_33b) = &parsed_message.fields.field_33b {
-            let validation = field_33b.validate();
-            print_field_validation("Field 33B (Cover)", &validation);
-        }
-    }
-
-    // Structural validation
-    if parsed_message.fields.validate_structure() {
-        println!("  ✅ Message Structure: Valid");
-    } else {
-        println!("  ❌ Message Structure: Invalid");
-    }
-
-    if parsed_message.fields.validate_cover_message() {
-        println!("  ✅ Cover Message Requirements: Valid");
-    } else {
-        println!("  ❌ Cover Message Requirements: Invalid");
+        print_validation_result("Field 72 (Sender to Receiver Info)", &validation);
     }
 }
 
-fn print_field_validation(field_name: &str, validation: &swift_mt_message::ValidationResult) {
+fn print_validation_result(field_name: &str, validation: &swift_mt_message::ValidationResult) {
     if validation.is_valid {
         println!("  ✅ {}: Valid", field_name);
     } else {
@@ -374,17 +210,86 @@ fn print_field_validation(field_name: &str, validation: &swift_mt_message::Valid
     }
 
     for warning in &validation.warnings {
-        println!("  ⚠️  {}: Warning - {}", field_name, warning);
+        println!("  ⚠️  {}: {}", field_name, warning);
     }
+}
+
+fn demonstrate_json_extraction() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a sample MT202 for demonstration
+    let sample_raw = r#"{1:F01CHASUS33AXXX0000000000}{2:I202DEUTDEFFAXXXN}{4:
+:20:DEMO123456
+:21:REF987654
+:32A:241231USD1000000,00
+:52A:CHASUS33XXX
+:58A:DEUTDEFFXXX
+:72:/INT/SAMPLE TRANSFER
+/REF/DEMONSTRATION
+-}"#;
+
+    match SwiftParser::parse::<MT202>(sample_raw) {
+        Ok(parsed_message) => {
+            // Example 1: Extract specific values from JSON
+            let json_value: serde_json::Value = serde_json::to_value(&parsed_message.fields)?;
+            
+            println!("🔍 Extracting specific values from JSON:");
+            if let Some(amount) = json_value["field_32a"]["amount"].as_f64() {
+                println!("  Amount from JSON: {:.2}", amount);
+            }
+            
+            if let Some(currency) = json_value["field_32a"]["currency"].as_str() {
+                println!("  Currency from JSON: {}", currency);
+            }
+            
+            if let Some(bic) = json_value["field_58a"]["bic"].as_str() {
+                println!("  Beneficiary BIC from JSON: {}", bic);
+            }
+
+            // Example 2: Convert JSON back to struct
+            println!("\n🔄 Round-trip JSON conversion:");
+            let fields_json = serde_json::to_string(&parsed_message.fields)?;
+            let deserialized_fields: MT202 = serde_json::from_str(&fields_json)?;
+            
+            println!("  Original amount: {:.2}", parsed_message.fields.field_32a.amount);
+            println!("  Deserialized amount: {:.2}", deserialized_fields.field_32a.amount);
+            println!("  Round-trip successful: {}", 
+                parsed_message.fields.field_32a.amount == deserialized_fields.field_32a.amount);
+
+            // Example 3: Create custom JSON structure
+            let custom_json = serde_json::json!({
+                "transaction": {
+                    "reference": parsed_message.fields.field_20.value,
+                    "related_reference": parsed_message.fields.field_21.value,
+                    "value_date": parsed_message.fields.field_32a.value_date,
+                    "currency": parsed_message.fields.field_32a.currency,
+                    "amount": parsed_message.fields.field_32a.amount
+                },
+                "institutions": {
+                    "beneficiary": parsed_message.fields.field_58a.bic,
+                    "ordering": parsed_message.fields.field_52a.as_ref().map(|f| &f.bic)
+                }
+            });
+            
+            println!("\n📋 Custom JSON structure:");
+            println!("{}", serde_json::to_string_pretty(&custom_json)?);
+        }
+        Err(e) => {
+            println!("❌ Failed to parse demonstration message: {:?}", e);
+        }
+    }
+
+    Ok(())
 }
 
 fn truncate_json(json: &str, max_length: usize) -> String {
     if json.len() <= max_length {
         json.to_string()
     } else {
-        format!(
-            "{}...\n  (JSON output truncated - full output available in actual usage)",
-            &json[..max_length]
-        )
+        let truncated = &json[..max_length];
+        // Try to cut at a complete line
+        if let Some(last_newline) = truncated.rfind('\n') {
+            format!("{}...\n  (truncated - {} more bytes)", &json[..last_newline], json.len() - last_newline)
+        } else {
+            format!("{}...\n  (truncated - {} more bytes)", truncated, json.len() - max_length)
+        }
     }
 }

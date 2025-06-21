@@ -38,4 +38,4 @@ path = "../examples/parse_mt103.rs"
 
 [[example]]
 name = "parse_mt202"
-path = "../examples/parse_mt202.rs" 
+path = "../examples/parse_mt202.rs"

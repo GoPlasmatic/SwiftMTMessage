@@ -4,17 +4,9 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT101: Request for Credit Transfer (Enhanced Architecture)
+/// MT101: Request for Credit Transfer
 ///
-/// This demonstrates the **working macro enhancement approach** for repetitive sequences.
-/// The architecture provides efficient batch processing with full type safety.
-///
-/// ## Key Benefits:
-/// 1. **Separate Structures**: Clean separation of message vs transaction fields
-/// 2. **Type Safety**: Each transaction is validated independently
-/// 3. **Performance**: Vec<T> for optimal memory usage and iteration
-/// 4. **Validation**: Both per-transaction and cross-transaction rules
-/// 5. **Maintainability**: Clear business logic separation
+/// Message for requesting multiple credit transfers with transaction details.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT101_VALIDATION_RULES)]
 #[serde_swift_fields]
@@ -55,18 +47,9 @@ pub struct MT101 {
     pub transactions: Vec<MT101Transaction>,
 }
 
-/// # MT101 Transaction (Sequence B)
+/// MT101 Transaction (Sequence B)
 ///
-/// Represents a single transaction within an MT101 message.
-/// This structure demonstrates the target architecture for handling repetitive SWIFT sequences.
-/// Enhanced with SwiftMessage derive for automatic parsing and validation as a sub-message structure.
-///
-/// ## Architectural Benefits:
-/// 1. **Complete Validation**: Each transaction validates all its fields independently
-/// 2. **Memory Efficiency**: Only allocates fields that are present  
-/// 3. **Type Safety**: Compile-time validation of field types
-/// 4. **Business Logic**: Clear transaction-level operations and validation
-/// 5. **Scalability**: Easy to add new transaction types or fields
+/// Single transaction within an MT101 message.
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT101_TRANSACTION_VALIDATION_RULES)]

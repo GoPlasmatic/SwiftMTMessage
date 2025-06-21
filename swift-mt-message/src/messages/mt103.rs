@@ -2,7 +2,9 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT103: Customer Credit Transfer (Standard)
+/// MT103: Customer Credit Transfer (Standard)
+///
+/// Standard message for customer credit transfers between financial institutions.
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT103_VALIDATION_RULES)]

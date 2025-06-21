@@ -10,29 +10,9 @@ use crate::fields::{
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT104: Customer Direct Debit (Enhanced Architecture)
+/// MT104: Customer Direct Debit
 ///
-/// ## Overview
-/// MT104 is used by financial institutions to send direct debit instructions.
-/// It supports batch processing of multiple direct debit transactions with
-/// detailed settlement information.
-///
-/// This implementation uses the enhanced macro system with separate transaction
-/// structures for optimal type safety and validation.
-///
-/// ## Structure
-/// - **Sequence A**: General Information (mandatory, single occurrence)
-/// - **Sequence B**: Transaction Details (mandatory, repetitive) - MT104Transaction struct
-/// - **Sequence C**: Settlement Details (optional, single occurrence) - Individual fields
-///
-/// ## Key Features
-/// - Multiple transaction support in single message
-/// - Flexible creditor/debtor identification
-/// - Optional settlement consolidation
-/// - Comprehensive regulatory reporting
-/// - Charge allocation options
-/// - Full field attribute compatibility
-/// - Type-safe transaction handling
+/// Message for customer direct debit instructions with transaction details.
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT104_VALIDATION_RULES)]
@@ -144,15 +124,7 @@ pub struct MT104 {
 
 /// # MT104 Transaction (Sequence B)
 ///
-/// Represents a single direct debit transaction within an MT104 message.
-/// This structure demonstrates the enhanced architecture for handling repetitive SWIFT sequences.
-///
-/// ## Architectural Benefits:
-/// 1. **Complete Validation**: Each transaction validates all its fields independently
-/// 2. **Memory Efficiency**: Only allocates fields that are present  
-/// 3. **Type Safety**: Compile-time validation of field types
-/// 4. **Business Logic**: Clear transaction-level operations and validation
-/// 5. **Scalability**: Easy to add new transaction types or fields
+/// Single direct debit transaction within an MT104 message.
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT104_TRANSACTION_VALIDATION_RULES)]

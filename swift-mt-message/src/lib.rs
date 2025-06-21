@@ -26,17 +26,6 @@
 //! - **Field32A** (Value Date/Currency/Amount): NaiveDate + String + f64
 //! - **Field20, 23B, 70, 71A**: Proper field name alignment with old version
 //!
-//! ## Example Usage
-//!
-//! ```rust
-//! use swift_mt_message::{SwiftParser, SwiftMessage, messages::MT103};
-//!
-//! let raw_mt103 = "{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:\n:20:FT21234567890\n:23B:CRED\n:32A:210315EUR1234567,89\n:50K:JOHN DOE\n:52A:BANKDEFF\n:57A:DEUTDEFF\n:59A:/DE89370400440532013000\nDEUTDEFF\n:70:PAYMENT\n:71A:OUR\n-}";
-//! let parsed: SwiftMessage<MT103> = SwiftParser::parse(raw_mt103)?;
-//! let json_output = serde_json::to_string_pretty(&parsed)?;
-//! # Ok::<(), Box<dyn std::error::Error>>(())
-//! ```
-//!
 //! ## JSON Output Structure
 //!
 //! The library produces clean, flattened JSON without enum wrapper layers:
@@ -197,6 +186,10 @@ impl ValidationResult {
 pub enum ParsedSwiftMessage {
     #[serde(rename = "103")]
     MT103(Box<SwiftMessage<messages::MT103>>),
+    #[serde(rename = "103STP")]
+    MT103STP(Box<SwiftMessage<messages::MT103STP>>),
+    #[serde(rename = "103REMIT")]
+    MT103REMIT(Box<SwiftMessage<messages::MT103REMIT>>),
     #[serde(rename = "202")]
     MT202(Box<SwiftMessage<messages::MT202>>),
     #[serde(rename = "205")]
@@ -208,6 +201,8 @@ impl ParsedSwiftMessage {
     pub fn message_type(&self) -> &'static str {
         match self {
             ParsedSwiftMessage::MT103(_) => "103",
+            ParsedSwiftMessage::MT103STP(_) => "103STP",
+            ParsedSwiftMessage::MT103REMIT(_) => "103REMIT",
             ParsedSwiftMessage::MT202(_) => "202",
             ParsedSwiftMessage::MT205(_) => "205",
         }
@@ -217,6 +212,20 @@ impl ParsedSwiftMessage {
     pub fn as_mt103(&self) -> Option<&SwiftMessage<messages::MT103>> {
         match self {
             ParsedSwiftMessage::MT103(msg) => Some(msg),
+            _ => None,
+        }
+    }
+
+    pub fn as_mt103stp(&self) -> Option<&SwiftMessage<messages::MT103STP>> {
+        match self {
+            ParsedSwiftMessage::MT103STP(msg) => Some(msg),
+            _ => None,
+        }
+    }
+
+    pub fn as_mt103remit(&self) -> Option<&SwiftMessage<messages::MT103REMIT>> {
+        match self {
+            ParsedSwiftMessage::MT103REMIT(msg) => Some(msg),
             _ => None,
         }
     }
@@ -266,10 +275,10 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         // Check if the message type has validation rules
         let validation_rules = match T::message_type() {
             "103" => messages::MT103::validation_rules(),
-            "103_STP" => messages::MT103STP::validation_rules(),
-            "103_REMIT" => messages::MT103REMIT::validation_rules(),
-            "202" => messages::MT202::validation_rules(),  
-            "202_COV" => messages::MT202COV::validation_rules(),
+            "103STP" => messages::MT103STP::validation_rules(),
+            "103REMIT" => messages::MT103REMIT::validation_rules(),
+            "202" => messages::MT202::validation_rules(),
+            "202COV" => messages::MT202COV::validation_rules(),
             "205" => messages::MT205::validation_rules(),
             "104" => messages::MT104::validation_rules(),
             "107" => messages::MT107::validation_rules(),
@@ -286,12 +295,13 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             "942" => messages::MT942::validation_rules(),
             "950" => messages::MT950::validation_rules(),
             _ => {
-                return ValidationResult::with_error(
-                    ValidationError::BusinessRuleValidation {
-                        rule_name: "UNSUPPORTED_MESSAGE_TYPE".to_string(),
-                        message: format!("No validation rules defined for message type {}", T::message_type()),
-                    }
-                );
+                return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
+                    rule_name: "UNSUPPORTED_MESSAGE_TYPE".to_string(),
+                    message: format!(
+                        "No validation rules defined for message type {}",
+                        T::message_type()
+                    ),
+                });
             }
         };
 
@@ -299,12 +309,10 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         let rules_json: serde_json::Value = match serde_json::from_str(validation_rules) {
             Ok(json) => json,
             Err(e) => {
-                return ValidationResult::with_error(
-                    ValidationError::BusinessRuleValidation {
-                        rule_name: "JSON_PARSE".to_string(),
-                        message: format!("Failed to parse validation rules JSON: {}", e),
-                    }
-                );
+                return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
+                    rule_name: "JSON_PARSE".to_string(),
+                    message: format!("Failed to parse validation rules JSON: {}", e),
+                });
             }
         };
 
@@ -312,17 +320,16 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         let rules = match rules_json.get("rules").and_then(|r| r.as_array()) {
             Some(rules) => rules,
             None => {
-                return ValidationResult::with_error(
-                    ValidationError::BusinessRuleValidation {
-                        rule_name: "RULES_FORMAT".to_string(),
-                        message: "Validation rules must contain a 'rules' array".to_string(),
-                    }
-                );
+                return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
+                    rule_name: "RULES_FORMAT".to_string(),
+                    message: "Validation rules must contain a 'rules' array".to_string(),
+                });
             }
         };
 
         // Get constants if they exist
-        let constants = rules_json.get("constants")
+        let constants = rules_json
+            .get("constants")
             .and_then(|c| c.as_object())
             .cloned()
             .unwrap_or_default();
@@ -331,12 +338,10 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         let context_value = match self.create_validation_context(&constants) {
             Ok(context) => context,
             Err(e) => {
-                return ValidationResult::with_error(
-                    ValidationError::BusinessRuleValidation {
-                        rule_name: "CONTEXT_CREATION".to_string(),
-                        message: format!("Failed to create validation context: {}", e),
-                    }
-                );
+                return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
+                    rule_name: "CONTEXT_CREATION".to_string(),
+                    message: format!("Failed to create validation context: {}", e),
+                });
             }
         };
 
@@ -345,12 +350,14 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         let mut warnings = Vec::new();
 
         for (rule_index, rule) in rules.iter().enumerate() {
-            let rule_id = rule.get("id")
+            let rule_id = rule
+                .get("id")
                 .and_then(|id| id.as_str())
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| format!("RULE_{}", rule_index));
 
-            let rule_description = rule.get("description")
+            let rule_description = rule
+                .get("description")
                 .and_then(|desc| desc.as_str())
                 .unwrap_or("No description");
 
@@ -368,12 +375,18 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                                 // Rule failed
                                 errors.push(ValidationError::BusinessRuleValidation {
                                     rule_name: rule_id.clone(),
-                                    message: format!("Business rule validation failed: {} - {}", rule_id, rule_description),
+                                    message: format!(
+                                        "Business rule validation failed: {} - {}",
+                                        rule_id, rule_description
+                                    ),
                                 });
                             }
                             None => {
                                 // Rule returned non-boolean value
-                                warnings.push(format!("Rule {} returned non-boolean value: {:?}", rule_id, result));
+                                warnings.push(format!(
+                                    "Rule {} returned non-boolean value: {:?}",
+                                    rule_id, result
+                                ));
                             }
                         }
                     }
@@ -381,7 +394,10 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                         // JSONLogic evaluation error
                         errors.push(ValidationError::BusinessRuleValidation {
                             rule_name: rule_id.clone(),
-                            message: format!("JSONLogic evaluation error for rule {}: {}", rule_id, e),
+                            message: format!(
+                                "JSONLogic evaluation error for rule {}: {}",
+                                rule_id, e
+                            ),
                         });
                     }
                 }
@@ -398,20 +414,23 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
     }
 
     /// Create a comprehensive validation context that includes headers, fields, and constants
-    fn create_validation_context(&self, constants: &serde_json::Map<String, serde_json::Value>) -> Result<serde_json::Value> {
+    fn create_validation_context(
+        &self,
+        constants: &serde_json::Map<String, serde_json::Value>,
+    ) -> Result<serde_json::Value> {
         // Serialize the entire message (including headers) to JSON for data context
         let full_message_data = match serde_json::to_value(self) {
             Ok(data) => data,
             Err(e) => {
-                return Err(ParseError::SerializationError { 
-                    message: format!("Failed to serialize complete message: {}", e) 
+                return Err(ParseError::SerializationError {
+                    message: format!("Failed to serialize complete message: {}", e),
                 });
             }
         };
 
         // Create a comprehensive data context
         let mut data_context = serde_json::Map::new();
-        
+
         // Add the complete message data
         if let serde_json::Value::Object(msg_obj) = full_message_data {
             for (key, value) in msg_obj {

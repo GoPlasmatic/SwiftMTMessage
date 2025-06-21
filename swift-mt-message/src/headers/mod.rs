@@ -44,7 +44,10 @@ impl BasicHeader {
         // Extract BIC from logical terminal (first 8 characters for standard BIC)
         let bic_str = &logical_terminal[0..8];
         let sender_bic = BIC::from_str(bic_str).map_err(|e| ParseError::InvalidBlockStructure {
-            message: format!("Failed to parse BIC from logical terminal '{}': {}", bic_str, e),
+            message: format!(
+                "Failed to parse BIC from logical terminal '{}': {}",
+                bic_str, e
+            ),
         })?;
 
         Ok(BasicHeader {
@@ -124,8 +127,13 @@ impl ApplicationHeader {
             None
         };
 
-        let receiver_bic = BIC::from_str(&destination_address[0..8]).map_err(|e| ParseError::InvalidBlockStructure {
-            message: format!("Failed to parse BIC from destination address '{}': {}", destination_address, e),
+        let receiver_bic = BIC::from_str(&destination_address[0..8]).map_err(|e| {
+            ParseError::InvalidBlockStructure {
+                message: format!(
+                    "Failed to parse BIC from destination address '{}': {}",
+                    destination_address, e
+                ),
+            }
         })?;
 
         Ok(ApplicationHeader {

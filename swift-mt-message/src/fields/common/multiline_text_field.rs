@@ -1,14 +1,12 @@
 use crate::{Result, SwiftField, ValidationError, ValidationResult};
 use serde::{Deserialize, Serialize};
 
-/// # Generic MultiLine Text Field
-/// Parameterized multiline field for different line/character constraints.
-/// Used for fields like Field70 (4*35x), Field72 (6*35x), Field77B (3*35x), etc.
-/// Format: {MAX_LINES}*{MAX_CHARS}x
-/// Validation: line_count, line_length
+/// Generic MultiLine Text Field
+///
+/// Parameterized multiline field for different line and character constraints.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GenericMultiLineTextField<const MAX_LINES: usize, const MAX_CHARS: usize> {
-    /// Text lines (up to MAX_LINES lines, MAX_CHARS characters each)
+    /// Text lines
     pub lines: Vec<String>,
 }
 
@@ -67,7 +65,7 @@ impl<const MAX_LINES: usize, const MAX_CHARS: usize> SwiftField
     }
 }
 
-// Type aliases for common sizes
+/// Type aliases for common sizes
 pub type GenericMultiLine3x35 = GenericMultiLineTextField<3, 35>;
 pub type GenericMultiLine4x35 = GenericMultiLineTextField<4, 35>;
 pub type GenericMultiLine6x35 = GenericMultiLineTextField<6, 35>;

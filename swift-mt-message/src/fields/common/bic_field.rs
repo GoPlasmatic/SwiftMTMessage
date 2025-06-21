@@ -1,16 +1,15 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// # Generic BIC Field
-/// Used for institution fields like Field52A, Field56A, Field57A, etc.
-/// Format: [/1!a][/34x]4!a2!a2!c[3!c] (optional account line indicator + optional account + BIC)
-/// Validation: bic, account_format (for account field)
+/// Generic BIC Field
+///
+/// Used for institution fields with BIC code and optional account information.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct GenericBicField {
-    /// BIC code (4!a2!a2!c[3!c] format, 8 or 11 characters)
+    /// BIC code (8 or 11 characters)
     #[component("4!a2!a2!c[3!c]", validate = ["bic"])]
     pub bic: BIC,
-    /// Account number (35x format, optional)
+    /// Account number (optional)
     #[component("35x", optional, validate = ["account_format"])]
     pub account: Option<String>,
 }
@@ -34,18 +33,22 @@ impl std::fmt::Display for BIC {
 
 impl std::str::FromStr for BIC {
     type Err = String;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.len() < 8 || s.len() > 11 {
             return Err("BIC must be 8 or 11 characters".to_string());
         }
-        
+
         Ok(BIC {
             raw: s.to_string(),
             bank_code: s[0..4].to_string(),
             country_code: s[4..6].to_string(),
             location_code: s[6..8].to_string(),
-            branch_code: if s.len() == 11 { Some(s[8..11].to_string()) } else { None },
+            branch_code: if s.len() == 11 {
+                Some(s[8..11].to_string())
+            } else {
+                None
+            },
         })
     }
 }

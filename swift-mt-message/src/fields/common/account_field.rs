@@ -1,10 +1,9 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// # Generic Account Field
-/// Used for account identification fields.
-/// Format: 35x (up to 35 alphanumeric characters)
-/// Validation: account_format
+/// Generic Account Field
+///
+/// Used for account identification fields with up to 35 alphanumeric characters.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct GenericAccountField {
     /// Account number or identifier (35x format)

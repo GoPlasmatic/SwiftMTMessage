@@ -10,35 +10,18 @@ use derive::field::derive_swift_field_impl;
 use derive::message::derive_swift_message_impl;
 
 /// Derive macro for SwiftField trait implementation
-/// Supports the new component-based approach:
-/// ```rust
-/// #[derive(SwiftField)]
-/// pub struct Field32A {
-///     #[component("6!n", validate = ["date_format", "valid_date_range"])]
-///     pub value_date: NaiveDate,
-///     #[component("3!a", validate = ["currency_code"])]
-///     pub currency: String,
-///     #[component("15d", validate = ["amount_format", "positive_amount"])]
-///     pub amount: f64,
-/// }
-/// ```
+///
+/// Supports the component-based approach for defining SWIFT field structures
+/// with validation attributes and format specifications.
 #[proc_macro_derive(SwiftField, attributes(component))]
 pub fn derive_swift_field(input: TokenStream) -> TokenStream {
     derive_swift_field_impl(input)
 }
 
 /// Derive macro for SwiftMessage trait implementation
-/// Supports message-level business validation:
-/// ```rust
-/// #[derive(SwiftMessage)]
-/// #[validation_rules(MT103_VALIDATION_RULES)]
-/// pub struct MT103 {
-///     #[field("20", mandatory)]
-///     pub field_20: GenericReferenceField,
-///     #[field("33B", optional)]
-///     pub field_33b: Option<GenericCurrencyAmountField>,
-/// }
-/// ```
+///
+/// Supports message-level business validation with field specifications
+/// and validation rules for complete SWIFT message types.
 #[proc_macro_derive(SwiftMessage, attributes(field, sequence, validation_rules))]
 pub fn derive_swift_message(input: TokenStream) -> TokenStream {
     derive_swift_message_impl(input)

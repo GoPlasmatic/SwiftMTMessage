@@ -1607,7 +1607,10 @@ fn is_custom_fromstr_type(ty: &syn::Type) -> bool {
 }
 
 /// Generate parsing logic for custom FromStr types
-fn generate_custom_fromstr_parsing(field_tag: &str, base_type: &syn::Type) -> proc_macro2::TokenStream {
+fn generate_custom_fromstr_parsing(
+    field_tag: &str,
+    base_type: &syn::Type,
+) -> proc_macro2::TokenStream {
     quote! {
         {
             content.trim().parse().map_err(|e: String| {

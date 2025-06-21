@@ -3,7 +3,7 @@ use swift_mt_message::{SwiftParser, ValidationResult};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The MT103 message from the user
     let raw_mt103 = r#"{1:F01CHASUS33AXXX0000000000}{2:I103DEUTDEFFAXXXN}{3:{113:SEPA}{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}}{4:
-:13C:/CLSTIME/0915+0100
+:13C:/123045+0/+0100/-0500
 :20:STP2024123456
 :23B:CRED
 :23E:INTC/COMPLIANCE
@@ -45,10 +45,12 @@ TRADE RELATED TRANSACTION
             println!("✅ Successfully parsed SWIFT message!");
             println!();
 
+            println!("🔍 Message Type: {}", parsed_message.message_type());
+
             if let Some(mt103_message) = parsed_message.as_mt103() {
                 // Demonstrate validation capabilities using the new wrapper-level validation
                 run_comprehensive_validation(mt103_message)?;
-                
+
                 // Show the JSON output
                 show_json_output(&parsed_message)?;
             } else {
@@ -65,7 +67,9 @@ TRADE RELATED TRANSACTION
 }
 
 /// Comprehensive validation demonstration for MT103
-fn run_comprehensive_validation(mt103_message: &swift_mt_message::SwiftMessage<swift_mt_message::messages::MT103>) -> Result<(), Box<dyn std::error::Error>> {
+fn run_comprehensive_validation(
+    mt103_message: &swift_mt_message::SwiftMessage<swift_mt_message::messages::MT103>,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 COMPREHENSIVE VALIDATION DEMONSTRATION");
     println!("{}", "=".repeat(60));
     println!();
@@ -90,7 +94,7 @@ fn print_validation_result(field_name: &str, validation: &ValidationResult) {
             println!("     └─ Error: {}", error);
         }
     }
-    
+
     if !validation.warnings.is_empty() {
         for warning in &validation.warnings {
             println!("     ⚠️  Warning: {}", warning);
@@ -99,7 +103,9 @@ fn print_validation_result(field_name: &str, validation: &ValidationResult) {
 }
 
 /// Show JSON output
-fn show_json_output(parsed_message: &swift_mt_message::ParsedSwiftMessage) -> Result<(), Box<dyn std::error::Error>> {
+fn show_json_output(
+    parsed_message: &swift_mt_message::ParsedSwiftMessage,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("📄 JSON CONVERSION DEMONSTRATION");
     println!("{}", "=".repeat(60));
     println!();

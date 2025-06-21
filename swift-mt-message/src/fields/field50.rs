@@ -1,52 +1,49 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// # Field 50F: Ordering Customer (Option F)
-/// Format: /34x + 4*35x (party identifier + name/address)
-/// Validation: party_identifier_format, structured_address
+/// Field 50F: Ordering Customer (Option F)
+///
+/// Ordering customer with party identifier and name/address.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct Field50F {
-    /// Party identifier (34x format)
+    /// Party identifier
     #[component("34x", validate = ["party_identifier_format"])]
     pub party_identifier: String,
-    /// Name and address lines (4*35x format)
+    /// Name and address lines
     #[component("4*35x", validate = ["line_count", "line_length", "structured_address"])]
     pub name_and_address: Vec<String>,
 }
 
-/// # Field 50A: Ordering Customer (Option A)
-/// Format: [/1!a][/34x]4!a2!a2!c[3!c]
-/// Validation: bic, account_format
+/// Field 50A: Ordering Customer (Option A)
+///
+/// Ordering customer with BIC-based identification.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct Field50A {
-    /// Account line indicator (1!a format, optional)
+    /// Account line indicator (optional)
     #[component("[1!a]", optional)]
     pub account_line_indicator: Option<String>,
-    /// Account number (34x format, optional)
+    /// Account number (optional)
     #[component("[34x]", optional)]
     pub account_number: Option<String>,
-    /// BIC code (4!a2!a2!c[3!c] format)
+    /// BIC code
     #[component("4!a2!a2!c[3!c]", validate = ["bic"])]
     pub bic: String,
 }
 
-/// # Field 50: Ordering Customer
-/// Multi-option field with different format specifications per option
+/// Field 50: Ordering Customer
+///
+/// Multi-option field with different format specifications per option.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field50 {
     /// Option A: BIC-based identification
-    /// Format: [/1!a][/34x]4!a2!a2!c[3!c]
-    /// Validation: bic, account_format
     A(Field50A),
     /// Option F: Party identifier with name/address
     F(Field50F),
-    /// Option K: Name and address only  
-    /// Format: 4*35x
-    /// Validation: line_count, line_length
+    /// Option K: Name and address only
     K(Field50K),
 }
 
-/// # Type alias for Field 50K: Ordering Customer (Option K)
+/// Type alias for Field 50K: Ordering Customer (Option K)
 pub type Field50K = crate::fields::common::GenericMultiLine4x35;
 
 impl crate::SwiftField for Field50 {

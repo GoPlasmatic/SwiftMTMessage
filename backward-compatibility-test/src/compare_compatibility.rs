@@ -275,12 +275,19 @@ fn compare_values(old: &Value, new: &Value, path: String) -> Vec<Difference> {
                 if let Some(new_value) = new_map.get(key) {
                     differences.extend(compare_values(old_value, new_value, current_path));
                 } else {
+                    // Check if the removed field was null - if so, it's compatible, not breaking
+                    let severity = if old_value.is_null() {
+                        Severity::Info // Removing a null field is compatible
+                    } else {
+                        Severity::Breaking // Removing a field with actual value is breaking
+                    };
+
                     differences.push(Difference {
                         path: current_path,
                         diff_type: DifferenceType::FieldRemoved,
                         old_value: Some(old_value.clone()),
                         new_value: None,
-                        severity: Severity::Breaking,
+                        severity,
                     });
                 }
             }
@@ -377,10 +384,18 @@ fn print_difference(diff: &Difference) {
         Severity::Breaking => "red",
     };
 
+    // Special handling for null field removals
+    let description = match (&diff.diff_type, &diff.old_value) {
+        (DifferenceType::FieldRemoved, Some(Value::Null)) => {
+            format!("{:?} (null field - compatible)", diff.diff_type)
+        }
+        _ => format!("{:?}", diff.diff_type),
+    };
+
     println!(
         "  {} {} at {}",
         icon,
-        format!("{:?}", diff.diff_type).color(color),
+        description.color(color),
         diff.path
     );
 
@@ -442,8 +457,15 @@ fn generate_report(results: &[ComparisonResult], output_path: &Path) -> Result<(
 
                 for diff in &result.differences {
                     if matches!(diff.severity, Severity::Breaking) {
+                        let description = match (&diff.diff_type, &diff.old_value) {
+                            (DifferenceType::FieldRemoved, Some(Value::Null)) => {
+                                format!("{:?} (null field - compatible)", diff.diff_type)
+                            }
+                            _ => format!("{:?}", diff.diff_type),
+                        };
+
                         report
-                            .push_str(&format!("- **{:?}** at `{}`\n", diff.diff_type, diff.path));
+                            .push_str(&format!("- **{}** at `{}`\n", description, diff.path));
 
                         if let Some(old_val) = &diff.old_value {
                             report.push_str(&format!(
@@ -463,6 +485,26 @@ fn generate_report(results: &[ComparisonResult], output_path: &Path) -> Result<(
                     }
                 }
             }
+        }
+
+        // Add a section for compatible null field removals if any exist
+        let mut has_null_removals = false;
+        for result in results {
+            for diff in &result.differences {
+                if matches!(diff.diff_type, DifferenceType::FieldRemoved) 
+                    && matches!(diff.old_value, Some(Value::Null))
+                    && matches!(diff.severity, Severity::Info) {
+                    if !has_null_removals {
+                        report.push_str("## ℹ️ Compatible Changes (Null Field Removals)\n\n");
+                        has_null_removals = true;
+                    }
+                    report.push_str(&format!("- **{}**: `{}` (was null)\n", result.file_name, diff.path));
+                }
+            }
+        }
+        
+        if has_null_removals {
+            report.push_str("\nThese null field removals are considered compatible changes.\n\n");
         }
     }
 

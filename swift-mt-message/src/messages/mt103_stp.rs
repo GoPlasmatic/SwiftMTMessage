@@ -2,7 +2,9 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT103 STP: Customer Credit Transfer (Straight Through Processing)
+/// MT103 STP: Customer Credit Transfer (Straight Through Processing)
+///
+/// STP variant of MT103 with enhanced automation and validation requirements.
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT103_STP_VALIDATION_RULES)]
@@ -115,28 +117,28 @@ const MT103_STP_VALIDATION_RULES: &str = r#"{
       "description": "If 33B is present and its currency differs from 32A, then 36 must be present; otherwise, 36 must not be present",
       "condition": {
         "if": [
-          {"var": "field_33b.is_some"},
+          {"!!": {"var": "fields.33B"}},
           {
             "if": [
-              {"!=": [{"var": "field_33b.currency"}, {"var": "field_32a.currency"}]},
-              {"var": "field_36.is_some"},
-              {"not": {"var": "field_36.is_some"}}
+              {"!=": [{"var": "fields.33B.currency"}, {"var": "fields.32A.currency"}]},
+              {"!!": {"var": "fields.36"}},
+              {"!": {"var": "fields.36"}}
             ]
           },
-          {"not": {"var": "field_36.is_some"}}
+          {"!": {"var": "fields.36"}}
         ]
       }
     },
     {
       "id": "C2", 
-      "description": "If both Sender and Receiver BICs are in EU/EEA country codes list, then 33B is mandatory",
+      "description": "33B is mandatory if both Sender and Receiver BICs are in EU/EEA country codes list",
       "condition": {
         "if": [
           {"and": [
-            {"in": [{"var": "message_context.sender_country"}, {"var": "EU_EEA_COUNTRIES"}]},
-            {"in": [{"var": "message_context.receiver_country"}, {"var": "EU_EEA_COUNTRIES"}]}
+            {"in": [{"var": "basic_header.sender_bic.country_code"}, {"var": "EU_EEA_COUNTRIES"}]},
+            {"in": [{"var": "application_header.receiver_bic.country_code"}, {"var": "EU_EEA_COUNTRIES"}]}
           ]},
-          {"var": "field_33b.is_some"},
+          {"!!": {"var": "fields.33B"}},
           true
         ]
       }
@@ -146,8 +148,8 @@ const MT103_STP_VALIDATION_RULES: &str = r#"{
       "description": "STP: 23E instruction codes limited to CORT, INTC, SDVA, REPA",
       "condition": {
         "if": [
-          {"var": "field_23e.is_some"},
-          {"in": [{"var": "field_23e.instruction_code"}, ["CORT", "INTC", "SDVA", "REPA"]]},
+          {"!!": {"var": "fields.23E"}},
+          {"in": [{"var": "fields.23E.instruction_code"}, {"var": "VALID_INSTRUCTION_CODES_STP"}]},
           true
         ]
       }
@@ -158,16 +160,16 @@ const MT103_STP_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"or": [
-            {"var": "field_55a.is_some"},
-            {"var": "field_55b.is_some"},
-            {"var": "field_55d.is_some"}
+            {"!!": {"var": "fields.55A"}},
+            {"!!": {"var": "fields.55B"}},
+            {"!!": {"var": "fields.55D"}}
           ]},
           {"and": [
             {"or": [
-              {"var": "field_53a.is_some"},
-              {"var": "field_53b.is_some"}
+              {"!!": {"var": "fields.53A"}},
+              {"!!": {"var": "fields.53B"}}
             ]},
-            {"var": "field_54a.is_some"}
+            {"!!": {"var": "fields.54A"}}
           ]},
           true
         ]
@@ -179,15 +181,15 @@ const MT103_STP_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"or": [
-            {"var": "field_56a.is_some"},
-            {"var": "field_56c.is_some"},
-            {"var": "field_56d.is_some"}
+            {"!!": {"var": "fields.56A"}},
+            {"!!": {"var": "fields.56C"}},
+            {"!!": {"var": "fields.56D"}}
           ]},
           {"or": [
-            {"var": "field_57a.is_some"},
-            {"var": "field_57b.is_some"},
-            {"var": "field_57c.is_some"},
-            {"var": "field_57d.is_some"}
+            {"!!": {"var": "fields.57A"}},
+            {"!!": {"var": "fields.57B"}},
+            {"!!": {"var": "fields.57C"}},
+            {"!!": {"var": "fields.57D"}}
           ]},
           true
         ]
@@ -198,11 +200,11 @@ const MT103_STP_VALIDATION_RULES: &str = r#"{
       "description": "STP: If 23B is SPRI → 56a must not be present",
       "condition": {
         "if": [
-          {"==": [{"var": "field_23b.value"}, "SPRI"]},
-          {"not": {"or": [
-            {"var": "field_56a.is_some"},
-            {"var": "field_56c.is_some"},
-            {"var": "field_56d.is_some"}
+          {"==": [{"var": "fields.23B.value"}, "SPRI"]},
+          {"!": {"or": [
+            {"!!": {"var": "fields.56A"}},
+            {"!!": {"var": "fields.56C"}},
+            {"!!": {"var": "fields.56D"}}
           ]}},
           true
         ]
@@ -210,29 +212,29 @@ const MT103_STP_VALIDATION_RULES: &str = r#"{
     },
     {
       "id": "C7",
-      "description": "Charge allocation rules",
+      "description": "Charge allocation rules: If 71A = OUR → 71F not allowed, 71G optional; If 71A = SHA → 71F optional, 71G not allowed; If 71A = BEN → 71F mandatory, 71G not allowed",
       "condition": {
         "and": [
           {
             "if": [
-              {"==": [{"var": "field_71a.value"}, "OUR"]},
-              {"not": {"var": "field_71f.is_some"}},
+              {"==": [{"var": "fields.71A.value"}, "OUR"]},
+              {"!": {"var": "fields.71F"}},
               true
             ]
           },
           {
             "if": [
-              {"==": [{"var": "field_71a.value"}, "SHA"]},
-              {"not": {"var": "field_71g.is_some"}},
+              {"==": [{"var": "fields.71A.value"}, "SHA"]},
+              {"!": {"var": "fields.71G"}},
               true
             ]
           },
           {
             "if": [
-              {"==": [{"var": "field_71a.value"}, "BEN"]},
+              {"==": [{"var": "fields.71A.value"}, "BEN"]},
               {"and": [
-                {"var": "field_71f.is_some"},
-                {"not": {"var": "field_71g.is_some"}}
+                {"!!": {"var": "fields.71F"}},
+                {"!": {"var": "fields.71G"}}
               ]},
               true
             ]
@@ -246,11 +248,174 @@ const MT103_STP_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"or": [
-            {"var": "field_71f.is_some"},
-            {"var": "field_71g.is_some"}
+            {"!!": {"var": "fields.71F"}},
+            {"!!": {"var": "fields.71G"}}
           ]},
-          {"var": "field_33b.is_some"},
+          {"!!": {"var": "fields.33B"}},
           true
+        ]
+      }
+    },
+    {
+      "id": "STP_FIELD_RESTRICTIONS",
+      "description": "STP: Verify restricted fields are not present (51A not allowed, only option A for certain fields)",
+      "condition": {
+        "and": [
+          {"!": {"var": "fields.51A"}},
+          {
+            "if": [
+              {"!!": {"var": "fields.52A"}},
+              true,
+              {"!": {"or": [
+                {"!!": {"var": "fields.52D"}}
+              ]}}
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.54A"}},
+              true,
+              {"!": {"or": [
+                {"!!": {"var": "fields.54B"}},
+                {"!!": {"var": "fields.54D"}}
+              ]}}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "MANDATORY_FIELDS",
+      "description": "All mandatory fields must be present and valid",
+      "condition": {
+        "and": [
+          {"!!": {"var": "fields.20"}},
+          {"!=": [{"var": "fields.20.value"}, ""]},
+          {"!!": {"var": "fields.23B"}},
+          {"in": [{"var": "fields.23B.value"}, {"var": "VALID_BANK_OPERATION_CODES"}]},
+          {"!!": {"var": "fields.32A"}},
+          {">": [{"var": "fields.32A.amount"}, 0]},
+          {"!!": {"var": "fields.50"}},
+          {"!!": {"var": "fields.59"}},
+          {"!!": {"var": "fields.71A"}},
+          {"in": [{"var": "fields.71A.value"}, {"var": "VALID_CHARGE_CODES"}]}
+        ]
+      }
+    },
+    {
+      "id": "STP_ACCOUNT_VALIDATION",
+      "description": "STP: Account information must be present in 59a field for beneficiary",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.59"}},
+          {
+            "or": [
+              {"!!": {"var": "fields.59.A"}},
+              {"!!": {"var": "fields.59.NoOption"}}
+            ]
+          },
+          true
+        ]
+      }
+    },
+    {
+      "id": "AMOUNT_CONSISTENCY",
+      "description": "All amounts must be positive and properly formatted",
+      "condition": {
+        "and": [
+          {">": [{"var": "fields.32A.amount"}, 0]},
+          {
+            "if": [
+              {"!!": {"var": "fields.33B"}},
+              {">": [{"var": "fields.33B.amount"}, 0]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71F"}},
+              {">": [{"var": "fields.71F.amount"}, 0]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71G"}},
+              {">": [{"var": "fields.71G.amount"}, 0]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CURRENCY_CODE_VALIDATION",
+      "description": "All currency codes must be valid ISO 4217 3-letter codes",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "fields.32A.currency"}, ""]},
+          {
+            "if": [
+              {"!!": {"var": "fields.33B"}},
+              {"!=": [{"var": "fields.33B.currency"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71F"}},
+              {"!=": [{"var": "fields.71F.currency"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71G"}},
+              {"!=": [{"var": "fields.71G.currency"}, ""]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "REFERENCE_FORMAT",
+      "description": "Reference fields must not contain invalid patterns",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "fields.20.value"}, ""]},
+          {"!": {"in": ["//", {"var": "fields.20.value"}]}}
+        ]
+      }
+    },
+    {
+      "id": "BIC_VALIDATION",
+      "description": "All BIC codes must be properly formatted (non-empty)",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "basic_header.sender_bic.raw"}, ""]},
+          {"!=": [{"var": "application_header.receiver_bic.raw"}, ""]},
+          {
+            "if": [
+              {"!!": {"var": "fields.52A"}},
+              {"!=": [{"var": "fields.52A.bic.raw"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.53A"}},
+              {"!=": [{"var": "fields.53A.bic.raw"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.57A"}},
+              {"!=": [{"var": "fields.57A.bic.raw"}, ""]},
+              true
+            ]
+          }
         ]
       }
     }

@@ -10,17 +10,18 @@ pub fn serde_swift_fields_impl(input: TokenStream) -> TokenStream {
         Data::Struct(data) => {
             if let Fields::Named(fields) = &mut data.fields {
                 for field in &mut fields.named {
-                    if let Some((field_tag, is_optional_config)) = extract_field_metadata_from_attrs(&field.attrs) {
+                    if let Some((field_tag, is_optional_config)) =
+                        extract_field_metadata_from_attrs(&field.attrs)
+                    {
                         // Check if serde attributes already exist
-                        let has_serde_attrs = field.attrs.iter().any(|attr| {
-                            attr.path().is_ident("serde")
-                        });
+                        let has_serde_attrs =
+                            field.attrs.iter().any(|attr| attr.path().is_ident("serde"));
 
                         // Add serde attributes if they don't exist
                         if !has_serde_attrs {
                             // Check if the field type is actually Option<T>
                             let is_option_type_actual = is_option_type(&field.ty);
-                            
+
                             if is_optional_config && is_option_type_actual {
                                 // Optional field with Option<T> type: add rename and skip_serializing_if
                                 let serde_attr: Attribute = parse_quote! {
@@ -40,9 +41,12 @@ pub fn serde_swift_fields_impl(input: TokenStream) -> TokenStream {
             }
         }
         _ => {
-            return syn::Error::new_spanned(&input, "serde_swift_fields can only be applied to structs")
-                .to_compile_error()
-                .into();
+            return syn::Error::new_spanned(
+                &input,
+                "serde_swift_fields can only be applied to structs",
+            )
+            .to_compile_error()
+            .into();
         }
     }
 
@@ -55,15 +59,16 @@ fn extract_field_metadata_from_attrs(attrs: &[Attribute]) -> Option<(String, boo
         if let Meta::List(meta_list) = &attr.meta {
             if meta_list.path.is_ident("field") {
                 let tokens = meta_list.tokens.to_string();
-                
+
                 // Extract field tag (first quoted string)
                 if let Some(tag_start) = tokens.find('"') {
                     if let Some(tag_end) = tokens[tag_start + 1..].find('"') {
                         let field_tag = tokens[tag_start + 1..tag_start + 1 + tag_end].to_string();
-                        
+
                         // Determine if field is optional
-                        let is_optional = tokens.contains("optional") || !tokens.contains("mandatory");
-                        
+                        let is_optional =
+                            tokens.contains("optional") || !tokens.contains("mandatory");
+
                         return Some((field_tag, is_optional));
                     }
                 }

@@ -126,28 +126,28 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "If 33B is present and its currency differs from 32A, then 36 must be present; otherwise, 36 must not be present",
       "condition": {
         "if": [
-          {"exists": ["33B"]},
+          {"!!": {"var": "fields.33B"}},
           {
             "if": [
-              {"!=": [{"var": "33B.currency"}, {"var": "32A.currency"}]},
-              {"exists": ["36"]},
-              {"!": {"exists": ["36"]}}
+              {"!=": [{"var": "fields.33B.currency"}, {"var": "fields.32A.currency"}]},
+              {"!!": {"var": "fields.36"}},
+              {"!": {"var": "fields.36"}}
             ]
           },
-          {"!": {"exists": ["36"]}}
+          {"!": {"var": "fields.36"}}
         ]
       }
     },
     {
       "id": "C2", 
-      "description": "If both Sender and Receiver BICs are in EU/EEA country codes list, then 33B is mandatory",
+      "description": "33B is mandatory if both Sender and Receiver BICs are in EU/EEA country codes list",
       "condition": {
         "if": [
           {"and": [
-            {"in": [{"var": "message_context.sender_country"}, {"var": "EU_EEA_COUNTRIES"}]},
-            {"in": [{"var": "message_context.receiver_country"}, {"var": "EU_EEA_COUNTRIES"}]}
+            {"in": [{"var": "basic_header.sender_bic.country_code"}, {"var": "EU_EEA_COUNTRIES"}]},
+            {"in": [{"var": "application_header.receiver_bic.country_code"}, {"var": "EU_EEA_COUNTRIES"}]}
           ]},
-          {"exists": ["33B"]},
+          {"!!": {"var": "fields.33B"}},
           true
         ]
       }
@@ -159,15 +159,18 @@ const MT103_VALIDATION_RULES: &str = r#"{
         "and": [
           {
             "if": [
-              {"==": [{"var": "field_23b.value"}, "SPRI"]},
-              {"in": [{"var": "field_23e.instruction_code"}, ["SDVA", "INTC"]]},
+              {"==": [{"var": "fields.23B.value"}, "SPRI"]},
+              {"and": [
+                {"!!": {"var": "fields.23E"}},
+                {"in": [{"var": "fields.23E.instruction_code"}, ["SDVA", "INTC"]]}
+              ]},
               true
             ]
           },
           {
             "if": [
-              {"in": [{"var": "field_23b.value"}, ["SSTD", "SPAY"]]},
-              {"not": {"var": "field_23e.is_some"}},
+              {"in": [{"var": "fields.23B.value"}, ["SSTD", "SPAY"]]},
+              {"!": {"var": "fields.23E"}},
               true
             ]
           }
@@ -180,15 +183,15 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"or": [
-            {"var": "field_56a.is_some"},
-            {"var": "field_56c.is_some"},
-            {"var": "field_56d.is_some"}
+            {"!!": {"var": "fields.56A"}},
+            {"!!": {"var": "fields.56C"}},
+            {"!!": {"var": "fields.56D"}}
           ]},
           {"or": [
-            {"var": "field_57a.is_some"},
-            {"var": "field_57b.is_some"},
-            {"var": "field_57c.is_some"},
-            {"var": "field_57d.is_some"}
+            {"!!": {"var": "fields.57A"}},
+            {"!!": {"var": "fields.57B"}},
+            {"!!": {"var": "fields.57C"}},
+            {"!!": {"var": "fields.57D"}}
           ]},
           true
         ]
@@ -201,24 +204,24 @@ const MT103_VALIDATION_RULES: &str = r#"{
         "and": [
           {
             "if": [
-              {"==": [{"var": "field_71a.value"}, "OUR"]},
-              {"not": {"var": "field_71f.is_some"}},
+              {"==": [{"var": "fields.71A.value"}, "OUR"]},
+              {"!": {"var": "fields.71F"}},
               true
             ]
           },
           {
             "if": [
-              {"==": [{"var": "field_71a.value"}, "SHA"]},
-              {"not": {"var": "field_71g.is_some"}},
+              {"==": [{"var": "fields.71A.value"}, "SHA"]},
+              {"!": {"var": "fields.71G"}},
               true
             ]
           },
           {
             "if": [
-              {"==": [{"var": "field_71a.value"}, "BEN"]},
+              {"==": [{"var": "fields.71A.value"}, "BEN"]},
               {"and": [
-                {"var": "field_71f.is_some"},
-                {"not": {"var": "field_71g.is_some"}}
+                {"!!": {"var": "fields.71F"}},
+                {"!": {"var": "fields.71G"}}
               ]},
               true
             ]
@@ -232,10 +235,10 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"or": [
-            {"var": "field_71f.is_some"},
-            {"var": "field_71g.is_some"}
+            {"!!": {"var": "fields.71F"}},
+            {"!!": {"var": "fields.71G"}}
           ]},
-          {"var": "field_33b.is_some"},
+          {"!!": {"var": "fields.33B"}},
           true
         ]
       }
@@ -245,9 +248,139 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "Currency codes in 71G and 32A must match",
       "condition": {
         "if": [
-          {"var": "field_71g.is_some"},
-          {"==": [{"var": "field_71g.currency"}, {"var": "field_32a.currency"}]},
+          {"!!": {"var": "fields.71G"}},
+          {"==": [{"var": "fields.71G.currency"}, {"var": "fields.32A.currency"}]},
           true
+        ]
+      }
+    },
+    {
+      "id": "MANDATORY_FIELDS",
+      "description": "All mandatory fields must be present and valid",
+      "condition": {
+        "and": [
+          {"!!": {"var": "fields.20"}},
+          {"!=": [{"var": "fields.20.value"}, ""]},
+          {"!!": {"var": "fields.23B"}},
+          {"in": [{"var": "fields.23B.value"}, {"var": "VALID_BANK_OPERATION_CODES"}]},
+          {"!!": {"var": "fields.32A"}},
+          {">": [{"var": "fields.32A.amount"}, 0]},
+          {"!!": {"var": "fields.50"}},
+          {"!!": {"var": "fields.59"}},
+          {"!!": {"var": "fields.71A"}},
+          {"in": [{"var": "fields.71A.value"}, {"var": "VALID_CHARGE_CODES"}]}
+        ]
+      }
+    },
+    {
+      "id": "INSTRUCTION_CODE_VALIDATION",
+      "description": "23E instruction codes must be valid when present",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.23E"}},
+          {"in": [{"var": "fields.23E.instruction_code"}, {"var": "VALID_INSTRUCTION_CODES"}]},
+          true
+        ]
+      }
+    },
+    {
+      "id": "AMOUNT_CONSISTENCY",
+      "description": "All amounts must be positive and properly formatted",
+      "condition": {
+        "and": [
+          {">": [{"var": "fields.32A.amount"}, 0]},
+          {
+            "if": [
+              {"!!": {"var": "fields.33B"}},
+              {">": [{"var": "fields.33B.amount"}, 0]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71F"}},
+              {">": [{"var": "fields.71F.amount"}, 0]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71G"}},
+              {">": [{"var": "fields.71G.amount"}, 0]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CURRENCY_CODE_VALIDATION",
+      "description": "All currency codes must be valid ISO 4217 3-letter codes",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "fields.32A.currency"}, ""]},
+          {
+            "if": [
+              {"!!": {"var": "fields.33B"}},
+              {"!=": [{"var": "fields.33B.currency"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71F"}},
+              {"!=": [{"var": "fields.71F.currency"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71G"}},
+              {"!=": [{"var": "fields.71G.currency"}, ""]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "REFERENCE_FORMAT",
+      "description": "Reference fields must not contain invalid patterns",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "fields.20.value"}, ""]},
+          {"!": {"in": ["//", {"var": "fields.20.value"}]}}
+        ]
+      }
+    },
+    {
+      "id": "BIC_VALIDATION",
+      "description": "All BIC codes must be properly formatted (non-empty)",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "basic_header.sender_bic.raw"}, ""]},
+          {"!=": [{"var": "application_header.receiver_bic.raw"}, ""]},
+          {
+            "if": [
+              {"!!": {"var": "fields.52A"}},
+              {"!=": [{"var": "fields.52A.bic.raw"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.53A"}},
+              {"!=": [{"var": "fields.53A.bic.raw"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.57A"}},
+              {"!=": [{"var": "fields.57A.bic.raw"}, ""]},
+              true
+            ]
+          }
         ]
       }
     }

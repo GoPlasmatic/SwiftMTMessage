@@ -257,3 +257,206 @@ impl ParsedSwiftMessage {
         }
     }
 }
+
+impl<T: SwiftMessageBody> SwiftMessage<T> {
+    /// Validate message against business rules using JSONLogic
+    /// This validation method has access to both headers and message fields,
+    /// allowing for comprehensive validation of MT103 and other message types.
+    pub fn validate_business_rules(&self) -> ValidationResult {
+        // Check if the message type has validation rules
+        let validation_rules = match T::message_type() {
+            "103" => messages::MT103::validation_rules(),
+            "103_STP" => messages::MT103STP::validation_rules(),
+            "103_REMIT" => messages::MT103REMIT::validation_rules(),
+            "202" => messages::MT202::validation_rules(),  
+            "202_COV" => messages::MT202COV::validation_rules(),
+            "205" => messages::MT205::validation_rules(),
+            "104" => messages::MT104::validation_rules(),
+            "107" => messages::MT107::validation_rules(),
+            "110" => messages::MT110::validation_rules(),
+            "111" => messages::MT111::validation_rules(),
+            "112" => messages::MT112::validation_rules(),
+            "210" => messages::MT210::validation_rules(),
+            "900" => messages::MT900::validation_rules(),
+            "910" => messages::MT910::validation_rules(),
+            "920" => messages::MT920::validation_rules(),
+            "935" => messages::MT935::validation_rules(),
+            "940" => messages::MT940::validation_rules(),
+            "941" => messages::MT941::validation_rules(),
+            "942" => messages::MT942::validation_rules(),
+            "950" => messages::MT950::validation_rules(),
+            _ => {
+                return ValidationResult::with_error(
+                    ValidationError::BusinessRuleValidation {
+                        rule_name: "UNSUPPORTED_MESSAGE_TYPE".to_string(),
+                        message: format!("No validation rules defined for message type {}", T::message_type()),
+                    }
+                );
+            }
+        };
+
+        // Parse the validation rules JSON
+        let rules_json: serde_json::Value = match serde_json::from_str(validation_rules) {
+            Ok(json) => json,
+            Err(e) => {
+                return ValidationResult::with_error(
+                    ValidationError::BusinessRuleValidation {
+                        rule_name: "JSON_PARSE".to_string(),
+                        message: format!("Failed to parse validation rules JSON: {}", e),
+                    }
+                );
+            }
+        };
+
+        // Extract rules array from the JSON
+        let rules = match rules_json.get("rules").and_then(|r| r.as_array()) {
+            Some(rules) => rules,
+            None => {
+                return ValidationResult::with_error(
+                    ValidationError::BusinessRuleValidation {
+                        rule_name: "RULES_FORMAT".to_string(),
+                        message: "Validation rules must contain a 'rules' array".to_string(),
+                    }
+                );
+            }
+        };
+
+        // Get constants if they exist
+        let constants = rules_json.get("constants")
+            .and_then(|c| c.as_object())
+            .cloned()
+            .unwrap_or_default();
+
+        // Create comprehensive data context with headers and fields
+        let context_value = match self.create_validation_context(&constants) {
+            Ok(context) => context,
+            Err(e) => {
+                return ValidationResult::with_error(
+                    ValidationError::BusinessRuleValidation {
+                        rule_name: "CONTEXT_CREATION".to_string(),
+                        message: format!("Failed to create validation context: {}", e),
+                    }
+                );
+            }
+        };
+
+        // Validate each rule using datalogic-rs
+        let mut errors = Vec::new();
+        let mut warnings = Vec::new();
+
+        for (rule_index, rule) in rules.iter().enumerate() {
+            let rule_id = rule.get("id")
+                .and_then(|id| id.as_str())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| format!("RULE_{}", rule_index));
+
+            let rule_description = rule.get("description")
+                .and_then(|desc| desc.as_str())
+                .unwrap_or("No description");
+
+            if let Some(condition) = rule.get("condition") {
+                // Create DataLogic instance for evaluation
+                let dl = datalogic_rs::DataLogic::new();
+                match dl.evaluate_json(condition, &context_value, None) {
+                    Ok(result) => {
+                        match result.as_bool() {
+                            Some(true) => {
+                                // Rule passed
+                                continue;
+                            }
+                            Some(false) => {
+                                // Rule failed
+                                errors.push(ValidationError::BusinessRuleValidation {
+                                    rule_name: rule_id.clone(),
+                                    message: format!("Business rule validation failed: {} - {}", rule_id, rule_description),
+                                });
+                            }
+                            None => {
+                                // Rule returned non-boolean value
+                                warnings.push(format!("Rule {} returned non-boolean value: {:?}", rule_id, result));
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        // JSONLogic evaluation error
+                        errors.push(ValidationError::BusinessRuleValidation {
+                            rule_name: rule_id.clone(),
+                            message: format!("JSONLogic evaluation error for rule {}: {}", rule_id, e),
+                        });
+                    }
+                }
+            } else {
+                warnings.push(format!("Rule {} has no condition", rule_id));
+            }
+        }
+
+        ValidationResult {
+            is_valid: errors.is_empty(),
+            errors,
+            warnings,
+        }
+    }
+
+    /// Create a comprehensive validation context that includes headers, fields, and constants
+    fn create_validation_context(&self, constants: &serde_json::Map<String, serde_json::Value>) -> Result<serde_json::Value> {
+        // Serialize the entire message (including headers) to JSON for data context
+        let full_message_data = match serde_json::to_value(self) {
+            Ok(data) => data,
+            Err(e) => {
+                return Err(ParseError::SerializationError { 
+                    message: format!("Failed to serialize complete message: {}", e) 
+                });
+            }
+        };
+
+        // Create a comprehensive data context
+        let mut data_context = serde_json::Map::new();
+        
+        // Add the complete message data
+        if let serde_json::Value::Object(msg_obj) = full_message_data {
+            for (key, value) in msg_obj {
+                data_context.insert(key, value);
+            }
+        }
+
+        // Add constants to data context
+        for (key, value) in constants {
+            data_context.insert(key.clone(), value.clone());
+        }
+
+        // Extract sender and receiver BIC from headers for enhanced validation context
+        let (sender_country, receiver_country) = self.extract_country_codes_from_bics();
+
+        // Add enhanced message context including BIC-derived information
+        data_context.insert("message_context".to_string(), serde_json::json!({
+            "message_type": self.message_type,
+            "sender_country": sender_country,
+            "receiver_country": receiver_country,
+            "sender_bic": self.basic_header.logical_terminal,
+            "receiver_bic": &self.application_header.destination_address,
+            "message_priority": &self.application_header.priority,
+            "delivery_monitoring": self.application_header.delivery_monitoring.as_ref().unwrap_or(&"3".to_string()),
+        }));
+
+        Ok(serde_json::Value::Object(data_context))
+    }
+
+    /// Extract country codes from BIC codes in the headers
+    fn extract_country_codes_from_bics(&self) -> (String, String) {
+        // Extract sender country from basic header BIC (positions 4-5)
+        let sender_country = if self.basic_header.logical_terminal.len() >= 6 {
+            self.basic_header.logical_terminal[4..6].to_string()
+        } else {
+            "XX".to_string() // Unknown country
+        };
+
+        // Extract receiver country from application header destination BIC
+        let receiver_country = if self.application_header.destination_address.len() >= 6 {
+            self.application_header.destination_address[4..6].to_string()
+        } else {
+            "XX".to_string()
+        };
+
+        (sender_country, receiver_country)
+    }
+}

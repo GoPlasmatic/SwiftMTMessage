@@ -46,8 +46,8 @@ TRADE RELATED TRANSACTION
             println!();
 
             if let Some(mt103_message) = parsed_message.as_mt103() {
-                // Demonstrate validation capabilities
-                run_comprehensive_validation(&mt103_message.fields)?;
+                // Demonstrate validation capabilities using the new wrapper-level validation
+                run_comprehensive_validation(mt103_message)?;
                 
                 // Show the JSON output
                 show_json_output(&parsed_message)?;
@@ -65,15 +65,15 @@ TRADE RELATED TRANSACTION
 }
 
 /// Comprehensive validation demonstration for MT103
-fn run_comprehensive_validation(mt103: &swift_mt_message::messages::MT103) -> Result<(), Box<dyn std::error::Error>> {
+fn run_comprehensive_validation(mt103_message: &swift_mt_message::SwiftMessage<swift_mt_message::messages::MT103>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 COMPREHENSIVE VALIDATION DEMONSTRATION");
     println!("{}", "=".repeat(60));
     println!();
 
-    // Run message-level business validation
+    // Run message-level business validation using the new wrapper-level method
     println!("🏦 Message-Level Business Rules Validation:");
     println!("--------------------------------------------");
-    let business_validation = mt103.validate_business_rules();
+    let business_validation = mt103_message.validate_business_rules();
     print_validation_result("Business Rules", &business_validation);
     println!();
 

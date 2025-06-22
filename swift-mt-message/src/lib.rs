@@ -47,6 +47,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::any::Any;
 
 pub mod errors;
 pub mod fields;
@@ -100,23 +101,6 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
 
     /// Get optional field tags for this message type
     fn optional_fields() -> Vec<&'static str>;
-
-    /// Check if this message is a cover message (default: false)
-    fn is_cover_message(&self) -> bool {
-        false
-    }
-
-    fn has_reject_codes(&self) -> bool {
-        false
-    }
-
-    fn has_return_codes(&self) -> bool {
-        false
-    }
-
-    fn is_stp_message(&self) -> bool {
-        false
-    }
 }
 
 /// Complete SWIFT message with headers and body
@@ -281,8 +265,12 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             }
         }
 
-        if T::has_reject_codes(&self.fields) {
-            return true;
+        if let Some(mt103_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT103>() {
+            return mt103_fields.has_reject_codes();
+        } else if let Some(mt202_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT202>() {
+            return mt202_fields.has_reject_codes();
+        } else if let Some(mt205_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT205>() {
+            return mt205_fields.has_reject_codes();
         }
 
         false
@@ -304,28 +292,32 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             }
         }
 
-        if T::has_return_codes(&self.fields) {
-            return true;
+        if let Some(mt103_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT103>() {
+            return mt103_fields.has_return_codes();
+        } else if let Some(mt202_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT202>() {
+            return mt202_fields.has_return_codes();
+        } else if let Some(mt205_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT205>() {
+            return mt205_fields.has_return_codes();
         }
 
         false
     }
 
     pub fn is_cover_message(&self) -> bool {
-        if T::message_type() == "202"
-            && T::is_cover_message(&self.fields)
-            && T::is_cover_message(&self.fields)
-        {
-            return true;
+        if let Some(mt202_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT202>() {
+            return mt202_fields.is_cover_message();
+        }
+        if let Some(mt205_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT205>() {
+            return mt205_fields.is_cover_message();
         }
 
         false
     }
 
     pub fn is_stp_message(&self) -> bool {
-        if T::message_type() == "103" && T::is_stp_message(&self.fields) {
-            return true;
-        }
+        if let Some(mt103_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT103>() {
+            return mt103_fields.is_stp_compliant();
+        } 
 
         false
     }

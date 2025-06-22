@@ -2,37 +2,25 @@ use swift_mt_message::{SwiftParser, ValidationResult};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The MT103 message from the user
-    let raw_mt103 = r#"{1:F01CHASUS33AXXX0000000000}{2:I103DEUTDEFFAXXXN}{3:{113:SEPA}{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}}{4:
-:13C:/123045+0/+0100/-0500
-:20:STP2024123456
+    let raw_mt103 = r#"{1:F01BANKBEBBAXXX0000000000}
+{2:I103BANKDEFFXXXXN}
+{3:{113:SEPA}{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}}
+{4:
+:20:RET123456
+:21:REF987654321
 :23B:CRED
-:23E:INTC/COMPLIANCE
-:26T:A01
-:32A:241231USD1500000,00
-:33B:EUR1375000,00
-:36:1,0909
+:32A:250615EUR123456,78
 :50K:/1234567890
-GLOBAL TECH CORPORATION
-456 INNOVATION DRIVE
-SAN FRANCISCO CA 94105 US
-:52A:CHASUS33
-:53A:BNPAFRPP
-:54A:DEUTDEFF
-:57A:DEUTDEFF
-:59A:/DE89370400440532013000
-DEUTDEFF
-:70:/INV/INVOICE-2024-Q4-789
-/RFB/SOFTWARE LICENSE PAYMENT
-ENTERPRISE SOFTWARE LICENSES
-ANNUAL SUBSCRIPTION RENEWAL
-:71A:SHA
-:71F:USD50,00
-:72:/ACC/STANDARD PROCESSING
-/INS/COMPLY WITH LOCAL REGS
-AUTOMATED STP PROCESSING
-:77B:/ORDERRES/DE//REGULATORY INFO
-SOFTWARE LICENSE COMPLIANCE
-TRADE RELATED TRANSACTION
+John Doe
+123 Street
+City, Country
+:59:/9876543210
+Jane Smith
+456 Avenue
+Another City, Country
+:70:RETURN OF FUNDS
+:71A:OUR
+:72:/RETN/INVALID ACCOUNT
 -}"#;
 
     println!("🚀 MT103 Parsing and Validation Example");
@@ -48,6 +36,8 @@ TRADE RELATED TRANSACTION
             println!("🔍 Message Type: {}", parsed_message.message_type());
 
             if let Some(mt103_message) = parsed_message.as_mt103() {
+                println!("🔍 Message Reject Codes: {}", mt103_message.has_reject_codes());
+                println!("🔍 Message Return Code: {}", mt103_message.has_return_codes());
                 // Demonstrate validation capabilities using the new wrapper-level validation
                 run_comprehensive_validation(mt103_message)?;
 

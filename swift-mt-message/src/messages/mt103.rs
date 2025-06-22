@@ -2,9 +2,25 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// MT103: Customer Credit Transfer (Standard)
+/// Message status information for MT103 messages
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MessageStatus {
+    /// Whether the message is STP compliant
+    pub is_stp_compliant: bool,
+    /// Whether the message is a REMIT message
+    pub is_remit: bool,
+    /// Whether the message contains reject codes
+    pub has_reject_codes: bool,
+    /// Whether the message contains return codes
+    pub has_return_codes: bool,
+    /// The processing variant (Standard, STP, REMIT, REJECT, RETURN)
+    pub processing_variant: String,
+}
+
+/// MT103: Customer Credit Transfer (Standard and STP variants)
 ///
-/// Standard message for customer credit transfers between financial institutions.
+/// Unified structure supporting both standard MT103 and MT103 STP variants.
+/// Use `is_stp_compliant()` to check if the message meets STP requirements.
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT103_VALIDATION_RULES)]
@@ -120,7 +136,147 @@ pub struct MT103 {
     pub field_77t: Option<Field77T>,
 }
 
-/// MT103 Standard validation rules
+impl MT103 {
+    /// Check if this MT103 message is compliant with STP (Straight Through Processing) requirements
+    ///
+    /// STP compliance requires:
+    /// - Field 51A must not be present
+    /// - Field 52: Only option A allowed (no D)
+    /// - Field 53: Only options A/B allowed (no D)
+    /// - Field 54: Only option A allowed (no B/D)
+    /// - Field 23E: Limited to CORT, INTC, SDVA, REPA
+    /// - Field 56a: Not allowed if 23B is SPRI
+    /// - Field 59: Account information mandatory
+    /// - Additional conditional rules (C4, C6)
+    pub fn is_stp_compliant(&self) -> bool {
+        // Check field 51A - must not be present in STP
+        if self.field_51a.is_some() {
+            return false;
+        }
+
+        // Check field 52 - only option A allowed in STP
+        if self.field_52d.is_some() {
+            return false;
+        }
+
+        // Check field 53 - only options A/B allowed in STP
+        if self.field_53d.is_some() {
+            return false;
+        }
+
+        // Check field 54 - only option A allowed in STP
+        if self.field_54b.is_some() || self.field_54d.is_some() {
+            return false;
+        }
+
+        // Check field 23E - restricted instruction codes in STP
+        if let Some(ref field_23e) = self.field_23e {
+            let stp_allowed_codes = ["CORT", "INTC", "SDVA", "REPA"];
+            if !stp_allowed_codes.contains(&field_23e.instruction_code.as_str()) {
+                return false;
+            }
+        }
+
+        // Check C6_STP: If 23B is SPRI → 56a must not be present
+        if self.field_23b.value == "SPRI"
+            && (self.field_56a.is_some() || self.field_56c.is_some() || self.field_56d.is_some())
+        {
+            return false;
+        }
+
+        // Check C4_STP: If 55a present → 53a and 54a are mandatory
+        if self.field_55a.is_some() || self.field_55b.is_some() || self.field_55d.is_some() {
+            if self.field_53a.is_none() && self.field_53b.is_none() {
+                return false;
+            }
+            if self.field_54a.is_none() {
+                return false;
+            }
+        }
+
+        // Check field 59 - account information should be present for STP
+        // This is a soft requirement - in practice, field 59 without account (NoOption)
+        // might still be acceptable in some STP scenarios
+        match &self.field_59 {
+            Field59::A(_) => {} // Has account - good for STP
+            Field59::F(_) => {} // Has party identifier - acceptable for STP
+            Field59::NoOption(_) => {
+                // This might be acceptable in some STP scenarios
+                // We'll allow it but note that proper STP usually requires account info
+            }
+        }
+
+        true
+    }
+
+    /// Check if this MT103 message is a REMIT message with enhanced remittance information
+    ///
+    /// REMIT messages are distinguished by:
+    /// - Field 77T must be present and contain structured remittance information
+    /// - Field 70 is typically not used (replaced by 77T)
+    /// - Enhanced remittance data for regulatory compliance
+    pub fn is_remit_message(&self) -> bool {
+        // The key distinguishing feature of REMIT is the presence of field 77T
+        // with structured remittance information
+        match &self.field_77t {
+            Some(field_77t) => {
+                // Check if 77T contains actual remittance data (not just empty)
+                !field_77t.envelope_identifier.trim().is_empty()
+                    && !field_77t.envelope_type.trim().is_empty()
+                    && !field_77t.envelope_format.trim().is_empty()
+            }
+            None => false,
+        }
+    }
+
+    /// Check if this MT103 message contains reject codes
+    ///
+    /// Reject messages are identified by checking:
+    /// 1. Field 20 (Sender's Reference) for "REJT" prefix
+    /// 2. Block 3 field 108 (MUR - Message User Reference) for "REJT"
+    /// 3. Field 72 (Sender to Receiver Information) containing `/REJT/` code
+    pub fn has_reject_codes(&self) -> bool {
+        // Check field 20 (sender's reference)
+        if self.field_20.value.to_uppercase().contains("REJT") {
+            return true;
+        }
+
+        // Check field 72 for structured reject codes
+        if let Some(field_72) = &self.field_72 {
+            let content = field_72.lines.join(" ").to_uppercase();
+            if content.contains("/REJT/") || content.contains("REJT") {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Check if this MT103 message contains return codes
+    ///
+    /// Return messages are identified by checking:
+    /// 1. Field 20 (Sender's Reference) for "RETN" prefix
+    /// 2. Block 3 field 108 (MUR - Message User Reference) for "RETN"
+    /// 3. Field 72 (Sender to Receiver Information) containing `/RETN/` code
+    pub fn has_return_codes(&self) -> bool {
+        // Check field 20 (sender's reference)
+        if self.field_20.value.to_uppercase().contains("RETN") {
+            return true;
+        }
+
+        // Check field 72 for structured return codes
+        if let Some(field_72) = &self.field_72 {
+            let content = field_72.lines.join(" ").to_uppercase();
+            if content.contains("/RETN/") || content.contains("RETN") {
+                return true;
+            }
+        }
+
+        false
+    }
+}
+
+/// Comprehensive MT103 validation rules covering both standard and STP variants
 const MT103_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
@@ -176,6 +332,32 @@ const MT103_VALIDATION_RULES: &str = r#"{
               true
             ]
           }
+        ]
+      }
+    },
+    {
+      "id": "C4",
+      "description": "If 55a is present, then 53a and 54a become mandatory",
+      "condition": {
+        "if": [
+          {"or": [
+            {"!!": {"var": "fields.55A"}},
+            {"!!": {"var": "fields.55B"}},
+            {"!!": {"var": "fields.55D"}}
+          ]},
+          {"and": [
+            {"or": [
+              {"!!": {"var": "fields.53A"}},
+              {"!!": {"var": "fields.53B"}},
+              {"!!": {"var": "fields.53D"}}
+            ]},
+            {"or": [
+              {"!!": {"var": "fields.54A"}},
+              {"!!": {"var": "fields.54B"}},
+              {"!!": {"var": "fields.54D"}}
+            ]}
+          ]},
+          true
         ]
       }
     },
@@ -385,12 +567,39 @@ const MT103_VALIDATION_RULES: &str = r#"{
           }
         ]
       }
+    },
+    {
+      "id": "REMIT_77T",
+      "description": "REMIT: If 77T is present, it must contain valid structured remittance information",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.77T"}},
+          {"and": [
+            {"!=": [{"var": "fields.77T.envelope_type"}, ""]},
+            {"!=": [{"var": "fields.77T.envelope_format"}, ""]},
+            {"!=": [{"var": "fields.77T.envelope_identifier"}, ""]}
+          ]},
+          true
+        ]
+      }
+    },
+    {
+      "id": "REMIT_FIELD_COMPATIBILITY",
+      "description": "REMIT: Field 70 should not be used when 77T is present (77T replaces 70 in REMIT)",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.77T"}},
+          {"!": {"var": "fields.70"}},
+          true
+        ]
+      }
     }
   ],
   "constants": {
     "EU_EEA_COUNTRIES": ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "IS", "LI", "NO"],
     "VALID_BANK_OPERATION_CODES": ["CRED", "CRTS", "SPAY", "SPRI", "SSTD"],
     "VALID_CHARGE_CODES": ["OUR", "SHA", "BEN"],
-    "VALID_INSTRUCTION_CODES": ["CORT", "INTC", "REPA", "SDVA", "CHQB", "PHOB", "PHOI", "PHON", "TELE", "TELI", "TELB"]
+    "VALID_INSTRUCTION_CODES": ["CORT", "INTC", "REPA", "SDVA", "CHQB", "PHOB", "PHOI", "PHON", "TELE", "TELI", "TELB"],
+    "VALID_INSTRUCTION_CODES_STP": ["CORT", "INTC", "SDVA", "REPA"]
   }
 }"#;

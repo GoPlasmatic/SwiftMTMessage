@@ -71,23 +71,8 @@ fn generate_swift_field_impl(
             fn parse(value: &str) -> crate::Result<Self> {
                 let value = value.trim();
 
-                // Extract field content (remove field tag prefix)
-                // For generic fields, we need to dynamically detect the field tag from the input
-                let content = if value.starts_with(':') {
-                    // Find the second colon to extract the actual field tag and content
-                    if let Some(first_colon) = value.find(':') {
-                        if let Some(second_colon) = value[first_colon + 1..].find(':') {
-                            let second_colon_pos = first_colon + 1 + second_colon;
-                            &value[second_colon_pos + 1..]
-                        } else {
-                            value
-                        }
-                    } else {
-                        value
-                    }
-                } else {
-                    value
-                };
+                // Extract field content using generic regex pattern to remove field tags
+                let content = Self::remove_field_tag_prefix(value);
 
                 #parse_logic
             }
@@ -125,6 +110,26 @@ fn generate_swift_field_impl(
             /// Parse from raw string content
             pub fn from_raw(content: &str) -> Result<Self, crate::ParseError> {
                 #from_raw_logic
+            }
+
+            /// Remove field tag prefix using generic regex pattern
+            /// Handles patterns like ":50K:", "50K:", ":20:", "32A:", etc.
+            fn remove_field_tag_prefix(value: &str) -> &str {
+                // Use lazy_static for regex compilation performance
+                use std::sync::OnceLock;
+                static FIELD_TAG_REGEX: OnceLock<regex::Regex> = OnceLock::new();
+
+                let regex = FIELD_TAG_REGEX.get_or_init(|| {
+                    // Pattern matches: optional colon + field identifier + mandatory colon
+                    // Field identifier: 1-3 digits optionally followed by 1-2 letters
+                    regex::Regex::new(r"^:?([0-9]{1,3}[A-Z]{0,2}):").unwrap()
+                });
+
+                if let Some(captures) = regex.find(value) {
+                    &value[captures.end()..]
+                } else {
+                    value
+                }
             }
         }
 

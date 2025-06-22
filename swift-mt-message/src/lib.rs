@@ -83,7 +83,7 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
 }
 
 /// Core trait for Swift message types
-pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize {
+pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::Any {
     /// Get the message type identifier (e.g., "103", "202")
     fn message_type() -> &'static str;
 
@@ -100,6 +100,23 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize {
 
     /// Get optional field tags for this message type
     fn optional_fields() -> Vec<&'static str>;
+
+    /// Check if this message is a cover message (default: false)
+    fn is_cover_message(&self) -> bool {
+        false
+    }
+
+    fn has_reject_codes(&self) -> bool {
+        false
+    }
+
+    fn has_return_codes(&self) -> bool {
+        false
+    }
+
+    fn is_stp_message(&self) -> bool {
+        false
+    }
 }
 
 /// Complete SWIFT message with headers and body
@@ -186,10 +203,6 @@ impl ValidationResult {
 pub enum ParsedSwiftMessage {
     #[serde(rename = "103")]
     MT103(Box<SwiftMessage<messages::MT103>>),
-    #[serde(rename = "103STP")]
-    MT103STP(Box<SwiftMessage<messages::MT103STP>>),
-    #[serde(rename = "103REMIT")]
-    MT103REMIT(Box<SwiftMessage<messages::MT103REMIT>>),
     #[serde(rename = "202")]
     MT202(Box<SwiftMessage<messages::MT202>>),
     #[serde(rename = "205")]
@@ -201,8 +214,6 @@ impl ParsedSwiftMessage {
     pub fn message_type(&self) -> &'static str {
         match self {
             ParsedSwiftMessage::MT103(_) => "103",
-            ParsedSwiftMessage::MT103STP(_) => "103STP",
-            ParsedSwiftMessage::MT103REMIT(_) => "103REMIT",
             ParsedSwiftMessage::MT202(_) => "202",
             ParsedSwiftMessage::MT205(_) => "205",
         }
@@ -212,20 +223,6 @@ impl ParsedSwiftMessage {
     pub fn as_mt103(&self) -> Option<&SwiftMessage<messages::MT103>> {
         match self {
             ParsedSwiftMessage::MT103(msg) => Some(msg),
-            _ => None,
-        }
-    }
-
-    pub fn as_mt103stp(&self) -> Option<&SwiftMessage<messages::MT103STP>> {
-        match self {
-            ParsedSwiftMessage::MT103STP(msg) => Some(msg),
-            _ => None,
-        }
-    }
-
-    pub fn as_mt103remit(&self) -> Option<&SwiftMessage<messages::MT103REMIT>> {
-        match self {
-            ParsedSwiftMessage::MT103REMIT(msg) => Some(msg),
             _ => None,
         }
     }
@@ -268,6 +265,71 @@ impl ParsedSwiftMessage {
 }
 
 impl<T: SwiftMessageBody> SwiftMessage<T> {
+    /// Check if this message contains reject codes (MT103 specific)
+    ///
+    /// Reject messages are identified by checking:
+    /// 1. Field 20 (Sender's Reference) for "REJT" prefix
+    /// 2. Block 3 field 108 (MUR - Message User Reference) for "REJT"
+    /// 3. Field 72 (Sender to Receiver Information) containing `/REJT/` code
+    pub fn has_reject_codes(&self) -> bool {
+        // Check Block 3 field 108 (MUR - Message User Reference)
+        if let Some(ref user_header) = self.user_header {
+            if let Some(ref mur) = user_header.message_user_reference {
+                if mur.to_uppercase().contains("REJT") {
+                    return true;
+                }
+            }
+        }
+
+        if T::has_reject_codes(&self.fields) {
+            return true;
+        }
+
+        false
+    }
+
+    /// Check if this message contains return codes (MT103 specific)
+    ///
+    /// Return messages are identified by checking:
+    /// 1. Field 20 (Sender's Reference) for "RETN" prefix
+    /// 2. Block 3 field 108 (MUR - Message User Reference) for "RETN"
+    /// 3. Field 72 (Sender to Receiver Information) containing `/RETN/` code
+    pub fn has_return_codes(&self) -> bool {
+        // Check Block 3 field 108 (MUR - Message User Reference)
+        if let Some(ref user_header) = self.user_header {
+            if let Some(ref mur) = user_header.message_user_reference {
+                if mur.to_uppercase().contains("RETN") {
+                    return true;
+                }
+            }
+        }
+
+        if T::has_return_codes(&self.fields) {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn is_cover_message(&self) -> bool {
+        if T::message_type() == "202"
+            && T::is_cover_message(&self.fields)
+            && T::is_cover_message(&self.fields)
+        {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn is_stp_message(&self) -> bool {
+        if T::message_type() == "103" && T::is_stp_message(&self.fields) {
+            return true;
+        }
+
+        false
+    }
+
     /// Validate message against business rules using JSONLogic
     /// This validation method has access to both headers and message fields,
     /// allowing for comprehensive validation of MT103 and other message types.
@@ -275,10 +337,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         // Check if the message type has validation rules
         let validation_rules = match T::message_type() {
             "103" => messages::MT103::validation_rules(),
-            "103STP" => messages::MT103STP::validation_rules(),
-            "103REMIT" => messages::MT103REMIT::validation_rules(),
             "202" => messages::MT202::validation_rules(),
-            "202COV" => messages::MT202COV::validation_rules(),
             "205" => messages::MT205::validation_rules(),
             "104" => messages::MT104::validation_rules(),
             "107" => messages::MT107::validation_rules(),

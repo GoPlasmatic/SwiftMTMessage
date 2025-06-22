@@ -3,7 +3,7 @@ use quote::quote;
 use syn::{Attribute, Data, DeriveInput, Fields, Meta, Type, parse_macro_input};
 
 use crate::component::parser::{
-    ComponentSpec, FieldSpec, is_vec_of_swift_messages, parse_field_specs,
+    ComponentSpec, FieldSpec, is_swift_message_type, is_vec_of_swift_messages, parse_field_specs,
 };
 use crate::utils::attributes::extract_message_type_attribute;
 
@@ -305,6 +305,21 @@ fn generate_from_fields_logic(
                         };
                     }
                 }
+            } else if is_option_swift_message(&mapping.field_type) {
+                // Handle Option<SwiftMessage> types (single instance)
+                quote! {
+                    let #field_name = if let Some(field_values) = fields.get(#field_tag) {
+                        if let Some(first_value) = field_values.first() {
+                            // Parse SwiftMessage from its field representation
+                            let message_fields = crate::parser::parse_swift_message_from_string(first_value)?;
+                            Some(crate::SwiftMessageBody::from_fields(message_fields)?)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    };
+                }
             } else {
                 quote! {
                     let #field_name = if let Some(field_values) = fields.get(#field_tag) {
@@ -471,6 +486,16 @@ fn generate_to_fields_logic(
                         }
                     }
                 }
+            } else if is_option_swift_message(&mapping.field_type) {
+                // Handle Option<SwiftMessage> types (single instance)
+                quote! {
+                    if let Some(ref message_value) = self.#field_name {
+                        // Serialize SwiftMessage to its field representation
+                        let message_fields = message_value.to_fields();
+                        let serialized_message = crate::parser::serialize_swift_message_to_string(&message_fields);
+                        fields.insert(#field_tag.to_string(), vec![serialized_message]);
+                    }
+                }
             } else {
                 quote! {
                     if let Some(ref field_value) = self.#field_name {
@@ -612,6 +637,22 @@ fn is_option_vec_of_swift_messages(ty: &Type) -> bool {
                 if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
                     if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() {
                         return is_vec_of_swift_messages(inner_type);
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+/// Check if a type is Option<SwiftMessage> (single instance, not Vec)
+fn is_option_swift_message(ty: &Type) -> bool {
+    if let Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            if segment.ident == "Option" {
+                if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+                    if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() {
+                        return is_swift_message_type(inner_type);
                     }
                 }
             }

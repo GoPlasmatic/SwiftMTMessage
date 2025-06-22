@@ -86,64 +86,64 @@ pub struct MT205 {
 }
 
 impl MT205 {
-  /// Check if this MT202 message contains reject codes
-  ///
-  /// Reject messages are identified by checking:
-  /// 1. Field 20 (Transaction Reference) for "REJT" prefix or content
-  /// 2. Field 72 (Sender to Receiver Information) containing `/REJT/` codes
-  /// 3. Additional structured reject information in field 72
-  pub fn has_reject_codes(&self) -> bool {
-      // Check field 20 (transaction reference)
-      if self.field_20.value.to_uppercase().contains("REJT") {
-          return true;
-      }
+    /// Check if this MT202 message contains reject codes
+    ///
+    /// Reject messages are identified by checking:
+    /// 1. Field 20 (Transaction Reference) for "REJT" prefix or content
+    /// 2. Field 72 (Sender to Receiver Information) containing `/REJT/` codes
+    /// 3. Additional structured reject information in field 72
+    pub fn has_reject_codes(&self) -> bool {
+        // Check field 20 (transaction reference)
+        if self.field_20.value.to_uppercase().contains("REJT") {
+            return true;
+        }
 
-      // Check field 72 for structured reject codes
-      if let Some(field_72) = &self.field_72 {
-          let content = field_72.lines.join(" ").to_uppercase();
-          if content.contains("/REJT/") || content.contains("REJT") {
-              return true;
-          }
-      }
+        // Check field 72 for structured reject codes
+        if let Some(field_72) = &self.field_72 {
+            let content = field_72.lines.join(" ").to_uppercase();
+            if content.contains("/REJT/") || content.contains("REJT") {
+                return true;
+            }
+        }
 
-      false
-  }
+        false
+    }
 
-  /// Check if this MT202 message contains return codes
-  ///
-  /// Return messages are identified by checking:
-  /// 1. Field 20 (Transaction Reference) for "RETN" prefix or content
-  /// 2. Field 72 (Sender to Receiver Information) containing `/RETN/` codes
-  /// 3. Additional structured return information in field 72
-  pub fn has_return_codes(&self) -> bool {
-      // Check field 20 (transaction reference)
-      if self.field_20.value.to_uppercase().contains("RETN") {
-          return true;
-      }
+    /// Check if this MT202 message contains return codes
+    ///
+    /// Return messages are identified by checking:
+    /// 1. Field 20 (Transaction Reference) for "RETN" prefix or content
+    /// 2. Field 72 (Sender to Receiver Information) containing `/RETN/` codes
+    /// 3. Additional structured return information in field 72
+    pub fn has_return_codes(&self) -> bool {
+        // Check field 20 (transaction reference)
+        if self.field_20.value.to_uppercase().contains("RETN") {
+            return true;
+        }
 
-      // Check field 72 for structured return codes
-      if let Some(field_72) = &self.field_72 {
-          let content = field_72.lines.join(" ").to_uppercase();
-          if content.contains("/RETN/") || content.contains("RETN") {
-              return true;
-          }
-      }
+        // Check field 72 for structured return codes
+        if let Some(field_72) = &self.field_72 {
+            let content = field_72.lines.join(" ").to_uppercase();
+            if content.contains("/RETN/") || content.contains("RETN") {
+                return true;
+            }
+        }
 
-      false
-  }
+        false
+    }
 
-  /// Check if this MT205 message is a Cover (COV) message
-  ///
-  /// COV messages are distinguished by:
-  /// - Presence of Sequence B customer fields (50a, 59a)
-  /// - Additional underlying customer credit transfer details
-  /// 
-  /// Based on the MT205 specification: "Cover Detection: Based on presence of Sequence B customer fields (50a, 59a)"
-  pub fn is_cover_message(&self) -> bool {
-      // The key distinguishing feature of COV is the presence of Sequence B customer fields
-      // According to spec: field 50a (Ordering Customer) or field 59a (Beneficiary Customer) 
-      self.field_50a.is_some() || self.field_59a.is_some()
-  }
+    /// Check if this MT205 message is a Cover (COV) message
+    ///
+    /// COV messages are distinguished by:
+    /// - Presence of Sequence B customer fields (50a, 59a)
+    /// - Additional underlying customer credit transfer details
+    ///
+    /// Based on the MT205 specification: "Cover Detection: Based on presence of Sequence B customer fields (50a, 59a)"
+    pub fn is_cover_message(&self) -> bool {
+        // The key distinguishing feature of COV is the presence of Sequence B customer fields
+        // According to spec: field 50a (Ordering Customer) or field 59a (Beneficiary Customer)
+        self.field_50a.is_some() || self.field_59a.is_some()
+    }
 }
 
 /// Validation rules for MT205 - General Financial Institution Transfer

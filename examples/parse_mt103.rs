@@ -36,8 +36,14 @@ Another City, Country
             println!("🔍 Message Type: {}", parsed_message.message_type());
 
             if let Some(mt103_message) = parsed_message.as_mt103() {
-                println!("🔍 Message Reject Codes: {}", mt103_message.has_reject_codes());
-                println!("🔍 Message Return Code: {}", mt103_message.has_return_codes());
+                println!(
+                    "🔍 Message Reject Codes: {}",
+                    mt103_message.has_reject_codes()
+                );
+                println!(
+                    "🔍 Message Return Code: {}",
+                    mt103_message.has_return_codes()
+                );
                 // Demonstrate validation capabilities using the new wrapper-level validation
                 run_comprehensive_validation(mt103_message)?;
 

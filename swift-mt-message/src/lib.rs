@@ -45,9 +45,9 @@
 //! Instead of nested enum structures like `{"50": {"K": {...}}}`.
 
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::any::Any;
 
 pub mod errors;
 pub mod fields;
@@ -265,11 +265,17 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             }
         }
 
-        if let Some(mt103_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT103>() {
+        if let Some(mt103_fields) =
+            (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT103>()
+        {
             return mt103_fields.has_reject_codes();
-        } else if let Some(mt202_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT202>() {
+        } else if let Some(mt202_fields) =
+            (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT202>()
+        {
             return mt202_fields.has_reject_codes();
-        } else if let Some(mt205_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT205>() {
+        } else if let Some(mt205_fields) =
+            (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT205>()
+        {
             return mt205_fields.has_reject_codes();
         }
 
@@ -292,11 +298,17 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             }
         }
 
-        if let Some(mt103_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT103>() {
+        if let Some(mt103_fields) =
+            (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT103>()
+        {
             return mt103_fields.has_return_codes();
-        } else if let Some(mt202_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT202>() {
+        } else if let Some(mt202_fields) =
+            (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT202>()
+        {
             return mt202_fields.has_return_codes();
-        } else if let Some(mt205_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT205>() {
+        } else if let Some(mt205_fields) =
+            (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT205>()
+        {
             return mt205_fields.has_return_codes();
         }
 
@@ -304,10 +316,14 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
     }
 
     pub fn is_cover_message(&self) -> bool {
-        if let Some(mt202_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT202>() {
+        if let Some(mt202_fields) =
+            (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT202>()
+        {
             return mt202_fields.is_cover_message();
         }
-        if let Some(mt205_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT205>() {
+        if let Some(mt205_fields) =
+            (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT205>()
+        {
             return mt205_fields.is_cover_message();
         }
 
@@ -315,9 +331,11 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
     }
 
     pub fn is_stp_message(&self) -> bool {
-        if let Some(mt103_fields) = (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT103>() {
+        if let Some(mt103_fields) =
+            (&self.fields as &dyn Any).downcast_ref::<crate::messages::MT103>()
+        {
             return mt103_fields.is_stp_compliant();
-        } 
+        }
 
         false
     }

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::errors::{ParseError, Result};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
-use crate::messages::{MT103, MT202, MT205};
+use crate::messages::{MT103, MT202, MT205, MT900};
 use crate::{ParsedSwiftMessage, RawBlocks, SwiftMessage, SwiftMessageBody};
 
 /// Type alias for the complex return type of field parsing
@@ -83,6 +83,10 @@ impl SwiftParser {
             "205" => {
                 let parsed = Self::parse::<MT205>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT205(Box::new(parsed)))
+            }
+            "900" => {
+                let parsed = Self::parse::<MT900>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT900(Box::new(parsed)))
             }
             _ => Err(ParseError::UnsupportedMessageType {
                 message_type: message_type.clone(),

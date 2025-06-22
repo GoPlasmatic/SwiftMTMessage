@@ -18,5 +18,5 @@ pub struct Field13D {
     pub offset_sign: char,
     /// UTC offset in total seconds
     #[component("4!n", validate = ["utc_offset_format"])]
-    pub offset_seconds: i32,
+    pub offset_seconds: String,
 }

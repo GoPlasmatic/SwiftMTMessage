@@ -39,3 +39,7 @@ path = "../examples/parse_mt103.rs"
 [[example]]
 name = "parse_mt202"
 path = "../examples/parse_mt202.rs"
+
+[[example]]
+name = "parse_auto"
+path = "../examples/parse_auto.rs"

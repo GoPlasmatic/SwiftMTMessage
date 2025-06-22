@@ -92,9 +92,11 @@ pub struct ApplicationHeader {
     pub priority: String,
 
     /// Delivery monitoring (1 = Non-delivery notification, 3 = Delivery notification)
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub delivery_monitoring: Option<String>,
 
     /// Obsolescence period (3 digits, only for certain message types)
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub obsolescence_period: Option<String>,
 }
 
@@ -226,8 +228,10 @@ pub struct UserHeader {
 /// Balance checkpoint structure for Tag 423
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BalanceCheckpoint {
-    pub date: String,                         // YYMMDD
-    pub time: String,                         // HHMMSS
+    pub date: String, // YYMMDD
+    pub time: String, // HHMMSS
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hundredths_of_second: Option<String>, // ss (optional)
 }
 
@@ -244,21 +248,27 @@ pub struct MessageInputReference {
 /// Payment release information structure for Tag 165
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PaymentReleaseInfo {
-    pub code: String,                    // 3!c
+    pub code: String, // 3!c
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub additional_info: Option<String>, // 34x (optional)
 }
 
 /// Sanctions screening information structure for Tag 433
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SanctionsScreeningInfo {
-    pub code_word: String,               // 3!a (AOK, FPO, NOK)
+    pub code_word: String, // 3!a (AOK, FPO, NOK)
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub additional_info: Option<String>, // 20x (optional)
 }
 
 /// Payment controls information structure for Tag 434
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PaymentControlsInfo {
-    pub code_word: String,               // 3!a
+    pub code_word: String, // 3!a
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub additional_info: Option<String>, // 20x (optional)
 }
 
@@ -575,7 +585,10 @@ pub struct Trailer {
 /// Possible Duplicate Emission structure for PDE tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PossibleDuplicateEmission {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub time: Option<String>, // HHMM (optional)
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub message_input_reference: Option<MessageInputReference>, // MIR (optional)
 }
 
@@ -590,7 +603,10 @@ pub struct MessageReference {
 /// Possible Duplicate Message structure for PDM tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PossibleDuplicateMessage {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub time: Option<String>, // HHMM (optional)
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub message_output_reference: Option<MessageOutputReference>, // MOR (optional)
 }
 
@@ -607,7 +623,10 @@ pub struct MessageOutputReference {
 /// System Originated Message structure for SYS tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SystemOriginatedMessage {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub time: Option<String>, // HHMM (optional)
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub message_input_reference: Option<MessageInputReference>, // MIR (optional)
 }
 

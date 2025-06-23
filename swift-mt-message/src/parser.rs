@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::errors::{ParseError, Result};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
-use crate::messages::{MT103, MT202, MT205, MT900};
+use crate::messages::{MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT202, MT205, MT210, MT292, MT296, MT900, MT910, MT920, MT935, MT940, MT941, MT942, MT950};
 use crate::{ParsedSwiftMessage, RawBlocks, SwiftMessage, SwiftMessageBody};
 
 /// Type alias for the complex return type of field parsing
@@ -72,9 +72,33 @@ impl SwiftParser {
 
         // Route to appropriate parser based on message type
         match message_type.as_str() {
+            "101" => {
+                let parsed = Self::parse::<MT101>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT101(Box::new(parsed)))
+            }
             "103" => {
                 let parsed = Self::parse::<MT103>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT103(Box::new(parsed)))
+            }
+            "104" => {
+                let parsed = Self::parse::<MT104>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT104(Box::new(parsed)))
+            }
+            "107" => {
+                let parsed = Self::parse::<MT107>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT107(Box::new(parsed)))
+            }
+            "110" => {
+                let parsed = Self::parse::<MT110>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT110(Box::new(parsed)))
+            }
+            "111" => {
+                let parsed = Self::parse::<MT111>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT111(Box::new(parsed)))
+            }
+            "112" => {
+                let parsed = Self::parse::<MT112>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT112(Box::new(parsed)))
             }
             "202" => {
                 let parsed = Self::parse::<MT202>(raw_message)?;
@@ -84,9 +108,57 @@ impl SwiftParser {
                 let parsed = Self::parse::<MT205>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT205(Box::new(parsed)))
             }
+            "210" => {
+                let parsed = Self::parse::<MT210>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT210(Box::new(parsed)))
+            }
             "900" => {
                 let parsed = Self::parse::<MT900>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT900(Box::new(parsed)))
+            }
+            "910" => {
+                let parsed = Self::parse::<MT910>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT910(Box::new(parsed)))
+            }
+            "920" => {
+                let parsed = Self::parse::<MT920>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT920(Box::new(parsed)))
+            }
+            "935" => {
+                let parsed = Self::parse::<MT935>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT935(Box::new(parsed)))
+            }
+            "940" => {
+                let parsed = Self::parse::<MT940>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT940(Box::new(parsed)))
+            }
+            "941" => {
+                let parsed = Self::parse::<MT941>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT941(Box::new(parsed)))
+            }
+            "942" => {
+                let parsed = Self::parse::<MT942>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT942(Box::new(parsed)))
+            }
+            "950" => {
+                let parsed = Self::parse::<MT950>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT950(Box::new(parsed)))
+            }
+            "192" => {
+                let parsed = Self::parse::<MT192>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT192(Box::new(parsed)))
+            }
+            "196" => {
+                let parsed = Self::parse::<MT196>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT196(Box::new(parsed)))
+            }
+            "292" => {
+                let parsed = Self::parse::<MT292>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT292(Box::new(parsed)))
+            }
+            "296" => {
+                let parsed = Self::parse::<MT296>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT296(Box::new(parsed)))
             }
             _ => Err(ParseError::UnsupportedMessageType {
                 message_type: message_type.clone(),
@@ -241,9 +313,10 @@ impl SwiftParser {
 
             // For certain field numbers, preserve the option letter to avoid conflicts
             match numeric_part.as_str() {
-                "13" | "23" | "26" | "32" | "33" | "52" | "53" | "54" | "55" | "56" | "57"
+                "11" | "13" | "23" | "26" | "32" | "33" | "52" | "53" | "54" | "55" | "56" | "57"
                 | "58" | "71" | "77" => {
                     // Keep option letters for fields that have multiple variants or specific formats
+                    // 11A (MT and Date - Option A), 11S (MT and Date - Option S)
                     // 13C (Time Indication)
                     // 23B (Bank Operation Code) vs 23E (Instruction Code)
                     // 26T (Transaction Type Code)

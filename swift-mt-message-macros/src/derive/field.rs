@@ -215,7 +215,10 @@ fn generate_parse_logic(components: &[ComponentSpec], field_tag: &str) -> proc_m
             };
 
             parsing_statements.push(parsing_logic);
-            position += component_size;
+            // Only advance position for fixed size components
+            if component_size > 0 {
+                position += component_size;
+            }
         }
 
         let field_names: Vec<_> = components
@@ -535,7 +538,7 @@ fn generate_naive_date_parsing(field_tag: &str) -> proc_macro2::TokenStream {
                     &format!("{}-{}-{}", year, month, day),
                     "%Y-%m-%d"
                 ).map_err(|_| crate::ParseError::InvalidFieldFormat {
-                    field_tag: #field_tag.to_string(),
+                        field_tag: #field_tag.to_string(),
                     message: "Invalid date".to_string(),
                 })?
             } else if date_str.len() == 8 && date_str.chars().all(|c| c.is_ascii_digit()) {
@@ -550,12 +553,12 @@ fn generate_naive_date_parsing(field_tag: &str) -> proc_macro2::TokenStream {
                 ).map_err(|_| crate::ParseError::InvalidFieldFormat {
                     field_tag: #field_tag.to_string(),
                     message: "Invalid date".to_string(),
-                })?
+                    })?
             } else {
                 // Try parsing ISO format (YYYY-MM-DD)
                 chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
                     .map_err(|_| crate::ParseError::InvalidFieldFormat {
-                        field_tag: #field_tag.to_string(),
+                    field_tag: #field_tag.to_string(),
                         message: "Invalid date format".to_string(),
                     })?
             }
@@ -1011,6 +1014,7 @@ fn get_component_fixed_size(format: &str) -> usize {
     match format {
         "6!n" => 6,                                 // Date: YYMMDD
         "3!a" => 3,                                 // Currency: USD, EUR, etc.
+        "3!n" => 3,                                 // Numeric: 3 digits
         "15d" | "12d" => 0,                         // Decimal amounts (variable size)
         "4!a" => 4,                                 // Code: 4 letters
         "4!c" => 4,                                 // Code: 4 alphanumeric
@@ -1078,35 +1082,22 @@ fn generate_positional_component_parsing(
                 }
                 let date_str = &content[#start_pos..#end_pos];
 
-                // Handle YYMMDD or YYYYMMDD formats
+                // For Field11S, we expect YYMMDD format
                 if date_str.len() == 6 && date_str.chars().all(|c| c.is_ascii_digit()) {
                     let year = format!("20{}", &date_str[0..2]);
                     let month = &date_str[2..4];
                     let day = &date_str[4..6];
 
-                    chrono::NaiveDate::parse_from_str(
-                        &format!("{}-{}-{}", year, month, day),
-                        "%Y-%m-%d"
-                    ).map_err(|_| crate::ParseError::InvalidFieldFormat {
-                        field_tag: #field_tag.to_string(),
-                        message: "Invalid date".to_string(),
-                    })?
-                } else if date_str.len() == 8 && date_str.chars().all(|c| c.is_ascii_digit()) {
-                    let year = &date_str[0..4];
-                    let month = &date_str[4..6];
-                    let day = &date_str[6..8];
-
-                    chrono::NaiveDate::parse_from_str(
-                        &format!("{}-{}-{}", year, month, day),
-                        "%Y-%m-%d"
-                    ).map_err(|_| crate::ParseError::InvalidFieldFormat {
-                        field_tag: #field_tag.to_string(),
-                        message: "Invalid date".to_string(),
-                    })?
+                    let formatted_date = format!("{}-{}-{}", year, month, day);
+                    chrono::NaiveDate::parse_from_str(&formatted_date, "%Y-%m-%d")
+                        .map_err(|_| crate::ParseError::InvalidFieldFormat {
+                            field_tag: #field_tag.to_string(),
+                            message: format!("Invalid date: {}", formatted_date),
+                        })?
                 } else {
                     return Err(crate::ParseError::InvalidFieldFormat {
                         field_tag: #field_tag.to_string(),
-                        message: "Invalid date format".to_string(),
+                        message: format!("Invalid date format: {}", date_str),
                     });
                 }
             }
@@ -1286,36 +1277,6 @@ fn generate_positional_component_parsing(
 
     // Original format-based parsing
     match comp.format.as_str() {
-        "6!n" => quote! {
-            {
-                if content.len() < #end_pos {
-                    return Err(crate::ParseError::InvalidFieldFormat {
-                        field_tag: #field_tag.to_string(),
-                        message: "Content too short for date field".to_string(),
-                    });
-                }
-
-                let date_str = &content[#start_pos..#end_pos];
-                if !date_str.chars().all(|c| c.is_ascii_digit()) {
-                    return Err(crate::ParseError::InvalidFieldFormat {
-                        field_tag: #field_tag.to_string(),
-                        message: "Date must be 6 digits".to_string(),
-                    });
-                }
-
-                let year = format!("20{}", &date_str[0..2]);
-                let month = &date_str[2..4];
-                let day = &date_str[4..6];
-
-                chrono::NaiveDate::parse_from_str(
-                    &format!("{}-{}-{}", year, month, day),
-                    "%Y-%m-%d"
-                ).map_err(|_| crate::ParseError::InvalidFieldFormat {
-                    field_tag: #field_tag.to_string(),
-                    message: "Invalid date".to_string(),
-                })?
-            }
-        },
         "3!a" => quote! {
             {
                 if content.len() < #end_pos {
@@ -1338,6 +1299,36 @@ fn generate_positional_component_parsing(
                 content[#start_pos..#end_pos].to_string()
             }
         },
+    }
+}
+
+/// Check if type is a custom type that implements FromStr (like BIC)
+fn is_custom_fromstr_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            matches!(segment.ident.to_string().as_str(), "BIC")
+        } else {
+            false
+        }
+    } else {
+        false
+    }
+}
+
+/// Generate parsing logic for custom FromStr types
+fn generate_custom_fromstr_parsing(
+    field_tag: &str,
+    base_type: &syn::Type,
+) -> proc_macro2::TokenStream {
+    quote! {
+        {
+            content.trim().parse().map_err(|e: String| {
+                crate::ParseError::InvalidFieldFormat {
+                    field_tag: #field_tag.to_string(),
+                    message: format!("Failed to parse {}: {}", stringify!(#base_type), e),
+                }
+            })?
+        }
     }
 }
 
@@ -1416,31 +1407,17 @@ fn generate_remaining_component_parsing(
                     let month = &date_str[2..4];
                     let day = &date_str[4..6];
 
-                    chrono::NaiveDate::parse_from_str(
-                        &format!("{}-{}-{}", year, month, day),
-                        "%Y-%m-%d"
-                    ).map_err(|_| crate::ParseError::InvalidFieldFormat {
-                        field_tag: #field_tag.to_string(),
-                        message: "Invalid date".to_string(),
-                    })?
-                } else if date_str.len() == 8 && date_str.chars().all(|c| c.is_ascii_digit()) {
-                    let year = &date_str[0..4];
-                    let month = &date_str[4..6];
-                    let day = &date_str[6..8];
-
-                    chrono::NaiveDate::parse_from_str(
-                        &format!("{}-{}-{}", year, month, day),
-                        "%Y-%m-%d"
-                    ).map_err(|_| crate::ParseError::InvalidFieldFormat {
-                        field_tag: #field_tag.to_string(),
-                        message: "Invalid date".to_string(),
-                    })?
-                } else {
-                    chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
+                    let formatted_date = format!("{}-{}-{}", year, month, day);
+                    chrono::NaiveDate::parse_from_str(&formatted_date, "%Y-%m-%d")
                         .map_err(|_| crate::ParseError::InvalidFieldFormat {
                             field_tag: #field_tag.to_string(),
-                            message: "Invalid date format".to_string(),
+                            message: format!("Invalid date: {}", formatted_date),
                         })?
+                } else {
+                    return Err(crate::ParseError::InvalidFieldFormat {
+                        field_tag: #field_tag.to_string(),
+                        message: format!("Invalid date format: {}", date_str),
+                    });
                 }
             }
         };
@@ -1474,12 +1451,10 @@ fn generate_remaining_component_parsing(
                         message: "Invalid time".to_string(),
                     })?
                 } else {
-                    chrono::NaiveTime::parse_from_str(time_str, "%H:%M:%S")
-                        .or_else(|_| chrono::NaiveTime::parse_from_str(time_str, "%H:%M"))
-                        .map_err(|_| crate::ParseError::InvalidFieldFormat {
-                            field_tag: #field_tag.to_string(),
-                            message: "Invalid time format".to_string(),
-                        })?
+                    return Err(crate::ParseError::InvalidFieldFormat {
+                        field_tag: #field_tag.to_string(),
+                        message: "Invalid time format".to_string(),
+                    });
                 }
             }
         };
@@ -1595,35 +1570,5 @@ fn generate_remaining_component_parsing(
         _ => quote! {
             remaining.to_string()
         },
-    }
-}
-
-/// Check if type is a custom type that implements FromStr (like BIC)
-fn is_custom_fromstr_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            matches!(segment.ident.to_string().as_str(), "BIC")
-        } else {
-            false
-        }
-    } else {
-        false
-    }
-}
-
-/// Generate parsing logic for custom FromStr types
-fn generate_custom_fromstr_parsing(
-    field_tag: &str,
-    base_type: &syn::Type,
-) -> proc_macro2::TokenStream {
-    quote! {
-        {
-            content.trim().parse().map_err(|e: String| {
-                crate::ParseError::InvalidFieldFormat {
-                    field_tag: #field_tag.to_string(),
-                    message: format!("Failed to parse {}: {}", stringify!(#base_type), e),
-                }
-            })?
-        }
     }
 }

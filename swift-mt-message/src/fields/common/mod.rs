@@ -16,6 +16,7 @@ pub use bic_field::{BIC, GenericBicField};
 pub use currency_field::GenericCurrencyAmountField;
 pub use multiline_text_field::{
     GenericMultiLine3x35, GenericMultiLine4x35, GenericMultiLine6x35, GenericMultiLine6x65,
+    GenericMultiLine20x35,
     GenericMultiLineTextField,
 };
 pub use name_field::GenericNameAddressField;

@@ -19,6 +19,7 @@ pub mod field50;
 pub mod field59;
 pub mod field61;
 pub mod field77t;
+pub mod field11s;
 
 // === TYPE ALIASES FOR SEMANTIC CLARITY ===
 
@@ -38,7 +39,6 @@ pub type Field71A = GenericTextField; // Details of Charges
 pub type Field70 = GenericMultiLine4x35; // Remittance Information (4x35)
 pub type Field72 = GenericMultiLine6x35; // Sender to Receiver Information (6x35)
 pub type Field75 = GenericMultiLine6x35; // Queries (6x35)
-pub type Field76 = GenericMultiLine6x35; // Answers/Status Information (6x35)
 pub type Field77B = GenericMultiLine3x35; // Regulatory Reporting (3x35)
 pub type Field86 = GenericMultiLine6x65; // Information to Account Owner (6x65)
 
@@ -67,6 +67,7 @@ pub use field50::{Field50, Field50F, Field50K};
 pub use field59::{Field59, Field59Basic, Field59F};
 pub use field61::Field61;
 pub use field77t::Field77T;
+pub use field11s::Field11S;
 
 /// Type alias for Field 60A - Opening Balance (Intermediate)
 pub type Field60A = GenericBalanceField;

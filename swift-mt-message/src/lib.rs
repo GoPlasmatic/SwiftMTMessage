@@ -264,138 +264,270 @@ impl ParsedSwiftMessage {
 impl ParsedSwiftMessage {
     /// Convert to a specific message type if it matches
     pub fn as_mt101(&self) -> Option<&SwiftMessage<messages::MT101>> {
-        match self { ParsedSwiftMessage::MT101(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT101(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt103(&self) -> Option<&SwiftMessage<messages::MT103>> {
-        match self { ParsedSwiftMessage::MT103(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT103(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt104(&self) -> Option<&SwiftMessage<messages::MT104>> {
-        match self { ParsedSwiftMessage::MT104(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT104(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt107(&self) -> Option<&SwiftMessage<messages::MT107>> {
-        match self { ParsedSwiftMessage::MT107(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT107(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt110(&self) -> Option<&SwiftMessage<messages::MT110>> {
-        match self { ParsedSwiftMessage::MT110(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT110(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt111(&self) -> Option<&SwiftMessage<messages::MT111>> {
-        match self { ParsedSwiftMessage::MT111(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT111(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt112(&self) -> Option<&SwiftMessage<messages::MT112>> {
-        match self { ParsedSwiftMessage::MT112(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT112(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt202(&self) -> Option<&SwiftMessage<messages::MT202>> {
-        match self { ParsedSwiftMessage::MT202(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT202(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt205(&self) -> Option<&SwiftMessage<messages::MT205>> {
-        match self { ParsedSwiftMessage::MT205(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT205(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt210(&self) -> Option<&SwiftMessage<messages::MT210>> {
-        match self { ParsedSwiftMessage::MT210(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT210(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt900(&self) -> Option<&SwiftMessage<messages::MT900>> {
-        match self { ParsedSwiftMessage::MT900(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT900(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt910(&self) -> Option<&SwiftMessage<messages::MT910>> {
-        match self { ParsedSwiftMessage::MT910(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT910(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt920(&self) -> Option<&SwiftMessage<messages::MT920>> {
-        match self { ParsedSwiftMessage::MT920(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT920(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt935(&self) -> Option<&SwiftMessage<messages::MT935>> {
-        match self { ParsedSwiftMessage::MT935(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT935(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt940(&self) -> Option<&SwiftMessage<messages::MT940>> {
-        match self { ParsedSwiftMessage::MT940(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT940(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt941(&self) -> Option<&SwiftMessage<messages::MT941>> {
-        match self { ParsedSwiftMessage::MT941(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT941(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt942(&self) -> Option<&SwiftMessage<messages::MT942>> {
-        match self { ParsedSwiftMessage::MT942(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT942(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt950(&self) -> Option<&SwiftMessage<messages::MT950>> {
-        match self { ParsedSwiftMessage::MT950(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT950(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt192(&self) -> Option<&SwiftMessage<messages::MT192>> {
-        match self { ParsedSwiftMessage::MT192(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT192(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt196(&self) -> Option<&SwiftMessage<messages::MT196>> {
-        match self { ParsedSwiftMessage::MT196(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT196(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt292(&self) -> Option<&SwiftMessage<messages::MT292>> {
-        match self { ParsedSwiftMessage::MT292(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT292(msg) => Some(msg),
+            _ => None,
+        }
     }
     pub fn as_mt296(&self) -> Option<&SwiftMessage<messages::MT296>> {
-        match self { ParsedSwiftMessage::MT296(msg) => Some(msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT296(msg) => Some(msg),
+            _ => None,
+        }
     }
 
     /// Convert into a specific message type if it matches
     pub fn into_mt101(self) -> Option<SwiftMessage<messages::MT101>> {
-        match self { ParsedSwiftMessage::MT101(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT101(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt103(self) -> Option<SwiftMessage<messages::MT103>> {
-        match self { ParsedSwiftMessage::MT103(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT103(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt104(self) -> Option<SwiftMessage<messages::MT104>> {
-        match self { ParsedSwiftMessage::MT104(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT104(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt107(self) -> Option<SwiftMessage<messages::MT107>> {
-        match self { ParsedSwiftMessage::MT107(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT107(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt110(self) -> Option<SwiftMessage<messages::MT110>> {
-        match self { ParsedSwiftMessage::MT110(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT110(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt111(self) -> Option<SwiftMessage<messages::MT111>> {
-        match self { ParsedSwiftMessage::MT111(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT111(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt112(self) -> Option<SwiftMessage<messages::MT112>> {
-        match self { ParsedSwiftMessage::MT112(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT112(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt202(self) -> Option<SwiftMessage<messages::MT202>> {
-        match self { ParsedSwiftMessage::MT202(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT202(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt205(self) -> Option<SwiftMessage<messages::MT205>> {
-        match self { ParsedSwiftMessage::MT205(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT205(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt210(self) -> Option<SwiftMessage<messages::MT210>> {
-        match self { ParsedSwiftMessage::MT210(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT210(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt900(self) -> Option<SwiftMessage<messages::MT900>> {
-        match self { ParsedSwiftMessage::MT900(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT900(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt910(self) -> Option<SwiftMessage<messages::MT910>> {
-        match self { ParsedSwiftMessage::MT910(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT910(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt920(self) -> Option<SwiftMessage<messages::MT920>> {
-        match self { ParsedSwiftMessage::MT920(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT920(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt935(self) -> Option<SwiftMessage<messages::MT935>> {
-        match self { ParsedSwiftMessage::MT935(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT935(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt940(self) -> Option<SwiftMessage<messages::MT940>> {
-        match self { ParsedSwiftMessage::MT940(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT940(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt941(self) -> Option<SwiftMessage<messages::MT941>> {
-        match self { ParsedSwiftMessage::MT941(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT941(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt942(self) -> Option<SwiftMessage<messages::MT942>> {
-        match self { ParsedSwiftMessage::MT942(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT942(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt950(self) -> Option<SwiftMessage<messages::MT950>> {
-        match self { ParsedSwiftMessage::MT950(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT950(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt192(self) -> Option<SwiftMessage<messages::MT192>> {
-        match self { ParsedSwiftMessage::MT192(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT192(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt196(self) -> Option<SwiftMessage<messages::MT196>> {
-        match self { ParsedSwiftMessage::MT196(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT196(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt292(self) -> Option<SwiftMessage<messages::MT292>> {
-        match self { ParsedSwiftMessage::MT292(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT292(msg) => Some(*msg),
+            _ => None,
+        }
     }
     pub fn into_mt296(self) -> Option<SwiftMessage<messages::MT296>> {
-        match self { ParsedSwiftMessage::MT296(msg) => Some(*msg), _ => None }
+        match self {
+            ParsedSwiftMessage::MT296(msg) => Some(*msg),
+            _ => None,
+        }
     }
 }
 

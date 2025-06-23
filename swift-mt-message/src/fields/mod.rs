@@ -4,6 +4,7 @@ pub mod common;
 pub use common::*;
 
 // === SPECIALIZED FIELDS (Complex fields that need custom structure) ===
+pub mod field11s;
 pub mod field13c;
 pub mod field13d;
 pub mod field23;
@@ -19,7 +20,6 @@ pub mod field50;
 pub mod field59;
 pub mod field61;
 pub mod field77t;
-pub mod field11s;
 
 // === TYPE ALIASES FOR SEMANTIC CLARITY ===
 
@@ -52,6 +52,7 @@ pub type Field90C = GenericSummaryField; // Sum of Credits
 pub type Field90D = GenericSummaryField; // Sum of Debits
 
 // Complex fields (require specialized implementations)
+pub use field11s::Field11S;
 pub use field13c::Field13C;
 pub use field13d::Field13D;
 pub use field23::Field23;
@@ -67,7 +68,6 @@ pub use field50::{Field50, Field50F, Field50K};
 pub use field59::{Field59, Field59Basic, Field59F};
 pub use field61::Field61;
 pub use field77t::Field77T;
-pub use field11s::Field11S;
 
 /// Type alias for Field 60A - Opening Balance (Intermediate)
 pub type Field60A = GenericBalanceField;

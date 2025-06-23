@@ -175,4 +175,4 @@ const MT296_VALIDATION_RULES: &str = r#"{
       }
     }
   ]
-}"#; 
+}"#;

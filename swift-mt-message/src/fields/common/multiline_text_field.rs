@@ -95,7 +95,6 @@ pub type GenericMultiLine6x35 = GenericMultiLineTextField<6, 35>;
 pub type GenericMultiLine6x65 = GenericMultiLineTextField<6, 65>;
 pub type GenericMultiLine20x35 = GenericMultiLineTextField<20, 35>;
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

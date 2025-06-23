@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use crate::errors::{ParseError, Result};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
-use crate::messages::{MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT202, MT205, MT210, MT292, MT296, MT900, MT910, MT920, MT935, MT940, MT941, MT942, MT950};
+use crate::messages::{
+    MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT202, MT205, MT210, MT292,
+    MT296, MT900, MT910, MT920, MT935, MT940, MT941, MT942, MT950,
+};
 use crate::{ParsedSwiftMessage, RawBlocks, SwiftMessage, SwiftMessageBody};
 
 /// Type alias for the complex return type of field parsing
@@ -313,8 +316,8 @@ impl SwiftParser {
 
             // For certain field numbers, preserve the option letter to avoid conflicts
             match numeric_part.as_str() {
-                "11" | "13" | "23" | "26" | "32" | "33" | "52" | "53" | "54" | "55" | "56" | "57"
-                | "58" | "71" | "77" => {
+                "11" | "13" | "23" | "26" | "32" | "33" | "52" | "53" | "54" | "55" | "56"
+                | "57" | "58" | "71" | "77" => {
                     // Keep option letters for fields that have multiple variants or specific formats
                     // 11A (MT and Date - Option A), 11S (MT and Date - Option S)
                     // 13C (Time Indication)

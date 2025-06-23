@@ -64,9 +64,9 @@ pub struct MT192 {
     /// When present, contains a copy of at least the mandatory fields from the original message.
     /// This helps the receiver identify the exact transaction to be cancelled.
     /// The specific fields depend on the original message type referenced in field 11S.
-    /// 
+    ///
     /// For MT103: Would include fields 23B, 32A, 50, 59, 71A
-    /// 
+    ///
     /// Note: This is represented as optional structured content that can contain
     /// various field combinations depending on the original message type.
 
@@ -84,7 +84,6 @@ pub struct MT192 {
 
     #[field("71A", optional)]
     pub field_71a: Option<GenericTextField>,
-
 }
 
 /// Enhanced validation rules for MT192
@@ -171,4 +170,4 @@ const MT192_VALIDATION_RULES: &str = r#"{
       }
     }
   ]
-}"#; 
+}"#;

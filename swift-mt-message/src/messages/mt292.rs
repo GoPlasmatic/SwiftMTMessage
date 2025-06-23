@@ -5,7 +5,7 @@ use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 /// # MT292: Request for Cancellation (Treasury)
 ///
 /// This message is sent by a financial institution to request the cancellation
-/// of a previously sent treasury-related message. MT292 is used for cancellation 
+/// of a previously sent treasury-related message. MT292 is used for cancellation
 /// requests related to treasury operations, interbank transfers, and institutional transactions.
 ///
 /// ## Key Features
@@ -65,11 +65,11 @@ pub struct MT292 {
     /// When present, contains a copy of at least the mandatory fields from the original treasury message.
     /// This helps the receiver identify the exact treasury transaction to be cancelled.
     /// The specific fields depend on the original message type referenced in field 11S.
-    /// 
+    ///
     /// For MT202: Would include fields 32A, 53, 58
     /// For MT205: Would include fields 32A, 53, 56, 57, 58  
     /// For MT210: Would include fields 32A, 53
-    /// 
+    ///
     /// Note: This is represented as optional structured content that can contain
     /// various field combinations depending on the original treasury message type.
 
@@ -90,7 +90,6 @@ pub struct MT292 {
 
     #[field("57A", optional)]
     pub field_57a: Option<GenericBicField>,
-
 }
 
 /// Enhanced validation rules for MT292
@@ -188,4 +187,4 @@ const MT292_VALIDATION_RULES: &str = r#"{
       }
     }
   ]
-}"#; 
+}"#;

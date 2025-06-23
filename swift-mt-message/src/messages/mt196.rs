@@ -167,4 +167,4 @@ const MT196_VALIDATION_RULES: &str = r#"{
       }
     }
   ]
-}"#; 
+}"#;

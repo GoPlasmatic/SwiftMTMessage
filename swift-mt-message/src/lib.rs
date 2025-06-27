@@ -668,7 +668,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             Err(e) => {
                 return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
                     rule_name: "JSON_PARSE".to_string(),
-                    message: format!("Failed to parse validation rules JSON: {}", e),
+                    message: format!("Failed to parse validation rules JSON: {e}"),
                 });
             }
         };
@@ -697,7 +697,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             Err(e) => {
                 return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
                     rule_name: "CONTEXT_CREATION".to_string(),
-                    message: format!("Failed to create validation context: {}", e),
+                    message: format!("Failed to create validation context: {e}"),
                 });
             }
         };
@@ -711,7 +711,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                 .get("id")
                 .and_then(|id| id.as_str())
                 .map(|s| s.to_string())
-                .unwrap_or_else(|| format!("RULE_{}", rule_index));
+                .unwrap_or_else(|| format!("RULE_{rule_index}"));
 
             let rule_description = rule
                 .get("description")
@@ -733,16 +733,14 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                                 errors.push(ValidationError::BusinessRuleValidation {
                                     rule_name: rule_id.clone(),
                                     message: format!(
-                                        "Business rule validation failed: {} - {}",
-                                        rule_id, rule_description
+                                        "Business rule validation failed: {rule_id} - {rule_description}"
                                     ),
                                 });
                             }
                             None => {
                                 // Rule returned non-boolean value
                                 warnings.push(format!(
-                                    "Rule {} returned non-boolean value: {:?}",
-                                    rule_id, result
+                                    "Rule {rule_id} returned non-boolean value: {result:?}"
                                 ));
                             }
                         }
@@ -751,15 +749,12 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                         // JSONLogic evaluation error
                         errors.push(ValidationError::BusinessRuleValidation {
                             rule_name: rule_id.clone(),
-                            message: format!(
-                                "JSONLogic evaluation error for rule {}: {}",
-                                rule_id, e
-                            ),
+                            message: format!("JSONLogic evaluation error for rule {rule_id}: {e}"),
                         });
                     }
                 }
             } else {
-                warnings.push(format!("Rule {} has no condition", rule_id));
+                warnings.push(format!("Rule {rule_id} has no condition"));
             }
         }
 
@@ -780,7 +775,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             Ok(data) => data,
             Err(e) => {
                 return Err(ParseError::SerializationError {
-                    message: format!("Failed to serialize complete message: {}", e),
+                    message: format!("Failed to serialize complete message: {e}"),
                 });
             }
         };
@@ -840,22 +835,22 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         let mut swift_message = String::new();
 
         if let Some(block1) = &self.blocks.block1 {
-            swift_message.push_str(&format!("{{1:{}}}\n", block1));
+            swift_message.push_str(&format!("{{1:{block1}}}\n"));
         }
 
         if let Some(block2) = &self.blocks.block2 {
-            swift_message.push_str(&format!("{{2:{}}}\n", block2));
+            swift_message.push_str(&format!("{{2:{block2}}}\n"));
         }
 
         if let Some(block3) = &self.blocks.block3 {
-            swift_message.push_str(&format!("{{3:{}}}\n", block3));
+            swift_message.push_str(&format!("{{3:{block3}}}\n"));
         }
 
         // Use the raw block4 content directly for perfect fidelity
         swift_message.push_str(&format!("{{4:{}-}}", self.blocks.block4));
 
         if let Some(block5) = &self.blocks.block5 {
-            swift_message.push_str(&format!("{{5:{}}}", block5));
+            swift_message.push_str(&format!("{{5:{block5}}}"));
         }
 
         swift_message

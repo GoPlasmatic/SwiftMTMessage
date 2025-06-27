@@ -122,7 +122,7 @@ mod tests {
 
         for (input, expected) in test_cases {
             let result = GenericMultiLineTextField::<4, 35>::remove_field_tag_prefix(input);
-            assert_eq!(result, expected, "Failed for input: '{}'", input);
+            assert_eq!(result, expected, "Failed for input: '{input}'");
         }
 
         println!("✅ Generic field tag removal works for all patterns!");

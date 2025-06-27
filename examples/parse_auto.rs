@@ -38,22 +38,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             convert_to_json(&parsed_message)?;
         }
         Err(e) => {
-            println!("❌ Failed to parse SWIFT message: {:?}", e);
+            println!("❌ Failed to parse SWIFT message: {e:?}");
 
             // Provide helpful information about the error
             match e {
                 swift_mt_message::ParseError::UnsupportedMessageType { message_type } => {
                     println!(
-                        "💡 The message type '{}' is not currently supported by parse_auto.",
-                        message_type
+                        "💡 The message type '{message_type}' is not currently supported by parse_auto."
                     );
                     println!("   Supported types: MT103, MT202, MT205, MT900");
                 }
                 swift_mt_message::ParseError::InvalidFormat { message } => {
-                    println!("💡 The message format is invalid: {}", message);
+                    println!("💡 The message format is invalid: {message}");
                 }
                 swift_mt_message::ParseError::MissingRequiredField { field_tag } => {
-                    println!("💡 Missing required field: {}", field_tag);
+                    println!("💡 Missing required field: {field_tag}");
                 }
                 _ => {
                     println!("💡 Check the message format and try again.");
@@ -123,7 +122,7 @@ fn display_message_info(parsed_message: &ParsedSwiftMessage) {
     println!("  Application Header: {:?}", basic_info.1);
 
     if let Some(user_header) = basic_info.2 {
-        println!("  User Header: {:?}", user_header);
+        println!("  User Header: {user_header:?}");
     }
 
     println!("  Number of Fields: {}", basic_info.3);

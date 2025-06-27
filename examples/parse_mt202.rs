@@ -50,7 +50,7 @@ HIGH VALUE PAYMENT
             validate_fields(&parsed_message);
         }
         Err(e) => {
-            println!("❌ Failed to parse MT202: {:?}", e);
+            println!("❌ Failed to parse MT202: {e:?}");
         }
     }
 
@@ -72,7 +72,7 @@ HIGH VALUE PAYMENT
             validate_fields(&parsed_message);
         }
         Err(e) => {
-            println!("❌ Failed to parse simple MT202: {:?}", e);
+            println!("❌ Failed to parse simple MT202: {e:?}");
         }
     }
 
@@ -94,7 +94,7 @@ fn display_basic_info(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
     );
 
     if let Some(user_header) = &parsed_message.user_header {
-        println!("  User Header: {:?}", user_header);
+        println!("  User Header: {user_header:?}");
     }
 
     println!("\n💼 Core Fields:");
@@ -169,7 +169,7 @@ fn convert_to_json(
     parsed_message: &swift_mt_message::SwiftMessage<MT202>,
     title: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n🔄 Converting {} to JSON:", title);
+    println!("\n🔄 Converting {title} to JSON:");
 
     // Convert complete message to JSON
     let full_json = serde_json::to_string_pretty(parsed_message)?;
@@ -184,7 +184,7 @@ fn convert_to_json(
     // Convert specific field to JSON (Field 32A)
     let field_32a_json = serde_json::to_string_pretty(&parsed_message.fields.field_32a)?;
     println!("\n💰 Field 32A (Value Date/Currency/Amount) JSON:");
-    println!("{}", field_32a_json);
+    println!("{field_32a_json}");
 
     // Show JSON sizes
     println!("\n📊 JSON Sizes:");
@@ -218,7 +218,7 @@ fn validate_fields(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
     if let Some(time_indications) = &parsed_message.fields.field_13c {
         for (i, time_ind) in time_indications.iter().enumerate() {
             let validation = time_ind.validate();
-            print_validation_result(&format!("Field 13C[{}] (Time Indication)", i), &validation);
+            print_validation_result(&format!("Field 13C[{i}] (Time Indication)"), &validation);
         }
     }
 
@@ -235,16 +235,16 @@ fn validate_fields(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
 
 fn print_validation_result(field_name: &str, validation: &swift_mt_message::ValidationResult) {
     if validation.is_valid {
-        println!("  ✅ {}: Valid", field_name);
+        println!("  ✅ {field_name}: Valid");
     } else {
-        println!("  ❌ {}: Invalid", field_name);
+        println!("  ❌ {field_name}: Invalid");
         for error in &validation.errors {
-            println!("     - {}", error);
+            println!("     - {error}");
         }
     }
 
     for warning in &validation.warnings {
-        println!("  ⚠️  {}: {}", field_name, warning);
+        println!("  ⚠️  {field_name}: {warning}");
     }
 }
 
@@ -267,15 +267,15 @@ fn demonstrate_json_extraction() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("🔍 Extracting specific values from JSON:");
             if let Some(amount) = json_value["field_32a"]["amount"].as_f64() {
-                println!("  Amount from JSON: {:.2}", amount);
+                println!("  Amount from JSON: {amount:.2}");
             }
 
             if let Some(currency) = json_value["field_32a"]["currency"].as_str() {
-                println!("  Currency from JSON: {}", currency);
+                println!("  Currency from JSON: {currency}");
             }
 
             if let Some(bic) = json_value["field_58a"]["bic"].as_str() {
-                println!("  Beneficiary BIC from JSON: {}", bic);
+                println!("  Beneficiary BIC from JSON: {bic}");
             }
 
             // Example 2: Convert JSON back to struct
@@ -315,7 +315,7 @@ fn demonstrate_json_extraction() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}", serde_json::to_string_pretty(&custom_json)?);
         }
         Err(e) => {
-            println!("❌ Failed to parse demonstration message: {:?}", e);
+            println!("❌ Failed to parse demonstration message: {e:?}");
         }
     }
 

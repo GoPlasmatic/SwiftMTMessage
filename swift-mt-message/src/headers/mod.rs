@@ -44,10 +44,7 @@ impl BasicHeader {
         // Extract BIC from logical terminal (first 8 characters for standard BIC)
         let bic_str = &logical_terminal[0..8];
         let sender_bic = BIC::from_str(bic_str).map_err(|e| ParseError::InvalidBlockStructure {
-            message: format!(
-                "Failed to parse BIC from logical terminal '{}': {}",
-                bic_str, e
-            ),
+            message: format!("Failed to parse BIC from logical terminal '{bic_str}': {e}"),
         })?;
 
         Ok(BasicHeader {
@@ -132,8 +129,7 @@ impl ApplicationHeader {
         let receiver_bic = BIC::from_str(&destination_address[0..8]).map_err(|e| {
             ParseError::InvalidBlockStructure {
                 message: format!(
-                    "Failed to parse BIC from destination address '{}': {}",
-                    destination_address, e
+                    "Failed to parse BIC from destination address '{destination_address}': {e}"
                 ),
             }
         })?;
@@ -165,7 +161,7 @@ impl std::fmt::Display for ApplicationHeader {
             result.push_str(obsolescence_period);
         }
 
-        write!(f, "{}", result)
+        write!(f, "{result}")
     }
 }
 
@@ -492,27 +488,27 @@ impl std::fmt::Display for UserHeader {
         let mut result = String::new();
 
         if let Some(ref service_id) = self.service_identifier {
-            result.push_str(&format!("{{103:{}}}", service_id));
+            result.push_str(&format!("{{103:{service_id}}}"));
         }
 
         if let Some(ref banking_priority) = self.banking_priority {
-            result.push_str(&format!("{{113:{}}}", banking_priority));
+            result.push_str(&format!("{{113:{banking_priority}}}"));
         }
 
         if let Some(ref message_user_ref) = self.message_user_reference {
-            result.push_str(&format!("{{108:{}}}", message_user_ref));
+            result.push_str(&format!("{{108:{message_user_ref}}}"));
         }
 
         if let Some(ref validation_flag) = self.validation_flag {
-            result.push_str(&format!("{{119:{}}}", validation_flag));
+            result.push_str(&format!("{{119:{validation_flag}}}"));
         }
 
         if let Some(ref unique_end_to_end_ref) = self.unique_end_to_end_reference {
-            result.push_str(&format!("{{121:{}}}", unique_end_to_end_ref));
+            result.push_str(&format!("{{121:{unique_end_to_end_ref}}}"));
         }
 
         if let Some(ref service_type_id) = self.service_type_identifier {
-            result.push_str(&format!("{{111:{}}}", service_type_id));
+            result.push_str(&format!("{{111:{service_type_id}}}"));
         }
 
         if let Some(ref payment_controls) = self.payment_controls_info {
@@ -521,7 +517,7 @@ impl std::fmt::Display for UserHeader {
                 value.push('/');
                 value.push_str(additional);
             }
-            result.push_str(&format!("{{434:{}}}", value));
+            result.push_str(&format!("{{434:{value}}}"));
         }
 
         if let Some(ref payment_release) = self.payment_release_information {
@@ -530,7 +526,7 @@ impl std::fmt::Display for UserHeader {
                 value.push('/');
                 value.push_str(additional);
             }
-            result.push_str(&format!("{{165:{}}}", value));
+            result.push_str(&format!("{{165:{value}}}"));
         }
 
         if let Some(ref sanctions) = self.sanctions_screening_info {
@@ -539,10 +535,10 @@ impl std::fmt::Display for UserHeader {
                 value.push('/');
                 value.push_str(additional);
             }
-            result.push_str(&format!("{{433:{}}}", value));
+            result.push_str(&format!("{{433:{value}}}"));
         }
 
-        write!(f, "{}", result)
+        write!(f, "{result}")
     }
 }
 
@@ -672,7 +668,7 @@ impl std::fmt::Display for Trailer {
         let mut result = String::new();
 
         if let Some(ref checksum) = self.checksum {
-            result.push_str(&format!("{{CHK:{}}}", checksum));
+            result.push_str(&format!("{{CHK:{checksum}}}"));
         }
 
         if let Some(true) = self.test_and_training {
@@ -695,10 +691,10 @@ impl std::fmt::Display for Trailer {
         }
 
         if let Some(ref mac) = self.mac {
-            result.push_str(&format!("{{MAC:{}}}", mac));
+            result.push_str(&format!("{{MAC:{mac}}}"));
         }
 
-        write!(f, "{}", result)
+        write!(f, "{result}")
     }
 }
 

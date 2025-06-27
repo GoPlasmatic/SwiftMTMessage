@@ -30,7 +30,7 @@ once_cell = { workspace = true }
 datalogic-rs = { workspace = true }
 
 [dev-dependencies]
-pretty_assertions = "1.0"
+pretty_assertions = "1.4"
 
 [[example]]
 name = "parse_mt103"

@@ -270,7 +270,7 @@ impl SwiftParser {
                     let field_value = content[value_start..value_end].trim().to_string();
 
                     // Store the complete field string including tag prefix for compatibility
-                    let complete_field_string = format!(":{}:{}", raw_field_tag, field_value);
+                    let complete_field_string = format!(":{raw_field_tag}:{field_value}");
 
                     // Add to existing Vec or create new Vec for this field tag
                     field_map
@@ -499,9 +499,9 @@ HAUPTSTRASSE 1
 
         println!("Extracted fields:");
         for (tag, values) in &field_map {
-            println!("  {}: {:?}", tag, values);
+            println!("  {tag}: {values:?}");
         }
-        println!("Field order: {:?}", field_order);
+        println!("Field order: {field_order:?}");
 
         // Check specific fields
         assert!(field_map.contains_key("20"));
@@ -526,7 +526,7 @@ HAUPTSTRASSE 1
 
         assert!(blocks.block3.is_some());
         let block3_content = blocks.block3.unwrap();
-        println!("Block 3 content: '{}'", block3_content);
+        println!("Block 3 content: '{block3_content}'");
 
         // Should contain both tags
         assert_eq!(
@@ -569,15 +569,15 @@ HAUPTSTRASSE 1
     #[test]
     fn debug_find_matching_brace() {
         let test_str = "{103:EBA}{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}";
-        println!("Test string: '{}'", test_str);
+        println!("Test string: '{test_str}'");
         println!("Length: {}", test_str.len());
 
         let result = SwiftParser::find_matching_brace(test_str);
-        println!("Result: {:?}", result);
+        println!("Result: {result:?}");
 
         // Let's manually check what character is at different positions
         for (i, ch) in test_str.char_indices() {
-            println!("Position {}: '{}'", i, ch);
+            println!("Position {i}: '{ch}'");
         }
     }
 

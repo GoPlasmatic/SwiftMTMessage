@@ -10,8 +10,8 @@ chrono = { version = "0.4", features = ["serde"] }
 
 # Error handling and utilities
 thiserror = "1.0"
-regex = "1.0"
-once_cell = "1.18"
+regex = "1.11"
+once_cell = "1.21"
 
 # Derive macro dependencies
 proc-macro2 = "1.0"

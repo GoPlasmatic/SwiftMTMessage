@@ -54,7 +54,7 @@ Another City, Country
             }
         }
         Err(parse_error) => {
-            println!("❌ Failed to parse SWIFT message: {}", parse_error);
+            println!("❌ Failed to parse SWIFT message: {parse_error}");
             return Err(parse_error.into());
         }
     }
@@ -83,17 +83,17 @@ fn run_comprehensive_validation(
 /// Print a formatted validation result
 fn print_validation_result(field_name: &str, validation: &ValidationResult) {
     if validation.is_valid {
-        println!("  ✅ {}: Valid", field_name);
+        println!("  ✅ {field_name}: Valid");
     } else {
-        println!("  ❌ {}: Invalid", field_name);
+        println!("  ❌ {field_name}: Invalid");
         for error in &validation.errors {
-            println!("     └─ Error: {}", error);
+            println!("     └─ Error: {error}");
         }
     }
 
     if !validation.warnings.is_empty() {
         for warning in &validation.warnings {
-            println!("     ⚠️  Warning: {}", warning);
+            println!("     ⚠️  Warning: {warning}");
         }
     }
 }
@@ -114,13 +114,13 @@ fn show_json_output(
         Ok(json_output) => {
             println!("📄 Complete JSON Output:");
             println!("{}", "=".repeat(60));
-            println!("{}", json_output);
+            println!("{json_output}");
             println!("{}", "=".repeat(60));
             println!();
             println!("✅ Successfully converted MT103 to JSON format!");
         }
         Err(json_error) => {
-            println!("❌ Failed to convert to JSON: {}", json_error);
+            println!("❌ Failed to convert to JSON: {json_error}");
             return Err(json_error.into());
         }
     }

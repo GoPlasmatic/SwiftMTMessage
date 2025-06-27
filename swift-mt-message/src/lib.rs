@@ -835,4 +835,29 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
 
         (sender_country, receiver_country)
     }
+
+    pub fn to_mt_message(&self) -> String {
+        let mut swift_message = String::new();
+
+        if let Some(block1) = &self.blocks.block1 {
+            swift_message.push_str(&format!("{{1:{}}}\n", block1));
+        }
+
+        if let Some(block2) = &self.blocks.block2 {
+            swift_message.push_str(&format!("{{2:{}}}\n", block2));
+        }
+
+        if let Some(block3) = &self.blocks.block3 {
+            swift_message.push_str(&format!("{{3:{}}}\n", block3));
+        }
+
+        // Use the raw block4 content directly for perfect fidelity
+        swift_message.push_str(&format!("{{4:{}-}}", self.blocks.block4));
+
+        if let Some(block5) = &self.blocks.block5 {
+            swift_message.push_str(&format!("{{5:{}}}", block5));
+        }
+
+        swift_message
+    }
 }

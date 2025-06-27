@@ -45,8 +45,9 @@ impl SwiftParser {
             });
         }
 
+        let block4 = blocks.block4.clone().unwrap_or_default();
         // Parse block 4 fields
-        let (field_map, field_order) = Self::parse_block4_fields(&blocks.block4)?;
+        let (field_map, field_order) = Self::parse_block4_fields(&block4)?;
 
         // Parse message body using the field map
         let fields = T::from_fields(field_map)?;
@@ -56,7 +57,7 @@ impl SwiftParser {
             application_header,
             user_header,
             trailer,
-            blocks,
+            blocks: Some(blocks),
             message_type,
             field_order,
             fields,
@@ -212,7 +213,7 @@ impl SwiftParser {
             let start = current_pos + start;
             if let Some(end) = raw_message[start..].find("-}") {
                 let end = start + end;
-                blocks.block4 = raw_message[start + 3..end].to_string();
+                blocks.block4 = Some(raw_message[start + 3..end].to_string());
                 current_pos = end + 2;
             }
         }
@@ -226,7 +227,7 @@ impl SwiftParser {
             }
         }
 
-        if blocks.block1.is_none() || blocks.block2.is_none() || blocks.block4.is_empty() {
+        if blocks.block1.is_none() || blocks.block2.is_none() || blocks.block4.is_none() {
             return Err(ParseError::InvalidBlockStructure {
                 message: "Missing required blocks (1, 2, or 4)".to_string(),
             });
@@ -453,7 +454,7 @@ mod tests {
 
         assert!(blocks.block1.is_some());
         assert!(blocks.block2.is_some());
-        assert!(!blocks.block4.is_empty());
+        assert!(blocks.block4.is_some());
         assert_eq!(blocks.block1.as_ref().unwrap(), "F01BANKDEFFAXXX0123456789");
         assert_eq!(blocks.block2.as_ref().unwrap(), "I103BANKDEFFAXXXU3003");
     }

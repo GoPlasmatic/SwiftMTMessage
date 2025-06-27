@@ -104,7 +104,7 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
 }
 
 /// Complete SWIFT message with headers and body
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwiftMessage<T: SwiftMessageBody> {
     /// Basic Header (Block 1)
     pub basic_header: BasicHeader,
@@ -121,7 +121,7 @@ pub struct SwiftMessage<T: SwiftMessageBody> {
     pub trailer: Option<Trailer>,
 
     /// Raw message blocks for preservation
-    pub blocks: RawBlocks,
+    pub blocks: Option<RawBlocks>,
 
     /// Message type identifier
     pub message_type: String,
@@ -142,7 +142,8 @@ pub struct RawBlocks {
     pub block2: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub block3: Option<String>,
-    pub block4: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub block4: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub block5: Option<String>,
 }
@@ -182,7 +183,7 @@ impl ValidationResult {
 }
 
 /// Enumeration of all supported SWIFT message types for automatic parsing
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "message_type")]
 pub enum ParsedSwiftMessage {
     #[serde(rename = "101")]
@@ -834,23 +835,61 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
     pub fn to_mt_message(&self) -> String {
         let mut swift_message = String::new();
 
-        if let Some(block1) = &self.blocks.block1 {
-            swift_message.push_str(&format!("{{1:{block1}}}\n"));
-        }
+        // Block 1: Basic Header
+        let block1 = &self.basic_header.to_string();
+        swift_message.push_str(&format!("{{1:{block1}}}\n"));
 
-        if let Some(block2) = &self.blocks.block2 {
-            swift_message.push_str(&format!("{{2:{block2}}}\n"));
-        }
+        // Block 2: Application Header
+        let block2 = &self.application_header.to_string();
+        swift_message.push_str(&format!("{{2:{block2}}}\n"));
 
-        if let Some(block3) = &self.blocks.block3 {
+        // Block 3: User Header (if present)
+        if let Some(ref user_header) = self.user_header {
+            let block3 = &user_header.to_string();
             swift_message.push_str(&format!("{{3:{block3}}}\n"));
         }
 
-        // Use the raw block4 content directly for perfect fidelity
-        swift_message.push_str(&format!("{{4:{}-}}", self.blocks.block4));
+        // Block 4: Text Block with fields
+        let field_map = self.fields.to_fields();
+        let mut block4 = String::new();
 
-        if let Some(block5) = &self.blocks.block5 {
-            swift_message.push_str(&format!("{{5:{block5}}}"));
+        // Use field_order to maintain proper field sequence
+        for field_tag in &self.field_order {
+            if let Some(field_values) = field_map.get(field_tag) {
+                for field_value in field_values {
+                    // field_value already includes the field tag prefix from to_swift_string()
+                    // but we need to check if it starts with ':' to avoid double prefixing
+                    if field_value.starts_with(':') {
+                        // Value already has field tag prefix, use as-is
+                        block4.push_str(&format!("\n{field_value}"));
+                    } else {
+                        // Value doesn't have field tag prefix, add it
+                        block4.push_str(&format!("\n:{field_tag}:{field_value}"));
+                    }
+                }
+            }
+        }
+
+        // Handle any fields not in field_order (shouldn't happen in normal cases)
+        for (field_tag, field_values) in &field_map {
+            if !self.field_order.contains(field_tag) {
+                for field_value in field_values {
+                    if field_value.starts_with(':') {
+                        block4.push_str(&format!("\n{field_value}"));
+                    } else {
+                        block4.push_str(&format!("\n:{field_tag}:{field_value}"));
+                    }
+                }
+            }
+        }
+
+        swift_message.push_str(&format!("{{4:{block4}\n-}}"));
+        swift_message.push('\n');
+
+        // Block 5: Trailer (if present)
+        if let Some(ref trailer) = self.trailer {
+            let block5 = &trailer.to_string();
+            swift_message.push_str(&format!("{{5:{block5}}}\n"));
         }
 
         swift_message

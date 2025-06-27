@@ -3,15 +3,36 @@ use swift_mt_message::{ParsedSwiftMessage, SwiftParser};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Sample SWIFT message (MT900 - Confirmation of Debit)
     // This example works with any supported message type (MT103, MT202, MT205, MT900)
-    let raw_swift_message = r#"{1:F01BANKBEBBAXXX0000000000}
-{2:I192BANKDEFFXXXXN}
-{3:{113:TEST}{121:123e4567-e89b-12d3-a456-426614174000}}
+    let raw_swift_message = r#"{1:F01BANKUS33XXXAXXX0000000000}
+{2:I103BANKDEFFXXXXXXXN}
+{3:{121:550e8400-e29b-41d4-a716-446655440000}}
 {4:
-:20:CANCEL12345678
-:21:ORIGMSG98765432
-:11S:103240621123401234
-:79:/CUST/Requested by customer
-/INDM/Willing to consider indemnity
+:20:INSTR123456
+:23B:CRED
+:32A:250627EUR1000
+:33B:USD1100
+:36:1,1
+:50:/ACC-US-123456789
+Jane Smith
+Apartment 4B
+:52A:BANKUS33XXX/DBTR-AGENT-ACC-123
+:56A:INTRMGB2LXX/INTER-ACC-123
+:57A:BANKDEFFXXX/CDTR-AGENT-ACC-456
+:59:/DE89370400440532013000
+John Doe
+Building C
+:70:/ROC/550e8400-e29b-41d4-a716-446655440000
+Payment for invoice INV-2025-001234
+Thank you for your business
+Reference: CONTRACT-2025-789
+:71A:SHA
+:71F:EUR5
+:71G:EUR10
+:72:Please process with high priority
+Additional instructions for next agent
+:77B:Export payment for goods
+Additional regulatory information
+:23E:INTC
 -}"#;
 
     println!("🔍 SWIFT Message Auto-Parser with JSON Conversion");

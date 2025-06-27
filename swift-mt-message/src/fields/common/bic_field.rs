@@ -76,7 +76,7 @@ impl crate::SwiftField for GenericBicField {
                     .parse()
                     .map_err(|e: String| crate::ParseError::InvalidFieldFormat {
                         field_tag: "GENERICBICFIELD".to_string(),
-                        message: format!("Failed to parse BIC: {}", e),
+                        message: format!("Failed to parse BIC: {e}"),
                     })?;
 
             let account = if account_str.is_empty() {
@@ -93,7 +93,7 @@ impl crate::SwiftField for GenericBicField {
                     .parse()
                     .map_err(|e: String| crate::ParseError::InvalidFieldFormat {
                         field_tag: "GENERICBICFIELD".to_string(),
-                        message: format!("Failed to parse BIC: {}", e),
+                        message: format!("Failed to parse BIC: {e}"),
                     })?;
 
             Ok(GenericBicField { bic, account: None })

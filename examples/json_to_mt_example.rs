@@ -138,7 +138,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("🗨️  Generated MT Message:");
     println!("{}", "=".repeat(60));
-    println!("{}", mt_message);
+    println!("{mt_message}");
     println!("{}", "=".repeat(60));
     println!();
 

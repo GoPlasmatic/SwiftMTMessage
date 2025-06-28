@@ -40,6 +40,7 @@ pub type Field70 = GenericMultiLine4x35; // Remittance Information (4x35)
 pub type Field72 = GenericMultiLine6x35; // Sender to Receiver Information (6x35)
 pub type Field75 = GenericMultiLine6x35; // Queries (6x35)
 pub type Field77B = GenericMultiLine3x35; // Regulatory Reporting (3x35)
+pub type Field79 = GenericMultiLine35x50; // Narrative (35x50)
 pub type Field86 = GenericMultiLine6x65; // Information to Account Owner (6x65)
 
 // Currency/Amount fields (using GenericCurrencyAmountField)

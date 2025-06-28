@@ -79,9 +79,9 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
 name = "datalogic-rs"
-version = "3.0.27"
+version = "3.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb4e08a94de4b717df5bceca557b5ceb8d4f1ddee2166af4206064a030624836"
+checksum = "0216bc11613efc164dd85bcef9a05a73a39e0f15e25db8722b44b6e56e1b724a"
 dependencies = [
  "bumpalo",
  "chrono",

@@ -61,7 +61,7 @@ pub struct MT205 {
 
     // Sequence B: COV Cover Message Fields (Optional)
     #[field("50A", optional)]
-    pub field_50a: Option<Field50>, // Ordering Customer
+    pub field_50a: Option<Field50A>, // Ordering Customer
 
     #[field("52A_SEQ_B", optional)]
     pub field_52a_seq_b: Option<GenericBicField>, // Ordering Institution (Seq B)

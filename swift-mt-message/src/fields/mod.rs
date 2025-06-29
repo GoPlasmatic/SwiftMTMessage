@@ -65,7 +65,7 @@ pub use field32a::Field32A;
 pub use field34f::Field34F;
 pub use field36::Field36;
 pub use field37h::Field37H;
-pub use field50::{Field50, Field50F, Field50K};
+pub use field50::{Field50, Field50A, Field50F, Field50K};
 pub use field59::{Field59, Field59Basic, Field59F};
 pub use field61::Field61;
 pub use field77t::Field77T;

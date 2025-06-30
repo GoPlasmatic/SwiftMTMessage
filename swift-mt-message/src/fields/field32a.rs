@@ -9,7 +9,7 @@ use swift_mt_message_macros::SwiftField;
 pub struct Field32A {
     /// Value date (YYMMDD)
     #[component("6!n", validate = ["date_format", "valid_date_range"])]
-    pub value_date: NaiveDate,
+    pub value_date: Option<NaiveDate>,
     /// Currency code (ISO 4217)
     #[component("3!a", validate = ["currency_code"])]
     pub currency: String,

@@ -107,7 +107,7 @@ fn display_basic_info(parsed_message: &swift_mt_message::SwiftMessage<MT202>) {
         parsed_message.fields.field_21.value
     );
     println!(
-        "  Value Date: {}",
+        "  Value Date: {:?}",
         parsed_message.fields.field_32a.value_date
     );
     println!("  Currency: {}", parsed_message.fields.field_32a.currency);

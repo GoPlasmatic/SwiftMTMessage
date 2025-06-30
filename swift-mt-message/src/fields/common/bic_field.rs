@@ -14,7 +14,6 @@ pub struct GenericBicField {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BIC {
-    pub raw: String,
     pub bank_code: String,
     pub country_code: String,
     pub location_code: String,
@@ -25,7 +24,14 @@ pub struct BIC {
 
 impl std::fmt::Display for BIC {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.raw)
+        write!(
+            f,
+            "{}{}{}{}",
+            self.bank_code,
+            self.country_code,
+            self.location_code,
+            self.branch_code.as_ref().unwrap_or(&"".to_string())
+        )
     }
 }
 
@@ -44,7 +50,6 @@ impl std::str::FromStr for BIC {
         }
 
         Ok(BIC {
-            raw: s.to_string(),
             bank_code: s[0..4].to_string(),
             country_code: s[4..6].to_string(),
             location_code: s[6..8].to_string(),
@@ -113,7 +118,10 @@ impl crate::SwiftField for GenericBicField {
         let mut warnings = Vec::new();
 
         // Validate BIC length (more lenient validation)
-        if self.bic.raw.len() < 8 {
+        if self.bic.bank_code.len() < 4
+            || self.bic.country_code.len() < 2
+            || self.bic.location_code.len() < 2
+        {
             errors.push(crate::ValidationError::FormatValidation {
                 field_tag: "GENERICBICFIELD".to_string(),
                 message: "BIC must be at least 8 characters".to_string(),

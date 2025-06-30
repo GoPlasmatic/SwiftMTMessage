@@ -14,9 +14,16 @@ pub struct GenericBicField {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BIC {
-    pub bank_code: String,
-    pub country_code: String,
-    pub location_code: String,
+    pub raw: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bank_code: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub country_code: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location_code: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub branch_code: Option<String>,
@@ -24,14 +31,7 @@ pub struct BIC {
 
 impl std::fmt::Display for BIC {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}{}{}{}",
-            self.bank_code,
-            self.country_code,
-            self.location_code,
-            self.branch_code.as_ref().unwrap_or(&"".to_string())
-        )
+        write!(f, "{}", self.raw)
     }
 }
 
@@ -50,9 +50,22 @@ impl std::str::FromStr for BIC {
         }
 
         Ok(BIC {
-            bank_code: s[0..4].to_string(),
-            country_code: s[4..6].to_string(),
-            location_code: s[6..8].to_string(),
+            raw: s.to_string(),
+            bank_code: if s.len() > 4 {
+                Some(s[0..4].to_string())
+            } else {
+                None
+            },
+            country_code: if s.len() > 6 {
+                Some(s[4..6].to_string())
+            } else {
+                None
+            },
+            location_code: if s.len() > 8 {
+                Some(s[6..8].to_string())
+            } else {
+                None
+            },
             branch_code: if s.len() == 11 {
                 Some(s[8..11].to_string())
             } else {
@@ -118,13 +131,10 @@ impl crate::SwiftField for GenericBicField {
         let mut warnings = Vec::new();
 
         // Validate BIC length (more lenient validation)
-        if self.bic.bank_code.len() < 4
-            || self.bic.country_code.len() < 2
-            || self.bic.location_code.len() < 2
-        {
+        if self.bic.raw.len() != 8 && self.bic.raw.len() != 11 {
             errors.push(crate::ValidationError::FormatValidation {
                 field_tag: "GENERICBICFIELD".to_string(),
-                message: "BIC must be at least 8 characters".to_string(),
+                message: format!("BIC must be 8 or 11 characters, got {}", self.bic.raw.len()),
             });
         }
 

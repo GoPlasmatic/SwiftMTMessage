@@ -22,3 +22,5 @@ target/
 
 .DS_Store
 specifications
+.claude/
+CLAUDE.md

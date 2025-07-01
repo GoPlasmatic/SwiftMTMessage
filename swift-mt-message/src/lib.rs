@@ -852,11 +852,22 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         // Block 4: Text Block with fields
         let field_map = self.fields.to_fields();
         let mut block4 = String::new();
+        
+        // Get optional field tags for this message type to determine which fields can be skipped
+        let optional_fields: std::collections::HashSet<String> = T::optional_fields()
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect();
 
         // Use field_order to maintain proper field sequence
         for field_tag in &self.field_order {
             if let Some(field_values) = field_map.get(field_tag) {
                 for field_value in field_values {
+                    // Skip empty optional fields
+                    if optional_fields.contains(field_tag) && field_value.trim().is_empty() {
+                        continue;
+                    }
+                    
                     // field_value already includes the field tag prefix from to_swift_string()
                     // but we need to check if it starts with ':' to avoid double prefixing
                     if field_value.starts_with(':') {
@@ -874,6 +885,11 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         for (field_tag, field_values) in &field_map {
             if !self.field_order.contains(field_tag) {
                 for field_value in field_values {
+                    // Skip empty optional fields
+                    if optional_fields.contains(field_tag) && field_value.trim().is_empty() {
+                        continue;
+                    }
+                    
                     if field_value.starts_with(':') {
                         block4.push_str(&format!("\n{field_value}"));
                     } else {

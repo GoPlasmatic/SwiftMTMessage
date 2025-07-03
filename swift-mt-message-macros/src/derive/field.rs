@@ -497,14 +497,16 @@ fn generate_field13c_parsing(
     components: &[ComponentSpec],
     field_tag: &str,
 ) -> proc_macro2::TokenStream {
-    let time_code_field = syn::Ident::new(&components[0].field_name, proc_macro2::Span::call_site());
+    let time_code_field =
+        syn::Ident::new(&components[0].field_name, proc_macro2::Span::call_site());
     let time_field = syn::Ident::new(&components[1].field_name, proc_macro2::Span::call_site());
-    let utc_offset_field = syn::Ident::new(&components[2].field_name, proc_macro2::Span::call_site());
+    let utc_offset_field =
+        syn::Ident::new(&components[2].field_name, proc_macro2::Span::call_site());
 
     quote! {
         {
             // Parse Field13C format: /TIMECODE/HHMM+OFFSET
-            
+
             // Find the time code pattern: /XXXXXXXX/
             if !content.starts_with('/') {
                 return Err(crate::ParseError::InvalidFieldFormat {
@@ -512,20 +514,20 @@ fn generate_field13c_parsing(
                     message: "Time code must start with '/'".to_string(),
                 });
             }
-            
+
             let end_slash_pos = content[1..].find('/').ok_or_else(|| {
                 crate::ParseError::InvalidFieldFormat {
                     field_tag: #field_tag.to_string(),
                     message: "Time code missing closing slash".to_string(),
                 }
             })?;
-            
+
             let time_code_end = end_slash_pos + 2; // Include both slashes
             let #time_code_field = content[0..time_code_end].to_string();
-            
+
             // Parse the remaining content after time code
             let remaining = &content[time_code_end..];
-            
+
             // Time should be 4 digits (HHMM)
             if remaining.len() < 4 {
                 return Err(crate::ParseError::InvalidFieldFormat {
@@ -533,9 +535,9 @@ fn generate_field13c_parsing(
                     message: "Missing time portion".to_string(),
                 });
             }
-            
+
             let #time_field = remaining[0..4].to_string();
-            
+
             // UTC offset should be the remaining 5 characters (+HHMM)
             if remaining.len() < 9 {
                 return Err(crate::ParseError::InvalidFieldFormat {
@@ -543,9 +545,9 @@ fn generate_field13c_parsing(
                     message: "Missing UTC offset portion".to_string(),
                 });
             }
-            
+
             let #utc_offset_field = remaining[4..9].to_string();
-            
+
             Ok(Self {
                 #time_code_field,
                 #time_field,
@@ -1131,14 +1133,14 @@ fn get_component_fixed_size(format: &str) -> usize {
         "2!a" => 2,                                 // Two letters
         "2!n" => 2,                                 // Two digits
         "8c" => 8,                                  // 8 characters
-        "/8c/" => 0,                                // Time code: /8characters/ - variable size due to dynamic parsing
-        "1!x4!n" => 5,                              // UTC offset: sign + 4 digits
-        "4!a2!a2!c[3!c]" => 0,                      // BIC code (8 or 11 characters, variable)
+        "/8c/" => 0,   // Time code: /8characters/ - variable size due to dynamic parsing
+        "1!x4!n" => 5, // UTC offset: sign + 4 digits
+        "4!a2!a2!c[3!c]" => 0, // BIC code (8 or 11 characters, variable)
         "35x" | "16x" | "30x" | "34x" | "11x" => 0, // Variable size text
-        "5n" => 0,                                  // Variable size numeric
-        "lines" => 0,                               // Variable size multiline
-        "[+/-]4!n" => 5,                            // Sign + 4 digits
-        _ => 0,                                     // Unknown format, treat as variable
+        "5n" => 0,     // Variable size numeric
+        "lines" => 0,  // Variable size multiline
+        "[+/-]4!n" => 5, // Sign + 4 digits
+        _ => 0,        // Unknown format, treat as variable
     }
 }
 

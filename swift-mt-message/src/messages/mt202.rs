@@ -2,7 +2,6 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-
 /// # MT202: General Financial Institution Transfer (Standard and COV variants)
 ///
 /// Unified structure supporting both standard MT202 and MT202 COV variants.
@@ -78,7 +77,6 @@ pub struct MT202 {
 
     // COV Sequence B Fields - Customer Credit Transfer Details
     // These fields are present only in MT202 COV messages
-    
     #[field("50A", optional)]
     pub field_50a: Option<Field50>,
 
@@ -152,8 +150,8 @@ impl MT202 {
     /// - Field 121 (UETR) in Block 3 is typically mandatory for COV messages
     pub fn is_cover_message(&self) -> bool {
         // COV messages contain customer fields that indicate underlying customer credit transfer details
-        (self.field_50a.is_some() || self.field_50.is_some()) && 
-        (self.field_59a.is_some() || self.field_59.is_some())
+        (self.field_50a.is_some() || self.field_50.is_some())
+            && (self.field_59a.is_some() || self.field_59.is_some())
     }
 }
 
@@ -183,4 +181,3 @@ const MT202_VALIDATION_RULES: &str = r#"{
     "VALID_INSTRUCTION_CODES": ["/INT/", "/COV/", "/REIMBURSEMENT/", "/SETTLEMENT/", "/SDVA/", "/RETN/", "/REJT/"]
   }
 }"#;
-

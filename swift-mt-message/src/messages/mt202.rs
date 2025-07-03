@@ -2,68 +2,6 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT202 Sequence B: Underlying Customer Credit Transfer Details (COV variant)
-///
-/// This sequence contains the underlying customer credit transfer details
-/// and is present only in MT202 COV messages.
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT202_SEQUENCE_B_VALIDATION_RULES)]
-pub struct MT202SequenceB {
-    // Mandatory Fields for COV Sequence B
-    #[field("50A", mandatory)]
-    pub field_50a: Field50,
-
-    #[field("59A", mandatory)]
-    pub field_59a: Field59,
-
-    // Optional Fields for COV Sequence B
-    #[field("52A", optional)]
-    pub field_52a: Option<GenericBicField>,
-
-    #[field("52D", optional)]
-    pub field_52d: Option<GenericNameAddressField>,
-
-    #[field("56A", optional)]
-    pub field_56a: Option<GenericBicField>,
-
-    #[field("56C", optional)]
-    pub field_56c: Option<GenericAccountField>,
-
-    #[field("56D", optional)]
-    pub field_56d: Option<GenericNameAddressField>,
-
-    #[field("57A", optional)]
-    pub field_57a: Option<GenericBicField>,
-
-    #[field("57B", optional)]
-    pub field_57b: Option<GenericPartyField>,
-
-    #[field("57C", optional)]
-    pub field_57c: Option<GenericAccountField>,
-
-    #[field("57D", optional)]
-    pub field_57d: Option<GenericNameAddressField>,
-
-    #[field("70", optional)]
-    pub field_70: Option<GenericMultiLine4x35>,
-
-    #[field("72", optional)]
-    pub field_72: Option<GenericMultiLine6x35>,
-
-    #[field("33B", optional)]
-    pub field_33b: Option<GenericCurrencyAmountField>,
-}
-
-const MT202_SEQUENCE_B_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "If 56a is present, 57a becomes mandatory",
-      "condition": true
-    }
-  ]
-}"#;
 
 /// # MT202: General Financial Institution Transfer (Standard and COV variants)
 ///
@@ -86,7 +24,7 @@ pub struct MT202 {
     #[field("58A", mandatory)]
     pub field_58a: GenericBicField,
 
-    // Optional Fields
+    // Optional Fields - Standard MT202 Sequence A
     #[field("13C", optional)]
     pub field_13c: Option<Vec<Field13C>>,
 
@@ -117,6 +55,9 @@ pub struct MT202 {
     #[field("56A", optional)]
     pub field_56a: Option<GenericBicField>,
 
+    #[field("56C", optional)]
+    pub field_56c: Option<GenericAccountField>,
+
     #[field("56D", optional)]
     pub field_56d: Option<GenericNameAddressField>,
 
@@ -126,16 +67,35 @@ pub struct MT202 {
     #[field("57B", optional)]
     pub field_57b: Option<GenericPartyField>,
 
+    #[field("57C", optional)]
+    pub field_57c: Option<GenericAccountField>,
+
     #[field("57D", optional)]
     pub field_57d: Option<GenericNameAddressField>,
 
     #[field("72", optional)]
     pub field_72: Option<GenericMultiLine6x35>,
 
-    // Sequence B: Underlying Customer Credit Transfer Details (COV variant)
-    // This entire section is optional and present only in MT202 COV messages
-    #[field("SEQUENCE_B", optional)]
-    pub sequence_b: Option<MT202SequenceB>,
+    // COV Sequence B Fields - Customer Credit Transfer Details
+    // These fields are present only in MT202 COV messages
+    
+    #[field("50A", optional)]
+    pub field_50a: Option<Field50>,
+
+    #[field("50", optional)]
+    pub field_50: Option<Field50>,
+
+    #[field("59A", optional)]
+    pub field_59a: Option<Field59>,
+
+    #[field("59", optional)]
+    pub field_59: Option<Field59>,
+
+    #[field("70", optional)]
+    pub field_70: Option<GenericMultiLine4x35>,
+
+    #[field("33B", optional)]
+    pub field_33b: Option<GenericCurrencyAmountField>,
 }
 
 impl MT202 {
@@ -188,11 +148,12 @@ impl MT202 {
     /// Check if this MT202 message is a Cover (COV) message
     ///
     /// COV messages are distinguished by:
-    /// - Presence of Sequence B section for underlying customer credit transfer details
+    /// - Presence of customer fields (50A/50 and 59A/59) indicating underlying customer details
     /// - Field 121 (UETR) in Block 3 is typically mandatory for COV messages
     pub fn is_cover_message(&self) -> bool {
-        // The key distinguishing feature of COV is the presence of Sequence B
-        self.sequence_b.is_some()
+        // COV messages contain customer fields that indicate underlying customer credit transfer details
+        (self.field_50a.is_some() || self.field_50.is_some()) && 
+        (self.field_59a.is_some() || self.field_59.is_some())
     }
 }
 
@@ -222,3 +183,4 @@ const MT202_VALIDATION_RULES: &str = r#"{
     "VALID_INSTRUCTION_CODES": ["/INT/", "/COV/", "/REIMBURSEMENT/", "/SETTLEMENT/", "/SDVA/", "/RETN/", "/REJT/"]
   }
 }"#;
+

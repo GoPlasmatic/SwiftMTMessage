@@ -157,6 +157,9 @@ fn generate_parse_logic(components: &[ComponentSpec], field_tag: &str) -> proc_m
                 #field_name: #field_parsing
             })
         }
+    } else if is_field13c_pattern(components) {
+        // Special handling for Field13C: /8c/ + 4!n + 1!x4!n
+        generate_field13c_parsing(components, field_tag)
     } else {
         // Multiple components case - use positional parsing (same as from_raw_logic)
         let mut parsing_statements = Vec::new();
@@ -334,6 +337,8 @@ fn generate_base_component_parsing(
         "6!n" => generate_date_parsing(field_tag),
         "3!a" => generate_currency_parsing(field_tag),
         "15d" | "12d" => generate_amount_parsing(field_tag),
+        "/8c/" => generate_time_code_parsing(field_tag),
+        "1!x4!n" => generate_utc_offset_parsing(),
         "4!c" | "35x" | "16x" | "30x" | "34x" | "11x" | "2!a" | "4!a" | "1!a" | "2!n" | "5n"
         | "8c" => generate_text_parsing(),
         "4!n" => generate_numeric_parsing(field_tag),
@@ -440,10 +445,113 @@ fn generate_lines_parsing() -> proc_macro2::TokenStream {
     }
 }
 
+/// Generate time code parsing logic (/8c/ format)
+fn generate_time_code_parsing(field_tag: &str) -> proc_macro2::TokenStream {
+    quote! {
+        {
+            // Find the time code pattern: /XXXXXXXX/
+            if content.starts_with('/') {
+                if let Some(end_slash_pos) = content[1..].find('/') {
+                    let time_code = &content[0..end_slash_pos + 2]; // Include both slashes
+                    if time_code.len() >= 3 { // At least /X/
+                        time_code.to_string()
+                    } else {
+                        return Err(crate::ParseError::InvalidFieldFormat {
+                            field_tag: #field_tag.to_string(),
+                            message: "Time code too short".to_string(),
+                        });
+                    }
+                } else {
+                    return Err(crate::ParseError::InvalidFieldFormat {
+                        field_tag: #field_tag.to_string(),
+                        message: "Time code missing closing slash".to_string(),
+                    });
+                }
+            } else {
+                return Err(crate::ParseError::InvalidFieldFormat {
+                    field_tag: #field_tag.to_string(),
+                    message: "Time code must start with '/'".to_string(),
+                });
+            }
+        }
+    }
+}
+
 /// Generate UTC offset parsing logic ([+/-]4!n format)
 fn generate_utc_offset_parsing() -> proc_macro2::TokenStream {
     quote! {
         content.to_string()
+    }
+}
+
+/// Check if the component pattern matches Field13C
+fn is_field13c_pattern(components: &[ComponentSpec]) -> bool {
+    components.len() == 3
+        && components[0].format == "/8c/"
+        && components[1].format == "4!n"
+        && components[2].format == "1!x4!n"
+}
+
+/// Generate specialized parsing logic for Field13C
+fn generate_field13c_parsing(
+    components: &[ComponentSpec],
+    field_tag: &str,
+) -> proc_macro2::TokenStream {
+    let time_code_field = syn::Ident::new(&components[0].field_name, proc_macro2::Span::call_site());
+    let time_field = syn::Ident::new(&components[1].field_name, proc_macro2::Span::call_site());
+    let utc_offset_field = syn::Ident::new(&components[2].field_name, proc_macro2::Span::call_site());
+
+    quote! {
+        {
+            // Parse Field13C format: /TIMECODE/HHMM+OFFSET
+            
+            // Find the time code pattern: /XXXXXXXX/
+            if !content.starts_with('/') {
+                return Err(crate::ParseError::InvalidFieldFormat {
+                    field_tag: #field_tag.to_string(),
+                    message: "Time code must start with '/'".to_string(),
+                });
+            }
+            
+            let end_slash_pos = content[1..].find('/').ok_or_else(|| {
+                crate::ParseError::InvalidFieldFormat {
+                    field_tag: #field_tag.to_string(),
+                    message: "Time code missing closing slash".to_string(),
+                }
+            })?;
+            
+            let time_code_end = end_slash_pos + 2; // Include both slashes
+            let #time_code_field = content[0..time_code_end].to_string();
+            
+            // Parse the remaining content after time code
+            let remaining = &content[time_code_end..];
+            
+            // Time should be 4 digits (HHMM)
+            if remaining.len() < 4 {
+                return Err(crate::ParseError::InvalidFieldFormat {
+                    field_tag: #field_tag.to_string(),
+                    message: "Missing time portion".to_string(),
+                });
+            }
+            
+            let #time_field = remaining[0..4].to_string();
+            
+            // UTC offset should be the remaining 5 characters (+HHMM)
+            if remaining.len() < 9 {
+                return Err(crate::ParseError::InvalidFieldFormat {
+                    field_tag: #field_tag.to_string(),
+                    message: "Missing UTC offset portion".to_string(),
+                });
+            }
+            
+            let #utc_offset_field = remaining[4..9].to_string();
+            
+            Ok(Self {
+                #time_code_field,
+                #time_field,
+                #utc_offset_field,
+            })
+        }
     }
 }
 
@@ -1023,6 +1131,8 @@ fn get_component_fixed_size(format: &str) -> usize {
         "2!a" => 2,                                 // Two letters
         "2!n" => 2,                                 // Two digits
         "8c" => 8,                                  // 8 characters
+        "/8c/" => 0,                                // Time code: /8characters/ - variable size due to dynamic parsing
+        "1!x4!n" => 5,                              // UTC offset: sign + 4 digits
         "4!a2!a2!c[3!c]" => 0,                      // BIC code (8 or 11 characters, variable)
         "35x" | "16x" | "30x" | "34x" | "11x" => 0, // Variable size text
         "5n" => 0,                                  // Variable size numeric
@@ -1277,6 +1387,25 @@ fn generate_positional_component_parsing(
 
     // Original format-based parsing
     match comp.format.as_str() {
+        "/8c/" => quote! {
+            {
+                if content.len() < #end_pos {
+                    return Err(crate::ParseError::InvalidFieldFormat {
+                        field_tag: #field_tag.to_string(),
+                        message: "Content too short for time code field".to_string(),
+                    });
+                }
+                let extracted = &content[#start_pos..#end_pos];
+                // Validate format: must start and end with '/'
+                if !extracted.starts_with('/') || !extracted.ends_with('/') {
+                    return Err(crate::ParseError::InvalidFieldFormat {
+                        field_tag: #field_tag.to_string(),
+                        message: format!("Time code must be in format /XXXXXXXX/: {}", extracted),
+                    });
+                }
+                extracted.to_string()
+            }
+        },
         "3!a" => quote! {
             {
                 if content.len() < #end_pos {

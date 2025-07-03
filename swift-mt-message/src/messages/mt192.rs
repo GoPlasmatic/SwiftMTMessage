@@ -70,6 +70,9 @@ pub struct MT192 {
     /// Note: This is represented as optional structured content that can contain
     /// various field combinations depending on the original message type.
 
+    #[field("13C", optional)]
+    pub field_13c: Option<Field13C>,
+
     #[field("23B", optional)]
     pub field_23b: Option<GenericTextField>,
 

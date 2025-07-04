@@ -44,7 +44,17 @@ pub enum Field50 {
 }
 
 /// Type alias for Field 50K: Ordering Customer (Option K)
-pub type Field50K = crate::fields::common::GenericMultiLine4x35;
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+pub struct Field50K {
+    /// Account number (optional)
+    #[component("[34x]", optional)]
+    pub account_number: Option<String>,
+
+    /// Name and address lines
+    #[component("4*35x", validate = ["line_count", "line_length", "structured_address"])]
+    pub name_and_address: Vec<String>,
+
+}
 
 impl crate::SwiftField for Field50 {
     fn parse(value: &str) -> crate::Result<Self> {

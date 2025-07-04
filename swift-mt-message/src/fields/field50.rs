@@ -53,7 +53,6 @@ pub struct Field50K {
     /// Name and address lines
     #[component("4*35x", validate = ["line_count", "line_length", "structured_address"])]
     pub name_and_address: Vec<String>,
-
 }
 
 impl crate::SwiftField for Field50 {

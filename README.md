@@ -11,9 +11,12 @@
   [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
   [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
   [![Crates.io](https://img.shields.io/crates/v/swift-mt-message.svg)](https://crates.io/crates/swift-mt-message)
-  <a href="https://github.com/GoPlasmatic">🏢 Organization</a> •
-  <a href="https://docs.rs/swift-mt-message">📖 Documentation</a> •
-  <a href="https://github.com/GoPlasmatic/SwiftMTMessage/issues">🐛 Issues</a>  
+
+  <p>
+    <a href="https://github.com/GoPlasmatic">🏢 Organization</a> •
+    <a href="https://docs.rs/swift-mt-message">📖 Documentation</a> •
+    <a href="https://github.com/GoPlasmatic/SwiftMTMessage/issues">🐛 Issues</a>  
+  </p>
 </div>
 
 ---
@@ -512,8 +515,6 @@ We welcome contributions! Please ensure:
 - SWIFT standard adherence
 - Test coverage for new features
 
-See our [Contributing Guide](CONTRIBUTING.md) for detailed information.
-
 ## 🏢 About Plasmatic
 
 SwiftMTMessage is developed by [Plasmatic](https://github.com/GoPlasmatic), a technology organization focused on building open-source financial infrastructure tools. We believe in:
@@ -525,13 +526,12 @@ SwiftMTMessage is developed by [Plasmatic](https://github.com/GoPlasmatic), a te
 
 ## 📄 License
 
-Licensed under the Apache License, Version 2.0 ([LICENSE](LICENSE) or http://www.apache.org/licenses/LICENSE-2.0)
+Licensed under the Apache License, Version 2.0 ([LICENSE](LICENSE))
 
 ## 🔗 Related Projects
 
 - [Reframe](https://github.com/GoPlasmatic/Reframe) - SWIFT MT ↔ ISO 20022 Transformation Engine
-- [SWIFT Standards](https://www.swift.com/standards) - Official SWIFT documentation
-- [MT Message Types](https://www.swift.com/standards/mt-messages) - SWIFT MT message specifications
+- [MXMessage](https://github.com/GoPlasmatic/MXMessage) - MX Message - ISO20022 Parser Library
 
 ---
 

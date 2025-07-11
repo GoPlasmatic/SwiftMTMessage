@@ -98,10 +98,11 @@ pub fn generate_alphanumeric(length: usize) -> String {
         .collect()
 }
 
-/// Generate string with any SWIFT-allowed character
+/// Generate string with any SWIFT-allowed character (reduced special chars for realism)
 pub fn generate_any_character(length: usize) -> String {
     let mut rng = rand::thread_rng();
-    let chars: Vec<char> = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-?:().,'+"
+    // Reduce special characters to make output look more realistic
+    let chars: Vec<char> = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 /-.,"
         .chars()
         .collect();
     (0..length)
@@ -111,14 +112,61 @@ pub fn generate_any_character(length: usize) -> String {
 
 /// Generate decimal number with specified total length and decimal places
 pub fn generate_decimal(length: usize, decimals: usize) -> String {
+    generate_decimal_with_range(length, decimals, None, None)
+}
+
+/// Generate decimal number with optional min/max range
+pub fn generate_decimal_with_range(
+    length: usize,
+    decimals: usize,
+    min: Option<f64>,
+    max: Option<f64>,
+) -> String {
     if decimals >= length {
         return "0,00".to_string();
     }
 
-    let integer_part_len = length - decimals - 1; // -1 for comma
-    let integer_part = generate_numeric(integer_part_len);
-    let decimal_part = generate_numeric(decimals);
+    let mut rng = rand::thread_rng();
 
+    // If min/max are provided, generate within that range
+    if let (Some(min_val), Some(max_val)) = (min, max) {
+        let amount = rng.gen_range(min_val..=max_val);
+        let formatted = format!("{amount:.2}").replace('.', ",");
+        if formatted.len() <= length {
+            return formatted;
+        }
+    }
+
+    // Generate realistic amounts instead of completely random
+    let realistic_amounts = [
+        "1250,00", "850,50", "2000,75", "500,25", "10000,00", "750,80", "3500,45", "125,60",
+        "25000,00", "1875,90", "650,15", "4200,35",
+    ];
+
+    // For shorter lengths, use predefined realistic amounts
+    if length <= 10 {
+        let amount = realistic_amounts[rng.gen_range(0..realistic_amounts.len())];
+        if amount.len() <= length {
+            return amount.to_string();
+        }
+    }
+
+    // For longer amounts, generate but with realistic patterns
+    let integer_part_len = length - decimals - 1; // -1 for comma
+
+    // Generate amounts that look realistic (not starting with 0, reasonable values)
+    let mut integer_part = String::new();
+    if integer_part_len > 0 {
+        // First digit should not be 0 for realistic amounts
+        integer_part.push_str(&rng.gen_range(1..10).to_string());
+
+        // Fill remaining digits
+        for _ in 1..integer_part_len {
+            integer_part.push_str(&rng.gen_range(0..10).to_string());
+        }
+    }
+
+    let decimal_part = generate_numeric(decimals);
     format!("{integer_part},{decimal_part}")
 }
 
@@ -126,20 +174,50 @@ pub fn generate_decimal(length: usize, decimals: usize) -> String {
 pub fn generate_valid_bic() -> String {
     let mut rng = rand::thread_rng();
     let bics = [
-        "ABNANL2A", "DEUTDEFF", "CHASUS33", "BOFAUS3N", "CITIUS33", "HSBCGB2L", "BNPAFRPP",
-        "UBSWCHZH", "SCBLSGSG", "DBSSSGSG",
+        // Major US banks (all 8 chars)
+        "CHASUS33", "BOFAUS3N", "CITIUS33", "WFBIUS6W", "USBKUS44", "PNCCUS33",
+        // Major European banks (all 8 chars)
+        "DEUTDEFF", "HSBCGB2L", "BNPAFRPP", "UBSWCHZH", "ABNANL2A", "INGBNL2A", "CRESCHZZ",
+        "BARCGB22", "LOYDGB2L", "NWBKGB2L", "RBOSGB2L",
+        // Major Asian banks (all 8 chars)
+        "SCBLSGSG", "DBSSSGSG", "OCBCSGSG", "HSBCHKHH", "CITIHKAX", "BOTKJPJT", "SMFGJPJT",
+        "MHCBJPJT", // Major Canadian/Australian banks (all 8 chars)
+        "ROYCCAT2", "BOFACATT", "ANZBAU3M", "CTBAAU2S",
+        // Major international banks (all 8 chars)
+        "ICICINBB", "HDFCINBB", "SBININBB", "BBVASPBX",
     ];
     bics[rng.gen_range(0..bics.len())].to_string()
 }
 
-/// Generate a valid currency code
+/// Generate a valid currency code with realistic distribution
 pub fn generate_valid_currency() -> String {
     let mut rng = rand::thread_rng();
-    let currencies = vec![
-        "USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "NZD", "SEK", "NOK", "DKK", "SGD", "HKD",
-        "CNY", "INR", "KRW", "MXN", "BRL", "ZAR", "AED",
-    ];
-    currencies[rng.gen_range(0..currencies.len())].to_string()
+
+    // Weight currencies by real-world usage in international payments
+    let weighted_selection = rng.gen_range(1..=100);
+
+    match weighted_selection {
+        1..=30 => "USD".to_string(),  // 30% - Most common
+        31..=45 => "EUR".to_string(), // 15% - Second most common
+        46..=55 => "GBP".to_string(), // 10% - Third most common
+        56..=60 => "JPY".to_string(), // 5%
+        61..=64 => "CHF".to_string(), // 4%
+        65..=67 => "CAD".to_string(), // 3%
+        68..=70 => "AUD".to_string(), // 3%
+        71..=73 => "SGD".to_string(), // 3%
+        74..=76 => "HKD".to_string(), // 3%
+        77..=79 => "CNY".to_string(), // 3%
+        80..=82 => "SEK".to_string(), // 3%
+        83..=85 => "NOK".to_string(), // 3%
+        86..=87 => "DKK".to_string(), // 2%
+        88..=89 => "NZD".to_string(), // 2%
+        90..=91 => "INR".to_string(), // 2%
+        92..=93 => "KRW".to_string(), // 2%
+        94..=95 => "BRL".to_string(), // 2%
+        96..=97 => "ZAR".to_string(), // 2%
+        98..=99 => "AED".to_string(), // 2%
+        _ => "MXN".to_string(),       // 1%
+    }
 }
 
 /// Generate a valid country code
@@ -188,6 +266,19 @@ pub fn generate_time_hhmm() -> String {
 
 /// Generate a value based on SWIFT format specification
 pub fn generate_by_format_spec(format: &str) -> String {
+    generate_by_format_spec_with_config(format, &FieldConfig::default())
+}
+
+/// Generate a value based on SWIFT format specification with configuration
+pub fn generate_by_format_spec_with_config(format: &str, config: &FieldConfig) -> String {
+    // Check if fixed values are provided
+    if let Some(fixed_values) = &config.fixed_values {
+        if !fixed_values.is_empty() {
+            let mut rng = rand::thread_rng();
+            return fixed_values[rng.gen_range(0..fixed_values.len())].clone();
+        }
+    }
+
     // Parse format like "3!a", "6!n", "16x", "15d"
     let mut chars = format.chars().peekable();
     let mut length_str = String::new();
@@ -216,11 +307,36 @@ pub fn generate_by_format_spec(format: &str) -> String {
     }
 
     let max_length: usize = length_str.parse().unwrap_or(1);
-    let length = if is_exact {
-        max_length
-    } else {
-        let mut rng = rand::thread_rng();
-        rng.gen_range(1..=max_length)
+
+    // Apply length preference from config
+    let length = match &config.length_preference {
+        Some(LengthPreference::Exact(len)) => *len.min(&max_length),
+        Some(LengthPreference::Range(min, max)) => {
+            let mut rng = rand::thread_rng();
+            let actual_min = *min.min(&max_length);
+            let actual_max = (*max).min(max_length);
+            if actual_min <= actual_max {
+                rng.gen_range(actual_min..=actual_max)
+            } else {
+                max_length
+            }
+        }
+        Some(LengthPreference::Short) => {
+            let mut rng = rand::thread_rng();
+            rng.gen_range(1..=(max_length / 2).max(1))
+        }
+        Some(LengthPreference::Long) => {
+            let mut rng = rand::thread_rng();
+            rng.gen_range((max_length / 2).max(1)..=max_length)
+        }
+        None => {
+            if is_exact {
+                max_length
+            } else {
+                let mut rng = rand::thread_rng();
+                rng.gen_range(1..=max_length)
+            }
+        }
     };
 
     match char_type {
@@ -230,7 +346,12 @@ pub fn generate_by_format_spec(format: &str) -> String {
         'd' => {
             // For decimal format, assume 2 decimal places if not specified
             let decimals = 2;
-            generate_decimal(length, decimals)
+            // Check for amount range configuration
+            if let Some(ValueRange::Amount { min, max, .. }) = &config.value_range {
+                generate_decimal_with_range(length, decimals, Some(*min), Some(*max))
+            } else {
+                generate_decimal(length, decimals)
+            }
         }
         _ => generate_any_character(length),
     }
@@ -280,27 +401,57 @@ pub fn generate_instruction_code() -> String {
 pub fn generate_name_and_address(lines: usize) -> Vec<String> {
     let mut rng = rand::thread_rng();
     let names = [
-        "ACME CORPORATION",
-        "GLOBAL TRADING LTD",
-        "INTERNATIONAL FINANCE INC",
-        "SWIFT PAYMENTS CORP",
-        "DIGITAL SOLUTIONS AG",
+        "GLOBAL TRADE SOLUTIONS LTD",
+        "INTERNATIONAL EXPORT CORP",
+        "PRIME FINANCIAL SERVICES",
+        "METROPOLITAN TRADING CO",
+        "CONSOLIDATED INDUSTRIES INC",
+        "PACIFIC RIM ENTERPRISES",
+        "EUROPEAN COMMERCE GROUP",
+        "ATLANTIC BUSINESS PARTNERS",
+        "CONTINENTAL HOLDINGS LLC",
+        "WORLDWIDE LOGISTICS CORP",
+        "STERLING INVESTMENT GROUP",
+        "MERIDIAN COMMERCIAL LTD",
+        "APEX TRADING COMPANY",
+        "NEXUS FINANCIAL CORP",
+        "HORIZON BUSINESS SOLUTIONS",
     ];
 
     let streets = [
-        "123 MAIN STREET",
-        "456 PARK AVENUE",
-        "789 BROADWAY",
-        "321 WALL STREET",
-        "654 FIFTH AVENUE",
+        "125 CORPORATE PLAZA",
+        "450 BUSINESS PARK DRIVE",
+        "789 FINANCIAL DISTRICT",
+        "1200 COMMERCE STREET",
+        "650 EXECUTIVE BOULEVARD",
+        "300 TRADE CENTER WAY",
+        "850 INTERNATIONAL AVENUE",
+        "1500 ENTERPRISE PARKWAY",
+        "275 INVESTMENT PLAZA",
+        "920 BANKING SQUARE",
+        "1750 CORPORATE CENTER",
+        "425 PROFESSIONAL DRIVE",
+        "680 MARKET STREET",
+        "1100 INDUSTRIAL WAY",
+        "550 COMMERCIAL BOULEVARD",
     ];
 
     let cities = [
-        "NEW YORK NY 10001",
-        "LONDON EC1A 1BB",
+        "NEW YORK NY 10005",
+        "LONDON EC2V 8RF",
         "ZURICH 8001",
-        "SINGAPORE 018956",
-        "TOKYO 100-0001",
+        "SINGAPORE 048624",
+        "TOKYO 100-6590",
+        "FRANKFURT AM MAIN 60311",
+        "PARIS 75001",
+        "MILAN 20121",
+        "GENEVA 1204",
+        "DUBLIN 2",
+        "AMSTERDAM 1017 XX",
+        "BRUSSELS 1000",
+        "MADRID 28001",
+        "BARCELONA 08002",
+        "VIENNA 1010",
     ];
 
     let mut result = vec![];
@@ -308,19 +459,26 @@ pub fn generate_name_and_address(lines: usize) -> Vec<String> {
     if lines > 0 {
         result.push(names[rng.gen_range(0..names.len())].to_string());
     }
-    if lines > 1 && rng.gen_bool(0.7) {
+    if lines > 1 {
         result.push(streets[rng.gen_range(0..streets.len())].to_string());
     }
-    if lines > result.len() && rng.gen_bool(0.8) {
+    if lines > 2 {
         result.push(cities[rng.gen_range(0..cities.len())].to_string());
     }
-    if lines > result.len() {
+    if lines > 3 {
         result.push(generate_valid_country_code());
     }
 
-    // Fill remaining lines if needed
+    // Fill remaining lines with additional address details if needed
     while result.len() < lines {
-        result.push(generate_any_character(rng.gen_range(10..30)));
+        let additional_info = [
+            "CORPORATE HEADQUARTERS",
+            "MAIN OFFICE",
+            "TREASURY DEPARTMENT",
+            "INTERNATIONAL DIVISION",
+            "FINANCIAL SERVICES",
+        ];
+        result.push(additional_info[rng.gen_range(0..additional_info.len())].to_string());
     }
 
     result
@@ -423,8 +581,8 @@ mod tests {
         let result = generate_any_character(20);
         assert_eq!(result.len(), 20);
 
-        // All characters should be SWIFT-allowed
-        let allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-?:().,'+";
+        // All characters should be SWIFT-allowed (reduced set for realism)
+        let allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 /-.,";
         assert!(result.chars().all(|c| allowed_chars.contains(c)));
     }
 

@@ -86,6 +86,16 @@ impl<const MAX_LINES: usize, const MAX_CHARS: usize> SwiftField
     fn format_spec() -> &'static str {
         "lines"
     }
+
+    fn sample() -> Self {
+        let line_count = if MAX_LINES > 4 { 4 } else { MAX_LINES };
+        let lines = crate::sample::generate_name_and_address(line_count);
+        Self { lines }
+    }
+
+    fn sample_with_config(_config: &crate::sample::FieldConfig) -> Self {
+        Self::sample()
+    }
 }
 
 /// Type aliases for common sizes

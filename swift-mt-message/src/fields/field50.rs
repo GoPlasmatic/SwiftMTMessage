@@ -97,4 +97,22 @@ impl crate::SwiftField for Field50 {
     fn format_spec() -> &'static str {
         "multi_option"
     }
+
+    fn sample() -> Self {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+
+        // Randomly choose between the three variants
+        match rng.gen_range(0..3) {
+            0 => Field50::A(Field50A::sample()),
+            1 => Field50::F(Field50F::sample()),
+            _ => Field50::K(Field50K::sample()),
+        }
+    }
+
+    fn sample_with_config(_config: &crate::sample::FieldConfig) -> Self {
+        // For now, just delegate to sample()
+        // Could be enhanced to use config to determine variant choice
+        Self::sample()
+    }
 }

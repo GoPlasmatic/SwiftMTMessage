@@ -50,6 +50,10 @@ pub fn derive_swift_message_impl(input: TokenStream) -> TokenStream {
         quote! {}
     };
 
+    // Generate sample methods
+    let sample_minimal_impl = generate_sample_methods(&field_mappings, &sequence_mappings, false);
+    let sample_full_impl = generate_sample_methods(&field_mappings, &sequence_mappings, true);
+
     let expanded = quote! {
         impl crate::SwiftMessageBody for #name {
             fn message_type() -> &'static str {
@@ -70,6 +74,27 @@ pub fn derive_swift_message_impl(input: TokenStream) -> TokenStream {
 
             fn optional_fields() -> Vec<&'static str> {
                 vec![ #( #optional_fields_list ),* ]
+            }
+
+            fn sample() -> Self {
+                #sample_minimal_impl
+            }
+
+            fn sample_minimal() -> Self {
+                Self::sample()
+            }
+
+            fn sample_full() -> Self {
+                #sample_full_impl
+            }
+
+            fn sample_with_config(config: &crate::sample::MessageConfig) -> Self {
+                // For now, just generate with or without optional fields
+                if config.include_optional {
+                    Self::sample_full()
+                } else {
+                    Self::sample()
+                }
             }
         }
 
@@ -760,4 +785,97 @@ fn extract_validation_rules_attribute(attrs: &[Attribute]) -> Option<String> {
         }
     }
     None
+}
+
+/// Generate sample methods for message types
+fn generate_sample_methods(
+    field_mappings: &[FieldMapping],
+    sequence_mappings: &[SequenceMapping],
+    include_optional: bool,
+) -> proc_macro2::TokenStream {
+    let mut field_samples = Vec::new();
+
+    // Generate samples for regular fields
+    for mapping in field_mappings {
+        let field_name = &mapping.field_name;
+        let field_type = &mapping.field_type;
+
+        if mapping.is_optional {
+            // Optional field - check if we should include it
+            if include_optional {
+                // Extract inner type from Option<T>
+                let inner_type = if let syn::Type::Path(type_path) = &mapping.field_type {
+                    if let Some(segment) = type_path.path.segments.last() {
+                        if segment.ident == "Option" {
+                            if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+                                if let Some(syn::GenericArgument::Type(inner)) = args.args.first() {
+                                    inner.clone()
+                                } else {
+                                    mapping.field_type.clone()
+                                }
+                            } else {
+                                mapping.field_type.clone()
+                            }
+                        } else {
+                            mapping.field_type.clone()
+                        }
+                    } else {
+                        mapping.field_type.clone()
+                    }
+                } else {
+                    mapping.field_type.clone()
+                };
+
+                // Check if inner type is Vec<T> - if so, just generate empty vec
+                if let syn::Type::Path(type_path) = &inner_type {
+                    if let Some(segment) = type_path.path.segments.last() {
+                        if segment.ident == "Vec" {
+                            field_samples.push(quote! {
+                                #field_name: Some(vec![])
+                            });
+                        } else {
+                            field_samples.push(quote! {
+                                #field_name: Some(<#inner_type as crate::SwiftField>::sample())
+                            });
+                        }
+                    } else {
+                        field_samples.push(quote! {
+                            #field_name: Some(<#inner_type as crate::SwiftField>::sample())
+                        });
+                    }
+                } else {
+                    field_samples.push(quote! {
+                        #field_name: Some(<#inner_type as crate::SwiftField>::sample())
+                    });
+                }
+            } else {
+                // Don't include optional field - set to None
+                field_samples.push(quote! {
+                    #field_name: None
+                });
+            }
+        } else {
+            // Required field
+            field_samples.push(quote! {
+                #field_name: <#field_type as crate::SwiftField>::sample()
+            });
+        }
+    }
+
+    // Generate samples for sequences (if any)
+    for seq_mapping in sequence_mappings {
+        let field_name = &seq_mapping.field_name;
+
+        // For sequences, always generate an empty vector for now
+        // TODO: Implement proper sequence sample generation
+        field_samples.push(quote! {
+            #field_name: vec![]
+        });
+    }
+
+    quote! {
+        Self {
+            #(#field_samples,)*
+        }
+    }
 }

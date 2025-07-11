@@ -5,6 +5,82 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2024-12-20
+
+### 🎲 New Features
+
+#### Sample Data Generation System
+- **Macro-Generated Sample Methods**: Added `sample()` and `sample_with_config()` methods to all `SwiftField` implementations
+- **Message-Level Generation**: Added `sample()`, `sample_minimal()`, `sample_full()`, and `sample_with_config()` methods to all `SwiftMessage` implementations
+- **Format-Aware Generation**: Automatic generation based on SWIFT format specifications (3!a, 6!n, 15d, etc.)
+- **Validation-Aware**: All generated data passes SWIFT compliance checks
+- **Type-Safe**: Generated samples match field type constraints and validation rules
+
+#### JSON Configuration Support
+- **FieldConfig**: Configurable length preferences, value ranges, fixed values, and regex patterns
+- **MessageConfig**: Message-level configuration with scenario support and field-specific overrides
+- **Predefined Scenarios**: Built-in scenarios for common testing needs:
+  - `Standard`: Basic compliant messages
+  - `StpCompliant`: Straight Through Processing optimized
+  - `CoverPayment`: Cover payment message format
+  - `Minimal`: Only mandatory fields
+  - `Full`: All fields populated
+- **Serde Integration**: Full JSON serialization/deserialization support for all configuration types
+
+#### Specialized Generators
+- **BIC Codes**: Valid 8/11 character BIC code generation
+- **Currency Codes**: ISO 4217 compliant currency code generation
+- **Date Generation**: SWIFT-compliant date formats (YYMMDD, YYYYMMDD)
+- **Amount Generation**: Decimal amounts with currency-specific precision
+- **Name/Address Generation**: Realistic institution and customer data
+- **Transaction Codes**: Valid SWIFT transaction and instruction codes
+
+### 📚 Documentation & Examples
+
+#### Comprehensive Examples
+- **examples/sample_generation.rs**: Basic sample generation demonstration
+- **examples/json_config_sample_generation.rs**: Advanced JSON configuration examples
+- **examples/simple_sample_test.rs**: Simple testing utilities
+- **SAMPLE_GENERATOR.md**: Technical specification and design documentation
+
+#### Enhanced README
+- **Sample Generation Section**: Comprehensive documentation with usage examples
+- **Plasmatic Branding**: Updated to follow Plasmatic organization template
+- **Professional Header**: Added logo, badges, and navigation links
+- **Organization Links**: Community engagement through discussions and contribution links
+- **Related Projects**: Cross-references to other Plasmatic projects like Reframe
+
+### 🔧 Technical Implementation
+
+#### Macro Enhancements
+- **SwiftField Derive**: Enhanced to generate sample implementations automatically
+- **SwiftMessage Derive**: Enhanced to generate message-level sample methods
+- **Custom Implementations**: Special handling for complex enum fields (Field50, Field59)
+- **Format Parser**: SWIFT format specification parser for automatic constraint application
+
+#### Architecture Improvements
+- **sample.rs Module**: Self-contained sample generation utilities and configuration types
+- **Clean Integration**: Follows the same architecture pattern as validation functions
+- **Minimal Boilerplate**: Macro-generated implementations reduce manual code
+- **Configurable Randomness**: Support for reproducible test data generation
+
+#### Dependencies
+- **Added rand = "0.8"**: Random number generation for sample data
+- **Workspace Integration**: Added to workspace Cargo.toml for consistent versioning
+
+### 🧪 Testing & Quality
+
+#### Comprehensive Test Coverage
+- **Unit Tests**: All sample generation functions have dedicated tests
+- **Integration Tests**: Full message generation and validation testing
+- **JSON Roundtrip Tests**: Configuration serialization/deserialization validation
+- **Format Compliance Tests**: Generated data validates against SWIFT standards
+
+#### Production Ready
+- **Financial Grade**: Suitable for production use in financial institutions
+- **Performance Optimized**: Efficient generation with minimal memory allocations
+- **Error Handling**: Proper error propagation and validation
+
 ## [2.1.0]
 
 ### 🐛 Bug Fixes

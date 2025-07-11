@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 /// Generic BIC Field
 ///
@@ -161,6 +162,17 @@ impl crate::SwiftField for GenericBicField {
 
     fn format_spec() -> &'static str {
         "4!a2!a2!c[3!c][/35x]"
+    }
+
+    fn sample() -> Self {
+        Self {
+            bic: BIC::from_str(&crate::sample::generate_valid_bic()).unwrap(),
+            account: Some(crate::sample::generate_account_number()),
+        }
+    }
+
+    fn sample_with_config(_config: &crate::sample::FieldConfig) -> Self {
+        Self::sample()
     }
 }
 

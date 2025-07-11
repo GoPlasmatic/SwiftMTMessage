@@ -1,12 +1,31 @@
-# Swift MT Message Parser
+<div align="center">
+  <img src="https://avatars.githubusercontent.com/u/207296579?s=200&v=4" alt="Plasmatic Logo" width="120" height="120">
+  
+  # SwiftMTMessage
+  
+  **Enterprise-Grade SWIFT MT Message Processing Library**
+  
+  *Macro-driven, type-safe parsing with automatic test data generation*
+  
+  [![Release Crates](https://github.com/GoPlasmatic/SwiftMTMessage/actions/workflows/crate-publish.yml/badge.svg)](https://github.com/GoPlasmatic/SwiftMTMessage/actions/workflows/crate-publish.yml)
+  [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+  [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
+  [![Crates.io](https://img.shields.io/crates/v/swift-mt-message.svg)](https://crates.io/crates/swift-mt-message)
+  <a href="https://github.com/GoPlasmatic">🏢 Organization</a> •
+  <a href="https://docs.rs/swift-mt-message">📖 Documentation</a> •
+  <a href="https://github.com/GoPlasmatic/SwiftMTMessage/issues">🐛 Issues</a>  
+</div>
 
-A modern Rust library for parsing SWIFT MT (Message Type) financial messages with **macro-based field definitions** and **serde-like automatic serialization**. Built for financial institutions requiring type-safe, high-performance SWIFT message processing.
+---
+
+A modern Rust library for parsing SWIFT MT (Message Type) financial messages with **macro-based field definitions** and **serde-like automatic serialization**. Built for financial institutions requiring type-safe, high-performance SWIFT message processing with comprehensive test data generation.
 
 ## 🚀 Key Features
 
 - **Macro-Driven Architecture**: `#[derive(SwiftField)]` and `#[derive(SwiftMessage)]` for automatic field and message generation
 - **Serde-Like Design**: Familiar serialization patterns adapted for financial messaging standards
 - **Type-safe Parsing**: Dedicated field structs with automatic validation
+- **Sample Data Generation**: Automatic generation of valid SWIFT test data with JSON configuration support
 - **Comprehensive Field Support**: All MT103 fields with proper SWIFT compliance
 - **Zero-Copy Parsing**: Efficient parsing with minimal memory allocations
 - **Financial-Grade Validation**: Strict SWIFT compliance with comprehensive error reporting
@@ -31,6 +50,7 @@ pub struct Field23B {
 // - parse() method with format validation
 // - to_swift_string() method
 // - validate() method with SWIFT rules
+// - sample() and sample_with_config() methods
 // - Serde serialization/deserialization
 ```
 
@@ -57,6 +77,7 @@ pub struct MT103 {
     // - Field validation
     // - SWIFT format compliance
     // - JSON serialization with field tags
+    // - Sample data generation
     // - Error propagation
 }
 ```
@@ -114,6 +135,138 @@ pub enum Field50 {
 // Custom serialization flattens the structure:
 // Instead of: {"50": {"K": {"name_and_address": [...]}}}
 // Produces:   {"50": {"name_and_address": [...]}}
+```
+
+## 🎲 Sample Data Generation
+
+### Automatic Test Data Creation
+
+Generate valid SWIFT test data automatically using the same macro-driven approach:
+
+```rust
+use swift_mt_message::{fields::Field20, messages::MT103, SwiftField, SwiftMessageBody};
+
+// Generate individual field samples
+let transaction_ref = Field20::sample();
+println!("Generated reference: {}", transaction_ref.to_swift_string());
+// Output: :20:ABC123DEF4567890
+
+// Generate complete message samples
+let mt103_sample = MT103::sample();
+let json = serde_json::to_string_pretty(&mt103_sample)?;
+println!("Sample MT103:\n{}", json);
+```
+
+### JSON Configuration-Based Generation
+
+Customize sample generation with JSON configurations for precise test scenarios:
+
+```rust
+use swift_mt_message::sample::{FieldConfig, MessageConfig, ValueRange, LengthPreference};
+
+// Configure field-specific generation
+let field_config_json = r#"
+{
+    "length_preference": { "Exact": 16 },
+    "pattern": "^STP[0-9]{13}$",
+    "value_range": {
+        "Amount": {
+            "min": 10000.0,
+            "max": 50000.0,
+            "currency": "EUR"
+        }
+    }
+}
+"#;
+
+let config: FieldConfig = serde_json::from_str(field_config_json)?;
+let custom_sample = Field20::sample_with_config(&config);
+```
+
+### Multi-Scenario Test Generation
+
+Generate test data for different financial scenarios:
+
+```rust
+let scenarios_json = r#"
+[
+    {
+        "name": "High Value Transaction",
+        "config": {
+            "include_optional": true,
+            "scenario": "Standard",
+            "field_configs": {
+                "32A": {
+                    "value_range": {
+                        "Amount": {
+                            "min": 100000.0,
+                            "max": 1000000.0,
+                            "currency": "USD"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "STP Compliant Payment",
+        "config": {
+            "include_optional": true,
+            "scenario": "StpCompliant",
+            "field_configs": {
+                "20": {
+                    "pattern": "^STP[0-9]{13}$"
+                }
+            }
+        }
+    }
+]
+"#;
+
+let scenarios: Vec<TestScenario> = serde_json::from_str(scenarios_json)?;
+for scenario in scenarios {
+    let sample = MT103::sample_with_config(&scenario.config);
+    println!("Scenario '{}': {}", scenario.name, sample.field_20.value);
+}
+```
+
+### Format-Aware Generation
+
+Sample generation respects SWIFT format specifications automatically:
+
+```rust
+// Field with format specification "6!n" (exactly 6 numeric characters)
+#[derive(SwiftField)]
+#[format("6!n")]
+pub struct DateField {
+    #[format("6!n")]
+    pub date: String,
+}
+
+let sample = DateField::sample();
+// Generates: "240315" (valid YYMMDD format)
+```
+
+### Predefined Scenarios
+
+Built-in scenarios for common testing needs:
+
+- **Standard**: Basic compliant messages
+- **StpCompliant**: Straight Through Processing optimized
+- **CoverPayment**: Cover payment message format
+- **Minimal**: Only mandatory fields
+- **Full**: All fields populated
+
+```rust
+use swift_mt_message::sample::MessageScenario;
+
+let config = MessageConfig {
+    include_optional: true,
+    scenario: Some(MessageScenario::StpCompliant),
+    field_configs: HashMap::new(),
+};
+
+let stp_sample = MT103::sample_with_config(&config);
 ```
 
 ## 📋 Financial Field Types
@@ -248,6 +401,8 @@ Generated Implementation:
 ├── parse() - Format-aware parsing
 ├── validate() - SWIFT compliance
 ├── to_swift_string() - Format generation
+├── sample() - Test data generation
+├── sample_with_config() - Configurable generation
 └── Serde traits - JSON serialization
 ```
 
@@ -262,6 +417,7 @@ Complete MT Message:
 ├── Field validation pipeline
 ├── Message structure validation
 ├── Automatic header handling
+├── Sample data generation
 └── Financial JSON serialization
 ```
 
@@ -300,6 +456,16 @@ Test with financial message examples:
 cargo test --features financial-examples -- --nocapture
 ```
 
+Run sample generation examples:
+
+```bash
+# Basic sample generation
+cargo run --example sample_generation
+
+# JSON configuration-based generation
+cargo run --example json_config_sample_generation
+```
+
 ## 📚 Macro Reference
 
 ### SwiftField Attributes
@@ -309,6 +475,7 @@ cargo test --features financial-examples -- --nocapture
 | `#[format("4!c")]` | Field format specification | 4 characters, alphabetic |
 | `#[variant("A")]` | Enum variant tag | Field50A variant |
 | `#[validate(bic)]` | Custom validation | BIC code validation |
+| `#[sample(generator)]` | Custom sample generator | Specialized test data |
 
 ### SwiftMessage Attributes
 
@@ -317,6 +484,7 @@ cargo test --features financial-examples -- --nocapture
 | `#[field("20")]` | SWIFT field tag | Transaction reference |
 | `#[optional]` | Optional field | Non-mandatory fields |
 | `#[swift_serde(...)]` | Serialization control | Field tag mapping |
+| `#[sample_scenario(...)]` | Default sample scenario | StpCompliant generation |
 
 ## 🔍 Financial Validation Rules
 
@@ -327,18 +495,46 @@ cargo test --features financial-examples -- --nocapture
 - **Date Formats**: YYMMDD format with leap year validation
 - **Message Structure**: Complete MT message validation
 
+## 🎯 Sample Generation Features
+
+- **Format-Driven**: Generates data based on SWIFT format specifications
+- **Validation-Aware**: All generated data passes SWIFT compliance checks
+- **JSON Configurable**: External configuration for test scenarios
+- **Scenario-Based**: Predefined scenarios for common testing needs
+- **Type-Safe**: Generated samples match field type constraints
+- **Reproducible**: Configurable random seed for deterministic testing
+
 ## 🤝 Contributing
 
-Contributions welcome! Please ensure:
+We welcome contributions! Please ensure:
 - Financial compliance testing
 - Macro documentation updates
 - SWIFT standard adherence
+- Test coverage for new features
+
+See our [Contributing Guide](CONTRIBUTING.md) for detailed information.
+
+## 🏢 About Plasmatic
+
+SwiftMTMessage is developed by [Plasmatic](https://github.com/GoPlasmatic), a technology organization focused on building open-source financial infrastructure tools. We believe in:
+
+- **🔓 Open Source**: Transparent, community-driven development
+- **🛡️ Security First**: Financial-grade security and compliance
+- **⚡ Performance**: High-performance solutions for enterprise needs
+- **🌍 Global Standards**: Supporting international financial protocols
 
 ## 📄 License
 
-Apache License Version 2.0 - See [LICENSE](LICENSE) file for details.
+Licensed under the Apache License, Version 2.0 ([LICENSE](LICENSE) or http://www.apache.org/licenses/LICENSE-2.0)
 
-## 🔗 Financial Standards
+## 🔗 Related Projects
 
-- [SWIFT Standards](https://www.swift.com/standards)
-- [MT Message Types](https://www.swift.com/standards/mt-messages)
+- [Reframe](https://github.com/GoPlasmatic/Reframe) - SWIFT MT ↔ ISO 20022 Transformation Engine
+- [SWIFT Standards](https://www.swift.com/standards) - Official SWIFT documentation
+- [MT Message Types](https://www.swift.com/standards/mt-messages) - SWIFT MT message specifications
+
+---
+
+<div align="center">
+  <p>Built with ❤️ by the <a href="https://github.com/GoPlasmatic">Plasmatic</a> team</p>
+</div>

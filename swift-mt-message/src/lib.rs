@@ -54,6 +54,7 @@ pub mod fields;
 pub mod headers;
 pub mod messages;
 pub mod parser;
+pub mod sample;
 
 // Re-export core types
 pub use errors::{ParseError, Result, ValidationError};
@@ -81,6 +82,16 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
 
     /// Get field format specification
     fn format_spec() -> &'static str;
+
+    /// Generate a random sample of this field
+    fn sample() -> Self
+    where
+        Self: Sized;
+
+    /// Generate a random sample with configuration
+    fn sample_with_config(config: &sample::FieldConfig) -> Self
+    where
+        Self: Sized;
 }
 
 /// Core trait for Swift message types
@@ -101,6 +112,26 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
 
     /// Get optional field tags for this message type
     fn optional_fields() -> Vec<&'static str>;
+
+    /// Generate a sample message with only mandatory fields
+    fn sample() -> Self
+    where
+        Self: Sized;
+
+    /// Generate a minimal sample (only mandatory fields)
+    fn sample_minimal() -> Self
+    where
+        Self: Sized;
+
+    /// Generate a full sample (all fields populated)
+    fn sample_full() -> Self
+    where
+        Self: Sized;
+
+    /// Generate a sample with configuration
+    fn sample_with_config(config: &sample::MessageConfig) -> Self
+    where
+        Self: Sized;
 }
 
 /// Complete SWIFT message with headers and body

@@ -66,6 +66,10 @@ fn generate_swift_field_impl(
     // Generate from_raw method
     let from_raw_logic = generate_from_raw_logic(components, field_tag);
 
+    // Generate sample logic from components
+    let sample_logic = generate_sample_logic(components);
+    let sample_with_config_logic = generate_sample_with_config_logic(components);
+
     let expanded = quote! {
         impl crate::SwiftField for #name {
             fn parse(value: &str) -> crate::Result<Self> {
@@ -103,6 +107,14 @@ fn generate_swift_field_impl(
 
             fn format_spec() -> &'static str {
                 #format_spec
+            }
+
+            fn sample() -> Self {
+                #sample_logic
+            }
+
+            fn sample_with_config(config: &crate::sample::FieldConfig) -> Self {
+                #sample_with_config_logic
             }
         }
 
@@ -1701,5 +1713,135 @@ fn generate_remaining_component_parsing(
         _ => quote! {
             remaining.to_string()
         },
+    }
+}
+
+/// Generate sample logic from component specifications
+fn generate_sample_logic(components: &[ComponentSpec]) -> proc_macro2::TokenStream {
+    let field_assignments = components.iter().map(|comp| {
+        let field_name = syn::Ident::new(&comp.field_name, proc_macro2::Span::call_site());
+        let sample_value = generate_component_sample(comp);
+
+        quote! {
+            #field_name: #sample_value
+        }
+    });
+
+    quote! {
+        Self {
+            #(#field_assignments),*
+        }
+    }
+}
+
+/// Generate sample logic with configuration from component specifications
+fn generate_sample_with_config_logic(_components: &[ComponentSpec]) -> proc_macro2::TokenStream {
+    quote! {
+        // For now, just call sample() - can be enhanced later to use config
+        Self::sample()
+    }
+}
+
+/// Generate sample value for a component based on its format and type
+fn generate_component_sample(comp: &ComponentSpec) -> proc_macro2::TokenStream {
+    let base_type = get_base_type(&comp.field_type);
+    let is_vec = is_vec_type(&comp.field_type);
+    let is_optional = is_option_type(&comp.field_type) || comp.optional;
+    let is_naive_date = is_naive_date_type(base_type);
+    let is_naive_time = is_naive_time_type(base_type);
+    let is_char = is_char_type(base_type);
+    let is_u32 = is_u32_type(base_type);
+    let is_f64 = is_f64_type(base_type);
+    let is_i32 = is_i32_type(base_type);
+    let is_u8 = is_u8_type(base_type);
+    let is_bool = is_bool_type(base_type);
+    let is_custom_fromstr = is_custom_fromstr_type(base_type);
+
+    let base_sample = if is_vec {
+        match comp.format.as_str() {
+            "lines" => quote! {
+                vec![
+                    crate::sample::generate_any_character(20),
+                    crate::sample::generate_any_character(25),
+                ]
+            },
+            _ => quote! { vec![crate::sample::generate_alphanumeric(10)] },
+        }
+    } else if is_naive_date {
+        match comp.format.as_str() {
+            "6!n" => quote! {
+                {
+                    let date_str = crate::sample::generate_date_yymmdd();
+                    chrono::NaiveDate::parse_from_str(&format!("20{}", date_str), "%Y%m%d").unwrap()
+                }
+            },
+            "8!n" => quote! {
+                {
+                    let date_str = crate::sample::generate_date_yyyymmdd();
+                    chrono::NaiveDate::parse_from_str(&date_str, "%Y%m%d").unwrap()
+                }
+            },
+            _ => quote! { chrono::Local::now().naive_local().date() },
+        }
+    } else if is_naive_time {
+        match comp.format.as_str() {
+            "4!n" => quote! {
+                {
+                    let time_str = crate::sample::generate_time_hhmm();
+                    chrono::NaiveTime::parse_from_str(&format!("{}:00", &time_str[0..2]), "%H:%M:%S").unwrap()
+                }
+            },
+            "6!n" => quote! {
+                chrono::NaiveTime::from_hms_opt(14, 30, 0).unwrap()
+            },
+            _ => quote! { chrono::Local::now().naive_local().time() },
+        }
+    } else if is_char {
+        quote! { 'A' }
+    } else if is_u32 {
+        quote! { 12345u32 }
+    } else if is_i32 {
+        quote! { 100i32 }
+    } else if is_u8 {
+        quote! { 5u8 }
+    } else if is_f64 {
+        quote! { 1000.50f64 }
+    } else if is_bool {
+        quote! { true }
+    } else if is_custom_fromstr {
+        // Check if it's a BIC type
+        if comp.validation_rules.contains(&"bic".to_string()) {
+            quote! { crate::fields::bic::BIC::from_str(&crate::sample::generate_valid_bic()).unwrap() }
+        } else {
+            quote! { Default::default() }
+        }
+    } else {
+        // String type - generate based on format
+        match comp.format.as_str() {
+            format if format.contains("currency_code") => {
+                quote! { crate::sample::generate_valid_currency() }
+            }
+            format if format.contains("bic") => {
+                quote! { crate::sample::generate_valid_bic() }
+            }
+            format if format.contains("date_format:YYMMDD") => {
+                quote! { crate::sample::generate_date_yymmdd() }
+            }
+            format if format.contains("date_format:YYYYMMDD") => {
+                quote! { crate::sample::generate_date_yyyymmdd() }
+            }
+            format if format.contains("time_format:HHMM") => {
+                quote! { crate::sample::generate_time_hhmm() }
+            }
+            format => {
+                quote! { crate::sample::generate_by_format_spec(#format) }
+            }
+        }
+    };
+
+    if is_optional {
+        quote! { Some(#base_sample) }
+    } else {
+        base_sample
     }
 }

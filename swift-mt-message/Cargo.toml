@@ -1,6 +1,6 @@
 [package]
 name = "swift-mt-message"
-version = "2.2.16"
+version = "2.3.0"
 edition = "2024"
 exclude = [".DS_Store", "/target", ".vscode", ".github"]
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
@@ -29,6 +29,9 @@ once_cell = { workspace = true }
 # Data validation
 datalogic-rs = { workspace = true }
 
+# Random number generation for sample data
+rand = { workspace = true }
+
 [dev-dependencies]
 pretty_assertions = "1.4"
 
@@ -47,3 +50,15 @@ path = "../examples/parse_auto.rs"
 [[example]]
 name = "json_to_mt_example"
 path = "../examples/json_to_mt_example.rs"
+
+[[example]]
+name = "sample_generation"
+path = "../examples/sample_generation.rs"
+
+[[example]]
+name = "simple_sample_test"
+path = "../examples/simple_sample_test.rs"
+
+[[example]]
+name = "json_config_sample_generation"
+path = "../examples/json_config_sample_generation.rs"

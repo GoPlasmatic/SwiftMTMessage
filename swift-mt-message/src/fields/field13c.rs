@@ -25,7 +25,7 @@ mod tests {
     #[test]
     fn test_field13c_parsing() {
         let test_input = ":13C:/RNCTIME/1405+0200";
-        println!("Testing input: {}", test_input);
+        println!("Testing input: {test_input}");
 
         match Field13C::parse(test_input) {
             Ok(parsed) => {
@@ -36,7 +36,7 @@ mod tests {
 
                 // Test serialization back
                 let serialized = parsed.to_swift_string();
-                println!("Serialized back: {}", serialized);
+                println!("Serialized back: {serialized}");
 
                 // Verify the parsed values
                 assert_eq!(parsed.time_code, "/RNCTIME/");
@@ -44,8 +44,8 @@ mod tests {
                 assert_eq!(parsed.utc_offset, "+0200");
             }
             Err(e) => {
-                println!("Parsing failed: {:?}", e);
-                panic!("Failed to parse Field13C: {:?}", e);
+                println!("Parsing failed: {e:?}");
+                panic!("Failed to parse Field13C: {e:?}");
             }
         }
     }
@@ -71,7 +71,7 @@ mod tests {
                     assert_eq!(serialized, input);
                 }
                 Err(e) => {
-                    panic!("Failed to parse {}: {:?}", input, e);
+                    panic!("Failed to parse {input}: {e:?}");
                 }
             }
         }

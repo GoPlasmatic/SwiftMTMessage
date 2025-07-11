@@ -137,10 +137,28 @@ pub fn generate_decimal_with_range(
         }
     }
 
-    // Generate realistic amounts instead of completely random
+    // Generate realistic amounts based on typical transaction ranges
     let realistic_amounts = [
-        "1250,00", "850,50", "2000,75", "500,25", "10000,00", "750,80", "3500,45", "125,60",
-        "25000,00", "1875,90", "650,15", "4200,35",
+        "1250,00",
+        "850,50",
+        "2000,75",
+        "500,25",
+        "10000,00",
+        "750,80",
+        "3500,45",
+        "125,60",
+        "25000,00",
+        "1875,90",
+        "650,15",
+        "4200,35",
+        "50000,00",
+        "75000,00",
+        "100000,00",
+        "250000,00",
+        "500000,00",
+        "1000000,00",
+        "2500000,00",
+        "5000000,00",
     ];
 
     // For shorter lengths, use predefined realistic amounts
@@ -151,19 +169,44 @@ pub fn generate_decimal_with_range(
         }
     }
 
-    // For longer amounts, generate but with realistic patterns
-    let integer_part_len = length - decimals - 1; // -1 for comma
+    // For longer amounts, generate realistic business transaction amounts
+    // Typical ranges: small (100-9,999), medium (10,000-999,999), large (1M-100M)
+    let amount_ranges = [
+        (100.0, 9999.0),        // Small transactions
+        (10000.0, 99999.0),     // Medium transactions
+        (100000.0, 999999.0),   // Large transactions
+        (1000000.0, 9999999.0), // Very large transactions
+    ];
 
-    // Generate amounts that look realistic (not starting with 0, reasonable values)
+    let (min_amt, max_amt) = amount_ranges[rng.gen_range(0..amount_ranges.len())];
+    let amount = rng.gen_range(min_amt..=max_amt);
+    let formatted = format!("{amount:.2}").replace('.', ",");
+
+    if formatted.len() <= length {
+        return formatted;
+    }
+
+    // Fallback: generate basic structure if formatted amount is too long
+    let integer_part_len = if length > decimals + 1 {
+        length - decimals - 1 // -1 for comma
+    } else {
+        1 // Ensure at least 1 digit for integer part
+    };
+
     let mut integer_part = String::new();
     if integer_part_len > 0 {
-        // First digit should not be 0 for realistic amounts
-        integer_part.push_str(&rng.gen_range(1..10).to_string());
+        // Generate smaller realistic amounts that fit the length constraint
+        let max_val = 10_u64.pow(integer_part_len as u32) - 1;
+        let amount = rng.gen_range(100..=max_val.min(999999)); // Cap at reasonable amount
+        integer_part = amount.to_string();
 
-        // Fill remaining digits
-        for _ in 1..integer_part_len {
-            integer_part.push_str(&rng.gen_range(0..10).to_string());
+        // Pad if necessary
+        while integer_part.len() < integer_part_len {
+            integer_part = format!("0{integer_part}");
         }
+    } else {
+        // Fallback: ensure at least one digit
+        integer_part.push_str(&rng.gen_range(1..10).to_string());
     }
 
     let decimal_part = generate_numeric(decimals);
@@ -333,8 +376,13 @@ pub fn generate_by_format_spec_with_config(format: &str, config: &FieldConfig) -
             if is_exact {
                 max_length
             } else {
-                let mut rng = rand::thread_rng();
-                rng.gen_range(1..=max_length)
+                // For decimal formats, use full length to ensure reasonable amounts
+                if char_type == 'd' {
+                    max_length
+                } else {
+                    let mut rng = rand::thread_rng();
+                    rng.gen_range(1..=max_length)
+                }
             }
         }
     };
@@ -487,49 +535,7 @@ pub fn generate_name_and_address(lines: usize) -> Vec<String> {
 /// Generate a UETR (Unique End-to-End Transaction Reference) in UUID format
 /// Used for CBPR+ compliance in Tag 121 of User Header
 pub fn generate_uetr() -> String {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-
-    // Generate UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-    // where x is any hexadecimal digit and y is one of 8, 9, A, or B
-    let hex_chars = "0123456789abcdef";
-    let hex_chars: Vec<char> = hex_chars.chars().collect();
-
-    let mut uuid = String::new();
-
-    // First segment: 8 hex chars
-    for _ in 0..8 {
-        uuid.push(hex_chars[rng.gen_range(0..16)]);
-    }
-    uuid.push('-');
-
-    // Second segment: 4 hex chars
-    for _ in 0..4 {
-        uuid.push(hex_chars[rng.gen_range(0..16)]);
-    }
-    uuid.push('-');
-
-    // Third segment: 4xxx where first char is '4'
-    uuid.push('4');
-    for _ in 0..3 {
-        uuid.push(hex_chars[rng.gen_range(0..16)]);
-    }
-    uuid.push('-');
-
-    // Fourth segment: yxxx where y is 8, 9, a, or b
-    let y_chars = ['8', '9', 'a', 'b'];
-    uuid.push(y_chars[rng.gen_range(0..4)]);
-    for _ in 0..3 {
-        uuid.push(hex_chars[rng.gen_range(0..16)]);
-    }
-    uuid.push('-');
-
-    // Fifth segment: 12 hex chars
-    for _ in 0..12 {
-        uuid.push(hex_chars[rng.gen_range(0..16)]);
-    }
-
-    uuid
+    uuid::Uuid::new_v4().to_string()
 }
 
 #[cfg(test)]

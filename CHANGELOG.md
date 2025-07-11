@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.5] - 2025-01-11
+
+### 🐛 Bug Fixes
+
+#### Sample Generation Configuration Support
+- **Fixed Field32A sample generation ignoring configuration**: Resolved critical issue where `sample_with_config()` was not respecting `ValueRange::Amount` constraints for amount and currency fields
+- **Amount Range Compliance**: Field32A now properly generates amounts within configured min/max ranges instead of using default random values
+- **Currency Configuration**: Field32A now uses the specified currency from `ValueRange::Amount.currency` configuration instead of generating random currencies
+- **Enhanced Macro Implementation**: Added `generate_component_sample_with_config()` function to properly handle configuration parameters in derived `SwiftField` implementations
+- **Message-Level Configuration**: Improved message-level `sample_with_config()` to properly pass field-specific configurations to individual fields
+- **Backward Compatibility**: All existing `sample()` methods continue to work unchanged
+
+#### Technical Implementation
+- **Added UUID Support**: Added `uuid` dependency for realistic UETR generation in sample data
+- **Enhanced Field Generation**: f64 fields with decimal formats (15d, 12d) now respect `ValueRange::Amount` constraints
+- **Currency Field Logic**: String fields with `currency_code` validation now check configuration before falling back to random generation
+- **Configuration Propagation**: Proper configuration passing from message-level to field-level sample generation
+
+### 🔧 Technical Improvements
+
+#### Dependencies
+- **Added uuid = "1.17"**: For realistic UETR (Unique End-to-End Transaction Reference) generation
+- **Updated Cargo.lock**: Added required dependencies for UUID functionality
+
+#### Testing
+- **Comprehensive Test Coverage**: All sample generation functions validate configuration compliance
+- **Range Validation**: Automated testing ensures generated amounts stay within configured bounds
+- **Currency Validation**: Automated testing ensures configured currencies are used consistently
+
 ## [2.3.0] - 2024-12-20
 
 ### 🎲 New Features

@@ -53,6 +53,8 @@ pub fn derive_swift_message_impl(input: TokenStream) -> TokenStream {
     // Generate sample methods
     let sample_minimal_impl = generate_sample_methods(&field_mappings, &sequence_mappings, false);
     let sample_full_impl = generate_sample_methods(&field_mappings, &sequence_mappings, true);
+    let field_assignments_with_config =
+        generate_sample_with_config_assignments(&field_mappings, &sequence_mappings);
 
     let expanded = quote! {
         impl crate::SwiftMessageBody for #name {
@@ -89,11 +91,11 @@ pub fn derive_swift_message_impl(input: TokenStream) -> TokenStream {
             }
 
             fn sample_with_config(config: &crate::sample::MessageConfig) -> Self {
-                // For now, just generate with or without optional fields
-                if config.include_optional {
-                    Self::sample_full()
-                } else {
-                    Self::sample()
+                // Generate message with field configurations
+                use crate::SwiftField;
+
+                Self {
+                    #(#field_assignments_with_config,)*
                 }
             }
         }
@@ -785,6 +787,100 @@ fn extract_validation_rules_attribute(attrs: &[Attribute]) -> Option<String> {
         }
     }
     None
+}
+
+/// Generate sample assignments for sample_with_config method
+fn generate_sample_with_config_assignments(
+    field_mappings: &[FieldMapping],
+    sequence_mappings: &[SequenceMapping],
+) -> Vec<proc_macro2::TokenStream> {
+    let mut field_assignments = Vec::new();
+
+    // Generate config-aware assignments for regular fields
+    for mapping in field_mappings {
+        let field_name = &mapping.field_name;
+        let field_tag = &mapping.field_tag;
+        let field_type = &mapping.field_type;
+
+        if mapping.is_optional {
+            // For optional fields, extract the inner type and generate appropriately
+            if let syn::Type::Path(type_path) = &mapping.field_type {
+                if let Some(segment) = type_path.path.segments.last() {
+                    if segment.ident == "Option" {
+                        if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+                            if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first()
+                            {
+                                // Check if inner type is Vec<T>
+                                if let syn::Type::Path(inner_path) = inner_type {
+                                    if let Some(inner_segment) = inner_path.path.segments.last() {
+                                        if inner_segment.ident == "Vec" {
+                                            // Handle Option<Vec<T>> - generate empty vector for now
+                                            let assignment = quote! {
+                                                #field_name: if config.include_optional {
+                                                    Some(vec![])
+                                                } else {
+                                                    None
+                                                }
+                                            };
+                                            field_assignments.push(assignment);
+                                            continue;
+                                        }
+                                    }
+                                }
+
+                                // Generate for the inner type, wrapped in Option
+                                let assignment = quote! {
+                                    #field_name: if let Some(field_config) = config.field_configs.get(#field_tag) {
+                                        Some(<#inner_type as SwiftField>::sample_with_config(field_config))
+                                    } else if config.include_optional {
+                                        Some(<#inner_type as SwiftField>::sample())
+                                    } else {
+                                        None
+                                    }
+                                };
+                                field_assignments.push(assignment);
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+            // Fallback for non-Option optional fields
+            let assignment = quote! {
+                #field_name: if config.include_optional {
+                    <#field_type as SwiftField>::sample()
+                } else {
+                    Default::default()
+                }
+            };
+            field_assignments.push(assignment);
+        } else {
+            // For required fields, always generate but check config first
+            let assignment = quote! {
+                #field_name: if let Some(field_config) = config.field_configs.get(#field_tag) {
+                    <#field_type as SwiftField>::sample_with_config(field_config)
+                } else {
+                    <#field_type as SwiftField>::sample()
+                }
+            };
+            field_assignments.push(assignment);
+        }
+    }
+
+    // Generate assignments for sequences (if any)
+    for seq_mapping in sequence_mappings {
+        let field_name = &seq_mapping.field_name;
+        let _sequence_tag = &seq_mapping.sequence_tag;
+
+        // For sequences, generate empty vector for now
+        // TODO: Implement proper sequence config support
+        let assignment = quote! {
+            #field_name: vec![]
+        };
+        field_assignments.push(assignment);
+    }
+
+    field_assignments
 }
 
 /// Generate sample methods for message types

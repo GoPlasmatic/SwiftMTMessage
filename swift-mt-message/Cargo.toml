@@ -1,6 +1,6 @@
 [package]
 name = "swift-mt-message"
-version = "2.3.4"
+version = "2.3.5"
 edition = "2024"
 exclude = [".DS_Store", "/target", ".vscode", ".github"]
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
@@ -14,7 +14,7 @@ categories = ["data-structures", "development-tools", "parsing"]
 
 [dependencies]
 # Macro crate
-swift-mt-message-macros = { version = "2.3.1", path = "../swift-mt-message-macros" }
+swift-mt-message-macros = { version = "2.3.5", path = "../swift-mt-message-macros" }
 
 # Core serialization and parsing
 serde = { workspace = true }
@@ -31,6 +31,9 @@ datalogic-rs = { workspace = true }
 
 # Random number generation for sample data
 rand = { workspace = true }
+
+# UUID generation for realistic UETR
+uuid = { workspace = true }
 
 [dev-dependencies]
 pretty_assertions = "1.4"

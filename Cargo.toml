@@ -23,3 +23,6 @@ datalogic-rs = "3.0.29"
 
 # Random number generation for sample data
 rand = "0.8" 
+
+# UUID generation
+uuid = { version = "1.11", features = ["v4", "serde"] } 

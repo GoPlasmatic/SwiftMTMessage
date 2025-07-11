@@ -1735,10 +1735,20 @@ fn generate_sample_logic(components: &[ComponentSpec]) -> proc_macro2::TokenStre
 }
 
 /// Generate sample logic with configuration from component specifications
-fn generate_sample_with_config_logic(_components: &[ComponentSpec]) -> proc_macro2::TokenStream {
+fn generate_sample_with_config_logic(components: &[ComponentSpec]) -> proc_macro2::TokenStream {
+    let field_assignments = components.iter().map(|comp| {
+        let field_name = syn::Ident::new(&comp.field_name, proc_macro2::Span::call_site());
+        let sample_value = generate_component_sample_with_config(comp);
+
+        quote! {
+            #field_name: #sample_value
+        }
+    });
+
     quote! {
-        // For now, just call sample() - can be enhanced later to use config
-        Self::sample()
+        Self {
+            #(#field_assignments),*
+        }
     }
 }
 
@@ -1760,12 +1770,27 @@ fn generate_component_sample(comp: &ComponentSpec) -> proc_macro2::TokenStream {
     let base_sample = if is_vec {
         match comp.format.as_str() {
             "lines" => quote! {
-                vec![
-                    crate::sample::generate_any_character(20),
-                    crate::sample::generate_any_character(25),
-                ]
+                {
+                    use rand::Rng;
+                    let mut rng = rand::thread_rng();
+                    let line_count = rng.gen_range(1..=4);
+                    (0..line_count).map(|_| {
+                        let length = rng.gen_range(15..35);
+                        crate::sample::generate_any_character(length)
+                    }).collect::<Vec<String>>()
+                }
             },
-            _ => quote! { vec![crate::sample::generate_alphanumeric(10)] },
+            _ => quote! {
+                {
+                    use rand::Rng;
+                    let mut rng = rand::thread_rng();
+                    let item_count = rng.gen_range(1..=3);
+                    (0..item_count).map(|_| {
+                        let length = rng.gen_range(8..15);
+                        crate::sample::generate_alphanumeric(length)
+                    }).collect()
+                }
+            },
         }
     } else if is_naive_date {
         match comp.format.as_str() {
@@ -1792,20 +1817,67 @@ fn generate_component_sample(comp: &ComponentSpec) -> proc_macro2::TokenStream {
                 }
             },
             "6!n" => quote! {
-                chrono::NaiveTime::from_hms_opt(14, 30, 0).unwrap()
+                {
+                    let time_str = crate::sample::generate_time_hhmm();
+                    chrono::NaiveTime::parse_from_str(&format!("{}:{}:00", &time_str[0..2], &time_str[2..4]), "%H:%M:%S").unwrap()
+                }
             },
             _ => quote! { chrono::Local::now().naive_local().time() },
         }
     } else if is_char {
-        quote! { 'A' }
+        quote! {
+            {
+                use rand::Rng;
+                let chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+                let mut rng = rand::thread_rng();
+                chars[rng.gen_range(0..chars.len())]
+            }
+        }
     } else if is_u32 {
-        quote! { 12345u32 }
+        quote! {
+            {
+                use rand::Rng;
+                let mut rng = rand::thread_rng();
+                rng.gen_range(10000u32..99999u32)
+            }
+        }
     } else if is_i32 {
-        quote! { 100i32 }
+        quote! {
+            {
+                use rand::Rng;
+                let mut rng = rand::thread_rng();
+                rng.gen_range(100i32..9999i32)
+            }
+        }
     } else if is_u8 {
-        quote! { 5u8 }
+        quote! {
+            {
+                use rand::Rng;
+                let mut rng = rand::thread_rng();
+                rng.gen_range(1u8..99u8)
+            }
+        }
     } else if is_f64 {
-        quote! { 1000.50f64 }
+        // Generate realistic f64 amounts using the sample utilities
+        match comp.format.as_str() {
+            "15d" | "12d" => {
+                let format_str = &comp.format;
+                quote! {
+                    {
+                        let amount_str = crate::sample::generate_by_format_spec(#format_str);
+                        let normalized = amount_str.replace(',', ".");
+                        normalized.parse::<f64>().unwrap_or(1250.0)
+                    }
+                }
+            }
+            _ => quote! {
+                {
+                    let amount_str = crate::sample::generate_decimal(10, 2);
+                    let normalized = amount_str.replace(',', ".");
+                    normalized.parse::<f64>().unwrap_or(1250.0)
+                }
+            },
+        }
     } else if is_bool {
         quote! { true }
     } else if is_custom_fromstr {
@@ -1816,25 +1888,208 @@ fn generate_component_sample(comp: &ComponentSpec) -> proc_macro2::TokenStream {
             quote! { Default::default() }
         }
     } else {
-        // String type - generate based on format
+        // String type - generate based on validation rules and format
+        if comp.validation_rules.contains(&"currency_code".to_string()) {
+            quote! { crate::sample::generate_valid_currency() }
+        } else if comp.validation_rules.contains(&"bic".to_string()) {
+            quote! { crate::sample::generate_valid_bic() }
+        } else {
+            match comp.format.as_str() {
+                format if format.contains("date_format:YYMMDD") => {
+                    quote! { crate::sample::generate_date_yymmdd() }
+                }
+                format if format.contains("date_format:YYYYMMDD") => {
+                    quote! { crate::sample::generate_date_yyyymmdd() }
+                }
+                format if format.contains("time_format:HHMM") => {
+                    quote! { crate::sample::generate_time_hhmm() }
+                }
+                format => {
+                    let format_str = format;
+                    quote! { crate::sample::generate_by_format_spec(#format_str) }
+                }
+            }
+        }
+    };
+
+    if is_optional {
+        quote! { Some(#base_sample) }
+    } else {
+        base_sample
+    }
+}
+
+/// Generate sample value for a component with configuration support
+fn generate_component_sample_with_config(comp: &ComponentSpec) -> proc_macro2::TokenStream {
+    let base_type = get_base_type(&comp.field_type);
+    let is_vec = is_vec_type(&comp.field_type);
+    let is_optional = is_option_type(&comp.field_type) || comp.optional;
+    let is_naive_date = is_naive_date_type(base_type);
+    let is_naive_time = is_naive_time_type(base_type);
+    let is_char = is_char_type(base_type);
+    let is_u32 = is_u32_type(base_type);
+    let is_f64 = is_f64_type(base_type);
+    let is_i32 = is_i32_type(base_type);
+    let is_u8 = is_u8_type(base_type);
+    let is_bool = is_bool_type(base_type);
+    let is_custom_fromstr = is_custom_fromstr_type(base_type);
+
+    let base_sample = if is_vec {
         match comp.format.as_str() {
-            format if format.contains("currency_code") => {
-                quote! { crate::sample::generate_valid_currency() }
+            "lines" => quote! {
+                {
+                    use rand::Rng;
+                    let mut rng = rand::thread_rng();
+                    let line_count = rng.gen_range(1..=4);
+                    (0..line_count).map(|_| {
+                        let length = rng.gen_range(15..35);
+                        crate::sample::generate_any_character(length)
+                    }).collect::<Vec<String>>()
+                }
+            },
+            _ => quote! {
+                {
+                    use rand::Rng;
+                    let mut rng = rand::thread_rng();
+                    let item_count = rng.gen_range(1..=3);
+                    (0..item_count).map(|_| {
+                        let length = rng.gen_range(8..15);
+                        crate::sample::generate_alphanumeric(length)
+                    }).collect()
+                }
+            },
+        }
+    } else if is_naive_date {
+        match comp.format.as_str() {
+            "6!n" => quote! {
+                {
+                    let date_str = crate::sample::generate_date_yymmdd();
+                    chrono::NaiveDate::parse_from_str(&format!("20{}", date_str), "%Y%m%d").unwrap()
+                }
+            },
+            "8!n" => quote! {
+                {
+                    let date_str = crate::sample::generate_date_yyyymmdd();
+                    chrono::NaiveDate::parse_from_str(&date_str, "%Y%m%d").unwrap()
+                }
+            },
+            _ => quote! { chrono::Local::now().naive_local().date() },
+        }
+    } else if is_naive_time {
+        match comp.format.as_str() {
+            "4!n" => quote! {
+                {
+                    let time_str = crate::sample::generate_time_hhmm();
+                    chrono::NaiveTime::parse_from_str(&format!("{}:00", &time_str[0..2]), "%H:%M:%S").unwrap()
+                }
+            },
+            "6!n" => quote! {
+                {
+                    let time_str = crate::sample::generate_time_hhmm();
+                    chrono::NaiveTime::parse_from_str(&format!("{}:{}:00", &time_str[0..2], &time_str[2..4]), "%H:%M:%S").unwrap()
+                }
+            },
+            _ => quote! { chrono::Local::now().naive_local().time() },
+        }
+    } else if is_char {
+        quote! {
+            {
+                use rand::Rng;
+                let chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+                let mut rng = rand::thread_rng();
+                chars[rng.gen_range(0..chars.len())]
             }
-            format if format.contains("bic") => {
-                quote! { crate::sample::generate_valid_bic() }
+        }
+    } else if is_u32 {
+        quote! {
+            {
+                use rand::Rng;
+                let mut rng = rand::thread_rng();
+                rng.gen_range(10000u32..99999u32)
             }
-            format if format.contains("date_format:YYMMDD") => {
-                quote! { crate::sample::generate_date_yymmdd() }
+        }
+    } else if is_i32 {
+        quote! {
+            {
+                use rand::Rng;
+                let mut rng = rand::thread_rng();
+                rng.gen_range(100i32..9999i32)
             }
-            format if format.contains("date_format:YYYYMMDD") => {
-                quote! { crate::sample::generate_date_yyyymmdd() }
+        }
+    } else if is_u8 {
+        quote! {
+            {
+                use rand::Rng;
+                let mut rng = rand::thread_rng();
+                rng.gen_range(1u8..99u8)
             }
-            format if format.contains("time_format:HHMM") => {
-                quote! { crate::sample::generate_time_hhmm() }
+        }
+    } else if is_f64 {
+        // Generate f64 amounts using configuration if available
+        match comp.format.as_str() {
+            "15d" | "12d" => {
+                let format_str = &comp.format;
+                quote! {
+                    {
+                        // Use config for amount generation if available
+                        let amount_str = crate::sample::generate_by_format_spec_with_config(#format_str, config);
+                        let normalized = amount_str.replace(',', ".");
+                        normalized.parse::<f64>().unwrap_or(1250.0)
+                    }
+                }
             }
-            format => {
-                quote! { crate::sample::generate_by_format_spec(#format) }
+            _ => quote! {
+                {
+                    // Use config for decimal generation if available
+                    if let Some(crate::sample::ValueRange::Amount { min, max, .. }) = &config.value_range {
+                        let amount_str = crate::sample::generate_decimal_with_range(10, 2, Some(*min), Some(*max));
+                        let normalized = amount_str.replace(',', ".");
+                        normalized.parse::<f64>().unwrap_or(1250.0)
+                    } else {
+                        let amount_str = crate::sample::generate_decimal(10, 2);
+                        let normalized = amount_str.replace(',', ".");
+                        normalized.parse::<f64>().unwrap_or(1250.0)
+                    }
+                }
+            },
+        }
+    } else if is_bool {
+        quote! { true }
+    } else if is_custom_fromstr {
+        // Check if it's a BIC type
+        if comp.validation_rules.contains(&"bic".to_string()) {
+            quote! { crate::fields::bic::BIC::from_str(&crate::sample::generate_valid_bic()).unwrap() }
+        } else {
+            quote! { Default::default() }
+        }
+    } else {
+        // String type - generate based on validation rules and format, with config support
+        if comp.validation_rules.contains(&"currency_code".to_string()) {
+            quote! {
+                // Use currency from config if available
+                if let Some(crate::sample::ValueRange::Amount { currency: Some(curr), .. }) = &config.value_range {
+                    curr.clone()
+                } else {
+                    crate::sample::generate_valid_currency()
+                }
+            }
+        } else if comp.validation_rules.contains(&"bic".to_string()) {
+            quote! { crate::sample::generate_valid_bic() }
+        } else {
+            match comp.format.as_str() {
+                format if format.contains("date_format:YYMMDD") => {
+                    quote! { crate::sample::generate_date_yymmdd() }
+                }
+                format if format.contains("date_format:YYYYMMDD") => {
+                    quote! { crate::sample::generate_date_yyyymmdd() }
+                }
+                format if format.contains("time_format:HHMM") => {
+                    quote! { crate::sample::generate_time_hhmm() }
+                }
+                format => {
+                    let format_str = format;
+                    quote! { crate::sample::generate_by_format_spec_with_config(#format_str, config) }
+                }
             }
         }
     };

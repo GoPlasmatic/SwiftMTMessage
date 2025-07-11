@@ -326,6 +326,54 @@ pub fn generate_name_and_address(lines: usize) -> Vec<String> {
     result
 }
 
+/// Generate a UETR (Unique End-to-End Transaction Reference) in UUID format
+/// Used for CBPR+ compliance in Tag 121 of User Header
+pub fn generate_uetr() -> String {
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+
+    // Generate UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+    // where x is any hexadecimal digit and y is one of 8, 9, A, or B
+    let hex_chars = "0123456789abcdef";
+    let hex_chars: Vec<char> = hex_chars.chars().collect();
+
+    let mut uuid = String::new();
+
+    // First segment: 8 hex chars
+    for _ in 0..8 {
+        uuid.push(hex_chars[rng.gen_range(0..16)]);
+    }
+    uuid.push('-');
+
+    // Second segment: 4 hex chars
+    for _ in 0..4 {
+        uuid.push(hex_chars[rng.gen_range(0..16)]);
+    }
+    uuid.push('-');
+
+    // Third segment: 4xxx where first char is '4'
+    uuid.push('4');
+    for _ in 0..3 {
+        uuid.push(hex_chars[rng.gen_range(0..16)]);
+    }
+    uuid.push('-');
+
+    // Fourth segment: yxxx where y is 8, 9, a, or b
+    let y_chars = ['8', '9', 'a', 'b'];
+    uuid.push(y_chars[rng.gen_range(0..4)]);
+    for _ in 0..3 {
+        uuid.push(hex_chars[rng.gen_range(0..16)]);
+    }
+    uuid.push('-');
+
+    // Fifth segment: 12 hex chars
+    for _ in 0..12 {
+        uuid.push(hex_chars[rng.gen_range(0..16)]);
+    }
+
+    uuid
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

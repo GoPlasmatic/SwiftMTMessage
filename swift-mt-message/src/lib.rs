@@ -941,4 +941,114 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
 
         swift_message
     }
+
+    /// Generate a sample SWIFT message with headers and message body
+    /// Returns a complete message with all blocks including sample headers
+    pub fn sample() -> Self
+    where
+        T: SwiftMessageBody,
+    {
+        Self::sample_with_config(&sample::MessageConfig::default())
+    }
+
+    /// Generate a minimal sample SWIFT message (mandatory fields only)
+    /// Returns a complete message with headers and minimal field set
+    pub fn sample_minimal() -> Self
+    where
+        T: SwiftMessageBody,
+    {
+        let config = sample::MessageConfig {
+            scenario: Some(sample::MessageScenario::Minimal),
+            ..Default::default()
+        };
+        Self::sample_with_config(&config)
+    }
+
+    /// Generate a full sample SWIFT message (all fields populated)
+    /// Returns a complete message with headers and all possible fields
+    pub fn sample_full() -> Self
+    where
+        T: SwiftMessageBody,
+    {
+        let config = sample::MessageConfig {
+            scenario: Some(sample::MessageScenario::Full),
+            include_optional: true,
+            ..Default::default()
+        };
+        Self::sample_with_config(&config)
+    }
+
+    /// Generate a sample SWIFT message with custom configuration
+    /// Returns a complete message with headers and configurable field generation
+    pub fn sample_with_config(config: &sample::MessageConfig) -> Self
+    where
+        T: SwiftMessageBody,
+    {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+
+        // Generate sample message body based on configuration
+        let fields = match config.scenario {
+            Some(sample::MessageScenario::Minimal) => T::sample_minimal(),
+            Some(sample::MessageScenario::Full) => T::sample_full(),
+            _ => T::sample_with_config(config),
+        };
+
+        // Generate sample headers using the header module functions
+        let basic_header = BasicHeader::sample();
+        let application_header = ApplicationHeader::sample(T::message_type());
+
+        // Generate user header with UETR for CBPR+ compliance - always include for CBPR+
+        let user_header = Some(UserHeader::sample_with_scenario(config.scenario.as_ref()));
+
+        // Generate optional trailer (Block 5) - include sometimes for realism
+        let trailer = if config.scenario == Some(sample::MessageScenario::Full) || rng.gen_bool(0.2)
+        {
+            Some(Trailer::sample())
+        } else {
+            None
+        };
+
+        // Generate field order based on required and optional fields
+        let mut field_order = T::required_fields()
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>();
+
+        if config.include_optional || config.scenario == Some(sample::MessageScenario::Full) {
+            let mut optional_fields = T::optional_fields()
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>();
+            field_order.append(&mut optional_fields);
+        }
+
+        // Sort field order numerically for proper SWIFT message structure
+        field_order.sort_by(|a, b| {
+            let a_num: u32 = a
+                .chars()
+                .take_while(|c| c.is_ascii_digit())
+                .collect::<String>()
+                .parse()
+                .unwrap_or(0);
+            let b_num: u32 = b
+                .chars()
+                .take_while(|c| c.is_ascii_digit())
+                .collect::<String>()
+                .parse()
+                .unwrap_or(0);
+            a_num.cmp(&b_num)
+        });
+
+        SwiftMessage {
+            basic_header,
+            application_header,
+            user_header,
+            trailer,
+            blocks: None,
+            message_type: T::message_type().to_string(),
+            field_order,
+            fields,
+        }
+    }
 }

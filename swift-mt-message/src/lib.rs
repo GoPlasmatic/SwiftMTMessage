@@ -261,6 +261,10 @@ pub enum ParsedSwiftMessage {
     MT292(Box<SwiftMessage<messages::MT292>>),
     #[serde(rename = "296")]
     MT296(Box<SwiftMessage<messages::MT296>>),
+    #[serde(rename = "199")]
+    MT199(Box<SwiftMessage<messages::MT199>>),
+    #[serde(rename = "299")]
+    MT299(Box<SwiftMessage<messages::MT299>>),
 }
 
 impl ParsedSwiftMessage {
@@ -289,6 +293,8 @@ impl ParsedSwiftMessage {
             ParsedSwiftMessage::MT196(_) => "196",
             ParsedSwiftMessage::MT292(_) => "292",
             ParsedSwiftMessage::MT296(_) => "296",
+            ParsedSwiftMessage::MT199(_) => "199",
+            ParsedSwiftMessage::MT299(_) => "299",
         }
     }
 }
@@ -427,6 +433,18 @@ impl ParsedSwiftMessage {
             _ => None,
         }
     }
+    pub fn as_mt199(&self) -> Option<&SwiftMessage<messages::MT199>> {
+        match self {
+            ParsedSwiftMessage::MT199(msg) => Some(msg),
+            _ => None,
+        }
+    }
+    pub fn as_mt299(&self) -> Option<&SwiftMessage<messages::MT299>> {
+        match self {
+            ParsedSwiftMessage::MT299(msg) => Some(msg),
+            _ => None,
+        }
+    }
 
     /// Convert into a specific message type if it matches
     pub fn into_mt101(self) -> Option<SwiftMessage<messages::MT101>> {
@@ -561,6 +579,18 @@ impl ParsedSwiftMessage {
             _ => None,
         }
     }
+    pub fn into_mt199(self) -> Option<SwiftMessage<messages::MT199>> {
+        match self {
+            ParsedSwiftMessage::MT199(msg) => Some(*msg),
+            _ => None,
+        }
+    }
+    pub fn into_mt299(self) -> Option<SwiftMessage<messages::MT299>> {
+        match self {
+            ParsedSwiftMessage::MT299(msg) => Some(*msg),
+            _ => None,
+        }
+    }
 }
 
 impl<T: SwiftMessageBody> SwiftMessage<T> {
@@ -683,6 +713,8 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             "196" => messages::MT196::validation_rules(),
             "292" => messages::MT292::validation_rules(),
             "296" => messages::MT296::validation_rules(),
+            "199" => messages::MT199::validation_rules(),
+            "299" => messages::MT299::validation_rules(),
             _ => {
                 return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
                     rule_name: "UNSUPPORTED_MESSAGE_TYPE".to_string(),

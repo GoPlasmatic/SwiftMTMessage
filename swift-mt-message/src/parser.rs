@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use crate::errors::{ParseError, Result};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 use crate::messages::{
-    MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT202, MT205, MT210, MT292,
-    MT296, MT900, MT910, MT920, MT935, MT940, MT941, MT942, MT950,
+    MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT199, MT202, MT205, MT210,
+    MT292, MT296, MT299, MT900, MT910, MT920, MT935, MT940, MT941, MT942, MT950,
 };
 use crate::{ParsedSwiftMessage, RawBlocks, SwiftMessage, SwiftMessageBody};
 
@@ -163,6 +163,14 @@ impl SwiftParser {
             "296" => {
                 let parsed = Self::parse::<MT296>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT296(Box::new(parsed)))
+            }
+            "199" => {
+                let parsed = Self::parse::<MT199>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT199(Box::new(parsed)))
+            }
+            "299" => {
+                let parsed = Self::parse::<MT299>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT299(Box::new(parsed)))
             }
             _ => Err(ParseError::UnsupportedMessageType {
                 message_type: message_type.clone(),

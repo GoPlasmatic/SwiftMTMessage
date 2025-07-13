@@ -33,34 +33,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         "service_id": "01",
                         "session_number": "0000"
                     },
-                    "blocks": {
-                        "block1": "F01BANKBEBBAXXX0000000000",
-                        "block2": "I103BANKDEFFXXXXN",
-                        "block3": "{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}"
-                    },
-                    "field_order": [
-                        "20",
-                        "23B",
-                        "32A",
-                        "33B",
-                        "36",
-                        "50",
-                        "52A",
-                        "56A",
-                        "56B",
-                        "56C",
-                        "57A",
-                        "57B",
-                        "57C",
-                        "57D",
-                        "59",
-                        "70",
-                        "71A",
-                        "71F",
-                        "71G",
-                        "72",
-                        "77B"
-                    ],
                     "fields": {
                         "20": {
                             "value": "REF123456789"
@@ -75,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         },
                         "50": {
                             "K": {
-                                "lines": [
+                                "name_and_address": [
                                     "/NOTPROVIDED",
                                     "John Doe"
                                 ]

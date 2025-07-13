@@ -1,4 +1,4 @@
-use swift_mt_message::{ParsedSwiftMessage, SwiftParser};
+use swift_mt_message::{ParsedSwiftMessage, SwiftMessageBody, SwiftParser};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Sample SWIFT message (MT900 - Confirmation of Debit)
@@ -95,43 +95,43 @@ fn display_message_info(parsed_message: &ParsedSwiftMessage) {
             &msg.basic_header,
             &msg.application_header,
             msg.user_header.as_ref(),
-            msg.field_order.len(),
+            msg.fields.to_fields().len(),
         ),
         ParsedSwiftMessage::MT104(msg) => (
             &msg.basic_header,
             &msg.application_header,
             msg.user_header.as_ref(),
-            msg.field_order.len(),
+            msg.fields.to_fields().len(),
         ),
         ParsedSwiftMessage::MT107(msg) => (
             &msg.basic_header,
             &msg.application_header,
             msg.user_header.as_ref(),
-            msg.field_order.len(),
+            msg.fields.to_fields().len(),
         ),
         ParsedSwiftMessage::MT202(msg) => (
             &msg.basic_header,
             &msg.application_header,
             msg.user_header.as_ref(),
-            msg.field_order.len(),
+            msg.fields.to_fields().len(),
         ),
         ParsedSwiftMessage::MT205(msg) => (
             &msg.basic_header,
             &msg.application_header,
             msg.user_header.as_ref(),
-            msg.field_order.len(),
+            msg.fields.to_fields().len(),
         ),
         ParsedSwiftMessage::MT900(msg) => (
             &msg.basic_header,
             &msg.application_header,
             msg.user_header.as_ref(),
-            msg.field_order.len(),
+            msg.fields.to_fields().len(),
         ),
         ParsedSwiftMessage::MT192(msg) => (
             &msg.basic_header,
             &msg.application_header,
             msg.user_header.as_ref(),
-            msg.field_order.len(),
+            msg.fields.to_fields().len(),
         ),
         _ => {
             println!("Unknown message type");

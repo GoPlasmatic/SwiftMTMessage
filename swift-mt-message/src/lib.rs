@@ -151,32 +151,11 @@ pub struct SwiftMessage<T: SwiftMessageBody> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trailer: Option<Trailer>,
 
-    /// Raw message blocks for preservation
-    pub blocks: Option<RawBlocks>,
-
     /// Message type identifier
     pub message_type: String,
 
-    /// Field order as they appeared in the original message
-    pub field_order: Vec<String>,
-
     /// Parsed message body with typed fields
     pub fields: T,
-}
-
-/// Raw message blocks for preservation and reconstruction
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct RawBlocks {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub block1: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub block2: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub block3: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub block4: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub block5: Option<String>,
 }
 
 /// Validation result for field and message validation
@@ -922,8 +901,26 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             .map(|s| s.to_string())
             .collect();
 
-        // Use field_order to maintain proper field sequence
-        for field_tag in &self.field_order {
+        // Create ascending field order by sorting field tags numerically
+        let mut field_tags: Vec<_> = field_map.keys().collect();
+        field_tags.sort_by(|a, b| {
+            let a_num: u32 = a
+                .chars()
+                .take_while(|c| c.is_ascii_digit())
+                .collect::<String>()
+                .parse()
+                .unwrap_or(0);
+            let b_num: u32 = b
+                .chars()
+                .take_while(|c| c.is_ascii_digit())
+                .collect::<String>()
+                .parse()
+                .unwrap_or(0);
+            a_num.cmp(&b_num)
+        });
+
+        // Output fields in ascending numerical order
+        for field_tag in field_tags {
             if let Some(field_values) = field_map.get(field_tag) {
                 for field_value in field_values {
                     // Skip empty optional fields
@@ -938,24 +935,6 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                         block4.push_str(&format!("\n{field_value}"));
                     } else {
                         // Value doesn't have field tag prefix, add it
-                        block4.push_str(&format!("\n:{field_tag}:{field_value}"));
-                    }
-                }
-            }
-        }
-
-        // Handle any fields not in field_order (shouldn't happen in normal cases)
-        for (field_tag, field_values) in &field_map {
-            if !self.field_order.contains(field_tag) {
-                for field_value in field_values {
-                    // Skip empty optional fields
-                    if optional_fields.contains(field_tag) && field_value.trim().is_empty() {
-                        continue;
-                    }
-
-                    if field_value.starts_with(':') {
-                        block4.push_str(&format!("\n{field_value}"));
-                    } else {
                         block4.push_str(&format!("\n:{field_tag}:{field_value}"));
                     }
                 }
@@ -1041,45 +1020,12 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             None
         };
 
-        // Generate field order based on required and optional fields
-        let mut field_order = T::required_fields()
-            .iter()
-            .map(|s| s.to_string())
-            .collect::<Vec<_>>();
-
-        if config.include_optional || config.scenario == Some(sample::MessageScenario::Full) {
-            let mut optional_fields = T::optional_fields()
-                .iter()
-                .map(|s| s.to_string())
-                .collect::<Vec<_>>();
-            field_order.append(&mut optional_fields);
-        }
-
-        // Sort field order numerically for proper SWIFT message structure
-        field_order.sort_by(|a, b| {
-            let a_num: u32 = a
-                .chars()
-                .take_while(|c| c.is_ascii_digit())
-                .collect::<String>()
-                .parse()
-                .unwrap_or(0);
-            let b_num: u32 = b
-                .chars()
-                .take_while(|c| c.is_ascii_digit())
-                .collect::<String>()
-                .parse()
-                .unwrap_or(0);
-            a_num.cmp(&b_num)
-        });
-
         SwiftMessage {
             basic_header,
             application_header,
             user_header,
             trailer,
-            blocks: None,
             message_type: T::message_type().to_string(),
-            field_order,
             fields,
         }
     }

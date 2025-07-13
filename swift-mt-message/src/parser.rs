@@ -6,10 +6,10 @@ use crate::messages::{
     MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT199, MT202, MT205, MT210,
     MT292, MT296, MT299, MT900, MT910, MT920, MT935, MT940, MT941, MT942, MT950,
 };
-use crate::{ParsedSwiftMessage, RawBlocks, SwiftMessage, SwiftMessageBody};
+use crate::{ParsedSwiftMessage, SwiftMessage, SwiftMessageBody};
 
-/// Type alias for the complex return type of field parsing
-type FieldParseResult = Result<(HashMap<String, Vec<String>>, Vec<String>)>;
+/// Type alias for the field parsing result
+type FieldParseResult = Result<HashMap<String, Vec<String>>>;
 
 /// Main parser for SWIFT MT messages
 pub struct SwiftParser;
@@ -17,22 +17,17 @@ pub struct SwiftParser;
 impl SwiftParser {
     /// Parse a raw SWIFT message string into a typed message
     pub fn parse<T: SwiftMessageBody>(raw_message: &str) -> Result<SwiftMessage<T>> {
-        let blocks = Self::extract_blocks(raw_message)?;
+        let block1 = Self::extract_block(raw_message, 1)?;
+        let block2 = Self::extract_block(raw_message, 2)?;
+        let block3 = Self::extract_block(raw_message, 3)?;
+        let block4 = Self::extract_block(raw_message, 4)?;
+        let block5 = Self::extract_block(raw_message, 5)?;
 
         // Parse headers
-        let basic_header = BasicHeader::parse(&blocks.block1.clone().unwrap_or_default())?;
-        let application_header =
-            ApplicationHeader::parse(&blocks.block2.clone().unwrap_or_default())?;
-        let user_header = blocks
-            .block3
-            .as_ref()
-            .map(|b| UserHeader::parse(b))
-            .transpose()?;
-        let trailer = blocks
-            .block5
-            .as_ref()
-            .map(|b| Trailer::parse(b))
-            .transpose()?;
+        let basic_header = BasicHeader::parse(&block1.unwrap_or_default())?;
+        let application_header = ApplicationHeader::parse(&block2.unwrap_or_default())?;
+        let user_header = block3.map(|b| UserHeader::parse(&b)).transpose()?;
+        let trailer = block5.map(|b| Trailer::parse(&b)).transpose()?;
 
         // Extract message type from application header
         let message_type = application_header.message_type.clone();
@@ -45,9 +40,8 @@ impl SwiftParser {
             });
         }
 
-        let block4 = blocks.block4.clone().unwrap_or_default();
         // Parse block 4 fields
-        let (field_map, field_order) = Self::parse_block4_fields(&block4)?;
+        let field_map = Self::parse_block4_fields(&block4.unwrap_or_default())?;
 
         // Parse message body using the field map
         let fields = T::from_fields(field_map)?;
@@ -57,9 +51,7 @@ impl SwiftParser {
             application_header,
             user_header,
             trailer,
-            blocks: Some(blocks),
             message_type,
-            field_order,
             fields,
         })
     }
@@ -67,11 +59,10 @@ impl SwiftParser {
     /// Parse a raw SWIFT message string with automatic message type detection
     pub fn parse_auto(raw_message: &str) -> Result<ParsedSwiftMessage> {
         // First, extract blocks to get the message type
-        let blocks = Self::extract_blocks(raw_message)?;
+        let block2 = Self::extract_block(raw_message, 2)?;
 
         // Parse application header to get message type
-        let application_header =
-            ApplicationHeader::parse(&blocks.block2.clone().unwrap_or_default())?;
+        let application_header = ApplicationHeader::parse(&block2.unwrap_or_default())?;
         let message_type = &application_header.message_type;
 
         // Route to appropriate parser based on message type
@@ -178,76 +169,53 @@ impl SwiftParser {
         }
     }
 
-    /// Extract message blocks from raw SWIFT message
-    pub fn extract_blocks(raw_message: &str) -> Result<RawBlocks> {
-        let mut blocks = RawBlocks::default();
+    /// Extract a specific message block from raw SWIFT message
+    pub fn extract_block(raw_message: &str, block_index: u8) -> Result<Option<String>> {
+        let block_marker = format!("{{{block_index}:");
 
-        // Find block boundaries
-        let mut current_pos = 0;
+        if let Some(start) = raw_message.find(&block_marker) {
+            let content_start = start + block_marker.len();
 
-        // Block 1: Basic Header {1:...}
-        if let Some(start) = raw_message[current_pos..].find("{1:") {
-            let start = current_pos + start;
-            if let Some(end) = raw_message[start..].find('}') {
-                let end = start + end;
-                blocks.block1 = Some(raw_message[start + 3..end].to_string());
-                current_pos = end + 1;
+            match block_index {
+                1 | 2 | 5 => {
+                    // Blocks 1, 2, and 5 end with simple closing brace
+                    if let Some(end) = raw_message[start..].find('}') {
+                        let end = start + end;
+                        Ok(Some(raw_message[content_start..end].to_string()))
+                    } else {
+                        Ok(None)
+                    }
+                }
+                3 => {
+                    // Block 3 may have nested braces
+                    if let Some(end) = Self::find_matching_brace(&raw_message[start..]) {
+                        let end = start + end;
+                        Ok(Some(raw_message[content_start..end].to_string()))
+                    } else {
+                        Ok(None)
+                    }
+                }
+                4 => {
+                    // Block 4 ends with "-}"
+                    if let Some(end) = raw_message[start..].find("-}") {
+                        let end = start + end;
+                        Ok(Some(raw_message[content_start..end].to_string()))
+                    } else {
+                        Ok(None)
+                    }
+                }
+                _ => Err(ParseError::InvalidBlockStructure {
+                    message: format!("Invalid block index: {block_index}"),
+                }),
             }
+        } else {
+            Ok(None)
         }
-
-        // Block 2: Application Header {2:...}
-        if let Some(start) = raw_message[current_pos..].find("{2:") {
-            let start = current_pos + start;
-            if let Some(end) = raw_message[start..].find('}') {
-                let end = start + end;
-                blocks.block2 = Some(raw_message[start + 3..end].to_string());
-                current_pos = end + 1;
-            }
-        }
-
-        // Block 3: User Header {3:...} (optional)
-        if let Some(start) = raw_message[current_pos..].find("{3:") {
-            let start = current_pos + start;
-            // Find matching closing brace for block 3
-            if let Some(end) = Self::find_matching_brace(&raw_message[start..]) {
-                let end = start + end;
-                blocks.block3 = Some(raw_message[start + 3..end].to_string());
-                current_pos = end + 1;
-            }
-        }
-
-        // Block 4: Text Block {4:\n...-}
-        if let Some(start) = raw_message[current_pos..].find("{4:") {
-            let start = current_pos + start;
-            if let Some(end) = raw_message[start..].find("-}") {
-                let end = start + end;
-                blocks.block4 = Some(raw_message[start + 3..end].to_string());
-                current_pos = end + 2;
-            }
-        }
-
-        // Block 5: Trailer {5:...} (optional)
-        if let Some(start) = raw_message[current_pos..].find("{5:") {
-            let start = current_pos + start;
-            if let Some(end) = raw_message[start..].find('}') {
-                let end = start + end;
-                blocks.block5 = Some(raw_message[start + 3..end].to_string());
-            }
-        }
-
-        if blocks.block1.is_none() || blocks.block2.is_none() || blocks.block4.is_none() {
-            return Err(ParseError::InvalidBlockStructure {
-                message: "Missing required blocks (1, 2, or 4)".to_string(),
-            });
-        }
-
-        Ok(blocks)
     }
 
-    /// Parse block 4 fields into a field map and preserve field order
+    /// Parse block 4 fields into a field map
     fn parse_block4_fields(block4: &str) -> FieldParseResult {
         let mut field_map: HashMap<String, Vec<String>> = HashMap::new();
-        let mut field_order = Vec::new();
 
         // Remove leading/trailing whitespace and newlines
         let content = block4.trim();
@@ -287,11 +255,6 @@ impl SwiftParser {
                         .or_default()
                         .push(complete_field_string);
 
-                    // Only add to field_order if this is the first occurrence of this field
-                    if !field_order.contains(&field_tag) {
-                        field_order.push(field_tag);
-                    }
-
                     current_pos = value_end;
                 } else {
                     // Last field or malformed
@@ -302,7 +265,7 @@ impl SwiftParser {
             }
         }
 
-        Ok((field_map, field_order))
+        Ok(field_map)
     }
 
     /// Normalize field tag by removing option letters (A, F, K, etc.)
@@ -456,21 +419,61 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_extract_blocks() {
+    fn test_extract_blocks_legacy() {
         let raw_message = "{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:\n:20:FT21234567890\n:23B:CRED\n-}";
-        let blocks = SwiftParser::extract_blocks(raw_message).unwrap();
 
-        assert!(blocks.block1.is_some());
-        assert!(blocks.block2.is_some());
-        assert!(blocks.block4.is_some());
-        assert_eq!(blocks.block1.as_ref().unwrap(), "F01BANKDEFFAXXX0123456789");
-        assert_eq!(blocks.block2.as_ref().unwrap(), "I103BANKDEFFAXXXU3003");
+        // Test using extract_block for each block
+        let block1 = SwiftParser::extract_block(raw_message, 1).unwrap();
+        let block2 = SwiftParser::extract_block(raw_message, 2).unwrap();
+        let block3 = SwiftParser::extract_block(raw_message, 3).unwrap();
+        let block4 = SwiftParser::extract_block(raw_message, 4).unwrap();
+        let block5 = SwiftParser::extract_block(raw_message, 5).unwrap();
+
+        assert!(block1.is_some());
+        assert!(block2.is_some());
+        assert!(block3.is_none());
+        assert!(block4.is_some());
+        assert!(block5.is_none());
+        assert_eq!(block1.as_ref().unwrap(), "F01BANKDEFFAXXX0123456789");
+        assert_eq!(block2.as_ref().unwrap(), "I103BANKDEFFAXXXU3003");
+    }
+
+    #[test]
+    fn test_extract_block() {
+        let raw_message = "{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:\n:20:FT21234567890\n:23B:CRED\n-}";
+
+        // Test individual block extraction
+        let block1 = SwiftParser::extract_block(raw_message, 1).unwrap();
+        let block2 = SwiftParser::extract_block(raw_message, 2).unwrap();
+        let block3 = SwiftParser::extract_block(raw_message, 3).unwrap();
+        let block4 = SwiftParser::extract_block(raw_message, 4).unwrap();
+        let block5 = SwiftParser::extract_block(raw_message, 5).unwrap();
+
+        assert!(block1.is_some());
+        assert!(block2.is_some());
+        assert!(block3.is_none());
+        assert!(block4.is_some());
+        assert!(block5.is_none());
+
+        assert_eq!(block1.unwrap(), "F01BANKDEFFAXXX0123456789");
+        assert_eq!(block2.unwrap(), "I103BANKDEFFAXXXU3003");
+        assert_eq!(block4.unwrap(), "\n:20:FT21234567890\n:23B:CRED\n");
+
+        // Test invalid block index with a message that contains the block marker
+        let invalid_message = "{6:INVALID}";
+        let result = SwiftParser::extract_block(invalid_message, 6);
+        assert!(result.is_err());
+
+        // Test block that doesn't exist (should return Ok(None))
+        let result_none = SwiftParser::extract_block(raw_message, 6);
+        assert!(result_none.is_ok());
+        assert!(result_none.unwrap().is_none());
     }
 
     #[test]
     fn test_parse_block4_fields() {
         let block4 = "\n:20:FT21234567890\n:23B:CRED\n:32A:210315EUR1234567,89\n";
-        let (field_map, field_order) = SwiftParser::parse_block4_fields(block4).unwrap();
+        let field_map = SwiftParser::parse_block4_fields(block4).unwrap();
 
         assert_eq!(
             field_map.get("20"),
@@ -481,8 +484,6 @@ mod tests {
             field_map.get("32A"),
             Some(&vec![":32A:210315EUR1234567,89".to_string()])
         );
-
-        assert_eq!(field_order, vec!["20", "23B", "32A"]);
     }
 
     #[test]
@@ -504,13 +505,12 @@ HAUPTSTRASSE 1
 :70:PAYMENT FOR INVOICE 12345
 :71A:OUR
 "#;
-        let (field_map, field_order) = SwiftParser::parse_block4_fields(block4).unwrap();
+        let field_map = SwiftParser::parse_block4_fields(block4).unwrap();
 
         println!("Extracted fields:");
         for (tag, values) in &field_map {
             println!("  {tag}: {values:?}");
         }
-        println!("Field order: {field_order:?}");
 
         // Check specific fields
         assert!(field_map.contains_key("20"));
@@ -531,10 +531,10 @@ HAUPTSTRASSE 1
 :23B:CRED
 -}"#;
 
-        let blocks = SwiftParser::extract_blocks(raw_message).unwrap();
+        let block3 = SwiftParser::extract_block(raw_message, 3).unwrap();
 
-        assert!(blocks.block3.is_some());
-        let block3_content = blocks.block3.unwrap();
+        assert!(block3.is_some());
+        let block3_content = block3.unwrap();
         println!("Block 3 content: '{block3_content}'");
 
         // Should contain both tags

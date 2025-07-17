@@ -1,71 +1,30 @@
-use crate::fields::{
-    Field20, Field21, Field30, Field59, Field75, GenericBicField, GenericCurrencyAmountField,
-};
+use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT111: Request for Stop Payment of a Cheque (Enhanced Architecture)
-///
-/// ## Overview
-/// MT111 is used by financial institutions to request the stop payment of a cheque
-/// that has been previously issued. This message provides all necessary details
-/// to identify the specific cheque and includes optional query information about
-/// the reason for the stop payment request.
-///
-/// This implementation uses the enhanced macro system for optimal type safety and validation.
-///
-/// ## Structure
-/// All fields are at the message level (no repeating sequences)
-///
-/// ## Key Features
-/// - Stop payment request for specific cheque
-/// - Must match original cheque details if MT110 was previously sent
-/// - Optional query information with predefined codes
-/// - Support for national clearing codes
-/// - Payee identification without account numbers
-/// - Validation against original MT110 if applicable
-/// - Type-safe field handling
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT111_VALIDATION_RULES)]
 pub struct MT111 {
-    /// **Sender's Reference** - Field 20 (Mandatory)
-    /// No '/' start/end, no '//'
-    #[field("20", mandatory)]
+    #[field("20")]
     pub field_20: Field20,
 
-    /// **Cheque Number** - Field 21 (Mandatory)
-    /// Must match original cheque if MT110 was sent
-    #[field("21", mandatory)]
-    pub field_21: Field21,
+    #[field("21")]
+    pub field_21: Field21NoOption,
 
-    /// **Date of Issue** - Field 30 (Mandatory)
-    /// Valid date format (YYMMDD)
-    #[field("30", mandatory)]
+    #[field("30")]
     pub field_30: Field30,
 
-    /// **Amount** - Field 32a (Mandatory)
-    /// Options: A (6!n3!a15d), B (3!a15d)
-    /// Must match MT110 if already sent
-    /// Use Option A if sender credited receiver in advance, otherwise Option B
-    #[field("32A", mandatory)]
-    pub field_32a: GenericCurrencyAmountField,
+    #[field("32")]
+    pub field_32: Field32,
 
-    /// **Drawer Bank** - Field 52a (Optional)
-    /// Options: A, B, D. Use national clearing codes if no BIC
-    #[field("52A", optional)]
-    pub field_52a: Option<GenericBicField>,
+    #[field("52")]
+    pub field_52: Option<Field52DrawerBank>,
 
-    /// **Payee** - Field 59 (Optional)
-    /// Account field not used - only name and address allowed
-    /// Must not contain an account number
-    #[field("59", optional)]
-    pub field_59: Option<Field59>,
+    #[field("59")]
+    pub field_59: Option<Field59NoOption>,
 
-    /// **Queries** - Field 75 (Optional)
-    /// Format: 6*35x, optional format with codes
-    /// Predefined codes: 3, 18, 19, 20, 21
-    #[field("75", optional)]
+    #[field("75")]
     pub field_75: Option<Field75>,
 }
 

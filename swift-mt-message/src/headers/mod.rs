@@ -1,7 +1,5 @@
 use crate::errors::{ParseError, Result};
-use crate::fields::common::BIC;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 
 /// Basic Header (Block 1) - Application and service identifier
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -14,7 +12,7 @@ pub struct BasicHeader {
 
     /// Logical Terminal (LT) address (12 characters)
     pub logical_terminal: String,
-    pub sender_bic: BIC,
+    pub sender_bic: String,
 
     /// Session number (4 digits)
     pub session_number: String,
@@ -40,12 +38,7 @@ impl BasicHeader {
         let logical_terminal = block1[3..15].to_string();
         let session_number = block1[15..19].to_string();
         let sequence_number = block1[19..].to_string();
-
-        // Extract BIC from logical terminal (first 8 characters for standard BIC)
-        let bic_str = &logical_terminal[0..8];
-        let sender_bic = BIC::from_str(bic_str).map_err(|e| ParseError::InvalidBlockStructure {
-            message: format!("Failed to parse BIC from logical terminal '{bic_str}': {e}"),
-        })?;
+        let sender_bic = logical_terminal[0..8].to_string();
 
         Ok(BasicHeader {
             application_id,
@@ -83,7 +76,7 @@ pub struct ApplicationHeader {
 
     /// Destination address (12 characters)
     pub destination_address: String,
-    pub receiver_bic: BIC,
+    pub receiver_bic: String,
 
     /// Priority (U = Urgent, N = Normal, S = System)
     pub priority: String,
@@ -126,13 +119,7 @@ impl ApplicationHeader {
             None
         };
 
-        let receiver_bic = BIC::from_str(&destination_address[0..8]).map_err(|e| {
-            ParseError::InvalidBlockStructure {
-                message: format!(
-                    "Failed to parse BIC from destination address '{destination_address}': {e}"
-                ),
-            }
-        })?;
+        let receiver_bic = destination_address[0..8].to_string();
 
         Ok(ApplicationHeader {
             direction,
@@ -712,7 +699,7 @@ impl BasicHeader {
             application_id: "F".to_string(),
             service_id: "01".to_string(),
             logical_terminal: logical_terminal.clone(),
-            sender_bic: BIC::from_str(&sender_bic_code).unwrap(),
+            sender_bic: sender_bic_code.to_string(),
             session_number: format!("{:04}", rng.gen_range(1000..9999)),
             sequence_number: format!("{:06}", rng.gen_range(100000..999999)),
         }
@@ -729,7 +716,7 @@ impl BasicHeader {
             application_id: "F".to_string(),
             service_id: "01".to_string(),
             logical_terminal: logical_terminal.clone(),
-            sender_bic: BIC::from_str(bic).unwrap(),
+            sender_bic: bic.to_string(),
             session_number: format!("{:04}", rng.gen_range(1000..9999)),
             sequence_number: format!("{:06}", rng.gen_range(100000..999999)),
         }
@@ -746,7 +733,7 @@ impl ApplicationHeader {
             direction: "I".to_string(),
             message_type: message_type.to_string(),
             destination_address: destination_address.clone(),
-            receiver_bic: BIC::from_str(&receiver_bic_code).unwrap(),
+            receiver_bic: receiver_bic_code.to_string(),
             priority: "N".to_string(),
             delivery_monitoring: Some("3".to_string()),
             obsolescence_period: None,
@@ -761,7 +748,7 @@ impl ApplicationHeader {
             direction: "I".to_string(),
             message_type: message_type.to_string(),
             destination_address: destination_address.clone(),
-            receiver_bic: BIC::from_str(receiver_bic).unwrap(),
+            receiver_bic: receiver_bic.to_string(),
             priority: priority.to_string(),
             delivery_monitoring: Some("3".to_string()),
             obsolescence_period: None,

@@ -2,87 +2,65 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT205: General Financial Institution Transfer
-///
-/// This message enables financial institutions to transfer funds between themselves for their own
-/// account or for the account of their customers. Similar to MT202 but with key structural
-/// differences: field 54a is not present and field 52a is always mandatory.
-///
-/// ## Key Differences from MT202
-/// - **Field 54a**: Not present in MT205 (completely absent)
-/// - **Field 52a**: Always mandatory (no fallback to sender BIC)
-/// - **Settlement Logic**: Uses METAFCT003 (simplified scenarios)
-/// - **Cover Detection**: Based on Sequence B presence
-///
-/// ## Message Variants
-/// - **MT205**: Standard financial institution transfer
-/// - **MT205.COV**: Cover message for customer credit transfers
-/// - **MT205.REJT**: Rejection message
-/// - **MT205.RETN**: Return message
-///
-/// ## Structure
-/// - **Sequence A**: Bank-to-bank financial institution details
-/// - **Sequence B**: Customer details (COV variant only)
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT205_VALIDATION_RULES)]
 pub struct MT205 {
     // Sequence A: Mandatory Fields
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField, // Transaction Reference Number
+    #[field("20")]
+    pub field_20: Field20, // Transaction Reference Number
 
-    #[field("21", mandatory)]
-    pub field_21: GenericReferenceField, // Related Reference
+    #[field("21")]
+    pub field_21: Field21NoOption, // Related Reference
 
-    #[field("32A", mandatory)]
+    #[field("13C")]
+    pub field_13c: Vec<Field13C>, // Time Indication (repetitive)
+
+    #[field("32A")]
     pub field_32a: Field32A, // Value Date/Currency/Amount
 
-    #[field("52A", mandatory)]
-    pub field_52a: GenericBicField, // Ordering Institution (MANDATORY in MT205)
+    #[field("52")]
+    pub field_52: Field52OrderingInstitution, // Ordering Institution (MANDATORY in MT205)
 
-    #[field("58A", mandatory)]
-    pub field_58a: GenericBicField, // Beneficiary Institution
+    #[field("53")]
+    pub field_53: Option<Field53SenderCorrespondent>, // Sender's Correspondent
 
-    // Sequence A: Optional Fields
-    #[field("13C", optional)]
-    pub field_13c: Option<Vec<Field13C>>, // Time Indication (repetitive)
+    #[field("56")]
+    pub field_56: Option<Field56Intermediary>, // Intermediary Institution
 
-    #[field("53A", optional)]
-    pub field_53a: Option<GenericBicField>, // Sender's Correspondent
+    #[field("57")]
+    pub field_57: Option<Field57AccountWithInstitution>, // Account With Institution
 
-    #[field("56A", optional)]
-    pub field_56a: Option<GenericBicField>, // Intermediary Institution
+    #[field("58")]
+    pub field_58: Field58, // Beneficiary Institution
 
-    #[field("57A", optional)]
-    pub field_57a: Option<GenericBicField>, // Account With Institution
-
-    #[field("72", optional)]
-    pub field_72: Option<GenericMultiLine6x35>, // Sender to Receiver Information
+    #[field("72")]
+    pub field_72: Option<Field72>, // Sender to Receiver Information
 
     // Sequence B: COV Cover Message Fields (Optional)
-    #[field("50A", optional)]
-    pub field_50a: Option<Field50A>, // Ordering Customer
+    #[field("50")]
+    pub field_50_seq_b: Option<Field50OrderingCustomerAFK>, // Ordering Customer
 
-    #[field("52A_SEQ_B", optional)]
-    pub field_52a_seq_b: Option<GenericBicField>, // Ordering Institution (Seq B)
+    #[field("52")]
+    pub field_52_seq_b: Option<Field52OrderingInstitution>, // Ordering Institution (Seq B)
 
-    #[field("56A_SEQ_B", optional)]
-    pub field_56a_seq_b: Option<GenericBicField>, // Intermediary Institution (Seq B)
+    #[field("56")]
+    pub field_56_seq_b: Option<Field56Intermediary>, // Intermediary Institution (Seq B)
 
-    #[field("57A_SEQ_B", optional)]
-    pub field_57a_seq_b: Option<GenericBicField>, // Account With Institution (Seq B)
+    #[field("57")]
+    pub field_57_seq_b: Option<Field57AccountWithInstitution>, // Account With Institution (Seq B)
 
-    #[field("59A", optional)]
-    pub field_59a: Option<GenericBicField>, // Beneficiary Customer
+    #[field("59")]
+    pub field_59_seq_b: Option<Field59>, // Beneficiary Customer
 
-    #[field("70", optional)]
-    pub field_70: Option<GenericMultiLine4x35>, // Remittance Information
+    #[field("70")]
+    pub field_70_seq_b: Option<Field70>, // Remittance Information
 
-    #[field("72_SEQ_B", optional)]
-    pub field_72_seq_b: Option<GenericMultiLine6x35>, // Sender to Receiver Info (Seq B)
+    #[field("72")]
+    pub field_72_seq_b: Option<Field72>, // Sender to Receiver Info (Seq B)
 
-    #[field("33B", optional)]
-    pub field_33b: Option<GenericCurrencyAmountField>, // Currency/Instructed Amount
+    #[field("33B")]
+    pub field_33b_seq_b: Option<Field33B>, // Currency/Instructed Amount
 }
 
 impl MT205 {
@@ -94,13 +72,13 @@ impl MT205 {
     /// 3. Additional structured reject information in field 72
     pub fn has_reject_codes(&self) -> bool {
         // Check field 20 (transaction reference)
-        if self.field_20.value.to_uppercase().contains("REJT") {
+        if self.field_20.reference.to_uppercase().contains("REJT") {
             return true;
         }
 
         // Check field 72 for structured reject codes
         if let Some(field_72) = &self.field_72 {
-            let content = field_72.lines.join(" ").to_uppercase();
+            let content = field_72.information.join(" ").to_uppercase();
             if content.contains("/REJT/") || content.contains("REJT") {
                 return true;
             }
@@ -117,13 +95,13 @@ impl MT205 {
     /// 3. Additional structured return information in field 72
     pub fn has_return_codes(&self) -> bool {
         // Check field 20 (transaction reference)
-        if self.field_20.value.to_uppercase().contains("RETN") {
+        if self.field_20.reference.to_uppercase().contains("RETN") {
             return true;
         }
 
         // Check field 72 for structured return codes
         if let Some(field_72) = &self.field_72 {
-            let content = field_72.lines.join(" ").to_uppercase();
+            let content = field_72.information.join(" ").to_uppercase();
             if content.contains("/RETN/") || content.contains("RETN") {
                 return true;
             }
@@ -142,7 +120,7 @@ impl MT205 {
     pub fn is_cover_message(&self) -> bool {
         // The key distinguishing feature of COV is the presence of Sequence B customer fields
         // According to spec: field 50a (Ordering Customer) or field 59a (Beneficiary Customer)
-        self.field_50a.is_some() || self.field_59a.is_some()
+        self.field_50_seq_b.is_some() || self.field_59_seq_b.is_some()
     }
 }
 

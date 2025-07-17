@@ -2,57 +2,39 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT210: Notice to Receive
-///
-/// This message is used by a financial institution to notify another financial institution
-/// of an impending debit to the sender's account held with the receiver, or to request
-/// the receiver to provide funds to cover the debit. This message serves as advance
-/// notice of funds requirements and facilitates liquidity management between institutions.
-///
-/// ## Key Features
-/// - **Liquidity management**: Advance notice of funding requirements
-/// - **Correspondent banking**: Notice of impending debits to nostro accounts
-/// - **Cash management**: Coordination of funds availability
-/// - **Settlement preparation**: Pre-funding for settlement obligations
-///
-/// ## Business Rules
-/// - **Rule C1**: Message may include up to 10 notice sequences (if repeated)
-/// - **Rule C2**: Either Field 50a or Field 52a must be present, not both
-/// - **Rule C3**: Currency must be consistent in all 32B fields
-/// - **Commodity restriction**: XAU, XAG, XPD, XPT must not be used
-///
-/// ## Structure
-/// Simple flat structure with conditional fields based on ordering party type.
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT210_VALIDATION_RULES)]
 pub struct MT210 {
-    // Mandatory Fields
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField, // Transaction Reference Number
+    #[field("20")]
+    pub field_20: Field20, // Transaction Reference Number
 
-    #[field("21", mandatory)]
-    pub field_21: GenericReferenceField, // Related Reference
+    #[field("25")]
+    pub field_25: Option<Field25NoOption>, // Account Identification
 
-    #[field("30", mandatory)]
-    pub field_30: GenericTextField, // Value Date (YYMMDD)
+    #[field("30")]
+    pub field_30: Field30, // Value Date (YYMMDD)
 
-    #[field("32B", mandatory)]
-    pub field_32b: GenericCurrencyAmountField, // Currency and Amount
+    #[field("#")]
+    pub sequence: Vec<MT210Sequence>, // Sequence of Fields
+}
 
-    // Optional Fields
-    #[field("25", optional)]
-    pub field_25: Option<GenericTextField>, // Account Identification
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+pub struct MT210Sequence {
+    #[field("21")]
+    pub field_21: Field21NoOption, // Related Reference
 
-    // Conditional Fields (Rule C2 - exactly one must be present)
-    #[field("50A", optional)]
-    pub field_50a: Option<Field50>, // Ordering Customer (C, F options)
+    #[field("32B")]
+    pub field_32b: Field32B, // Currency and Amount
 
-    #[field("52A", optional)]
-    pub field_52a: Option<GenericBicField>, // Ordering Institution (A, D options)
+    #[field("50")]
+    pub field_50: Option<Field50OrderingCustomerNCF>, // Ordering Customer (C, F options)
 
-    #[field("56A", optional)]
-    pub field_56a: Option<GenericBicField>, // Intermediary Institution (A, D options)
+    #[field("52")]
+    pub field_52a: Option<Field52OrderingInstitution>, // Ordering Institution (A, D options)
+
+    #[field("56")]
+    pub field_56a: Option<Field56Intermediary>, // Intermediary Institution (A, D options)
 }
 
 /// Validation rules for MT210 - Notice to Receive

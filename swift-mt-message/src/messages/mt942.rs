@@ -1,125 +1,52 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{SwiftMessage, SwiftField, serde_swift_fields};
 
-/// # MT942: Interim Transaction Report
-///
-/// This message is used by financial institutions to send periodic interim
-/// transaction reports containing summary information about account activity
-/// within a specified period. Unlike MT940, this message focuses on transaction
-/// summaries rather than detailed transaction lines.
-///
-/// ## Key Features
-/// - **Interim reporting**: Regular transaction summaries between full statements
-/// - **Transaction counts**: Summary of debit and credit transaction volumes
-/// - **Floor limits**: Threshold-based reporting for significant transactions
-/// - **Balance progression**: Opening and closing balance information
-/// - **High-volume accounts**: Efficient reporting for accounts with many transactions
-/// - **Cash management**: Regular monitoring of account activity
-///
-/// ## Field Structure
-/// All fields follow the enhanced macro system with proper validation rules.
-/// The message supports optional floor limit information and transaction summaries.
-///
-/// ## Business Rules
-/// - All balance fields must use the same currency
-/// - Transaction counts represent actual processed transactions
-/// - Floor limits determine which transactions are included in summaries
-/// - Entry counts should match the sum of individual transaction counts
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT942_VALIDATION_RULES)]
 pub struct MT942 {
-    /// **Transaction Reference Number** - Field 20
-    ///
-    /// Unique reference for this interim transaction report.
-    /// Used for tracking and referencing this specific report.
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField,
+    #[field("20")]
+    pub field_20: Field20,
 
-    /// **Related Reference** - Field 21 (Optional)
-    ///
-    /// Links to MT920 request if applicable.
-    /// Provides connection to report request that triggered this response.
-    #[field("21", optional)]
-    pub field_21: Option<GenericReferenceField>,
+    #[field("21")]
+    pub field_21: Option<Field21NoOption>,
 
-    /// **Account Identification** - Field 25
-    ///
-    /// IBAN or account identifier for the reported account.
-    /// Identifies the account for which transaction summary is provided.
-    #[field("25", mandatory)]
-    pub field_25: GenericTextField,
+    #[field("25")]
+    pub field_25: Field25AccountIdentification,
 
-    /// **Statement Number** - Field 28C
-    ///
-    /// Statement sequence number and optional page number.
-    /// Enables proper sequencing of interim reports.
-    #[field("28C", mandatory)]
+    #[field("28C")]
     pub field_28c: Field28C,
 
-    /// **Floor Limit Indicator** - Field 34F (Optional)
-    ///
-    /// Minimum transaction amount for inclusion in the report.
-    /// Transactions below this threshold may be excluded from summaries.
-    #[field("34F", optional)]
-    pub field_34f: Option<Field34F>,
+    #[field("34F")]
+    pub field_34f_debit_limit: Field34F,
 
-    /// **Date/Time Indication** - Field 13D (Optional)
-    ///
-    /// Date and time when the report was generated.
-    /// Provides timestamp for report generation context.
-    #[field("13D", optional)]
-    pub field_13d: Option<Field13D>,
+    #[field("34F")]
+    pub field_34f_credit_limit: Option<Field34F>,
 
-    /// **Opening Balance** - Field 60F
-    ///
-    /// Booked opening balance at start of reporting period.
-    /// Reference point for transaction summaries during the period.
-    #[field("60F", mandatory)]
-    pub field_60f: GenericBalanceField,
+    #[field("13D")]
+    pub field_13d: Field13D,
 
-    /// **Sum of Debit Entries** - Field 90D (Optional)
-    ///
-    /// Total amount and count of debit transactions.
-    /// Summarizes all debit activity during the reporting period.
-    #[field("90D", optional)]
+    #[field("#")]
+    pub statement_lines: Vec<MT942StatementLine>,
+
+    #[field("90D")]
     pub field_90d: Option<Field90D>,
 
-    /// **Sum of Credit Entries** - Field 90C (Optional)
-    ///
-    /// Total amount and count of credit transactions.
-    /// Summarizes all credit activity during the reporting period.
-    #[field("90C", optional)]
+    #[field("90C")]
     pub field_90c: Option<Field90C>,
 
-    /// **Closing Balance** - Field 62F
-    ///
-    /// Booked closing balance at end of reporting period.
-    /// Final balance after all transactions during the period.
-    #[field("62F", mandatory)]
-    pub field_62f: GenericBalanceField,
+    #[field("86")]
+    pub field_86: Option<Field86>,
+}
 
-    /// **Closing Available Balance** - Field 64 (Optional)
-    ///
-    /// Available funds at close of reporting period.
-    /// Shows actual spendable balance after reserves and holds.
-    #[field("64", optional)]
-    pub field_64: Option<GenericBalanceField>,
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+pub struct MT942StatementLine {
+    #[component("61")]
+    pub field_61: Option<Field61>,
 
-    /// **Forward Available Balance** - Field 65 (Optional)
-    ///
-    /// Value-dated available balance for future periods.
-    /// Shows projected available funds considering pending transactions.
-    #[field("65", optional)]
-    pub field_65: Option<GenericBalanceField>,
-
-    /// **Info to Account Owner** - Field 86 (Optional)
-    ///
-    /// Additional narrative information about the report.
-    /// Provides context or explanatory details for the transaction summary.
-    #[field("86", optional)]
-    pub field_86: Option<GenericMultiLineTextField<6, 65>>,
+    #[component("86")]
+    pub field_86: Option<Field86>,
 }
 
 /// Enhanced validation rules for MT942
@@ -207,6 +134,19 @@ const MT942_VALIDATION_RULES: &str = r#"{
           {"var": "field_60f.is_valid"},
           {"var": "field_62f.is_valid"}
         ]
+      }
+    }
+  ]
+}"#;
+
+/// Validation rules specific to MT942 statement lines
+const MT942_STATEMENT_LINE_VALIDATION_RULES: &str = r#"{
+  "rules": [
+    {
+      "id": "STATEMENT_LINE_VALID",
+      "description": "Statement line must be valid",
+      "condition": {
+        "var": "field_61.is_valid"
       }
     }
   ]

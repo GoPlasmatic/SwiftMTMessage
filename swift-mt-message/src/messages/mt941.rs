@@ -2,104 +2,45 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT941: Balance Report
-///
-/// This message is used by financial institutions to report account balance
-/// information to their customers or correspondent banks. It provides a summary
-/// of account balances at specific value dates without detailed transaction
-/// information, making it ideal for balance monitoring and cash management.
-///
-/// ## Key Features
-/// - **Balance reporting**: Summary of account balances at specific dates
-/// - **Multi-date balances**: Forward value dates for liquidity planning
-/// - **Cash management**: Real-time balance monitoring capabilities
-/// - **Correspondent banking**: Inter-bank balance reporting
-/// - **Treasury operations**: Daily balance reconciliation
-/// - **Liquidity management**: Available funds tracking
-///
-/// ## Field Structure
-/// All fields follow the enhanced macro system with proper validation rules.
-/// The message supports repetitive balance lines for multiple value dates.
-///
-/// ## Business Rules
-/// - All balance fields must use the same currency
-/// - Forward balances must have value dates in the future
-/// - Available balances reflect actual spendable funds
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT941_VALIDATION_RULES)]
 pub struct MT941 {
-    /// **Transaction Reference Number** - Field 20
-    ///
-    /// Unique reference for this balance report.
-    /// Used for tracking and referencing this specific report.
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField,
+    #[field("20")]
+    pub field_20: Field20,
 
-    /// **Related Reference** - Field 21 (Optional)
-    ///
-    /// Links to MT920 request if applicable.
-    /// Provides connection to balance request that triggered this report.
-    #[field("21", optional)]
-    pub field_21: Option<GenericReferenceField>,
+    #[field("21")]
+    pub field_21: Option<Field21NoOption>,
 
-    /// **Account Identification** - Field 25
-    ///
-    /// IBAN or account identifier.
-    /// Identifies the account for which balances are reported.
-    #[field("25", mandatory)]
-    pub field_25: GenericTextField,
+    #[field("25")]
+    pub field_25: Field25AccountIdentification,
 
-    /// **Statement Number** - Field 28D
-    ///
-    /// Statement sequence number for tracking.
-    /// Enables proper sequencing of balance reports.
-    #[field("28D", mandatory)]
-    pub field_28d: Field28D,
+    #[field("28")]
+    pub field_28: Field28,
 
-    /// **Opening Balance** - Field 60F
-    ///
-    /// Booked opening balance for the reporting period.
-    /// Reference point for balance changes during the period.
-    #[field("60F", mandatory)]
-    pub field_60f: GenericBalanceField,
+    #[field("13D")]
+    pub field_13d: Option<Field13D>,
 
-    /// **Balance Lines** (Repetitive)
-    ///
-    /// Forward balances at different value dates.
-    /// Each line represents balance projection for specific dates.
-    #[field("BALANCE_LINES", repetitive)]
-    pub balance_lines: Vec<MT941BalanceLine>,
+    #[field("60F")]
+    pub field_60f: Field60F,
 
-    /// **Closing Balance** - Field 62F
-    ///
-    /// Booked closing balance at end of reporting period.
-    /// Final balance after all transactions for the period.
-    #[field("62F", mandatory)]
-    pub field_62f: GenericBalanceField,
+    #[field("90D")]
+    pub field_90d: Option<Field90D>,
 
-    /// **Closing Available Balance** - Field 64 (Optional)
-    ///
-    /// Available funds at close of business.
-    /// Shows actual spendable balance after reserves and holds.
-    #[field("64", optional)]
-    pub field_64: Option<GenericBalanceField>,
-}
+    #[field("90C")]
+    pub field_90c: Option<Field90C>,
 
-/// # MT941 Balance Line
-///
-/// Represents a forward balance at a specific value date.
-/// Enhanced with SwiftMessage derive for automatic parsing and validation.
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT941_BALANCE_LINE_VALIDATION_RULES)]
-pub struct MT941BalanceLine {
-    /// **Forward Available Balance** - Field 65
-    ///
-    /// Available balance at specific future value date.
-    /// Shows projected available funds considering pending transactions.
-    #[field("65", mandatory)]
-    pub field_65: GenericBalanceField,
+    #[field("62F")]
+    pub field_62f: Field62F,
+
+    #[field("64")]
+    pub field_64: Option<Field64>,
+
+    #[field("65")]
+    pub field_65: Vec<Field65>,
+
+    #[field("86")]
+    pub field_86: Option<Field86>,
 }
 
 /// Enhanced validation rules for MT941
@@ -139,19 +80,6 @@ const MT941_VALIDATION_RULES: &str = r#"{
           {"var": "field_60f.is_valid"},
           {"var": "field_62f.is_valid"}
         ]
-      }
-    }
-  ]
-}"#;
-
-/// Validation rules specific to MT941 balance lines
-const MT941_BALANCE_LINE_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "BALANCE_LINE_VALID",
-      "description": "Balance line must be valid",
-      "condition": {
-        "var": "field_65.is_valid"
       }
     }
   ]

@@ -1,84 +1,119 @@
-// === COMMON FIELD TYPES ===
-// Re-export all lightweight common field structures
-pub mod common;
-pub use common::*;
+pub mod field11;
+pub use field11::*;
 
-// === SPECIALIZED FIELDS (Complex fields that need custom structure) ===
-pub mod field11s;
-pub mod field13c;
-pub mod field13d;
+pub mod field12;
+pub use field12::*;
+
+pub mod field13;
+pub use field13::*;
+
+pub mod field19;
+pub use field19::*;
+
+pub mod field20;
+pub use field20::*;
+
+pub mod field21;
+pub use field21::*;
+
 pub mod field23;
-pub mod field23e;
+pub use field23::*;
+
+pub mod field25;
+pub use field25::*;
+
+pub mod field26;
+pub use field26::*;
+
 pub mod field28;
-pub mod field28c;
-pub mod field28d;
-pub mod field32a;
-pub mod field34f;
+pub use field28::*;
+
+pub mod field30;
+pub use field30::*;
+
+pub mod field32;
+pub use field32::*;
+
+pub mod field33;
+pub use field33::*;
+
+pub mod field34;
+pub use field34::*;
+
 pub mod field36;
-pub mod field37h;
+pub use field36::*;
+
+pub mod field37;
+pub use field37::*;
+
 pub mod field50;
+pub use field50::*;
+
+pub mod field51;
+pub use field51::*;
+
+pub mod field52;
+pub use field52::*;
+
+pub mod field53;
+pub use field53::*;
+
+pub mod field54;
+pub use field54::*;
+
+pub mod field55;
+pub use field55::*;
+
+pub mod field56;
+pub use field56::*;
+
+pub mod field57;
+pub use field57::*;
+
+pub mod field58;
+pub use field58::*;
+
 pub mod field59;
+pub use field59::*;
+
+pub mod field60;
+pub use field60::*;
+
 pub mod field61;
-pub mod field77t;
+pub use field61::*;
 
-// === TYPE ALIASES FOR SEMANTIC CLARITY ===
+pub mod field62;
+pub use field62::*;
 
-// Reference fields (using GenericReferenceField)
-pub type Field20 = GenericReferenceField; // Transaction Reference
-pub type Field21 = GenericReferenceField; // Related Reference
+pub mod field64;
+pub use field64::*;
 
-// Simple text fields (using GenericTextField)
-pub type Field12 = GenericTextField; // Message Requested
-pub type Field23B = GenericTextField; // Bank Operation Code
-pub type Field25 = GenericTextField; // Account Identification
-pub type Field26T = GenericTextField; // Transaction Type Code
-pub type Field30 = GenericTextField; // Value Date
-pub type Field71A = GenericTextField; // Details of Charges
+pub mod field65;
+pub use field65::*;
 
-// Multiline text fields (using GenericMultiLineTextField)
-pub type Field70 = GenericMultiLine4x35; // Remittance Information (4x35)
-pub type Field72 = GenericMultiLine6x35; // Sender to Receiver Information (6x35)
-pub type Field75 = GenericMultiLine6x35; // Queries (6x35)
-pub type Field77B = GenericMultiLine3x35; // Regulatory Reporting (3x35)
-pub type Field79 = GenericMultiLine35x50; // Narrative (35x50)
-pub type Field86 = GenericMultiLine6x65; // Information to Account Owner (6x65)
+pub mod field70;
+pub use field70::*;
 
-// Currency/Amount fields (using GenericCurrencyAmountField)
-pub type Field33B = GenericCurrencyAmountField; // Instructed Amount
-pub type Field71F = GenericCurrencyAmountField; // Sender's Charges
-pub type Field71G = GenericCurrencyAmountField; // Receiver's Charges
+pub mod field71;
+pub use field71::*;
 
-// Summary fields (using GenericSummaryField)
-pub type Field90C = GenericSummaryField; // Sum of Credits
-pub type Field90D = GenericSummaryField; // Sum of Debits
+pub mod field72;
+pub use field72::*;
 
-// Complex fields (require specialized implementations)
-pub use field11s::Field11S;
-pub use field13c::Field13C;
-pub use field13d::Field13D;
-pub use field23::Field23;
-pub use field23e::Field23E;
-pub use field28::Field28;
-pub use field28c::Field28C;
-pub use field28d::Field28D;
-pub use field32a::Field32A;
-pub use field34f::Field34F;
-pub use field36::Field36;
-pub use field37h::Field37H;
-pub use field50::{Field50, Field50A, Field50F, Field50K};
-pub use field59::{Field59, Field59Basic, Field59F};
-pub use field61::Field61;
-pub use field77t::Field77T;
+pub mod field75;
+pub use field75::*;
 
-/// Type alias for Field 60A - Opening Balance (Intermediate)
-pub type Field60A = GenericBalanceField;
-/// Type alias for Field 60F - Opening Balance (Final/Booked)  
-pub type Field60F = GenericBalanceField;
-/// Type alias for Field 62A - Closing Balance (Intermediate)
-pub type Field62A = GenericBalanceField;
-/// Type alias for Field 62F - Closing Balance (Final/Booked)
-pub type Field62F = GenericBalanceField;
-/// Type alias for Field 64 - Closing Available Balance
-pub type Field64 = GenericBalanceField;
-/// Type alias for Field 65 - Forward Available Balance
-pub type Field65 = GenericBalanceField;
+pub mod field76;
+pub use field76::*;
+
+pub mod field77;
+pub use field77::*;
+
+pub mod field79;
+pub use field79::*;
+
+pub mod field86;
+pub use field86::*;
+
+pub mod field90;
+pub use field90::*;

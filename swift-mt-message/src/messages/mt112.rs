@@ -2,54 +2,30 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT112: Status of Request for Stop Payment of a Cheque
-///
-/// This message is used by financial institutions to communicate the status of a stop payment
-/// request that was previously submitted via MT111. It provides confirmation, rejection, or
-/// status updates regarding the processing of the stop payment request.
-///
-/// ## Structure
-/// Simple flat structure with no repeating sequences - all fields are at message level.
-///
-/// ## Key Features
-/// - Status response to MT111 stop payment requests
-/// - References original stop payment request details  
-/// - Provides detailed status information and reasons
-/// - Support for partial processing scenarios
-/// - Optional additional correspondence information
-/// - Maintains audit trail for stop payment lifecycle
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT112_VALIDATION_RULES)]
 pub struct MT112 {
-    // Mandatory Fields
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField, // Transaction Reference Number
+    #[field("20")]
+    pub field_20: Field20, // Transaction Reference Number
 
-    #[field("21", mandatory)]
-    pub field_21: GenericReferenceField, // Cheque Number
+    #[field("21")]
+    pub field_21: Field21NoOption, // Cheque Number
 
-    #[field("30", mandatory)]
-    pub field_30: GenericTextField, // Date of Issue (YYMMDD)
+    #[field("30")]
+    pub field_30: Field30, // Date of Issue (YYMMDD)
 
-    #[field("32A", mandatory)]
-    pub field_32a: GenericCurrencyAmountField, // Amount
+    #[field("32")]
+    pub field_32: Field32, // Amount
 
-    #[field("76", mandatory)]
-    pub field_76: GenericMultiLine6x35, // Answers (Status Information)
+    #[field("52")]
+    pub field_52: Option<Field52DrawerBank>, // Drawer Bank A
 
-    // Optional Fields
-    #[field("52A", optional)]
-    pub field_52a: Option<GenericBicField>, // Drawer Bank A
+    #[field("59")]
+    pub field_59: Option<Field59NoOption>, // Payee (without account number)
 
-    #[field("52B", optional)]
-    pub field_52b: Option<GenericPartyField>, // Drawer Bank B
-
-    #[field("52D", optional)]
-    pub field_52d: Option<GenericNameAddressField>, // Drawer Bank D
-
-    #[field("59", optional)]
-    pub field_59: Option<Field59>, // Payee (without account number)
+    #[field("76")]
+    pub field_76: Field76, // Answers (Status Information)
 }
 
 /// Validation rules for MT112 - Status of Request for Stop Payment of a Cheque

@@ -1,7 +1,7 @@
 [package]
 name = "swift-mt-message-macros"
-version = "2.3.8"
-edition = "2024"
+version = "3.0.0"
+edition = "2021"
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
 license = "Apache-2.0"
 description = "Derive macros for SWIFT MT message parsing library"
@@ -21,4 +21,4 @@ quote = { workspace = true }
 syn = { workspace = true }
 regex = { workspace = true }
 datalogic-rs = { workspace = true }
-serde_json = { workspace = true } 
+serde_json = { workspace = true }

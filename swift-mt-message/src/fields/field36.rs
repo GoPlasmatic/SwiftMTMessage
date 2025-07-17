@@ -7,6 +7,6 @@ use swift_mt_message_macros::SwiftField;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct Field36 {
     /// Exchange rate (12d format)
-    #[component("12d", validate = ["rate_format", "positive_rate", "reasonable_exchange_rate"])]
+    #[component("12d")]
     pub rate: f64,
 }

@@ -1,7 +1,7 @@
 [package]
 name = "swift-mt-message"
-version = "2.3.8"
-edition = "2024"
+version = "3.0.0"
+edition = "2021"
 exclude = [".DS_Store", "/target", ".vscode", ".github"]
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
 license = "Apache-2.0"
@@ -14,7 +14,7 @@ categories = ["data-structures", "development-tools", "parsing"]
 
 [dependencies]
 # Macro crate
-swift-mt-message-macros = { version = "2.3.5", path = "../swift-mt-message-macros" }
+swift-mt-message-macros = { version = "3.0", path = "../swift-mt-message-macros" }
 
 # Core serialization and parsing
 serde = { workspace = true }
@@ -40,7 +40,7 @@ pretty_assertions = "1.4"
 
 [[example]]
 name = "parse_mt103"
-path = "../examples/parse_mt103.rs" 
+path = "../examples/parse_mt103.rs"
 
 [[example]]
 name = "parse_mt202"
@@ -57,4 +57,3 @@ path = "../examples/json_to_mt_example.rs"
 [[example]]
 name = "sample_generation"
 path = "../examples/sample_generation.rs"
-

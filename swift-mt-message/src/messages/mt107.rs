@@ -1,245 +1,125 @@
-use crate::fields::{
-    Field20, Field21, Field23E, Field26T, Field30, Field36, Field50, Field59, Field70, Field71A,
-    Field72, Field77B, GenericBalanceField, GenericBicField, GenericCurrencyAmountField,
-};
+use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// # MT107: Request for Cancellation/Amendment (Enhanced Architecture)
-///
-/// ## Overview
-/// MT107 is used by financial institutions to request cancellation or amendment
-/// of previously sent direct debit instructions. It supports batch processing
-/// of multiple transaction modifications with detailed settlement information.
-///
-/// This implementation uses the enhanced macro system with separate transaction
-/// structures for optimal type safety and validation.
-///
-/// ## Structure
-/// - **Sequence A**: General Information (mandatory, single occurrence)
-/// - **Sequence B**: Transaction Details (mandatory, repetitive) - MT107Transaction struct
-/// - **Sequence C**: Settlement Details (optional, single occurrence) - Individual fields
-///
-/// ## Key Features
-/// - Multiple transaction modification support in single message
-/// - Flexible creditor/debtor identification
-/// - Optional settlement consolidation
-/// - Comprehensive regulatory reporting
-/// - Charge allocation options
-/// - Amendment and cancellation instructions
-/// - Type-safe transaction handling
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT107_VALIDATION_RULES)]
 pub struct MT107 {
-    // ================================
-    // SEQUENCE A - GENERAL INFORMATION
-    // ================================
-    /// **Sender's Reference** - Field 20 (Mandatory)
-    /// Unique ID assigned by the sender to identify this MT107 message.
-    #[field("20", mandatory)]
+    #[field("20")]
     pub field_20: Field20,
 
-    /// **Instruction Code** - Field 23E Seq A (Conditional)
-    /// Values: AUTH, NAUT, OTHR, RTND (C1)
-    #[field("23E", optional)]
+    #[field("23E")]
     pub field_23e: Option<Field23E>,
 
-    /// **Registration Reference** - Field 21E (Conditional)
-    /// Optional ID. Subject to C2/C3
-    #[field("21E", optional)]
-    pub field_21e: Option<Field21>,
+    #[field("21E")]
+    pub field_21e: Option<Field21E>,
 
-    /// **Requested Execution Date** - Field 30 (Mandatory)
-    /// Format: YYMMDD
-    #[field("30", mandatory)]
+    #[field("30")]
     pub field_30: Field30,
 
-    /// **Sending Institution** - Field 51A (Optional)
-    /// FileAct only
-    #[field("51A", optional)]
-    pub field_51a: Option<GenericBicField>,
+    #[field("51A")]
+    pub field_51a: Option<Field51A>,
 
-    /// **Instructing Party** - Field 50a Seq A (Conditional)
-    /// Options: C, L. Who orders debit. Subject to C2
-    #[field("50A_INSTRUCTING", optional)]
-    pub field_50a_instructing: Option<Field50>,
+    #[field("50")]
+    pub field_50a_instructing: Option<Field50InstructingParty>,
 
-    /// **Creditor** - Field 50a Seq A (Conditional)
-    /// Options: A, K. Name & account details. Subject to C1/C3
-    #[field("50A_CREDITOR", optional)]
-    pub field_50a_creditor: Option<Field50>,
+    #[field("50")]
+    pub field_50a_creditor: Option<Field50Creditor>,
 
-    /// **Creditor's Bank** - Field 52a Seq A (Conditional)
-    /// Options: A, C, D. Clearing/routing. Subject to C2
-    #[field("52A", optional)]
-    pub field_52a: Option<GenericBicField>,
+    #[field("52")]
+    pub field_52: Option<Field52CreditorBank>,
 
-    /// **Transaction Type Code** - Field 26T Seq A (Conditional)
-    /// Purpose code. Subject to C2
-    #[field("26T", optional)]
+    #[field("26T")]
     pub field_26t: Option<Field26T>,
 
-    /// **Regulatory Reporting** - Field 77B Seq A (Conditional)
-    /// Statutory codes. Subject to C2
-    #[field("77B", optional)]
+    #[field("77B")]
     pub field_77b: Option<Field77B>,
 
-    /// **Details of Charges** - Field 71A Seq A (Conditional)
-    /// Values: BEN, OUR, SHA. Subject to C2
-    #[field("71A", optional)]
+    #[field("71A")]
     pub field_71a: Option<Field71A>,
 
-    /// **Sender to Receiver Information** - Field 72 (Conditional)
-    /// RTND required. Subject to C4
-    #[field("72", optional)]
+    #[field("72")]
     pub field_72: Option<Field72>,
 
-    // ================================
-    // SEQUENCE B - TRANSACTION DETAILS (REPEATING)
-    // ================================
-    /// **Transaction Details** - Sequence B (Mandatory, Repetitive)
-    /// Each entry represents one transaction to be cancelled/amended
-    #[field("TRANSACTIONS", repetitive)]
+    #[field("#")]
     pub transactions: Vec<MT107Transaction>,
 
-    // ================================
-    // SEQUENCE C - SETTLEMENT DETAILS (OPTIONAL)
-    // ================================
-    /// **Settlement Amount** - Field 32B Seq C (Optional)
-    /// Final amount including charges
-    #[field("32B", optional)]
-    pub field_32b: Option<GenericCurrencyAmountField>,
+    #[field("32B")]
+    pub field_32b: Option<Field32B>,
 
-    /// **Sum of Amounts** - Field 19 (Conditional)
-    /// If 32B not used. Subject to C8
-    #[field("19", optional)]
-    pub field_19: Option<GenericBalanceField>,
+    #[field("19")]
+    pub field_19: Option<Field19>,
 
-    /// **Sum of Sender's Charges** - Field 71F Seq C (Conditional)
-    /// Totals from B blocks. Subject to C5
-    #[field("71F", optional)]
-    pub field_71f: Option<GenericCurrencyAmountField>,
+    #[field("71F")]
+    pub field_71f: Option<Field71F>,
 
-    /// **Sum of Receiver's Charges** - Field 71G Seq C (Conditional)
-    /// Totals from B blocks. Subject to C5
-    #[field("71G", optional)]
-    pub field_71g: Option<GenericCurrencyAmountField>,
+    #[field("71G")]
+    pub field_71g: Option<Field71G>,
 
-    /// **Sender's Correspondent** - Field 53a (Optional)
-    /// Options: A, B. Reimbursement branch
-    #[field("53A", optional)]
-    pub field_53a: Option<GenericBicField>,
+    #[field("53")]
+    pub field_53a: Option<Field53SenderCorrespondent>,
 }
 
-/// # MT107 Transaction (Sequence B)
-///
-/// Represents a single transaction within an MT107 cancellation/amendment message.
-/// This structure demonstrates the enhanced architecture for handling repetitive SWIFT sequences.
-///
-/// ## Architectural Benefits:
-/// 1. **Complete Validation**: Each transaction validates all its fields independently
-/// 2. **Memory Efficiency**: Only allocates fields that are present  
-/// 3. **Type Safety**: Compile-time validation of field types
-/// 4. **Business Logic**: Clear transaction-level operations and validation
-/// 5. **Scalability**: Easy to add new transaction types or fields
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT107_TRANSACTION_VALIDATION_RULES)]
 pub struct MT107Transaction {
-    /// **Transaction Reference** - Field 21 (Mandatory)
-    /// Unique reference for each transaction
-    #[field("21", mandatory)]
-    pub field_21: Field21,
+    #[field("21")]
+    pub field_21: Field21NoOption,
 
-    /// **Instruction Code** - Field 23E Seq B (Conditional)
-    /// Values: AUTH, NAUT, OTHR (C1)
-    #[field("23E", optional)]
+    #[field("23E")]
     pub field_23e: Option<Field23E>,
 
-    /// **Mandate Reference** - Field 21C (Optional)
-    /// Used for mandates
-    #[field("21C", optional)]
-    pub field_21c: Option<Field21>,
+    #[field("21C")]
+    pub field_21c: Option<Field21C>,
 
-    /// **Direct Debit Reference** - Field 21D (Optional)
-    /// Used for returns
-    #[field("21D", optional)]
-    pub field_21d: Option<Field21>,
+    #[field("21D")]
+    pub field_21d: Option<Field21D>,
 
-    /// **Registration Reference** - Field 21E Seq B (Conditional)
-    /// Subject to C2/C3
-    #[field("21E", optional)]
-    pub field_21e: Option<Field21>,
+    #[field("21E")]
+    pub field_21e: Option<Field21E>,
 
-    /// **Currency/Transaction Amount** - Field 32B (Mandatory)
-    /// Amount to debit
-    #[field("32B", mandatory)]
-    pub field_32b: GenericCurrencyAmountField,
+    #[field("32B")]
+    pub field_32b: Field32B,
 
-    /// **Instructing Party** - Field 50a Seq B (Conditional)
-    /// Options: C, L. Who orders debit. Subject to C2
-    #[field("50A_INSTRUCTING", optional)]
-    pub field_50a_instructing: Option<Field50>,
+    #[field("50")]
+    pub field_50a_instructing: Option<Field50InstructingParty>,
 
-    /// **Creditor** - Field 50a Seq B (Conditional)
-    /// Options: A, K. Name & account details. Subject to C1/C3
-    #[field("50A_CREDITOR", optional)]
-    pub field_50a_creditor: Option<Field50>,
+    #[field("50")]
+    pub field_50a_creditor: Option<Field50Creditor>,
 
-    /// **Creditor's Bank** - Field 52a Seq B (Conditional)
-    /// Options: A, C, D. Routing bank. Subject to C2
-    #[field("52A", optional)]
-    pub field_52a: Option<GenericBicField>,
+    #[field("52")]
+    pub field_52a: Option<Field52CreditorBank>,
 
-    /// **Debtor's Bank** - Field 57a (Optional)
-    /// Options: A, C, D. Account servicing bank
-    #[field("57A", optional)]
-    pub field_57a: Option<GenericBicField>,
+    #[field("57")]
+    pub field_57a: Option<Field57DebtorBank>,
 
-    /// **Debtor** - Field 59a (Mandatory)
-    /// Must include account. Options: A/none
-    #[field("59A", mandatory)]
+    #[field("59")]
     pub field_59a: Field59,
 
-    /// **Remittance Information** - Field 70 (Optional)
-    /// Details to debtor
-    #[field("70", optional)]
+    #[field("70")]
     pub field_70: Option<Field70>,
 
-    /// **Transaction Type Code** - Field 26T Seq B (Conditional)
-    /// Reason for payment. Subject to C2
-    #[field("26T", optional)]
+    #[field("26T")]
     pub field_26t: Option<Field26T>,
 
-    /// **Regulatory Reporting** - Field 77B Seq B (Conditional)
-    /// Residence, codes. Subject to C2
-    #[field("77B", optional)]
+    #[field("77B")]
     pub field_77b: Option<Field77B>,
 
-    /// **Original Ordered Amount** - Field 33B (Optional)
-    /// Must differ from 32B
-    #[field("33B", optional)]
-    pub field_33b: Option<GenericCurrencyAmountField>,
+    #[field("33B")]
+    pub field_33b: Option<Field33B>,
 
-    /// **Details of Charges** - Field 71A Seq B (Conditional)
-    /// Values: BEN, OUR, SHA. Subject to C2
-    #[field("71A", optional)]
+    #[field("71A")]
     pub field_71a: Option<Field71A>,
 
-    /// **Sender's Charges** - Field 71F (Conditional)
-    /// Total sender charges. Subject to C5
-    #[field("71F", optional)]
-    pub field_71f: Option<GenericCurrencyAmountField>,
+    #[field("71F")]
+    pub field_71f: Option<Field71F>,
 
-    /// **Receiver's Charges** - Field 71G (Conditional)
-    /// Total receiver charges. Subject to C5
-    #[field("71G", optional)]
-    pub field_71g: Option<GenericCurrencyAmountField>,
+    #[field("71G")]
+    pub field_71g: Option<Field71G>,
 
-    /// **Exchange Rate** - Field 36 (Conditional)
-    /// Required if 33B ≠ 32B. Subject to C7
-    #[field("36", optional)]
+    #[field("36")]
     pub field_36: Option<Field36>,
 }
 

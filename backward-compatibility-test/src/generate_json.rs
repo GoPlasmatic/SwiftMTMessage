@@ -10,6 +10,9 @@ use swift_mt_message_local as swift;
 
 fn main() -> Result<()> {
     let test_data_dir = Path::new("../test_data");
+    #[cfg(feature = "published")]
+    let output_dir = Path::new("output/old_version");
+    #[cfg(feature = "local")]
     let output_dir = Path::new("output/new_version");
 
     // Create output directory

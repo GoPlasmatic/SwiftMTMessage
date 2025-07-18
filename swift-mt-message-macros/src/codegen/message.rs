@@ -152,7 +152,7 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                 field_parsers.push(quote! {
                     #field_name: {
                         if let Some((value, variant_tag, _pos)) = crate::parser::find_field_with_variant_sequential(&fields, #tag, &mut tracker) {
-                            Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref())?)
+                            Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(#tag))?)
                         } else {
                             None
                         }
@@ -178,7 +178,7 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                         .ok_or_else(|| crate::errors::ParseError::MissingRequiredField {
                             field_tag: #tag.to_string()
                         })?;
-                    #inner_type::parse_with_variant(&value, variant_tag.as_deref())?
+                    #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(#tag))?
                 }
             });
         }

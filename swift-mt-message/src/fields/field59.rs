@@ -22,7 +22,7 @@ pub struct Field59F {
 pub struct Field59A {
     /// Account number (optional)
     #[component("[/34x]")]
-    pub account_number: Option<String>,
+    pub account: Option<String>,
     /// BIC code
     #[component("4!a2!a2!c[3!c]")]
     pub bic: String,

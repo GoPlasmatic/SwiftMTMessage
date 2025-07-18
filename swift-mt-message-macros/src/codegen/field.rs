@@ -21,7 +21,7 @@ fn generate_struct_field_impl(
     name: &syn::Ident,
     struct_field: &StructField,
 ) -> MacroResult<TokenStream> {
-    let parse_impl = generate_struct_parse_impl(struct_field)?;
+    let parse_impl = generate_struct_parse_impl(name, struct_field)?;
     let to_swift_string_impl = generate_struct_to_swift_string_impl(struct_field)?;
     let format_spec_impl = generate_struct_format_spec_impl(struct_field)?;
     let sample_impl = generate_struct_sample_impl(struct_field)?;
@@ -69,7 +69,7 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
                 #parse_impl
             }
 
-            fn parse_with_variant(value: &str, variant: Option<&str>) -> crate::Result<Self> {
+            fn parse_with_variant(value: &str, variant: Option<&str>, field_tag: Option<&str>) -> crate::Result<Self> {
                 // Try direct variant first if provided
                 if let Some(variant_letter) = variant {
                     #(
@@ -78,14 +78,22 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
                             return #variant_types::parse(value)
                                 .map(|parsed| Self::#variant_idents(parsed))
                                 .map_err(|_| crate::errors::ParseError::InvalidFormat {
-                                    message: format!("Failed to parse as variant '{}' for field", variant_letter)
+                                    message: format!(
+                                        "Failed to parse as variant '{}' for field '{}'", 
+                                        variant_letter, 
+                                        field_tag.unwrap_or("unknown")
+                                    )
                                 });
                         }
                     )*
 
                     // If variant hint doesn't match any known variant, return error
                     return Err(crate::errors::ParseError::InvalidFormat {
-                        message: format!("Unknown variant '{}' for field", variant_letter)
+                        message: format!(
+                            "Unknown variant '{}' for field '{}'", 
+                            variant_letter, 
+                            field_tag.unwrap_or("unknown")
+                        )
                     });
                 } else {
                     // No variant letter provided - try NoOption variant first if it exists
@@ -123,23 +131,9 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
 }
 
 /// Generate parse implementation for struct fields
-fn generate_struct_parse_impl(struct_field: &StructField) -> MacroResult<TokenStream> {
-    if struct_field.components.len() == 1 {
-        // Single component field - parse directly
-        let component = &struct_field.components[0];
-        let field_name = &component.name;
-        let parse_expr = generate_component_parse_expr(component)?;
-
-        Ok(quote! {
-            let parsed_value = #parse_expr;
-            Ok(Self {
-                #field_name: parsed_value,
-            })
-        })
-    } else {
-        // Multi-component field - use regex-based parsing
-        generate_regex_parse_impl(struct_field)
-    }
+fn generate_struct_parse_impl(name: &syn::Ident, struct_field: &StructField) -> MacroResult<TokenStream> {
+    // Always use regex-based parsing for consistency
+    generate_regex_parse_impl(name, struct_field)
 }
 
 /// Generate component parsing expression

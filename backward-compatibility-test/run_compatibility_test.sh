@@ -15,6 +15,12 @@ NC='\033[0m' # No Color
 # Navigate to the backward compatibility test directory
 cd "$(dirname "$0")"
 
+rm -rf output/
+# Ensure the output directory exists
+mkdir -p output/old_version
+mkdir -p output/new_version
+# Clean previous builds
+
 echo
 echo -e "${BLUE}📦 Step 1: Building with old version (published)${NC}"
 echo "Building binaries with published version..."
@@ -27,7 +33,7 @@ fi
 echo
 echo -e "${BLUE}📋 Step 2: Generating JSON with old version${NC}"
 echo "Processing test data with published version..."
-./target/release/generate_old_json
+./target/release/generate_json
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Failed to generate JSON with old version${NC}"
     exit 1
@@ -46,7 +52,7 @@ fi
 echo
 echo -e "${BLUE}📋 Step 4: Generating JSON with new version${NC}"
 echo "Processing test data with local version..."
-./target/release/generate_new_json
+./target/release/generate_json
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Failed to generate JSON with new version${NC}"
     exit 1

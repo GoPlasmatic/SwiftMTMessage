@@ -57,3 +57,4 @@ path = "../examples/json_to_mt_example.rs"
 [[example]]
 name = "sample_generation"
 path = "../examples/sample_generation.rs"
+

@@ -345,6 +345,19 @@ fn extract_next_pattern(remaining: &mut &str) -> MacroResult<Option<String>> {
         if let Some(end_pos) = start.find(']') {
             let pattern = start[..=end_pos].to_string();
             *remaining = &start[end_pos + 1..];
+            
+            // Check if the next pattern is also optional and should be combined
+            if remaining.starts_with('[') {
+                // This is a compound optional pattern like [/1!a][/34x]
+                // We need to combine them into a single pattern
+                if let Some(second_end) = remaining.find(']') {
+                    let second_pattern = &remaining[..=second_end];
+                    let combined_pattern = format!("{}{}", pattern, second_pattern);
+                    *remaining = &remaining[second_end + 1..];
+                    return Ok(Some(combined_pattern));
+                }
+            }
+            
             return Ok(Some(pattern));
         }
     }
@@ -388,18 +401,68 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
         let inner_regex = pattern_to_regex(inner)?;
         return Ok(format!("(?:{inner_regex})?"));
     }
+    
+    // Handle compound optional patterns like [/1!a][/34x]
+    if pattern.starts_with('[') && pattern.contains("][") {
+        // Split compound pattern and process each part
+        let parts: Vec<&str> = pattern.split("][").collect();
+        if parts.len() == 2 {
+            let first_part = parts[0].trim_start_matches('[');
+            let second_part = parts[1].trim_end_matches(']');
+            
+            let first_regex = pattern_to_regex(first_part)?;
+            let second_regex = pattern_to_regex(second_part)?;
+            
+            // Remove outer capture groups to avoid nested captures
+            let first_clean = first_regex.trim_start_matches('(').trim_end_matches(')');
+            let second_clean = second_regex.trim_start_matches('(').trim_end_matches(')');
+            
+            // Create a single optional group that captures the entire compound pattern
+            return Ok(format!("(?:({first_clean}{second_clean}))?"));
+        }
+    }
 
     // Handle prefix slash
     if pattern == "/" {
         return Ok("/".to_string());
     }
 
-    // Handle slash prefix patterns like /34x
+    // Handle compound slash patterns like /1!a/34x and /8c/
+    if pattern.starts_with('/') && pattern.contains('/') && pattern.len() > 1 {
+        let parts: Vec<&str> = pattern[1..].split('/').collect();
+        
+        // Handle patterns like /8c/ (delimited with slashes on both sides)
+        if parts.len() == 2 && parts[1].is_empty() {
+            // Pattern like /8c/ - match /content/ but capture only content
+            let inner_regex = pattern_to_regex(parts[0])?;
+            let inner_regex_no_parens = inner_regex.trim_start_matches('(').trim_end_matches(')');
+            // Return the pattern that captures only the content between slashes
+            return Ok(format!("/({}))/", inner_regex_no_parens));
+        }
+        
+        // Handle compound patterns like /1!a/34x
+        if parts.len() == 2 && !parts[1].is_empty() {
+            let first_part_regex = pattern_to_regex(parts[0])?;
+            let second_part_regex = pattern_to_regex(parts[1])?;
+            // Remove capturing groups to avoid nested captures
+            let first_no_parens = first_part_regex
+                .trim_start_matches('(')
+                .trim_end_matches(')');
+            let second_no_parens = second_part_regex
+                .trim_start_matches('(')
+                .trim_end_matches(')');
+            // Create a single capturing group that captures both parts without the slashes
+            return Ok(format!("/({}/{})", first_no_parens, second_no_parens));
+        }
+    }
+
+    // Handle simple slash prefix patterns like /34x
     if pattern.starts_with('/') && pattern.len() > 1 {
         let after_slash = &pattern[1..];
         let inner_regex = pattern_to_regex(after_slash)?;
         // Remove the capturing group from inner regex since we'll add our own
         let inner_regex_no_parens = inner_regex.trim_start_matches('(').trim_end_matches(')');
+        // Match the slash but don't capture it, only capture the content after
         return Ok(format!("/({inner_regex_no_parens})"));
     }
 
@@ -478,6 +541,20 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
 /// Convert all capturing groups in a regex to non-capturing groups
 /// This ensures that we can wrap the entire pattern in a single capturing group
 fn convert_to_non_capturing_groups(regex: &str) -> String {
+    // Special handling for slash patterns: if pattern is like /([A-Z0-9]{1,8})/
+    // we want to preserve the inner capture group
+    if regex.starts_with('/') && regex.ends_with('/') {
+        // For patterns like /([A-Z0-9]{1,8})/, keep the inner capture group
+        return regex.to_string();
+    }
+    
+    // Special handling for optional slash patterns: if pattern is like (?:/(.{1,34}))? or (?:/([A-Z]{1}/.{1,34}))?
+    // we want to preserve the inner capture group
+    if regex.starts_with("(?:/") && regex.contains('(') {
+        // For patterns like (?:/(.{1,34}))? or (?:/([A-Z]{1}/.{1,34}))?, keep the inner capture group
+        return regex.to_string();
+    }
+    
     // Simple approach: replace all "(" with "(?:" except for the outer wrapping groups
     // This is a bit naive but should work for our generated patterns
     let mut result = String::new();
@@ -500,7 +577,10 @@ fn convert_to_non_capturing_groups(regex: &str) -> String {
 }
 
 /// Generate regex-based parsing code for struct fields
-pub fn generate_regex_parse_impl(struct_field: &StructField) -> MacroResult<TokenStream> {
+pub fn generate_regex_parse_impl(
+    name: &syn::Ident,
+    struct_field: &StructField,
+) -> MacroResult<TokenStream> {
     if struct_field.components.is_empty() {
         return Ok(quote! {
             return Err(crate::errors::ParseError::InvalidFormat {
@@ -519,13 +599,118 @@ pub fn generate_regex_parse_impl(struct_field: &StructField) -> MacroResult<Toke
         let component_regex = component_regex
             .trim_start_matches('^')
             .trim_end_matches('$');
+        
         // Convert all inner capturing groups to non-capturing groups to ensure exactly one capture per component
         let non_capturing_regex = convert_to_non_capturing_groups(component_regex);
-        // Wrap each component in exactly one capture group
-        regex_parts.push(format!("({non_capturing_regex})"));
+        
+        // Special case: if the regex already has proper capture groups, don't wrap it
+        if (non_capturing_regex.starts_with('/') && non_capturing_regex.ends_with('/') && non_capturing_regex.contains('(')) ||
+           (non_capturing_regex.starts_with("(?:/") && non_capturing_regex.contains('(')) {
+            regex_parts.push(non_capturing_regex);
+        } else {
+            // Wrap each component in exactly one capture group
+            regex_parts.push(format!("({non_capturing_regex})"));
+        }
     }
 
-    let regex_pattern = format!("^{}$", regex_parts.join(""));
+    // Determine if this is a multiline field that needs newline separators
+    let is_multiline_field = is_multiline_field_type(name, struct_field);
+    
+    // For Field50K and Field59NoOption specifically, handle the optional account pattern followed by multiline address
+    if (name.to_string() == "Field50K" || name.to_string() == "Field59NoOption") && struct_field.components.len() == 2 {
+        // Verify the field has the expected pattern: [/34x] followed by 4*35x
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        
+        if first_component.format.pattern == "[/34x]" && second_component.format.pattern == "4*35x" {
+        // These fields have optional account [/34x] followed by multiline address 4*35x
+        // We need to handle both cases: with and without account
+        let account_pattern = &regex_parts[0];
+        let address_pattern = &regex_parts[1];
+        
+        // Remove the outer capture groups temporarily
+        let account_inner = account_pattern
+            .trim_start_matches("(?:")
+            .trim_end_matches(")?");
+        let address_inner = address_pattern
+            .trim_start_matches("(")
+            .trim_end_matches(")");
+        
+        // Create a pattern that matches either:
+        // 1. /account followed by newline and addresses, or
+        // 2. Just the addresses without account
+        let regex_pattern = format!("^(?:{}\\n)?({})$", account_inner, address_inner);
+        
+        // We need to adjust the field assignments for this special case
+        let mut field_assignments = Vec::new();
+        
+        // Account field (optional) - extract from the beginning of the input if present
+        field_assignments.push(quote! {
+            let account = if value.trim().starts_with('/') {
+                // Extract account from the first line if it starts with '/'
+                let lines: Vec<&str> = value.trim().lines().collect();
+                if let Some(first_line) = lines.first() {
+                    if first_line.starts_with('/') {
+                        // For Field50K/Field59NoOption, account is optional and doesn't include the slash
+                        let account_value = first_line.trim_start_matches('/');
+                        Some(account_value.to_string())
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+        });
+        
+        // Name and address field (required) - skip first line if it's an account
+        field_assignments.push(quote! {
+            let name_and_address = {
+                // Split the input into lines
+                let lines: Vec<&str> = value.trim().lines().collect();
+                
+                // If the first line starts with '/', skip it (it's the account)
+                let start_index = if lines.first().map_or(false, |line| line.starts_with('/')) {
+                    1
+                } else {
+                    0
+                };
+                
+                // Collect the name and address lines
+                lines.iter()
+                    .skip(start_index)
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_string())
+                    .collect()
+            };
+        });
+        
+        return Ok(quote! {
+            use regex::Regex;
+
+            let pattern = #regex_pattern;
+            let re = Regex::new(pattern).map_err(|e| crate::errors::ParseError::InvalidFormat {
+                message: format!("Invalid regex pattern: {}", e),
+            })?;
+
+            let captures = re.captures(value.trim()).ok_or_else(|| crate::errors::ParseError::InvalidFormat {
+                message: format!("Value does not match expected pattern: {}", pattern),
+            })?;
+
+            #(#field_assignments)*
+
+            Ok(Self {
+                account,
+                name_and_address,
+            })
+        });
+        }
+    }
+    
+    let separator = if is_multiline_field { r"\n" } else { "" };
+    let regex_pattern = format!("^{}$", regex_parts.join(separator));
 
     // Generate field assignments with type conversion
     let mut field_assignments = Vec::new();
@@ -593,6 +778,27 @@ pub fn generate_regex_parse_impl(struct_field: &StructField) -> MacroResult<Toke
             #(#component_names),*
         })
     })
+}
+
+/// Determine if a field should use multiline parsing (components separated by newlines)
+fn is_multiline_field_type(_name: &syn::Ident, struct_field: &StructField) -> bool {
+    if struct_field.components.len() <= 1 {
+        return false;
+    }
+
+    // Also check for specific patterns that indicate multiline fields
+    for component in &struct_field.components {
+        let pattern = &component.format.pattern;
+
+        // Repetitive patterns with * that indicate multiple lines of text
+        // Examples: 4*35x, 6*65x, 35*50x, 20*35x (multiple address lines)
+        // 4*(1!n/33x) (numbered address lines)
+        if pattern.contains("*") || pattern.contains("4*") || pattern.contains("4!(") {
+            return true;
+        }
+    }
+
+    false
 }
 
 /// Extract inner type from Option<T>
@@ -748,6 +954,69 @@ mod tests {
         // Test combined pattern (like Field32A: 6!n3!a15d)
         let regex = swift_format_to_regex("6!n3!a15d").unwrap();
         assert_eq!(regex, "^(\\d{6})([A-Z]{3})(\\d{1,15}(?:[.,]\\d+)?)$");
+        
+        // Test /8c/ pattern (Field13C code)
+        let regex = swift_format_to_regex("/8c/").unwrap();
+        println!("Generated regex for /8c/: {}", regex);
+        assert_eq!(regex, "^/([A-Z0-9]{1,8})/$");
+        
+        // Test that the regex works correctly
+        let re = regex::Regex::new(&regex).unwrap();
+        if let Some(captures) = re.captures("/SNDTIME/") {
+            println!("Capture group 1: '{}'", captures.get(1).unwrap().as_str());
+            assert_eq!(captures.get(1).unwrap().as_str(), "SNDTIME");
+        } else {
+            panic!("Regex should match /SNDTIME/");
+        }
+        
+        // Test [/34x] pattern (Field50K account)
+        let regex = swift_format_to_regex("[/34x]").unwrap();
+        println!("Generated regex for [/34x]: {}", regex);
+        assert_eq!(regex, "^(?:/(.{1,34}))?$");
+        
+        // Test that the regex works correctly
+        let re = regex::Regex::new(&regex).unwrap();
+        if let Some(captures) = re.captures("/1234567890") {
+            println!("Capture group 1: '{}'", captures.get(1).unwrap().as_str());
+            assert_eq!(captures.get(1).unwrap().as_str(), "1234567890");
+        } else {
+            panic!("Regex should match /1234567890");
+        }
+        
+        // Test [/1!a][/34x] pattern (Field53A party_identifier)
+        let regex = swift_format_to_regex("[/1!a][/34x]").unwrap();
+        println!("Generated regex for [/1!a][/34x]: {}", regex);
+        assert_eq!(regex, "^(?:/([A-Z]{1}/.{1,34}))?$");
+        
+        // Test that the regex works correctly with empty input
+        let re = regex::Regex::new(&regex).unwrap();
+        if let Some(captures) = re.captures("") {
+            println!("Empty input matches - capture groups: {}", captures.len());
+            for i in 0..captures.len() {
+                if let Some(cap) = captures.get(i) {
+                    println!("  Group {}: '{}'", i, cap.as_str());
+                } else {
+                    println!("  Group {}: None", i);
+                }
+            }
+        } else {
+            println!("Empty input does not match");
+        }
+        
+        // Test with actual input
+        if let Some(captures) = re.captures("/R/9876543210") {
+            println!("'/R/9876543210' matches - capture groups: {}", captures.len());
+            for i in 0..captures.len() {
+                if let Some(cap) = captures.get(i) {
+                    println!("  Group {}: '{}'", i, cap.as_str());
+                } else {
+                    println!("  Group {}: None", i);
+                }
+            }
+            assert_eq!(captures.get(1).unwrap().as_str(), "R/9876543210");
+        } else {
+            panic!("Should match /R/9876543210");
+        }
     }
 
     #[test]

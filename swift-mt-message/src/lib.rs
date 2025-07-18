@@ -57,7 +57,6 @@ pub use messages::*;
 pub mod parser;
 pub mod sample;
 pub mod validation;
-pub mod validation_rules;
 
 // Re-export core types
 pub use errors::{ParseError, Result, ValidationError};
@@ -79,7 +78,7 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
 
     /// Parse field value with variant hint for enum fields
     /// Default implementation falls back to regular parse
-    fn parse_with_variant(value: &str, _variant: Option<&str>) -> Result<Self>
+    fn parse_with_variant(value: &str, _variant: Option<&str>, _field_tag: Option<&str>) -> Result<Self>
     where
         Self: Sized,
     {

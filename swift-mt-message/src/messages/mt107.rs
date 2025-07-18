@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
@@ -22,10 +22,10 @@ pub struct MT107 {
     pub field_51a: Option<Field51A>,
 
     #[field("50")]
-    pub field_50a_instructing: Option<Field50InstructingParty>,
+    pub field_50_instructing: Option<Field50InstructingParty>,
 
     #[field("50")]
-    pub field_50a_creditor: Option<Field50Creditor>,
+    pub field_50_creditor: Option<Field50Creditor>,
 
     #[field("52")]
     pub field_52: Option<Field52CreditorBank>,
@@ -58,7 +58,7 @@ pub struct MT107 {
     pub field_71g: Option<Field71G>,
 
     #[field("53")]
-    pub field_53a: Option<Field53SenderCorrespondent>,
+    pub field_53: Option<Field53SenderCorrespondent>,
 }
 
 #[serde_swift_fields]
@@ -84,19 +84,19 @@ pub struct MT107Transaction {
     pub field_32b: Field32B,
 
     #[field("50")]
-    pub field_50a_instructing: Option<Field50InstructingParty>,
+    pub field_50_instructing: Option<Field50InstructingParty>,
 
     #[field("50")]
-    pub field_50a_creditor: Option<Field50Creditor>,
+    pub field_50_creditor: Option<Field50Creditor>,
 
     #[field("52")]
-    pub field_52a: Option<Field52CreditorBank>,
+    pub field_52: Option<Field52CreditorBank>,
 
     #[field("57")]
-    pub field_57a: Option<Field57DebtorBank>,
+    pub field_57: Option<Field57DebtorBank>,
 
     #[field("59")]
-    pub field_59a: Field59,
+    pub field_59: Field59,
 
     #[field("70")]
     pub field_70: Option<Field70>,

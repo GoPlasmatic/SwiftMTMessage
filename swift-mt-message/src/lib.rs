@@ -65,7 +65,7 @@ pub use headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 pub use parser::SwiftParser;
 
 // Re-export derive macros
-pub use swift_mt_message_macros::{SwiftField, SwiftMessage, serde_swift_fields};
+pub use swift_mt_message_macros::{serde_swift_fields, SwiftField, SwiftMessage};
 
 /// Simplified result type for SWIFT operations
 pub type SwiftResult<T> = std::result::Result<T, crate::errors::ParseError>;
@@ -76,6 +76,15 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
     fn parse(value: &str) -> Result<Self>
     where
         Self: Sized;
+
+    /// Parse field value with variant hint for enum fields
+    /// Default implementation falls back to regular parse
+    fn parse_with_variant(value: &str, _variant: Option<&str>) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        Self::parse(value)
+    }
 
     /// Convert field back to SWIFT string format
     fn to_swift_string(&self) -> String;
@@ -99,8 +108,8 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
     /// Get the message type identifier (e.g., "103", "202")
     fn message_type() -> &'static str;
 
-    /// Create from field map
-    fn from_fields(fields: HashMap<String, Vec<String>>) -> SwiftResult<Self>
+    /// Create from field map with sequential consumption tracking
+    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> SwiftResult<Self>
     where
         Self: Sized;
 

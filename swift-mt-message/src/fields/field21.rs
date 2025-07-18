@@ -31,7 +31,6 @@ pub struct Field21F {
     pub reference: String,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct Field21R {
     #[component("16x")]

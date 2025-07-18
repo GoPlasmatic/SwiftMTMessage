@@ -70,9 +70,99 @@ pub fn serde_swift_fields(_args: TokenStream, input: TokenStream) -> TokenStream
     }
 }
 
+/// Add serde attributes to optional and vector fields, and enum flattening
+fn add_serde_attributes_to_optional_fields(input: &mut syn::DeriveInput) -> Result<(), MacroError> {
+    // Handle enum types - add flattening and content-based serialization
+    if let syn::Data::Enum(_) = input.data {
+        // Check if it already has serde attributes for enums
+        let has_enum_serde_attr = input.attrs.iter().any(|attr| {
+            if attr.path().is_ident("serde") {
+                if let Ok(tokens) = attr.parse_args::<proc_macro2::TokenStream>() {
+                    let tokens_str = tokens.to_string();
+                    return tokens_str.contains("tag")
+                        || tokens_str.contains("content")
+                        || tokens_str.contains("untagged");
+                }
+            }
+            false
+        });
+
+        if !has_enum_serde_attr {
+            // Add serde(untagged) to enum for cleaner JSON without variant wrappers
+            let enum_serde_attr = syn::parse_quote! {
+                #[serde(untagged)]
+            };
+            input.attrs.push(enum_serde_attr);
+        }
+        return Ok(());
+    }
+
+    // Handle struct types
+    if let syn::Data::Struct(ref mut data_struct) = input.data {
+        if let syn::Fields::Named(ref mut fields) = data_struct.fields {
+            for field in &mut fields.named {
+                // Check if it already has a serde skip_serializing_if attribute
+                let has_skip_attr = field.attrs.iter().any(|attr| {
+                    if attr.path().is_ident("serde") {
+                        if let Ok(tokens) = attr.parse_args::<proc_macro2::TokenStream>() {
+                            return tokens.to_string().contains("skip_serializing_if");
+                        }
+                    }
+                    false
+                });
+
+                // Skip if attribute already exists
+                if has_skip_attr {
+                    continue;
+                }
+
+                // Check if field type is Option<T>
+                if is_option_type(&field.ty) {
+                    let skip_attr = syn::parse_quote! {
+                        #[serde(skip_serializing_if = "Option::is_none")]
+                    };
+                    field.attrs.push(skip_attr);
+                }
+                // Check if field type is Vec<T>
+                else if is_vec_type(&field.ty) {
+                    let skip_attr = syn::parse_quote! {
+                        #[serde(skip_serializing_if = "Vec::is_empty")]
+                    };
+                    field.attrs.push(skip_attr);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Check if a type is Option<T>
+fn is_option_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "Option";
+        }
+    }
+    false
+}
+
+/// Check if a type is Vec<T>
+fn is_vec_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            return segment.ident == "Vec";
+        }
+    }
+    false
+}
+
 /// Internal implementation for SwiftField derive macro
 fn derive_swift_field_impl(input: TokenStream) -> Result<TokenStream, MacroError> {
-    let input = syn::parse(input)?;
+    let mut input: syn::DeriveInput = syn::parse(input)?;
+
+    // Add serde attributes to optional fields
+    add_serde_attributes_to_optional_fields(&mut input)?;
+
     let definition = ast::FieldDefinition::parse(&input)?;
     let tokens = codegen::field::generate_swift_field_impl(&definition)?;
     Ok(tokens.into())

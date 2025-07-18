@@ -1,9 +1,9 @@
 //! Simple example demonstrating config-based SWIFT MT message sample generation
 
 use swift_mt_message::{
-    SwiftMessage,
     messages::MT103,
     sample::{MessageConfig, MessageScenario},
+    SwiftMessage,
 };
 
 fn main() {

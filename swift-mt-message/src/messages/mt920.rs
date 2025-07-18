@@ -1,6 +1,6 @@
 use crate::fields::{field34::Field34F, *};
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]

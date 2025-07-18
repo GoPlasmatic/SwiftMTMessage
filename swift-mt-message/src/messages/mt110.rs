@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
@@ -33,16 +33,16 @@ pub struct MT110Cheque {
     pub field_30: Field30,
 
     #[field("32")]
-    pub field_32a: Field32,
+    pub field_32: Field32,
 
     #[field("50")]
-    pub field_50a: Option<Field50OrderingCustomerAFK>,
+    pub field_50: Option<Field50OrderingCustomerAFK>,
 
     #[field("52")]
-    pub field_52a: Option<Field52DrawerBank>,
+    pub field_52: Option<Field52DrawerBank>,
 
     #[field("59")]
-    pub field_59a: Field59,
+    pub field_59: Field59,
 }
 
 /// Enhanced validation rules with forEach support for repetitive sequences

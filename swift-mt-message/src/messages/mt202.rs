@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
@@ -148,4 +148,3 @@ const MT202_VALIDATION_RULES: &str = r#"{
     "VALID_INSTRUCTION_CODES": ["/INT/", "/COV/", "/REIMBURSEMENT/", "/SETTLEMENT/", "/SDVA/", "/RETN/", "/REJT/"]
   }
 }"#;
-

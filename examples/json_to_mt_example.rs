@@ -1,4 +1,4 @@
-use swift_mt_message::{SwiftMessage, messages::MT103};
+use swift_mt_message::{messages::MT103, SwiftMessage};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SWIFT MT Message: JSON ↔ MT Format Example");

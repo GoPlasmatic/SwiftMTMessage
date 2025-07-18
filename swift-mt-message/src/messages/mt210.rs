@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
@@ -31,10 +31,10 @@ pub struct MT210Sequence {
     pub field_50: Option<Field50OrderingCustomerNCF>, // Ordering Customer (C, F options)
 
     #[field("52")]
-    pub field_52a: Option<Field52OrderingInstitution>, // Ordering Institution (A, D options)
+    pub field_52: Option<Field52OrderingInstitution>, // Ordering Institution (A, D options)
 
     #[field("56")]
-    pub field_56a: Option<Field56Intermediary>, // Intermediary Institution (A, D options)
+    pub field_56: Option<Field56Intermediary>, // Intermediary Institution (A, D options)
 }
 
 /// Validation rules for MT210 - Notice to Receive

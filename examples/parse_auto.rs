@@ -1,38 +1,39 @@
-use swift_mt_message::{ParsedSwiftMessage, SwiftMessageBody, SwiftParser};
+use swift_mt_message::{ParsedSwiftMessage, SwiftParser};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Sample SWIFT message (MT900 - Confirmation of Debit)
     // This example works with any supported message type (MT103, MT202, MT205, MT900)
-    let raw_swift_message = r#"{1:F01BANKUS33XXXAXXX0000000000}
-{2:I103BANKDEFFXXXXXXXN}
-{3:{121:550e8400-e29b-41d4-a716-446655440000}}
-{4:
-:20:INSTR123456
+    let raw_swift_message = r#"{1:F01CHASUS33AXXX0000000000}{2:I103DEUTDEFFAXXXN}{3:{113:SEPA}{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}}{4:
+:13C:/123045+0/+0100/-0500
+:20:STP2024123456
 :23B:CRED
-:32A:250627EUR1000
-:33B:USD1100
-:36:1,1
-:50:/ACC-US-123456789
-Jane Smith
-Apartment 4B
-:52A:BANKUS33XXX/DBTR-AGENT-ACC-123
-:56A:INTRMGB2LXX/INTER-ACC-123
-:57A:BANKDEFFXXX/CDTR-AGENT-ACC-456
-:59:/DE89370400440532013000
-John Doe
-Building C
-:70:/ROC/550e8400-e29b-41d4-a716-446655440000
-Payment for invoice INV-2025-001234
-Thank you for your business
-Reference: CONTRACT-2025-789
+:23E:INTC/COMPLIANCE
+:26T:A01
+:32A:241231USD1500000,00
+:33B:EUR1375000,00
+:36:1,0909
+:50K:/1234567890
+GLOBAL TECH CORPORATION
+456 INNOVATION DRIVE
+SAN FRANCISCO CA 94105 US
+:52A:CHASUS33
+:53A:BNPAFRPP
+:54A:DEUTDEFF
+:57A:DEUTDEFF
+:59A:/DE89370400440532013000
+DEUTDEFF
+:70:/INV/INVOICE-2024-Q4-789
+/RFB/SOFTWARE LICENSE PAYMENT
+ENTERPRISE SOFTWARE LICENSES
+ANNUAL SUBSCRIPTION RENEWAL
 :71A:SHA
-:71F:EUR5
-:71G:EUR10
-:72:Please process with high priority
-Additional instructions for next agent
-:77B:Export payment for goods
-Additional regulatory information
-:23E:INTC
+:71F:USD50,00
+:72:/ACC/STANDARD PROCESSING
+/INS/COMPLY WITH LOCAL REGS
+AUTOMATED STP PROCESSING
+:77B:/ORDERRES/DE//REGULATORY INFO
+SOFTWARE LICENSE COMPLIANCE
+TRADE RELATED TRANSACTION
 -}"#;
 
     println!("🔍 SWIFT Message Auto-Parser with JSON Conversion");
@@ -51,9 +52,6 @@ Additional regulatory information
                 "🏷️  Detected Message Type: MT{}",
                 parsed_message.message_type()
             );
-
-            // Display basic message information (generic for all message types)
-            display_message_info(&parsed_message);
 
             // Convert to JSON and display
             convert_to_json(&parsed_message)?;
@@ -85,99 +83,13 @@ Additional regulatory information
     Ok(())
 }
 
-fn display_message_info(parsed_message: &ParsedSwiftMessage) {
-    println!("\n📋 Message Information:");
-    println!("  Message Type: MT{}", parsed_message.message_type());
-
-    // Extract basic header info (available for all message types)
-    let basic_info = match parsed_message {
-        ParsedSwiftMessage::MT103(msg) => (
-            &msg.basic_header,
-            &msg.application_header,
-            msg.user_header.as_ref(),
-            msg.fields.to_fields().len(),
-        ),
-        ParsedSwiftMessage::MT104(msg) => (
-            &msg.basic_header,
-            &msg.application_header,
-            msg.user_header.as_ref(),
-            msg.fields.to_fields().len(),
-        ),
-        ParsedSwiftMessage::MT107(msg) => (
-            &msg.basic_header,
-            &msg.application_header,
-            msg.user_header.as_ref(),
-            msg.fields.to_fields().len(),
-        ),
-        ParsedSwiftMessage::MT202(msg) => (
-            &msg.basic_header,
-            &msg.application_header,
-            msg.user_header.as_ref(),
-            msg.fields.to_fields().len(),
-        ),
-        ParsedSwiftMessage::MT205(msg) => (
-            &msg.basic_header,
-            &msg.application_header,
-            msg.user_header.as_ref(),
-            msg.fields.to_fields().len(),
-        ),
-        ParsedSwiftMessage::MT900(msg) => (
-            &msg.basic_header,
-            &msg.application_header,
-            msg.user_header.as_ref(),
-            msg.fields.to_fields().len(),
-        ),
-        ParsedSwiftMessage::MT192(msg) => (
-            &msg.basic_header,
-            &msg.application_header,
-            msg.user_header.as_ref(),
-            msg.fields.to_fields().len(),
-        ),
-        _ => {
-            println!("Unknown message type");
-            return;
-        }
-    };
-
-    println!("  Basic Header: {:?}", basic_info.0);
-    println!("  Application Header: {:?}", basic_info.1);
-
-    if let Some(user_header) = basic_info.2 {
-        println!("  User Header: {user_header:?}");
-    }
-
-    println!("  Number of Fields: {}", basic_info.3);
-}
-
 fn convert_to_json(parsed_message: &ParsedSwiftMessage) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔄 Converting SWIFT Message to JSON:");
 
     // Convert complete message to JSON
     let full_json = serde_json::to_string_pretty(parsed_message)?;
     println!("\n📄 Complete Message JSON:");
-    println!("{}", truncate_json(&full_json, 1000));
+    println!("{full_json}");
 
     Ok(())
-}
-
-fn truncate_json(json: &str, max_length: usize) -> String {
-    if json.len() <= max_length {
-        json.to_string()
-    } else {
-        let truncated = &json[..max_length];
-        // Try to cut at a complete line
-        if let Some(last_newline) = truncated.rfind('\n') {
-            format!(
-                "{}...\n  (truncated - {} more bytes)",
-                &json[..last_newline],
-                json.len() - last_newline
-            )
-        } else {
-            format!(
-                "{}...\n  (truncated - {} more bytes)",
-                truncated,
-                json.len() - max_length
-            )
-        }
-    }
 }

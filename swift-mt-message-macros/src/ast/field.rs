@@ -73,7 +73,7 @@ impl FieldDefinition {
     pub fn parse(input: &DeriveInput) -> MacroResult<Self> {
         let name = input.ident.clone();
         let span = input.ident.span();
-        
+
         let kind = match &input.data {
             syn::Data::Struct(data_struct) => {
                 let struct_field = StructField::parse(&data_struct.fields)?;
@@ -87,11 +87,11 @@ impl FieldDefinition {
                 return Err(MacroError::unsupported_type(
                     span,
                     "union",
-                    "SwiftField can only be derived for structs and enums"
+                    "SwiftField can only be derived for structs and enums",
                 ));
             }
         };
-        
+
         Ok(FieldDefinition { name, kind, span })
     }
 }
@@ -104,20 +104,16 @@ impl StructField {
                 let components = Component::parse_all(named_fields)?;
                 Ok(StructField { components })
             }
-            Fields::Unnamed(_) => {
-                Err(MacroError::unsupported_type(
-                    Span::call_site(),
-                    "tuple struct",
-                    "SwiftField requires named fields"
-                ))
-            }
-            Fields::Unit => {
-                Err(MacroError::unsupported_type(
-                    Span::call_site(),
-                    "unit struct",
-                    "SwiftField requires fields with components"
-                ))
-            }
+            Fields::Unnamed(_) => Err(MacroError::unsupported_type(
+                Span::call_site(),
+                "tuple struct",
+                "SwiftField requires named fields",
+            )),
+            Fields::Unit => Err(MacroError::unsupported_type(
+                Span::call_site(),
+                "unit struct",
+                "SwiftField requires fields with components",
+            )),
         }
     }
 }
@@ -126,21 +122,21 @@ impl EnumField {
     /// Parse enum field from syn::DataEnum
     fn parse(data_enum: &syn::DataEnum) -> MacroResult<Self> {
         let mut variants = Vec::new();
-        
+
         for variant in &data_enum.variants {
             let enum_variant = EnumVariant::parse(variant)?;
             variants.push(enum_variant);
         }
-        
+
         if variants.is_empty() {
             return Err(MacroError::invalid_attribute(
                 Span::call_site(),
                 "enum",
                 "empty",
-                "at least one variant"
+                "at least one variant",
             ));
         }
-        
+
         Ok(EnumField { variants })
     }
 }
@@ -150,7 +146,7 @@ impl EnumVariant {
     fn parse(variant: &syn::Variant) -> MacroResult<Self> {
         let ident = variant.ident.clone();
         let span = variant.ident.span();
-        
+
         // Extract the wrapped type from the variant
         let type_name = match &variant.fields {
             Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
@@ -160,25 +156,25 @@ impl EnumVariant {
                 return Err(MacroError::unsupported_type(
                     span,
                     "named fields in enum variant",
-                    "enum variants must wrap a single type: A(TypeA)"
+                    "enum variants must wrap a single type: A(TypeA)",
                 ));
             }
             Fields::Unit => {
                 return Err(MacroError::unsupported_type(
                     span,
                     "unit enum variant",
-                    "enum variants must wrap a single type: A(TypeA)"
+                    "enum variants must wrap a single type: A(TypeA)",
                 ));
             }
             Fields::Unnamed(_) => {
                 return Err(MacroError::unsupported_type(
                     span,
                     "multiple fields in enum variant",
-                    "enum variants must wrap a single type: A(TypeA)"
+                    "enum variants must wrap a single type: A(TypeA)",
                 ));
             }
         };
-        
+
         Ok(EnumVariant {
             ident,
             type_name,
@@ -191,32 +187,33 @@ impl Component {
     /// Parse all components from named fields
     fn parse_all(fields: &FieldsNamed) -> MacroResult<Vec<Self>> {
         let mut components = Vec::new();
-        
+
         for field in &fields.named {
             let component = Component::parse(field)?;
             components.push(component);
         }
-        
+
         Ok(components)
     }
-    
+
     /// Parse a single component from a field
     fn parse(field: &Field) -> MacroResult<Self> {
-        let name = field.ident.clone().ok_or_else(|| {
-            MacroError::internal(field.span(), "Field must have a name")
-        })?;
-        
+        let name = field
+            .ident
+            .clone()
+            .ok_or_else(|| MacroError::internal(field.span(), "Field must have a name"))?;
+
         let field_type = field.ty.clone();
         let span = field.span();
-        
+
         // Extract format specification from #[component("format")] attribute
         let format_spec = extract_component_attribute(&field.attrs)?;
         let format = FormatSpec::parse(&format_spec)?;
-        
+
         // Determine if field is optional or repetitive
         let is_optional = is_option_type(&field_type);
         let is_repetitive = is_vec_type(&field_type);
-        
+
         Ok(Component {
             name,
             field_type,
@@ -245,7 +242,7 @@ fn extract_component_attribute(attrs: &[Attribute]) -> MacroResult<String> {
                                 attr.span(),
                                 "component",
                                 "non-string literal",
-                                "string literal with format specification"
+                                "string literal with format specification",
                             ));
                         }
                     }
@@ -255,17 +252,17 @@ fn extract_component_attribute(attrs: &[Attribute]) -> MacroResult<String> {
                         attr.span(),
                         "component",
                         "invalid syntax",
-                        "#[component(\"format_spec\")]"
+                        "#[component(\"format_spec\")]",
                     ));
                 }
             }
         }
     }
-    
+
     Err(MacroError::missing_attribute(
         Span::call_site(),
         "component",
-        "field component definition"
+        "field component definition",
     ))
 }
 
@@ -293,7 +290,7 @@ fn is_vec_type(ty: &Type) -> bool {
 mod tests {
     use super::*;
     use quote::quote;
-    
+
     #[test]
     fn test_parse_simple_struct() {
         let input: DeriveInput = syn::parse2(quote! {
@@ -301,11 +298,12 @@ mod tests {
                 #[component("16x")]
                 reference: String,
             }
-        }).unwrap();
-        
+        })
+        .unwrap();
+
         let definition = FieldDefinition::parse(&input).unwrap();
         assert_eq!(definition.name, "Field20");
-        
+
         if let FieldKind::Struct(struct_field) = definition.kind {
             assert_eq!(struct_field.components.len(), 1);
             assert_eq!(struct_field.components[0].name, "reference");

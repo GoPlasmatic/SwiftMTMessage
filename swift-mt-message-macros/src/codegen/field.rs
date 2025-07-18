@@ -1,51 +1,49 @@
 //! Code generation for SwiftField derive macro
 
-use crate::ast::{Component, EnumField, EnumVariant, FieldDefinition, FieldKind, StructField};
+use crate::ast::{Component, EnumField, FieldDefinition, FieldKind, StructField};
 use crate::error::MacroResult;
-use crate::format::{FormatSpec, FormatType};
+use crate::format::{generate_regex_parse_impl, FormatType};
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{GenericArgument, PathArguments};
 
 /// Generate SwiftField implementation for a field definition
 pub fn generate_swift_field_impl(definition: &FieldDefinition) -> MacroResult<TokenStream> {
     let name = &definition.name;
-    
+
     match &definition.kind {
-        FieldKind::Struct(struct_field) => {
-            generate_struct_field_impl(name, struct_field)
-        }
-        FieldKind::Enum(enum_field) => {
-            generate_enum_field_impl(name, enum_field)
-        }
+        FieldKind::Struct(struct_field) => generate_struct_field_impl(name, struct_field),
+        FieldKind::Enum(enum_field) => generate_enum_field_impl(name, enum_field),
     }
 }
 
 /// Generate SwiftField implementation for struct fields
-fn generate_struct_field_impl(name: &syn::Ident, struct_field: &StructField) -> MacroResult<TokenStream> {
+fn generate_struct_field_impl(
+    name: &syn::Ident,
+    struct_field: &StructField,
+) -> MacroResult<TokenStream> {
     let parse_impl = generate_struct_parse_impl(struct_field)?;
     let to_swift_string_impl = generate_struct_to_swift_string_impl(struct_field)?;
     let format_spec_impl = generate_struct_format_spec_impl(struct_field)?;
     let sample_impl = generate_struct_sample_impl(struct_field)?;
-    
+
     Ok(quote! {
         impl crate::SwiftField for #name {
             fn parse(value: &str) -> crate::Result<Self> {
                 #parse_impl
             }
-            
+
             fn to_swift_string(&self) -> String {
                 #to_swift_string_impl
             }
-            
+
             fn format_spec() -> &'static str {
                 #format_spec_impl
             }
-            
+
             fn sample() -> Self {
                 #sample_impl
             }
-            
+
             fn sample_with_config(config: &crate::sample::FieldConfig) -> Self {
                 // Use config for more sophisticated sample generation
                 Self::sample()
@@ -60,25 +58,62 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
     let to_swift_string_impl = generate_enum_to_swift_string_impl(enum_field)?;
     let format_spec_impl = generate_enum_format_spec_impl(enum_field)?;
     let sample_impl = generate_enum_sample_impl(enum_field)?;
-    
+
+    // Extract variant information for parse_with_variant
+    let variant_idents: Vec<_> = enum_field.variants.iter().map(|v| &v.ident).collect();
+    let variant_types: Vec<_> = enum_field.variants.iter().map(|v| &v.type_name).collect();
+
     Ok(quote! {
         impl crate::SwiftField for #name {
             fn parse(value: &str) -> crate::Result<Self> {
                 #parse_impl
             }
-            
+
+            fn parse_with_variant(value: &str, variant: Option<&str>) -> crate::Result<Self> {
+                // Try direct variant first if provided
+                if let Some(variant_letter) = variant {
+                    #(
+                        if variant_letter == stringify!(#variant_idents) {
+                            // When variant hint is provided, respect it strictly
+                            return #variant_types::parse(value)
+                                .map(|parsed| Self::#variant_idents(parsed))
+                                .map_err(|_| crate::errors::ParseError::InvalidFormat {
+                                    message: format!("Failed to parse as variant '{}' for field", variant_letter)
+                                });
+                        }
+                    )*
+
+                    // If variant hint doesn't match any known variant, return error
+                    return Err(crate::errors::ParseError::InvalidFormat {
+                        message: format!("Unknown variant '{}' for field", variant_letter)
+                    });
+                } else {
+                    // No variant letter provided - try NoOption variant first if it exists
+                    #(
+                        if stringify!(#variant_idents) == "NoOption" {
+                            if let Ok(parsed) = #variant_types::parse(value) {
+                                return Ok(Self::#variant_idents(parsed));
+                            }
+                        }
+                    )*
+
+                    // If no variant hint and no NoOption, fall back to trying all variants
+                    return Self::parse(value);
+                }
+            }
+
             fn to_swift_string(&self) -> String {
                 #to_swift_string_impl
             }
-            
+
             fn format_spec() -> &'static str {
                 #format_spec_impl
             }
-            
+
             fn sample() -> Self {
                 #sample_impl
             }
-            
+
             fn sample_with_config(config: &crate::sample::FieldConfig) -> Self {
                 // Try each variant and return the first successful one
                 #sample_impl
@@ -94,7 +129,7 @@ fn generate_struct_parse_impl(struct_field: &StructField) -> MacroResult<TokenSt
         let component = &struct_field.components[0];
         let field_name = &component.name;
         let parse_expr = generate_component_parse_expr(component)?;
-        
+
         Ok(quote! {
             let parsed_value = #parse_expr;
             Ok(Self {
@@ -102,63 +137,8 @@ fn generate_struct_parse_impl(struct_field: &StructField) -> MacroResult<TokenSt
             })
         })
     } else {
-        // Multi-component field - generate appropriate default values for each component
-        let mut field_assignments = Vec::new();
-        
-        for component in &struct_field.components {
-            let field_name = &component.name;
-            let field_type = &component.field_type;
-            
-            // Generate appropriate default/parsed values based on component type
-            let value_expr = if is_char_type(field_type) {
-                quote! { value.chars().nth(0).unwrap_or('X') }
-            } else if is_bool_type(field_type) {
-                quote! { !value.is_empty() }
-            } else if is_option_bool_type(field_type) {
-                quote! { if value.is_empty() { None } else { Some(!value.is_empty()) } }
-            } else if is_option_u32_type(field_type) {
-                quote! { if value.is_empty() { None } else { Some(value.parse::<u32>().unwrap_or(0)) } }
-            } else if is_option_u8_type(field_type) {
-                quote! { if value.is_empty() { None } else { Some(value.parse::<u8>().unwrap_or(0)) } }
-            } else if is_option_naive_date_type(field_type) {
-                quote! { if value.is_empty() { None } else { Some(chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap()) } }
-            } else if is_option_char_type(field_type) {
-                quote! { if value.is_empty() { None } else { Some(value.chars().nth(0).unwrap_or('X')) } }
-            } else if is_option_string_type(field_type) {
-                quote! { if value.is_empty() { None } else { Some(value.to_string()) } }
-            } else if is_vec_string_type(field_type) {
-                quote! { if value.is_empty() { vec![] } else { vec![value.to_string()] } }
-            } else if is_vec_type(field_type) {
-                quote! { Vec::new() }
-            } else if is_f64_type(field_type) {
-                quote! { value.parse::<f64>().unwrap_or(0.0) }
-            } else if is_u32_type(field_type) {
-                quote! { value.parse::<u32>().unwrap_or(0) }
-            } else if is_u8_type(field_type) {
-                quote! { value.parse::<u8>().unwrap_or(0) }
-            } else if is_naive_date_type(field_type) {
-                quote! { chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap() }
-            } else if is_naive_time_type(field_type) {
-                quote! { chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap() }
-            } else if is_field_type(field_type) {
-                quote! { #field_type::parse(value).unwrap_or_else(|_| #field_type::sample()) }
-            } else {
-                // Default to String
-                quote! { value.to_string() }
-            };
-            
-            field_assignments.push(quote! {
-                #field_name: #value_expr
-            });
-        }
-        
-        Ok(quote! {
-            // For multi-component fields, we parse/assign appropriate values for each component
-            // This is a simplified approach - real SWIFT parsing would split the input appropriately
-            Ok(Self {
-                #(#field_assignments),*
-            })
-        })
+        // Multi-component field - use regex-based parsing
+        generate_regex_parse_impl(struct_field)
     }
 }
 
@@ -166,7 +146,7 @@ fn generate_struct_parse_impl(struct_field: &StructField) -> MacroResult<TokenSt
 fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStream> {
     let field_type = &component.field_type;
     let format_spec = &component.format;
-    
+
     // Generate parsing code based on the actual field type
     if is_naive_date_type(field_type) {
         Ok(quote! {
@@ -177,15 +157,15 @@ fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStre
                         message: "Date must be 6 characters (YYMMDD)".to_string()
                     });
                 }
-                let year = 2000 + value[0..2].parse::<i32>().map_err(|_| 
+                let year = 2000 + value[0..2].parse::<i32>().map_err(|_|
                     crate::errors::ParseError::InvalidFormat {
                         message: "Invalid year in date".to_string()
                     })?;
-                let month = value[2..4].parse::<u32>().map_err(|_| 
+                let month = value[2..4].parse::<u32>().map_err(|_|
                     crate::errors::ParseError::InvalidFormat {
                         message: "Invalid month in date".to_string()
                     })?;
-                let day = value[4..6].parse::<u32>().map_err(|_| 
+                let day = value[4..6].parse::<u32>().map_err(|_|
                     crate::errors::ParseError::InvalidFormat {
                         message: "Invalid day in date".to_string()
                     })?;
@@ -204,11 +184,11 @@ fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStre
                         message: "Time must be 4 characters (HHMM)".to_string()
                     });
                 }
-                let hour = value[0..2].parse::<u32>().map_err(|_| 
+                let hour = value[0..2].parse::<u32>().map_err(|_|
                     crate::errors::ParseError::InvalidFormat {
                         message: "Invalid hour in time".to_string()
                     })?;
-                let minute = value[2..4].parse::<u32>().map_err(|_| 
+                let minute = value[2..4].parse::<u32>().map_err(|_|
                     crate::errors::ParseError::InvalidFormat {
                         message: "Invalid minute in time".to_string()
                     })?;
@@ -234,7 +214,7 @@ fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStre
         Ok(quote! {
             {
                 // Parse decimal amount
-                value.replace(',', ".").parse::<f64>().map_err(|_| 
+                value.replace(',', ".").parse::<f64>().map_err(|_|
                     crate::errors::ParseError::InvalidFormat {
                         message: "Invalid decimal number".to_string()
                     })?
@@ -244,7 +224,7 @@ fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStre
         Ok(quote! {
             {
                 // Parse u32 number
-                value.parse::<u32>().map_err(|_| 
+                value.parse::<u32>().map_err(|_|
                     crate::errors::ParseError::InvalidFormat {
                         message: "Invalid u32 number".to_string()
                     })?
@@ -254,7 +234,7 @@ fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStre
         Ok(quote! {
             {
                 // Parse u8 number
-                value.parse::<u8>().map_err(|_| 
+                value.parse::<u8>().map_err(|_|
                     crate::errors::ParseError::InvalidFormat {
                         message: "Invalid u8 number".to_string()
                     })?
@@ -285,15 +265,15 @@ fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStre
                             message: "Date must be 6 characters (YYMMDD)".to_string()
                         });
                     }
-                    let year = 2000 + value[0..2].parse::<i32>().map_err(|_| 
+                    let year = 2000 + value[0..2].parse::<i32>().map_err(|_|
                         crate::errors::ParseError::InvalidFormat {
                             message: "Invalid year in date".to_string()
                         })?;
-                    let month = value[2..4].parse::<u32>().map_err(|_| 
+                    let month = value[2..4].parse::<u32>().map_err(|_|
                         crate::errors::ParseError::InvalidFormat {
                             message: "Invalid month in date".to_string()
                         })?;
-                    let day = value[4..6].parse::<u32>().map_err(|_| 
+                    let day = value[4..6].parse::<u32>().map_err(|_|
                         crate::errors::ParseError::InvalidFormat {
                             message: "Invalid day in date".to_string()
                         })?;
@@ -314,8 +294,18 @@ fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStre
                 }
             }
         })
+    } else if is_vec_string_type(field_type) {
+        // Handle Vec<String> - split by lines and filter empty lines
+        Ok(quote! {
+            {
+                value.lines()
+                    .map(|line| line.trim().to_string())
+                    .filter(|line| !line.is_empty())
+                    .collect()
+            }
+        })
     } else if is_vec_type(field_type) {
-        // Handle Vec<T> - for now just create empty vec as placeholder
+        // Handle other Vec<T> types - create empty vec as placeholder
         Ok(quote! {
             {
                 Vec::new()
@@ -327,7 +317,7 @@ fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStre
                 if value.is_empty() {
                     None
                 } else {
-                    Some(value.parse::<u32>().map_err(|_| 
+                    Some(value.parse::<u32>().map_err(|_|
                         crate::errors::ParseError::InvalidFormat {
                             message: "Invalid u32 number".to_string()
                         })?)
@@ -340,7 +330,7 @@ fn generate_component_parse_expr(component: &Component) -> MacroResult<TokenStre
                 if value.is_empty() {
                     None
                 } else {
-                    Some(value.parse::<u8>().map_err(|_| 
+                    Some(value.parse::<u8>().map_err(|_|
                         crate::errors::ParseError::InvalidFormat {
                             message: "Invalid u8 number".to_string()
                         })?)
@@ -663,11 +653,11 @@ fn is_option_string_type(ty: &syn::Type) -> bool {
         if let Some(segment) = type_path.path.segments.last() {
             if segment.ident == "Option" {
                 if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
-                    if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
-                        if let syn::Type::Path(inner_path) = inner_ty {
-                            if let Some(inner_segment) = inner_path.path.segments.last() {
-                                return inner_segment.ident == "String";
-                            }
+                    if let Some(syn::GenericArgument::Type(syn::Type::Path(inner_path))) =
+                        args.args.first()
+                    {
+                        if let Some(inner_segment) = inner_path.path.segments.last() {
+                            return inner_segment.ident == "String";
                         }
                     }
                 }
@@ -795,12 +785,12 @@ fn is_option_field_type(ty: &syn::Type) -> bool {
                 if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
                     if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
                         // Check if it's not basic types (suggesting it's a Field type)
-                        return !is_string_type(inner_ty) 
-                            && !is_naive_date_type(inner_ty) 
-                            && !is_u32_type(inner_ty) 
-                            && !is_u8_type(inner_ty) 
-                            && !is_f64_type(inner_ty) 
-                            && !is_char_type(inner_ty) 
+                        return !is_string_type(inner_ty)
+                            && !is_naive_date_type(inner_ty)
+                            && !is_u32_type(inner_ty)
+                            && !is_u8_type(inner_ty)
+                            && !is_f64_type(inner_ty)
+                            && !is_char_type(inner_ty)
                             && !is_naive_time_type(inner_ty)
                             && !is_bool_type(inner_ty);
                     }
@@ -817,15 +807,15 @@ fn is_field_type(ty: &syn::Type) -> bool {
         if let Some(segment) = type_path.path.segments.last() {
             let ident = &segment.ident;
             // Check if it's not basic types (suggesting it's a Field type)
-            return ident != "String" 
-                && ident != "NaiveDate" 
-                && ident != "u32" 
-                && ident != "u8" 
-                && ident != "f64" 
-                && ident != "char" 
-                && ident != "NaiveTime" 
-                && ident != "bool" 
-                && ident != "Vec" 
+            return ident != "String"
+                && ident != "NaiveDate"
+                && ident != "u32"
+                && ident != "u8"
+                && ident != "f64"
+                && ident != "char"
+                && ident != "NaiveTime"
+                && ident != "bool"
+                && ident != "Vec"
                 && ident != "Option";
         }
     }
@@ -839,8 +829,8 @@ fn is_string_type(ty: &syn::Type) -> bool {
         let path_str = quote!(#type_path).to_string();
         // Remove spaces and check various forms
         let normalized = path_str.replace(" ", "");
-        return normalized == "String" 
-            || normalized == "std::string::String" 
+        return normalized == "String"
+            || normalized == "std::string::String"
             || normalized.ends_with("::String")
             || path_str == "String";
     }
@@ -853,7 +843,7 @@ fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResu
         let component = &struct_field.components[0];
         let field_name = &component.name;
         let field_type = &component.field_type;
-        
+
         // Generate conversion based on field type
         if is_naive_date_type(field_type) {
             Ok(quote! {
@@ -871,11 +861,7 @@ fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResu
             Ok(quote! {
                 format!("{:.2}", self.#field_name).replace('.', ",")
             })
-        } else if is_u32_type(field_type) {
-            Ok(quote! {
-                self.#field_name.to_string()
-            })
-        } else if is_u8_type(field_type) {
+        } else if is_u32_type(field_type) || is_u8_type(field_type) {
             Ok(quote! {
                 self.#field_name.to_string()
             })
@@ -893,11 +879,7 @@ fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResu
             Ok(quote! {
                 self.#field_name.as_ref().unwrap_or(&String::new()).clone()
             })
-        } else if is_option_u32_type(field_type) {
-            Ok(quote! {
-                self.#field_name.map(|n| n.to_string()).unwrap_or_default()
-            })
-        } else if is_option_u8_type(field_type) {
+        } else if is_option_u32_type(field_type) || is_option_u8_type(field_type) {
             Ok(quote! {
                 self.#field_name.map(|n| n.to_string()).unwrap_or_default()
             })
@@ -943,11 +925,11 @@ fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResu
     } else {
         // For multi-component fields, concatenate all components
         let mut component_conversions = Vec::new();
-        
+
         for component in &struct_field.components {
             let field_name = &component.name;
             let field_type = &component.field_type;
-            
+
             // Generate conversion based on field type for each component
             if is_naive_date_type(field_type) {
                 component_conversions.push(quote! {
@@ -965,11 +947,7 @@ fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResu
                 component_conversions.push(quote! {
                     format!("{:.2}", self.#field_name).replace('.', ",")
                 });
-            } else if is_u32_type(field_type) {
-                component_conversions.push(quote! {
-                    self.#field_name.to_string()
-                });
-            } else if is_u8_type(field_type) {
+            } else if is_u32_type(field_type) || is_u8_type(field_type) {
                 component_conversions.push(quote! {
                     self.#field_name.to_string()
                 });
@@ -987,11 +965,7 @@ fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResu
                 component_conversions.push(quote! {
                     self.#field_name.as_ref().unwrap_or(&String::new()).clone()
                 });
-            } else if is_option_u32_type(field_type) {
-                component_conversions.push(quote! {
-                    self.#field_name.map(|n| n.to_string()).unwrap_or_default()
-                });
-            } else if is_option_u8_type(field_type) {
+            } else if is_option_u32_type(field_type) || is_option_u8_type(field_type) {
                 component_conversions.push(quote! {
                     self.#field_name.map(|n| n.to_string()).unwrap_or_default()
                 });
@@ -1035,7 +1009,7 @@ fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResu
                 });
             }
         }
-        
+
         Ok(quote! {
             // Concatenate all component string representations
             vec![#(#component_conversions),*].join("")
@@ -1048,7 +1022,7 @@ fn generate_struct_format_spec_impl(struct_field: &StructField) -> MacroResult<T
     if struct_field.components.len() == 1 {
         let component = &struct_field.components[0];
         let pattern = &component.format.pattern;
-        
+
         Ok(quote! { #pattern })
     } else {
         // For multi-component fields, return a generic format spec
@@ -1062,7 +1036,7 @@ fn generate_struct_sample_impl(struct_field: &StructField) -> MacroResult<TokenS
         let component = &struct_field.components[0];
         let field_name = &component.name;
         let sample_expr = generate_component_sample_expr(component)?;
-        
+
         Ok(quote! {
             Self {
                 #field_name: #sample_expr,
@@ -1071,16 +1045,16 @@ fn generate_struct_sample_impl(struct_field: &StructField) -> MacroResult<TokenS
     } else {
         // For multi-component fields, generate samples for all components
         let mut field_samples = Vec::new();
-        
+
         for component in &struct_field.components {
             let field_name = &component.name;
             let sample_expr = generate_component_sample_expr(component)?;
-            
+
             field_samples.push(quote! {
                 #field_name: #sample_expr
             });
         }
-        
+
         Ok(quote! {
             Self {
                 #(#field_samples),*
@@ -1093,7 +1067,7 @@ fn generate_struct_sample_impl(struct_field: &StructField) -> MacroResult<TokenS
 fn generate_component_sample_expr(component: &Component) -> MacroResult<TokenStream> {
     let field_type = &component.field_type;
     let format_spec = &component.format;
-    
+
     // Generate sample code based on the actual field type
     if is_naive_date_type(field_type) {
         Ok(quote! {
@@ -1141,7 +1115,7 @@ fn generate_component_sample_expr(component: &Component) -> MacroResult<TokenStr
             if let Some(segment) = type_path.path.segments.last() {
                 if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
                     if let Some(syn::GenericArgument::Type(inner_ty)) = args.args.first() {
-                        return Ok(quote! { Some(#inner_ty::sample()) });
+                        return Ok(quote! { Some(<#inner_ty as crate::SwiftField>::sample()) });
                     }
                 }
             }
@@ -1149,7 +1123,7 @@ fn generate_component_sample_expr(component: &Component) -> MacroResult<TokenStr
         Ok(quote! { None })
     } else if is_field_type(field_type) {
         // Generate sample for field types
-        Ok(quote! { #field_type::sample() })
+        Ok(quote! { <#field_type as crate::SwiftField>::sample() })
     } else {
         // Default to String
         let sample_string = generate_sample_string_literal(format_spec);
@@ -1186,21 +1160,21 @@ fn generate_sample_string_literal(format_spec: &crate::format::FormatSpec) -> St
 /// Generate parse implementation for enum fields
 fn generate_enum_parse_impl(enum_field: &EnumField) -> MacroResult<TokenStream> {
     let mut variant_attempts = Vec::new();
-    
+
     for variant in &enum_field.variants {
         let variant_ident = &variant.ident;
         let type_name = &variant.type_name;
-        
+
         variant_attempts.push(quote! {
             if let Ok(parsed) = #type_name::parse(value) {
                 return Ok(Self::#variant_ident(parsed));
             }
         });
     }
-    
+
     Ok(quote! {
         #(#variant_attempts)*
-        
+
         Err(crate::errors::ParseError::InvalidFormat {
             message: format!("Unable to parse value '{}' as any variant", value)
         })
@@ -1210,15 +1184,15 @@ fn generate_enum_parse_impl(enum_field: &EnumField) -> MacroResult<TokenStream> 
 /// Generate to_swift_string implementation for enum fields
 fn generate_enum_to_swift_string_impl(enum_field: &EnumField) -> MacroResult<TokenStream> {
     let mut match_arms = Vec::new();
-    
+
     for variant in &enum_field.variants {
         let variant_ident = &variant.ident;
-        
+
         match_arms.push(quote! {
             Self::#variant_ident(inner) => inner.to_swift_string()
         });
     }
-    
+
     Ok(quote! {
         match self {
             #(#match_arms),*
@@ -1237,15 +1211,14 @@ fn generate_enum_sample_impl(enum_field: &EnumField) -> MacroResult<TokenStream>
     if let Some(first_variant) = enum_field.variants.first() {
         let variant_ident = &first_variant.ident;
         let type_name = &first_variant.type_name;
-        
+
         Ok(quote! {
-            Self::#variant_ident(#type_name::sample())
+            Self::#variant_ident(<#type_name as crate::SwiftField>::sample())
         })
     } else {
-        return Err(crate::error::MacroError::internal(
+        Err(crate::error::MacroError::internal(
             proc_macro2::Span::call_site(),
-            "Enum must have at least one variant"
-        ));
+            "Enum must have at least one variant",
+        ))
     }
 }
-

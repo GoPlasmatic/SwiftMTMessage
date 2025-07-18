@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, SwiftField, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
@@ -16,18 +16,19 @@ pub struct MT935 {
     pub field_72: Option<Field72>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[validation_rules(MT935_RATE_CHANGE_VALIDATION_RULES)]
 pub struct MT935RateChange {
-    #[component("23")]
+    #[field("23")]
     pub field_23: Option<Field23>,
 
-    #[component("25")]
+    #[field("25")]
     pub field_25: Option<Field25NoOption>,
 
-    #[component("30")]
+    #[field("30")]
     pub field_30: Field30,
 
-    #[component("37H")]
+    #[field("37H")]
     pub field_37h: Vec<Field37H>,
 }
 

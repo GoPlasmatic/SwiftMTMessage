@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 /// MT104: Customer Direct Debit
 ///
@@ -28,10 +28,10 @@ pub struct MT104 {
     pub field_51a: Option<Field51A>,
 
     #[field("50")]
-    pub field_50a_instructing: Option<Field50InstructingParty>,
+    pub field_50_instructing: Option<Field50InstructingParty>,
 
     #[field("50")]
-    pub field_50a_creditor: Option<Field50Creditor>,
+    pub field_50_creditor: Option<Field50Creditor>,
 
     #[field("52")]
     pub field_52: Option<Field52CreditorBank>,

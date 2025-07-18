@@ -575,11 +575,9 @@ mod tests {
     fn test_generate_alphanumeric() {
         let result = generate_alphanumeric(10);
         assert_eq!(result.len(), 10);
-        assert!(
-            result.chars().all(
-                |c| c.is_ascii_alphanumeric() && (c.is_ascii_uppercase() || c.is_ascii_digit())
-            )
-        );
+        assert!(result
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() && (c.is_ascii_uppercase() || c.is_ascii_digit())));
     }
 
     #[test]

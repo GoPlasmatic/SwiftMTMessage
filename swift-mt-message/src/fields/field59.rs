@@ -9,7 +9,7 @@ pub struct Field59F {
     /// Party identifier
     #[component("[/34x]")]
     pub party_identifier: Option<String>,
-    
+
     /// Name and address lines
     #[component("4*(1!n/33x)")]
     pub name_and_address: Vec<String>,
@@ -37,7 +37,7 @@ pub struct Field59NoOption {
     /// Name and address lines
     #[component("4*35x")]
     pub name_and_address: Vec<String>,
-} 
+}
 
 /// Field 59: Beneficiary Customer
 ///

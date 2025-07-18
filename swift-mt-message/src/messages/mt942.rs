@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, SwiftField, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
@@ -40,12 +40,13 @@ pub struct MT942 {
     pub field_86: Option<Field86>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[validation_rules(MT942_STATEMENT_LINE_VALIDATION_RULES)]
 pub struct MT942StatementLine {
-    #[component("61")]
+    #[field("61")]
     pub field_61: Option<Field61>,
 
-    #[component("86")]
+    #[field("86")]
     pub field_86: Option<Field86>,
 }
 

@@ -19,7 +19,6 @@ pub struct Field58D {
     pub name_and_address: Vec<String>,
 }
 
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
 pub enum Field58 {
     A(Field58A),

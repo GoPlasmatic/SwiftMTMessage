@@ -10,7 +10,10 @@ use syn::{Attribute, Lit, Meta};
 #[derive(Debug, Clone)]
 pub enum ValidationRule {
     /// Length validation
-    Length { min: Option<usize>, max: Option<usize> },
+    Length {
+        min: Option<usize>,
+        max: Option<usize>,
+    },
     /// Pattern validation (regex)
     Pattern(String),
     /// Custom validation function
@@ -26,7 +29,7 @@ pub enum ValidationRule {
 /// Parse validation rules from attributes
 pub fn parse_validation_rules(attrs: &[Attribute]) -> MacroResult<Vec<ValidationRule>> {
     let mut rules = Vec::new();
-    
+
     for attr in attrs {
         if attr.path().is_ident("validation_rules") {
             match &attr.meta {
@@ -47,7 +50,7 @@ pub fn parse_validation_rules(attrs: &[Attribute]) -> MacroResult<Vec<Validation
             }
         }
     }
-    
+
     Ok(rules)
 }
 
@@ -56,7 +59,7 @@ pub fn generate_validation_code(rules: &[ValidationRule], value_expr: &TokenStre
     if rules.is_empty() {
         return quote! {};
     }
-    
+
     let validation_checks = rules.iter().map(|rule| {
         match rule {
             ValidationRule::Length { min, max } => {
@@ -71,7 +74,7 @@ pub fn generate_validation_code(rules: &[ValidationRule], value_expr: &TokenStre
                         });
                     }
                 });
-                
+
                 let max_check = max.map(|max_val| quote! {
                     if #value_expr.len() > #max_val {
                         return Err(crate::errors::ParseError::ValidationFailed {
@@ -83,13 +86,13 @@ pub fn generate_validation_code(rules: &[ValidationRule], value_expr: &TokenStre
                         });
                     }
                 });
-                
+
                 quote! {
                     #min_check
                     #max_check
                 }
             }
-            
+
             ValidationRule::Pattern(pattern) => {
                 quote! {
                     if !regex::Regex::new(#pattern).unwrap().is_match(&#value_expr) {
@@ -102,7 +105,7 @@ pub fn generate_validation_code(rules: &[ValidationRule], value_expr: &TokenStre
                     }
                 }
             }
-            
+
             ValidationRule::Bic => {
                 quote! {
                     if !crate::validation::is_valid_bic(&#value_expr) {
@@ -115,7 +118,7 @@ pub fn generate_validation_code(rules: &[ValidationRule], value_expr: &TokenStre
                     }
                 }
             }
-            
+
             ValidationRule::Currency => {
                 quote! {
                     if !crate::validation::is_valid_currency(&#value_expr) {
@@ -128,7 +131,7 @@ pub fn generate_validation_code(rules: &[ValidationRule], value_expr: &TokenStre
                     }
                 }
             }
-            
+
             ValidationRule::Amount => {
                 quote! {
                     if let Err(e) = #value_expr.parse::<f64>() {
@@ -141,7 +144,7 @@ pub fn generate_validation_code(rules: &[ValidationRule], value_expr: &TokenStre
                     }
                 }
             }
-            
+
             ValidationRule::Custom(func_name) => {
                 let func_ident = syn::Ident::new(func_name, proc_macro2::Span::call_site());
                 quote! {
@@ -157,7 +160,7 @@ pub fn generate_validation_code(rules: &[ValidationRule], value_expr: &TokenStre
             }
         }
     });
-    
+
     quote! {
         // Apply validation rules
         #(#validation_checks)*
@@ -186,7 +189,7 @@ fn parse_simple_validation_rule(attr: &Attribute) -> MacroResult<ValidationRule>
                         attr.span(),
                         "validation_rules",
                         "non-string value",
-                        "string literal"
+                        "string literal",
                     ))
                 }
             } else {
@@ -194,10 +197,10 @@ fn parse_simple_validation_rule(attr: &Attribute) -> MacroResult<ValidationRule>
                     attr.span(),
                     "validation_rules",
                     "complex expression",
-                    "string literal"
+                    "string literal",
                 ))
             }
         }
-        _ => Ok(ValidationRule::Custom("default".to_string()))
+        _ => Ok(ValidationRule::Custom("default".to_string())),
     }
 }

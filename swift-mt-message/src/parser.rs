@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::errors::{ParseError, Result};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
@@ -8,8 +8,87 @@ use crate::messages::{
 };
 use crate::{ParsedSwiftMessage, SwiftMessage, SwiftMessageBody};
 
-/// Type alias for the field parsing result
-type FieldParseResult = Result<HashMap<String, Vec<String>>>;
+/// Type alias for the field parsing result - now includes position tracking
+type FieldParseResult = Result<HashMap<String, Vec<(String, usize)>>>;
+
+/// Field consumption tracker to ensure sequential processing of duplicate fields
+#[derive(Debug, Clone)]
+pub struct FieldConsumptionTracker {
+    consumed_indices: HashMap<String, HashSet<usize>>,
+}
+
+impl Default for FieldConsumptionTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl FieldConsumptionTracker {
+    /// Create a new consumption tracker
+    pub fn new() -> Self {
+        Self {
+            consumed_indices: HashMap::new(),
+        }
+    }
+
+    /// Mark a field value at a specific position as consumed
+    pub fn mark_consumed(&mut self, tag: &str, index: usize) {
+        self.consumed_indices
+            .entry(tag.to_string())
+            .or_default()
+            .insert(index);
+    }
+
+    /// Get the next available (unconsumed) field value for a tag
+    pub fn get_next_available<'a>(
+        &self,
+        tag: &str,
+        values: &'a [(String, usize)],
+    ) -> Option<(&'a str, usize)> {
+        let consumed_set = self.consumed_indices.get(tag);
+
+        // Find first unconsumed value in original message order
+        values
+            .iter()
+            .find(|(_, pos)| consumed_set.is_none_or(|set| !set.contains(pos)))
+            .map(|(value, pos)| (value.as_str(), *pos))
+    }
+}
+
+/// Find field values by base tag with sequential consumption tracking
+/// Returns (field_value, variant, position) where the field is consumed from the tracker
+pub fn find_field_with_variant_sequential(
+    fields: &HashMap<String, Vec<(String, usize)>>,
+    base_tag: &str,
+    tracker: &mut FieldConsumptionTracker,
+) -> Option<(String, Option<String>, usize)> {
+    // First try to find exact match (for non-variant fields)
+    if let Some(values) = fields.get(base_tag) {
+        if let Some((value, pos)) = tracker.get_next_available(base_tag, values) {
+            tracker.mark_consumed(base_tag, pos);
+            return Some((value.to_string(), None, pos));
+        }
+    }
+
+    // For enum fields, look for variant tags (50A, 50F, 50K, etc.)
+    for (tag, values) in fields {
+        if tag.starts_with(base_tag) && tag.len() == base_tag.len() + 1 {
+            let variant = tag.chars().last().unwrap().to_string();
+            // Check if it's a valid variant letter (A-Z)
+            if variant
+                .chars()
+                .all(|c| c.is_ascii_alphabetic() && c.is_ascii_uppercase())
+            {
+                if let Some((value, pos)) = tracker.get_next_available(tag, values) {
+                    tracker.mark_consumed(tag, pos);
+                    return Some((value.to_string(), Some(variant), pos));
+                }
+            }
+        }
+    }
+
+    None
+}
 
 /// Main parser for SWIFT MT messages
 pub struct SwiftParser;
@@ -40,11 +119,11 @@ impl SwiftParser {
             });
         }
 
-        // Parse block 4 fields
-        let field_map = Self::parse_block4_fields(&block4.unwrap_or_default())?;
+        // Parse block 4 fields with position tracking
+        let field_map_with_positions = Self::parse_block4_fields(&block4.unwrap_or_default())?;
 
-        // Parse message body using the field map
-        let fields = T::from_fields(field_map)?;
+        // Use sequential parsing for all message types
+        let fields = T::from_fields(field_map_with_positions)?;
 
         Ok(SwiftMessage {
             basic_header,
@@ -213,15 +292,16 @@ impl SwiftParser {
         }
     }
 
-    /// Parse block 4 fields into a field map
+    /// Parse block 4 fields into a field map with position tracking
     fn parse_block4_fields(block4: &str) -> FieldParseResult {
-        let mut field_map: HashMap<String, Vec<String>> = HashMap::new();
+        let mut field_map: HashMap<String, Vec<(String, usize)>> = HashMap::new();
 
         // Remove leading/trailing whitespace and newlines
         let content = block4.trim();
 
         // Split by field markers (:XX:)
         let mut current_pos = 0;
+        let mut field_position = 0; // Track sequential position for consumption ordering
 
         while current_pos < content.len() {
             // Find next field marker
@@ -246,15 +326,16 @@ impl SwiftParser {
 
                     let field_value = content[value_start..value_end].trim().to_string();
 
-                    // Store the complete field string including tag prefix for compatibility
-                    let complete_field_string = format!(":{raw_field_tag}:{field_value}");
+                    // Store field value with position for sequential consumption tracking
+                    // The field validators expect only the field content, not the tag
 
                     // Add to existing Vec or create new Vec for this field tag
                     field_map
                         .entry(field_tag.clone())
                         .or_default()
-                        .push(complete_field_string);
+                        .push((field_value, field_position));
 
+                    field_position += 1; // Increment position for next field
                     current_pos = value_end;
                 } else {
                     // Last field or malformed
@@ -288,8 +369,8 @@ impl SwiftParser {
 
             // For certain field numbers, preserve the option letter to avoid conflicts
             match numeric_part.as_str() {
-                "11" | "13" | "23" | "26" | "32" | "33" | "52" | "53" | "54" | "55" | "56"
-                | "57" | "58" | "71" | "77" => {
+                "11" | "13" | "23" | "26" | "32" | "33" | "50" | "52" | "53" | "54" | "55"
+                | "56" | "57" | "58" | "59" | "71" | "77" => {
                     // Keep option letters for fields that have multiple variants or specific formats
                     // 11A (MT and Date - Option A), 11S (MT and Date - Option S)
                     // 13C (Time Indication)
@@ -297,6 +378,8 @@ impl SwiftParser {
                     // 26T (Transaction Type Code)
                     // 32A (Value Date/Currency/Amount)
                     // 33B (Currency/Instructed Amount)
+                    // 50A/F/K (Ordering Customer)
+                    // 59A/F (Beneficiary Customer)
                     // 52A (Ordering Institution)
                     // 53A (Sender's Correspondent)
                     // 54A (Receiver's Correspondent)
@@ -477,12 +560,12 @@ mod tests {
 
         assert_eq!(
             field_map.get("20"),
-            Some(&vec![":20:FT21234567890".to_string()])
+            Some(&vec![("FT21234567890".to_string(), 0)])
         );
-        assert_eq!(field_map.get("23B"), Some(&vec![":23B:CRED".to_string()]));
+        assert_eq!(field_map.get("23B"), Some(&vec![("CRED".to_string(), 1)]));
         assert_eq!(
             field_map.get("32A"),
-            Some(&vec![":32A:210315EUR1234567,89".to_string()])
+            Some(&vec![("210315EUR1234567,89".to_string(), 2)])
         );
     }
 
@@ -516,7 +599,7 @@ HAUPTSTRASSE 1
         assert!(field_map.contains_key("20"));
         assert!(field_map.contains_key("23B"));
         assert!(field_map.contains_key("32A"));
-        assert!(field_map.contains_key("50"));
+        assert!(field_map.contains_key("50K")); // Option letters are preserved
         assert!(field_map.contains_key("52A"));
         assert!(field_map.contains_key("57A"));
         assert!(field_map.contains_key("59"));
@@ -599,24 +682,40 @@ HAUPTSTRASSE 1
 :50K:ACME CORPORATION
 123 BUSINESS AVENUE
 NEW YORK NY 10001
-:52A:BANKDEFF
-:57A:DEUTDEFF
-:59A:/DE89370400440532013000
-DEUTDEFF
+:52A:BANKDEFFXXX
+:57A:DEUTDEFFXXX
+:59:/DE89370400440532013000
+DEUTDEFFXXX
 :70:PAYMENT FOR SERVICES
 :71A:OUR
 -}"#;
 
-        let parsed = SwiftParser::parse_auto(raw_mt103).unwrap();
+        match SwiftParser::parse_auto(raw_mt103) {
+            Ok(parsed) => {
+                // Check that it detected the correct message type
+                assert_eq!(parsed.message_type(), "103");
 
-        // Check that it detected the correct message type
-        assert_eq!(parsed.message_type(), "103");
+                // Check that we can extract the MT103 message
+                let mt103_msg = parsed.as_mt103().unwrap();
+                assert_eq!(mt103_msg.message_type, "103");
 
-        // Check that we can extract the MT103 message
-        let mt103_msg = parsed.as_mt103().unwrap();
-        assert_eq!(mt103_msg.message_type, "103");
+                println!("Successfully parsed MT103 message with auto-detection");
+            }
+            Err(e) => {
+                println!("Error parsing MT103: {e:?}");
 
-        println!("Successfully parsed MT103 message with auto-detection");
+                // Let's debug by parsing the fields manually
+                let block4 = SwiftParser::extract_block(raw_mt103, 4).unwrap().unwrap();
+                let field_map = SwiftParser::parse_block4_fields(&block4).unwrap();
+
+                println!("Parsed fields:");
+                for (tag, values) in &field_map {
+                    println!("  {tag}: {values:?}");
+                }
+
+                panic!("Failed to parse MT103");
+            }
+        }
     }
 
     #[test]

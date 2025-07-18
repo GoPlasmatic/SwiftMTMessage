@@ -8,28 +8,28 @@ use std::fmt;
 pub enum MacroError {
     /// Syntax parsing error from syn
     Parse(syn::Error),
-    
+
     /// Invalid format specification
     InvalidFormat {
         span: Span,
         format: String,
         reason: String,
     },
-    
+
     /// Unsupported field type
     UnsupportedType {
         span: Span,
         type_name: String,
         context: String,
     },
-    
+
     /// Missing required attribute
     MissingAttribute {
         span: Span,
         attribute: String,
         context: String,
     },
-    
+
     /// Invalid attribute value
     InvalidAttribute {
         span: Span,
@@ -37,18 +37,12 @@ pub enum MacroError {
         value: String,
         expected: String,
     },
-    
+
     /// Conflicting attributes or configurations
-    Conflict {
-        span: Span,
-        message: String,
-    },
-    
+    Conflict { span: Span, message: String },
+
     /// Internal macro processing error
-    Internal {
-        span: Span,
-        message: String,
-    },
+    Internal { span: Span, message: String },
 }
 
 impl MacroError {
@@ -56,53 +50,69 @@ impl MacroError {
     pub fn to_compile_error(&self) -> TokenStream {
         match self {
             MacroError::Parse(syn_error) => syn_error.to_compile_error(),
-            
-            MacroError::InvalidFormat { span, format, reason } => {
-                let message = format!("Invalid SWIFT format '{}': {}", format, reason);
+
+            MacroError::InvalidFormat {
+                span,
+                format,
+                reason,
+            } => {
+                let message = format!("Invalid SWIFT format '{format}': {reason}");
                 quote::quote_spanned! { *span =>
                     compile_error!(#message);
                 }
             }
-            
-            MacroError::UnsupportedType { span, type_name, context } => {
-                let message = format!("Unsupported type '{}' in {}", type_name, context);
+
+            MacroError::UnsupportedType {
+                span,
+                type_name,
+                context,
+            } => {
+                let message = format!("Unsupported type '{type_name}' in {context}");
                 quote::quote_spanned! { *span =>
                     compile_error!(#message);
                 }
             }
-            
-            MacroError::MissingAttribute { span, attribute, context } => {
-                let message = format!("Missing required attribute '{}' in {}", attribute, context);
+
+            MacroError::MissingAttribute {
+                span,
+                attribute,
+                context,
+            } => {
+                let message = format!("Missing required attribute '{attribute}' in {context}");
                 quote::quote_spanned! { *span =>
                     compile_error!(#message);
                 }
             }
-            
-            MacroError::InvalidAttribute { span, attribute, value, expected } => {
+
+            MacroError::InvalidAttribute {
+                span,
+                attribute,
+                value,
+                expected,
+            } => {
                 let message = format!(
-                    "Invalid value '{}' for attribute '{}', expected: {}",
-                    value, attribute, expected
+                    "Invalid value '{value}' for attribute '{attribute}', expected: {expected}"
                 );
                 quote::quote_spanned! { *span =>
                     compile_error!(#message);
                 }
             }
-            
+
             MacroError::Conflict { span, message } => {
                 quote::quote_spanned! { *span =>
                     compile_error!(#message);
                 }
             }
-            
+
             MacroError::Internal { span, message } => {
-                let full_message = format!("Internal macro error: {}", message);
+                let full_message = format!("Internal macro error: {message}");
                 quote::quote_spanned! { *span =>
                     compile_error!(#full_message);
                 }
             }
         }
     }
-    
+
     /// Create an invalid format error
     pub fn invalid_format(span: Span, format: &str, reason: &str) -> Self {
         MacroError::InvalidFormat {
@@ -111,7 +121,7 @@ impl MacroError {
             reason: reason.to_string(),
         }
     }
-    
+
     /// Create an unsupported type error
     pub fn unsupported_type(span: Span, type_name: &str, context: &str) -> Self {
         MacroError::UnsupportedType {
@@ -120,7 +130,7 @@ impl MacroError {
             context: context.to_string(),
         }
     }
-    
+
     /// Create a missing attribute error
     pub fn missing_attribute(span: Span, attribute: &str, context: &str) -> Self {
         MacroError::MissingAttribute {
@@ -129,7 +139,7 @@ impl MacroError {
             context: context.to_string(),
         }
     }
-    
+
     /// Create an invalid attribute error
     pub fn invalid_attribute(span: Span, attribute: &str, value: &str, expected: &str) -> Self {
         MacroError::InvalidAttribute {
@@ -139,7 +149,7 @@ impl MacroError {
             expected: expected.to_string(),
         }
     }
-    
+
     /// Create a conflict error
     pub fn conflict(span: Span, message: &str) -> Self {
         MacroError::Conflict {
@@ -147,7 +157,7 @@ impl MacroError {
             message: message.to_string(),
         }
     }
-    
+
     /// Create an internal error
     pub fn internal(span: Span, message: &str) -> Self {
         MacroError::Internal {
@@ -166,21 +176,33 @@ impl From<syn::Error> for MacroError {
 impl fmt::Display for MacroError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            MacroError::Parse(syn_error) => write!(f, "Parse error: {}", syn_error),
+            MacroError::Parse(syn_error) => write!(f, "Parse error: {syn_error}"),
             MacroError::InvalidFormat { format, reason, .. } => {
-                write!(f, "Invalid SWIFT format '{}': {}", format, reason)
+                write!(f, "Invalid SWIFT format '{format}': {reason}")
             }
-            MacroError::UnsupportedType { type_name, context, .. } => {
-                write!(f, "Unsupported type '{}' in {}", type_name, context)
+            MacroError::UnsupportedType {
+                type_name, context, ..
+            } => {
+                write!(f, "Unsupported type '{type_name}' in {context}")
             }
-            MacroError::MissingAttribute { attribute, context, .. } => {
-                write!(f, "Missing required attribute '{}' in {}", attribute, context)
+            MacroError::MissingAttribute {
+                attribute, context, ..
+            } => {
+                write!(f, "Missing required attribute '{attribute}' in {context}")
             }
-            MacroError::InvalidAttribute { attribute, value, expected, .. } => {
-                write!(f, "Invalid value '{}' for attribute '{}', expected: {}", value, attribute, expected)
+            MacroError::InvalidAttribute {
+                attribute,
+                value,
+                expected,
+                ..
+            } => {
+                write!(
+                    f,
+                    "Invalid value '{value}' for attribute '{attribute}', expected: {expected}"
+                )
             }
-            MacroError::Conflict { message, .. } => write!(f, "Conflict: {}", message),
-            MacroError::Internal { message, .. } => write!(f, "Internal error: {}", message),
+            MacroError::Conflict { message, .. } => write!(f, "Conflict: {message}"),
+            MacroError::Internal { message, .. } => write!(f, "Internal error: {message}"),
         }
     }
 }
@@ -198,6 +220,6 @@ where
     E: std::fmt::Display,
 {
     fn with_context(self, context: &str) -> MacroResult<T> {
-        self.map_err(|e| MacroError::internal(Span::call_site(), &format!("{}: {}", context, e)))
+        self.map_err(|e| MacroError::internal(Span::call_site(), &format!("{context}: {e}")))
     }
 }

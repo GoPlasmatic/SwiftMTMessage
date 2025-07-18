@@ -57,7 +57,7 @@ pub struct MT103 {
     pub field_56: Option<Field56Intermediary>,
 
     #[field("57")]
-    pub field_57a: Option<Field57AccountWithInstitution>,
+    pub field_57: Option<Field57AccountWithInstitution>,
 
     #[field("59")]
     pub field_59: Field59,
@@ -138,11 +138,11 @@ impl MT103 {
             }
         }
 
-        if self.field_57a.is_some() {
+        if self.field_57.is_some() {
             // Field 57A must not be of type B or D
             if let Field57AccountWithInstitution::B(_)
             | Field57AccountWithInstitution::C(_)
-            | Field57AccountWithInstitution::D(_) = self.field_57a.as_ref().unwrap()
+            | Field57AccountWithInstitution::D(_) = self.field_57.as_ref().unwrap()
             {
                 return false;
             }

@@ -4,7 +4,6 @@
 //! like BIC codes, currency codes, and other financial identifiers.
 
 use once_cell::sync::Lazy;
-use regex::Regex;
 use std::collections::HashSet;
 
 /// Valid ISO 4217 currency codes (major currencies)
@@ -176,15 +175,15 @@ pub fn is_valid_swift_date(date: &str) -> bool {
     }
 
     // Basic range validation
-    let year: u32 = date[0..2].parse().unwrap_or(99);
+    let _: u32 = date[0..2].parse().unwrap_or(99);
     let month: u32 = date[2..4].parse().unwrap_or(13);
     let day: u32 = date[4..6].parse().unwrap_or(32);
 
-    if month < 1 || month > 12 {
+    if !(1..=12).contains(&month) {
         return false;
     }
 
-    if day < 1 || day > 31 {
+    if !(1..=31).contains(&day) {
         return false;
     }
 

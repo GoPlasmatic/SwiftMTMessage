@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
@@ -22,13 +22,13 @@ pub struct MT910 {
     pub field_32a: Field32A,
 
     #[field("50")]
-    pub field_50a: Option<Field50OrderingCustomerAFK>,
+    pub field_50: Option<Field50OrderingCustomerAFK>,
 
     #[field("52")]
-    pub field_52a: Option<Field52OrderingInstitution>,
+    pub field_52: Option<Field52OrderingInstitution>,
 
     #[field("56")]
-    pub field_56a: Option<Field56Intermediary>,
+    pub field_56: Option<Field56Intermediary>,
 
     #[field("72")]
     pub field_72: Option<Field72>,

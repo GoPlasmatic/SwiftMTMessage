@@ -3,4 +3,4 @@
 pub mod field;
 pub mod message;
 pub mod serde;
-pub mod validation;
+pub mod type_generators;

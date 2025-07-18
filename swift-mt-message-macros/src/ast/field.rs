@@ -2,9 +2,11 @@
 
 use crate::error::{MacroError, MacroResult};
 use crate::format::FormatSpec;
+use crate::utils::types::{is_option_type, is_vec_type};
+use crate::utils::attributes::extract_component_attribute;
 use proc_macro2::Span;
 use syn::spanned::Spanned;
-use syn::{Attribute, DeriveInput, Field, Fields, FieldsNamed, Ident, Lit, Meta, Type};
+use syn::{DeriveInput, Field, Fields, FieldsNamed, Ident, Type};
 
 /// Parsed field structure information
 #[derive(Debug, Clone)]
@@ -14,6 +16,7 @@ pub struct FieldDefinition {
     /// Field structure type (struct or enum)
     pub kind: FieldKind,
     /// Span for error reporting
+    #[allow(dead_code)]
     pub span: Span,
 }
 
@@ -48,6 +51,7 @@ pub struct EnumVariant {
     /// The type this variant wraps
     pub type_name: Type,
     /// Span for error reporting
+    #[allow(dead_code)]
     pub span: Span,
 }
 
@@ -65,6 +69,7 @@ pub struct Component {
     /// Whether the field is repetitive (Vec<T>)
     pub is_repetitive: bool,
     /// Span for error reporting
+    #[allow(dead_code)]
     pub span: Span,
 }
 
@@ -225,66 +230,6 @@ impl Component {
     }
 }
 
-/// Extract format specification from #[component("format")] attribute
-fn extract_component_attribute(attrs: &[Attribute]) -> MacroResult<String> {
-    for attr in attrs {
-        if attr.path().is_ident("component") {
-            match &attr.meta {
-                Meta::List(meta_list) => {
-                    let tokens = &meta_list.tokens;
-                    let lit: Lit = syn::parse2(tokens.clone())?;
-                    match lit {
-                        Lit::Str(lit_str) => {
-                            return Ok(lit_str.value());
-                        }
-                        _ => {
-                            return Err(MacroError::invalid_attribute(
-                                attr.span(),
-                                "component",
-                                "non-string literal",
-                                "string literal with format specification",
-                            ));
-                        }
-                    }
-                }
-                _ => {
-                    return Err(MacroError::invalid_attribute(
-                        attr.span(),
-                        "component",
-                        "invalid syntax",
-                        "#[component(\"format_spec\")]",
-                    ));
-                }
-            }
-        }
-    }
-
-    Err(MacroError::missing_attribute(
-        Span::call_site(),
-        "component",
-        "field component definition",
-    ))
-}
-
-/// Check if type is Option<T>
-fn is_option_type(ty: &Type) -> bool {
-    if let Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            return segment.ident == "Option";
-        }
-    }
-    false
-}
-
-/// Check if type is Vec<T>
-fn is_vec_type(ty: &Type) -> bool {
-    if let Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            return segment.ident == "Vec";
-        }
-    }
-    false
-}
 
 #[cfg(test)]
 mod tests {

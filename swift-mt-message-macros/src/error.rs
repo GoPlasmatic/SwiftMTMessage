@@ -9,13 +9,6 @@ pub enum MacroError {
     /// Syntax parsing error from syn
     Parse(syn::Error),
 
-    /// Invalid format specification
-    InvalidFormat {
-        span: Span,
-        format: String,
-        reason: String,
-    },
-
     /// Unsupported field type
     UnsupportedType {
         span: Span,
@@ -38,9 +31,6 @@ pub enum MacroError {
         expected: String,
     },
 
-    /// Conflicting attributes or configurations
-    Conflict { span: Span, message: String },
-
     /// Internal macro processing error
     Internal { span: Span, message: String },
 }
@@ -50,17 +40,6 @@ impl MacroError {
     pub fn to_compile_error(&self) -> TokenStream {
         match self {
             MacroError::Parse(syn_error) => syn_error.to_compile_error(),
-
-            MacroError::InvalidFormat {
-                span,
-                format,
-                reason,
-            } => {
-                let message = format!("Invalid SWIFT format '{format}': {reason}");
-                quote::quote_spanned! { *span =>
-                    compile_error!(#message);
-                }
-            }
 
             MacroError::UnsupportedType {
                 span,
@@ -98,27 +77,12 @@ impl MacroError {
                 }
             }
 
-            MacroError::Conflict { span, message } => {
-                quote::quote_spanned! { *span =>
-                    compile_error!(#message);
-                }
-            }
-
             MacroError::Internal { span, message } => {
                 let full_message = format!("Internal macro error: {message}");
                 quote::quote_spanned! { *span =>
                     compile_error!(#full_message);
                 }
             }
-        }
-    }
-
-    /// Create an invalid format error
-    pub fn invalid_format(span: Span, format: &str, reason: &str) -> Self {
-        MacroError::InvalidFormat {
-            span,
-            format: format.to_string(),
-            reason: reason.to_string(),
         }
     }
 
@@ -150,14 +114,6 @@ impl MacroError {
         }
     }
 
-    /// Create a conflict error
-    pub fn conflict(span: Span, message: &str) -> Self {
-        MacroError::Conflict {
-            span,
-            message: message.to_string(),
-        }
-    }
-
     /// Create an internal error
     pub fn internal(span: Span, message: &str) -> Self {
         MacroError::Internal {
@@ -177,9 +133,6 @@ impl fmt::Display for MacroError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             MacroError::Parse(syn_error) => write!(f, "Parse error: {syn_error}"),
-            MacroError::InvalidFormat { format, reason, .. } => {
-                write!(f, "Invalid SWIFT format '{format}': {reason}")
-            }
             MacroError::UnsupportedType {
                 type_name, context, ..
             } => {
@@ -201,7 +154,6 @@ impl fmt::Display for MacroError {
                     "Invalid value '{value}' for attribute '{attribute}', expected: {expected}"
                 )
             }
-            MacroError::Conflict { message, .. } => write!(f, "Conflict: {message}"),
             MacroError::Internal { message, .. } => write!(f, "Internal error: {message}"),
         }
     }
@@ -209,17 +161,3 @@ impl fmt::Display for MacroError {
 
 /// Result type for macro operations
 pub type MacroResult<T> = Result<T, MacroError>;
-
-/// Helper trait for adding context to errors
-pub trait ErrorContext<T> {
-    fn with_context(self, context: &str) -> MacroResult<T>;
-}
-
-impl<T, E> ErrorContext<T> for Result<T, E>
-where
-    E: std::fmt::Display,
-{
-    fn with_context(self, context: &str) -> MacroResult<T> {
-        self.map_err(|e| MacroError::internal(Span::call_site(), &format!("{context}: {e}")))
-    }
-}

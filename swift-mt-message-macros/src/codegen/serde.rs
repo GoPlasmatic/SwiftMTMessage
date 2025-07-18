@@ -1,6 +1,7 @@
 //! Serde integration for clean JSON serialization
 
 use crate::error::MacroResult;
+use crate::utils::types::{is_option_type, is_vec_type};
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::DeriveInput;
@@ -63,22 +64,3 @@ fn extract_field_tag(attrs: &[syn::Attribute]) -> Option<String> {
     None
 }
 
-/// Check if a type is Option<T>
-fn is_option_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            return segment.ident == "Option";
-        }
-    }
-    false
-}
-
-/// Check if a type is Vec<T>
-fn is_vec_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            return segment.ident == "Vec";
-        }
-    }
-    false
-}

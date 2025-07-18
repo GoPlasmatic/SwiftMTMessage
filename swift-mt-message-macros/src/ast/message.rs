@@ -1,6 +1,8 @@
 //! AST structures and parsing for message definitions
 
 use crate::error::{MacroError, MacroResult};
+use crate::utils::types::{is_option_type, is_vec_type, extract_inner_type};
+use crate::utils::attributes::extract_field_attribute;
 use proc_macro2::Span;
 use syn::spanned::Spanned;
 use syn::{Attribute, DeriveInput, Field, Fields, Ident, Lit, Meta, Type};
@@ -15,6 +17,7 @@ pub struct MessageDefinition {
     /// Validation rules constant name (e.g., "MT103_VALIDATION_RULES")
     pub validation_rules_const: Option<String>,
     /// Span for error reporting
+    #[allow(dead_code)]
     pub span: Span,
 }
 
@@ -24,6 +27,7 @@ pub struct MessageField {
     /// Field name in the struct
     pub name: Ident,
     /// Field type
+    #[allow(dead_code)]
     pub field_type: Type,
     /// Inner field type (extracted from Option<T> or Vec<T>)
     pub inner_type: Type,
@@ -34,6 +38,7 @@ pub struct MessageField {
     /// Whether the field is repetitive (Vec<T>)
     pub is_repetitive: bool,
     /// Span for error reporting
+    #[allow(dead_code)]
     pub span: Span,
 }
 
@@ -132,82 +137,7 @@ impl MessageField {
     }
 }
 
-/// Extract field tag from #[field("tag")] attribute
-fn extract_field_attribute(attrs: &[Attribute]) -> MacroResult<String> {
-    for attr in attrs {
-        if attr.path().is_ident("field") {
-            match &attr.meta {
-                Meta::List(meta_list) => {
-                    let tokens = &meta_list.tokens;
-                    let lit: Lit = syn::parse2(tokens.clone())?;
-                    match lit {
-                        Lit::Str(lit_str) => {
-                            return Ok(lit_str.value());
-                        }
-                        _ => {
-                            return Err(MacroError::invalid_attribute(
-                                attr.span(),
-                                "field",
-                                "non-string literal",
-                                "string literal with field tag",
-                            ));
-                        }
-                    }
-                }
-                _ => {
-                    return Err(MacroError::invalid_attribute(
-                        attr.span(),
-                        "field",
-                        "invalid syntax",
-                        "#[field(\"tag\")]",
-                    ));
-                }
-            }
-        }
-    }
 
-    Err(MacroError::missing_attribute(
-        Span::call_site(),
-        "field",
-        "message field definition",
-    ))
-}
-
-/// Check if type is Option<T>
-fn is_option_type(ty: &Type) -> bool {
-    if let Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            return segment.ident == "Option";
-        }
-    }
-    false
-}
-
-/// Check if type is Vec<T>
-fn is_vec_type(ty: &Type) -> bool {
-    if let Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            return segment.ident == "Vec";
-        }
-    }
-    false
-}
-
-/// Extract inner type from Option<T>, Vec<T>, or return the type as-is
-fn extract_inner_type(ty: &Type, is_optional: bool, is_repetitive: bool) -> Type {
-    if is_optional || is_repetitive {
-        if let Type::Path(type_path) = ty {
-            if let Some(segment) = type_path.path.segments.last() {
-                if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
-                    if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() {
-                        return inner_type.clone();
-                    }
-                }
-            }
-        }
-    }
-    ty.clone()
-}
 
 /// Extract validation rules constant name from attributes
 fn extract_validation_rules_attribute(attrs: &[Attribute]) -> MacroResult<Option<String>> {

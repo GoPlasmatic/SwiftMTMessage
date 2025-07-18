@@ -89,4 +89,26 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_field13c_sample_generation() {
+        let sample = Field13C::sample();
+        println!("Field13C sample: {:?}", sample);
+        println!("Field13C sample to_swift_string: {}", sample.to_swift_string());
+        
+        // Test that the sample can be parsed back
+        let sample_string = sample.to_swift_string();
+        match Field13C::parse(&sample_string) {
+            Ok(parsed) => {
+                println!("✓ Sample parsing successful!");
+                assert_eq!(parsed.code, sample.code);
+                assert_eq!(parsed.time, sample.time);
+                assert_eq!(parsed.sign, sample.sign);
+                assert_eq!(parsed.offset, sample.offset);
+            }
+            Err(e) => {
+                panic!("✗ Sample parsing failed: {:?}", e);
+            }
+        }
+    }
 }

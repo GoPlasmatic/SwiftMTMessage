@@ -252,8 +252,8 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
             let second_no_parens = second_part_regex
                 .trim_start_matches('(')
                 .trim_end_matches(')');
-            // Create a single capturing group that captures both parts without the slashes
-            return Ok(format!("/({}/{})", first_no_parens, second_no_parens));
+            // Create a single capturing group that captures both parts including the leading slash
+            return Ok(format!("(/{}{})", first_no_parens, second_no_parens));
         }
     }
 

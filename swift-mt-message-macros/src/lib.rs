@@ -72,8 +72,6 @@ pub fn serde_swift_fields(_args: TokenStream, input: TokenStream) -> TokenStream
     }
 }
 
-
-
 /// Internal implementation for SwiftField derive macro
 fn derive_swift_field_impl(input: TokenStream) -> Result<TokenStream, MacroError> {
     let mut input: syn::DeriveInput = syn::parse(input)?;

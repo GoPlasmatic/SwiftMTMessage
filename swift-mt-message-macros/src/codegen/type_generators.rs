@@ -15,7 +15,18 @@ pub fn generate_to_swift_string_for_component(component: &Component) -> TokenStr
     let field_name = &component.name;
     let field_type = &component.field_type;
     
-    generate_to_swift_string_for_type(field_name, field_type)
+    // Handle special format patterns that require delimiters
+    match component.format.pattern.as_str() {
+        "/8c/" => {
+            // For /8c/ format, wrap the value in slashes
+            quote! {
+                format!("/{}/", self.#field_name)
+            }
+        }
+        _ => {
+            generate_to_swift_string_for_type(field_name, field_type)
+        }
+    }
 }
 
 /// Generate to_swift_string code for a field with a specific type
@@ -103,11 +114,36 @@ pub fn generate_to_swift_string_for_type(field_name: &syn::Ident, field_type: &T
 /// Generate sample code for a specific component based on its type
 pub fn generate_sample_for_component(component: &Component) -> TokenStream {
     let field_name = &component.name;
-    let sample_expr = generate_sample_expr_for_type(&component.field_type, &component.format);
+    let sample_expr = generate_sample_expr_for_component(component);
     
     quote! {
         #field_name: #sample_expr
     }
+}
+
+/// Generate sample expression for a specific component
+pub fn generate_sample_expr_for_component(component: &Component) -> TokenStream {
+    let field_name = &component.name;
+    let field_type = &component.field_type;
+    let format_spec = &component.format;
+    
+    // Handle special cases based on field name and format
+    if is_string_type(field_type) {
+        match (field_name.to_string().as_str(), format_spec.pattern.as_str()) {
+            ("offset", "4!n") => {
+                // For offset fields, use "0000" 
+                return quote! { "0000".to_string() };
+            }
+            ("time", "4!n") => {
+                // For time fields, use "1200"
+                return quote! { "1200".to_string() };
+            }
+            _ => {}
+        }
+    }
+    
+    // Fall back to the original logic
+    generate_sample_expr_for_type(field_type, format_spec)
 }
 
 /// Generate sample expression for a field type
@@ -178,27 +214,44 @@ pub fn generate_sample_expr_for_type(field_type: &Type, format_spec: &crate::for
 
 /// Generate a sample string literal based on format spec
 fn generate_sample_string_literal(format_spec: &crate::format::FormatSpec) -> String {
-    
-    match &format_spec.format_type {
-        FormatType::AnyCharacter => {
-            let length = format_spec.length.unwrap_or(16);
-            "A".repeat(length)
+    // Handle special cases for complex format patterns
+    match format_spec.pattern.as_str() {
+        "/8c/" => {
+            // Time indication codes commonly used in SWIFT
+            "SNDTIME".to_string()
         }
-        FormatType::Numeric => {
-            let length = format_spec.length.unwrap_or(6);
-            "1".repeat(length)
-        }
-        FormatType::Alpha => {
-            let length = format_spec.length.unwrap_or(4);
-            "TEST".chars().cycle().take(length).collect()
-        }
-        FormatType::CharacterSet => {
-            let length = format_spec.length.unwrap_or(4);
-            "ABC1".chars().cycle().take(length).collect()
+        "1!x" => {
+            // Sign characters - default to positive
+            "+".to_string()
         }
         _ => {
-            let length = format_spec.length.unwrap_or(8);
-            "SAMPLE".chars().cycle().take(length).collect()
+            // Default behavior for other patterns
+            match &format_spec.format_type {
+                FormatType::AnyCharacter => {
+                    let length = format_spec.length.unwrap_or(16);
+                    "A".repeat(length)
+                }
+                FormatType::Numeric => {
+                    let length = format_spec.length.unwrap_or(6);
+                    match length {
+                        4 => "1200".to_string(), // Time format HHMM or offset
+                        6 => "123456".to_string(), // Date format YYMMDD
+                        _ => "1".repeat(length),
+                    }
+                }
+                FormatType::Alpha => {
+                    let length = format_spec.length.unwrap_or(4);
+                    "TEST".chars().cycle().take(length).collect()
+                }
+                FormatType::CharacterSet => {
+                    let length = format_spec.length.unwrap_or(4);
+                    "ABC1".chars().cycle().take(length).collect()
+                }
+                _ => {
+                    let length = format_spec.length.unwrap_or(8);
+                    "SAMPLE".chars().cycle().take(length).collect()
+                }
+            }
         }
     }
 }

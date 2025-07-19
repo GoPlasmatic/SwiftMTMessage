@@ -3,6 +3,32 @@
 //! This module provides utilities for formatting and parsing SWIFT field components
 //! according to SWIFT format specifications like "16x", "5n", "4!c", etc.
 //! Used by the derive macros to generate formatting code.
+//!
+//! ## SWIFT Format Specifications
+//!
+//! The format system supports all standard SWIFT format types:
+//!
+//! ### Basic Format Types
+//! - `n` - Numeric (0-9)
+//! - `a` - Alphabetic (A-Z, uppercase only)
+//! - `c` - Character set (A-Z, 0-9, and certain symbols)
+//! - `x` - Any printable character
+//! - `d` - Decimal number with optional fractional part
+//!
+//! ### Length Specifications  
+//! - `3!a` - Fixed length (exactly 3 alphabetic characters)
+//! - `16x` - Variable length (up to 16 any characters)
+//! - `15d` - Decimal number (up to 15 digits with optional decimal point)
+//!
+//! ### Optional and Repetitive Patterns
+//! - `[35x]` - Optional field (can be empty)
+//! - `4*35x` - Repetitive field (up to 4 lines of 35 characters each)
+//! - `[/34x]` - Optional with literal prefix (starts with "/" if present)
+//!
+//! ### Complex Patterns
+//! - `4!a2!a2!c[3!c]` - Multi-component patterns (BIC codes)
+//! - `[/1!a][/34x]` - Compound optional patterns
+//! - `4*(1!n/33x)` - Numbered line patterns
 
 use crate::ast::StructField;
 use crate::error::MacroResult;
@@ -12,13 +38,28 @@ use regex::Regex;
 use syn::Type;
 
 /// SWIFT format specification parser and formatter
+/// 
+/// Represents a parsed SWIFT format specification that can be used to generate
+/// parsing and validation code. This structure captures all the important
+/// aspects of a SWIFT format pattern.
+/// 
+/// ## Examples
+/// - Pattern `"3!a"` → `{ length: Some(3), format_type: Alpha, is_fixed: true }`
+/// - Pattern `"[35x]"` → `{ max_length: Some(35), format_type: AnyCharacter, is_optional: true }`
+/// - Pattern `"15d"` → `{ max_length: Some(15), format_type: Decimal, is_fixed: false }`
 #[derive(Debug, Clone, PartialEq)]
 pub struct FormatSpec {
+    /// Original pattern string (e.g., "3!a", "[35x]", "15d")
     pub pattern: String,
+    /// Exact length for fixed-length patterns
     pub length: Option<usize>,
+    /// Maximum length for variable-length patterns
     pub max_length: Option<usize>,
+    /// Character type and validation rules
     pub format_type: FormatType,
+    /// Whether the length is fixed (! modifier present)
     pub is_fixed: bool,
+    /// Whether the field is optional (wrapped in [...])
     pub is_optional: bool,
 }
 

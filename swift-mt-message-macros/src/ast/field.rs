@@ -9,9 +9,13 @@ use syn::spanned::Spanned;
 use syn::{DeriveInput, Field, Fields, FieldsNamed, Ident, Type};
 
 /// Parsed field structure information
+/// 
+/// Represents a complete field definition parsed from a Rust struct or enum
+/// that uses the `#[derive(SwiftField)]` macro. This structure contains all
+/// the information needed to generate the SwiftField trait implementation.
 #[derive(Debug, Clone)]
 pub struct FieldDefinition {
-    /// The struct or enum name
+    /// The struct or enum name (e.g., `Field20`, `Field50`)
     pub name: Ident,
     /// Field structure type (struct or enum)
     pub kind: FieldKind,
@@ -56,13 +60,30 @@ pub struct EnumVariant {
 }
 
 /// Component field within a struct
+/// 
+/// Represents a single component of a SWIFT field, extracted from a struct field
+/// with a `#[component("format")]` attribute. Components define the individual
+/// parts that make up a complete SWIFT field.
+/// 
+/// ## Example
+/// For a field like `Field32A`, this would represent each component:
+/// ```ignore
+/// struct Field32A {
+///     #[component("6!n")]   // Component: date
+///     date: String,
+///     #[component("3!a")]   // Component: currency  
+///     currency: String,
+///     #[component("15d")]   // Component: amount
+///     amount: f64,
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct Component {
-    /// Field name
+    /// Field name (e.g., `date`, `currency`, `amount`)
     pub name: Ident,
-    /// Field type
+    /// Field type (e.g., `String`, `f64`, `Option<String>`)
     pub field_type: Type,
-    /// SWIFT format specification
+    /// SWIFT format specification (e.g., "6!n", "3!a", "15d")
     pub format: FormatSpec,
     /// Whether the field is optional (Option<T>)
     pub is_optional: bool,

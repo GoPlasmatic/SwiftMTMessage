@@ -2,7 +2,7 @@
 //!
 //! This module provides centralized type checking functions to avoid code duplication
 //! across the macro implementation. These functions help identify common Rust types
-//! and their generic variants (Option<T>, Vec<T>, etc.).
+//! and their generic variants (`Option<T>`, `Vec<T>`, etc.).
 
 use syn::{GenericArgument, PathArguments, Type};
 

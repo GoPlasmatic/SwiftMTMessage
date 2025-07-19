@@ -8,11 +8,27 @@ use syn::spanned::Spanned;
 use syn::{Attribute, DeriveInput, Field, Fields, Ident, Lit, Meta, Type};
 
 /// Parsed message structure information
+/// 
+/// Represents a complete SWIFT message definition parsed from a Rust struct
+/// that uses the `#[derive(SwiftMessage)]` macro. Contains all fields and
+/// metadata needed to generate the SwiftMessageBody trait implementation.
+/// 
+/// ## Example
+/// For a message like:
+/// ```ignore
+/// #[derive(SwiftMessage)]
+/// struct MT103 {
+///     #[field("20")]
+///     field_20: Field20,
+///     #[field("32A")]  
+///     field_32a: Field32A,
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct MessageDefinition {
-    /// The message struct name (e.g., MT103)
+    /// The message struct name (e.g., `MT103`, `MT202`)
     pub name: Ident,
-    /// List of message fields
+    /// List of message fields with their SWIFT tags and types
     pub fields: Vec<MessageField>,
     /// Validation rules constant name (e.g., "MT103_VALIDATION_RULES")
     pub validation_rules_const: Option<String>,
@@ -22,20 +38,35 @@ pub struct MessageDefinition {
 }
 
 /// Message field definition
+/// 
+/// Represents a single field within a SWIFT message, extracted from a struct field
+/// with a `#[field("tag")]` attribute. Contains the mapping between Rust field
+/// names and SWIFT field tags, along with type information for proper parsing.
+/// 
+/// ## Example
+/// For a field definition like:
+/// ```ignore
+/// #[field("32A")]
+/// field_32a: Field32A,
+/// ```
+/// This creates a MessageField with:
+/// - name: `field_32a`
+/// - tag: `"32A"`
+/// - inner_type: `Field32A`
 #[derive(Debug, Clone)]
 pub struct MessageField {
-    /// Field name in the struct
+    /// Field name in the struct (e.g., `field_20`, `field_32a`)
     pub name: Ident,
-    /// Field type
+    /// Field type (e.g., `Field20`, `Option<Field50>`, `Vec<Field71A>`)
     #[allow(dead_code)]
     pub field_type: Type,
     /// Inner field type (extracted from Option<T> or Vec<T>)
     pub inner_type: Type,
-    /// SWIFT field tag (e.g., "20", "23B")
+    /// SWIFT field tag (e.g., "20", "32A", "71A")
     pub tag: String,
-    /// Whether the field is optional
+    /// Whether the field is optional (wrapped in Option<T>)
     pub is_optional: bool,
-    /// Whether the field is repetitive (Vec<T>)
+    /// Whether the field is repetitive (wrapped in Vec<T>)
     pub is_repetitive: bool,
     /// Span for error reporting
     #[allow(dead_code)]

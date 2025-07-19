@@ -57,12 +57,3 @@ path = "../examples/json_to_mt_example.rs"
 [[example]]
 name = "sample_generation"
 path = "../examples/sample_generation.rs"
-
-[[example]]
-name = "minimal_mt103"
-path = "../examples/minimal_mt103.rs"
-
-[[example]]
-name = "debug_round_trip"
-path = "../examples/debug_round_trip.rs"
-

@@ -897,7 +897,13 @@ where
     // Extract variant from debug string (e.g., "K(...)" -> "K")
     if let Some(variant_end) = debug_string.find('(') {
         let variant = &debug_string[..variant_end];
-        format!("{}{}", base_tag, variant)
+        
+        // Special handling for "NoOption" variant - use base tag without suffix
+        if variant == "NoOption" {
+            base_tag.to_string()
+        } else {
+            format!("{}{}", base_tag, variant)
+        }
     } else {
         base_tag.to_string()
     }

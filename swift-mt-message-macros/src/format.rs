@@ -420,6 +420,61 @@ pub fn generate_regex_parse_impl(
     // Determine if this is a multiline field that needs newline separators
     let is_multiline_field = is_multiline_field_type(name, struct_field);
 
+    // Special handling for Field53B and Field57B with pattern [/1!a][/34x] + [35x]
+    if struct_field.components.len() == 2 &&
+       struct_field.components[0].format.pattern == "[/1!a][/34x]" &&
+       struct_field.components[1].format.pattern == "[35x]" {
+        
+        let first_field_name = &struct_field.components[0].name;
+        let second_field_name = &struct_field.components[1].name;
+        
+        return Ok(quote! {
+            // Handle Field53B/Field57B parsing: optional party identifier + optional location
+            let lines: Vec<&str> = value.trim().lines().collect();
+            
+            let (#first_field_name, #second_field_name) = if lines.len() == 2 {
+                // Two lines: first is party identifier, second is location
+                let first_line = lines[0];
+                let second_line = lines[1];
+                
+                // Parse party identifier (remove leading slash)
+                let party_id = if first_line.starts_with('/') {
+                    Some(first_line.trim_start_matches('/').to_string())
+                } else {
+                    None
+                };
+                
+                // Parse location
+                let location = if !second_line.is_empty() {
+                    Some(second_line.to_string())
+                } else {
+                    None
+                };
+                
+                (party_id, location)
+            } else if lines.len() == 1 {
+                // One line: could be either party identifier or location
+                let line = lines[0];
+                
+                if line.starts_with('/') {
+                    // This is a party identifier only
+                    (Some(line.trim_start_matches('/').to_string()), None)
+                } else {
+                    // This is a location only
+                    (None, Some(line.to_string()))
+                }
+            } else {
+                // Empty or unexpected format
+                (None, None)
+            };
+            
+            Ok(Self {
+                #first_field_name,
+                #second_field_name,
+            })
+        });
+    }
+
     // Check if this is a field with an optional first component followed by a required component
     // These fields need special handling because when the optional component is present, 
     // it appears on its own line, followed by the required component on the next line

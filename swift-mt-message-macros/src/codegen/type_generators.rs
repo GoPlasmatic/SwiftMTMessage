@@ -55,6 +55,16 @@ pub fn generate_to_swift_string_for_component(component: &Component) -> TokenStr
                 generate_to_swift_string_for_type(field_name, field_type)
             }
         }
+        // Handle amount format (15d) - always show 2 decimal places with comma separator
+        "15d" => {
+            if is_f64_type(field_type) {
+                quote! {
+                    format!("{:.2}", self.#field_name).replace('.', ",")
+                }
+            } else {
+                generate_to_swift_string_for_type(field_name, field_type)
+            }
+        }
         _ => generate_to_swift_string_for_type(field_name, field_type),
     }
 }
@@ -79,7 +89,8 @@ pub fn generate_to_swift_string_for_type(
         }
     } else if is_f64_type(field_type) {
         quote! {
-            format!("{:.2}", self.#field_name).replace('.', ",")
+            // For exchange rates, preserve original precision by using the format that removes trailing zeros
+            format!("{}", self.#field_name).replace('.', ",")
         }
     } else if is_u32_type(field_type) || is_u8_type(field_type) {
         quote! {

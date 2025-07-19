@@ -253,6 +253,39 @@ fn generate_multi_component_to_swift_string(struct_field: &StructField) -> Macro
         });
     }
     
+    // Pattern: [/1!a][/34x] + [35x] (Field53B/Field57B style - optional party identifier + optional location)
+    if patterns.len() == 2 &&
+       patterns[0] == "[/1!a][/34x]" &&
+       patterns[1] == "[35x]" {
+        
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        let first_field = &first_component.name;
+        let second_field = &second_component.name;
+        
+        return Ok(quote! {
+            {
+                let mut result = String::new();
+                
+                // Add party identifier if present (with "/" prefix)
+                if let Some(ref party_id) = self.#first_field {
+                    result.push('/');
+                    result.push_str(party_id);
+                }
+                
+                // Add location on new line if present
+                if let Some(ref location) = self.#second_field {
+                    if !result.is_empty() {
+                        result.push_str("\n");
+                    }
+                    result.push_str(location);
+                }
+                
+                result
+            }
+        });
+    }
+    
     // Pattern: [/34x] + 4*(1!n/33x) (Field59F style - optional string + vec string with line numbering)
     if patterns.len() == 2 &&
        patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&

@@ -2,8 +2,8 @@
 
 use crate::error::{MacroError, MacroResult};
 use crate::format::FormatSpec;
-use crate::utils::types::{is_option_type, is_vec_type};
 use crate::utils::attributes::extract_component_attribute;
+use crate::utils::types::{is_option_type, is_vec_type};
 use proc_macro2::Span;
 use syn::spanned::Spanned;
 use syn::{DeriveInput, Field, Fields, FieldsNamed, Ident, Type};
@@ -229,7 +229,6 @@ impl Component {
         })
     }
 }
-
 
 #[cfg(test)]
 mod tests {

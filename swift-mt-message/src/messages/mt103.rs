@@ -15,13 +15,13 @@ pub struct MT103 {
     pub field_20: Field20,
 
     #[field("13C")]
-    pub field_13c: Vec<Field13C>,
+    pub field_13c: Option<Vec<Field13C>>,
 
     #[field("23B")]
     pub field_23b: Field23B,
 
     #[field("23E")]
-    pub field_23e: Vec<Field23E>,
+    pub field_23e: Option<Vec<Field23E>>,
 
     #[field("26T")]
     pub field_26t: Option<Field26T>,
@@ -69,7 +69,7 @@ pub struct MT103 {
     pub field_71a: Field71A,
 
     #[field("71F")]
-    pub field_71f: Vec<Field71F>,
+    pub field_71f: Option<Vec<Field71F>>,
 
     #[field("71G")]
     pub field_71g: Option<Field71G>,
@@ -149,11 +149,13 @@ impl MT103 {
         }
 
         // Check field 23E - restricted instruction codes in STP
-        if !self.field_23e.is_empty() {
-            let stp_allowed_codes = ["CORT", "INTC", "SDVA", "REPA"];
-            for field_23e in &self.field_23e {
-                if !stp_allowed_codes.contains(&field_23e.instruction_code.as_str()) {
-                    return false;
+        if let Some(ref field_23e_vec) = self.field_23e {
+            if !field_23e_vec.is_empty() {
+                let stp_allowed_codes = ["CORT", "INTC", "SDVA", "REPA"];
+                for field_23e in field_23e_vec {
+                    if !stp_allowed_codes.contains(&field_23e.instruction_code.as_str()) {
+                        return false;
+                    }
                 }
             }
         }
@@ -173,11 +175,13 @@ impl MT103 {
             }
         }
 
-        if !self.field_71f.is_empty() {
-            // If 71F is present, it must not be empty
-            for field_71f in &self.field_71f {
-                if field_71f.amount <= 0.0 {
-                    return false;
+        if let Some(ref field_71f_vec) = self.field_71f {
+            if !field_71f_vec.is_empty() {
+                // If 71F is present, it must not be empty
+                for field_71f in field_71f_vec {
+                    if field_71f.amount <= 0.0 {
+                        return false;
+                    }
                 }
             }
             if self.field_71g.is_some() {

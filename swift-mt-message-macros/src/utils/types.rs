@@ -223,6 +223,22 @@ pub fn is_vec_string_type(ty: &Type) -> bool {
     false
 }
 
+/// Check if a type is Option<Vec<T>>
+pub fn is_option_vec_type(ty: &Type) -> bool {
+    if let Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            if segment.ident == "Option" {
+                if let PathArguments::AngleBracketed(args) = &segment.arguments {
+                    if let Some(GenericArgument::Type(inner_ty)) = args.args.first() {
+                        return is_vec_type(inner_ty);
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
 /// Check if a type is Option<SomeField> (not basic types)
 pub fn is_option_field_type(ty: &Type) -> bool {
     if let Type::Path(type_path) = ty {
@@ -297,6 +313,33 @@ pub fn extract_generic_inner_type(ty: &Type) -> Option<Type> {
         }
     }
     None
+}
+
+/// Extract the inner type T from Option<Vec<T>>
+pub fn extract_option_vec_inner_type(ty: &Type) -> Type {
+    if let Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            if segment.ident == "Option" {
+                if let PathArguments::AngleBracketed(args) = &segment.arguments {
+                    if let Some(GenericArgument::Type(vec_type)) = args.args.first() {
+                        // Now extract T from Vec<T>
+                        if let Type::Path(vec_type_path) = vec_type {
+                            if let Some(vec_segment) = vec_type_path.path.segments.last() {
+                                if vec_segment.ident == "Vec" {
+                                    if let PathArguments::AngleBracketed(vec_args) = &vec_segment.arguments {
+                                        if let Some(GenericArgument::Type(inner_type)) = vec_args.args.first() {
+                                            return inner_type.clone();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    ty.clone()
 }
 
 #[cfg(test)]

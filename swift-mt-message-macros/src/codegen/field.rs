@@ -1,7 +1,9 @@
 //! Code generation for SwiftField derive macro
 
 use crate::ast::{EnumField, FieldDefinition, FieldKind, StructField};
-use crate::codegen::type_generators::{generate_to_swift_string_for_component, generate_sample_for_component};
+use crate::codegen::type_generators::{
+    generate_sample_for_component, generate_to_swift_string_for_component,
+};
 use crate::error::MacroResult;
 use crate::format::generate_regex_parse_impl;
 use proc_macro2::TokenStream;
@@ -140,7 +142,6 @@ fn generate_struct_parse_impl(
     generate_regex_parse_impl(name, struct_field)
 }
 
-
 /// Generate to_swift_string implementation for struct fields
 fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResult<TokenStream> {
     if struct_field.components.len() == 1 {
@@ -148,17 +149,156 @@ fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResu
         let conversion = generate_to_swift_string_for_component(component);
         Ok(conversion)
     } else {
-        // For multi-component fields, concatenate all components
-        let component_conversions: Vec<_> = struct_field.components
-            .iter()
-            .map(generate_to_swift_string_for_component)
-            .collect();
-
-        Ok(quote! {
-            // Concatenate all component string representations
-            vec![#(#component_conversions),*].join("")
-        })
+        // Handle multi-component fields with smart formatting
+        generate_multi_component_to_swift_string(struct_field)
     }
+}
+
+/// Generate to_swift_string for multi-component fields with smart formatting
+fn generate_multi_component_to_swift_string(struct_field: &StructField) -> MacroResult<TokenStream> {
+    // Check for specific patterns that need custom handling
+    let patterns: Vec<&str> = struct_field.components.iter()
+        .map(|c| c.format.pattern.as_str())
+        .collect();
+    
+    // Check for specific patterns that need custom handling
+    
+    // Pattern: [/34x] + 4*35x (Field50K style - optional string + vec string)
+    if patterns.len() == 2 &&
+       patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&
+       patterns[0].contains("x") && // Ensure it's a text field
+       patterns[1].contains("*") && patterns[1].contains("x") {
+        
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        let first_field = &first_component.name;
+        let second_field = &second_component.name;
+        
+        return Ok(quote! {
+            {
+                let mut result = String::new();
+                
+                // Add first component with prefix if present
+                if let Some(ref value) = self.#first_field {
+                    result.push('/');
+                    result.push_str(value);
+                }
+                
+                // Add second component (address lines)
+                if !self.#second_field.is_empty() {
+                    if !result.is_empty() {
+                        result.push_str("\n");
+                    }
+                    result.push_str(&self.#second_field.join("\n"));
+                }
+                
+                result
+            }
+        });
+    }
+    
+    // Pattern: 4!c + [/30x] (Field23E style - string + optional string)
+    if patterns.len() == 2 &&
+       !patterns[0].starts_with("[") && !patterns[0].ends_with("]") &&
+       patterns[1].starts_with("[/") && patterns[1].ends_with("]") &&
+       patterns[1].contains("x") { // Ensure it's a text field, not numeric
+        
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        let first_field = &first_component.name;
+        let second_field = &second_component.name;
+        
+        return Ok(quote! {
+            {
+                let mut result = self.#first_field.clone();
+                
+                // Add second component with prefix if present
+                if let Some(ref value) = self.#second_field {
+                    result.push('/');
+                    result.push_str(value);
+                }
+                
+                result
+            }
+        });
+    }
+    
+    // Pattern: [/34x] + BIC (Field59A style - optional string + BIC string)
+    if patterns.len() == 2 &&
+       patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&
+       patterns[0].contains("x") && // Ensure it's a text field
+       patterns[1].contains("!a") && patterns[1].contains("!c") {
+        
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        let first_field = &first_component.name;
+        let second_field = &second_component.name;
+        
+        return Ok(quote! {
+            {
+                let mut result = String::new();
+                
+                // Add account if present (with "/" prefix)
+                if let Some(ref account) = self.#first_field {
+                    result.push('/');
+                    result.push_str(account);
+                    result.push_str("\n");
+                }
+                
+                // Add BIC code
+                result.push_str(&self.#second_field);
+                
+                result
+            }
+        });
+    }
+    
+    // Pattern: [/34x] + 4*(1!n/33x) (Field59F style - optional string + vec string with line numbering)
+    if patterns.len() == 2 &&
+       patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&
+       patterns[0].contains("x") && // Ensure it's a text field
+       patterns[1] == "4*(1!n/33x)" { // Exact match for Field59F
+        
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        let first_field = &first_component.name;
+        let second_field = &second_component.name;
+        
+        return Ok(quote! {
+            {
+                let mut result = String::new();
+                
+                // Add party identifier if present (with "/" prefix)
+                if let Some(ref party_id) = self.#first_field {
+                    result.push('/');
+                    result.push_str(party_id);
+                }
+                
+                // Add name and address lines with proper line number formatting
+                for (i, line) in self.#second_field.iter().enumerate() {
+                    if !result.is_empty() || i > 0 {
+                        result.push_str("\n");
+                    }
+                    // Format: line number + "/" + text (per 4*(1!n/33x) format)
+                    result.push_str(&format!("{}/{}", i + 1, line));
+                }
+                
+                result
+            }
+        });
+    }
+    
+    // Default: use original concatenation logic for multi-component fields
+    let component_conversions: Vec<_> = struct_field
+        .components
+        .iter()
+        .map(generate_to_swift_string_for_component)
+        .collect();
+
+    Ok(quote! {
+        // Concatenate all component string representations
+        vec![#(#component_conversions),*].join("")
+    })
 }
 
 /// Generate format_spec implementation for struct fields
@@ -176,7 +316,8 @@ fn generate_struct_format_spec_impl(struct_field: &StructField) -> MacroResult<T
 
 /// Generate sample implementation for struct fields
 fn generate_struct_sample_impl(struct_field: &StructField) -> MacroResult<TokenStream> {
-    let field_samples: Vec<_> = struct_field.components
+    let field_samples: Vec<_> = struct_field
+        .components
         .iter()
         .map(generate_sample_for_component)
         .collect();
@@ -187,7 +328,6 @@ fn generate_struct_sample_impl(struct_field: &StructField) -> MacroResult<TokenS
         }
     })
 }
-
 
 /// Generate parse implementation for enum fields
 fn generate_enum_parse_impl(enum_field: &EnumField) -> MacroResult<TokenStream> {

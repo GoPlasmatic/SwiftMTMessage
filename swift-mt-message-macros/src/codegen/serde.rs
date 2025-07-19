@@ -63,4 +63,3 @@ fn extract_field_tag(attrs: &[syn::Attribute]) -> Option<String> {
     }
     None
 }
-

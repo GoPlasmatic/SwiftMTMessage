@@ -1,8 +1,8 @@
 //! AST structures and parsing for message definitions
 
 use crate::error::{MacroError, MacroResult};
-use crate::utils::types::{is_option_type, is_vec_type, extract_inner_type};
 use crate::utils::attributes::extract_field_attribute;
+use crate::utils::types::{extract_inner_type, extract_option_vec_inner_type, is_option_type, is_vec_type, is_option_vec_type};
 use proc_macro2::Span;
 use syn::spanned::Spanned;
 use syn::{Attribute, DeriveInput, Field, Fields, Ident, Lit, Meta, Type};
@@ -119,11 +119,17 @@ impl MessageField {
         let tag = extract_field_attribute(&field.attrs)?;
 
         // Determine if field is optional or repetitive
-        let is_optional = is_option_type(&field_type);
-        let is_repetitive = is_vec_type(&field_type);
+        let is_option_vec = is_option_vec_type(&field_type);
+        let is_optional = is_option_type(&field_type) || is_option_vec;
+        let is_repetitive = is_vec_type(&field_type) || is_option_vec;
 
         // Extract inner type
-        let inner_type = extract_inner_type(&field_type, is_optional, is_repetitive);
+        let inner_type = if is_option_vec {
+            // For Option<Vec<T>>, we need to extract T from Option<Vec<T>>
+            extract_option_vec_inner_type(&field_type)
+        } else {
+            extract_inner_type(&field_type, is_optional, is_repetitive)
+        };
 
         Ok(MessageField {
             name,
@@ -136,8 +142,6 @@ impl MessageField {
         })
     }
 }
-
-
 
 /// Extract validation rules constant name from attributes
 fn extract_validation_rules_attribute(attrs: &[Attribute]) -> MacroResult<Option<String>> {

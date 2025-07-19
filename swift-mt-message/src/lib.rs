@@ -78,7 +78,11 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
 
     /// Parse field value with variant hint for enum fields
     /// Default implementation falls back to regular parse
-    fn parse_with_variant(value: &str, _variant: Option<&str>, _field_tag: Option<&str>) -> Result<Self>
+    fn parse_with_variant(
+        value: &str,
+        _variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> Result<Self>
     where
         Self: Sized,
     {
@@ -881,7 +885,25 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
 
         (sender_country, receiver_country)
     }
+}
 
+/// Helper function to get field tag with variant for enum fields
+pub fn get_field_tag_with_variant<T>(base_tag: &str, field_value: &T) -> String 
+where 
+    T: std::fmt::Debug,
+{
+    let debug_string = format!("{:?}", field_value);
+    
+    // Extract variant from debug string (e.g., "K(...)" -> "K")
+    if let Some(variant_end) = debug_string.find('(') {
+        let variant = &debug_string[..variant_end];
+        format!("{}{}", base_tag, variant)
+    } else {
+        base_tag.to_string()
+    }
+}
+
+impl<T: SwiftMessageBody> SwiftMessage<T> {
     pub fn to_mt_message(&self) -> String {
         let mut swift_message = String::new();
 
@@ -1049,9 +1071,9 @@ mod tests {
     fn test_round_trip_core_functionality() {
         // Test the core round-trip functionality with a known good MT103 message
         // This tests the fundamental concept without relying on sample generation
-        
+
         println!("Testing round-trip functionality with simple MT103 message...");
-        
+
         // Use a simple, known good MT103 message with all mandatory fields
         let mt_string = r#"{1:F01BANKBEBBAXXX0000000000}
 {2:I103BANKDEFFXXXXN}
@@ -1067,49 +1089,51 @@ mod tests {
 :71A:OUR
 :71F:USD10,00
 -}"#;
-        
+
         println!("✓ Using known good MT103 message");
-        
+
         // Parse the MT string
-        let parsed_message = SwiftParser::parse_auto(&mt_string)
-            .unwrap_or_else(|e| {
-                eprintln!("Failed to parse MT string: {}", e);
-                eprintln!("MT String was:\n{}", mt_string);
-                panic!("Failed to parse MT string: {}", e);
-            });
+        let parsed_message = SwiftParser::parse_auto(&mt_string).unwrap_or_else(|e| {
+            eprintln!("Failed to parse MT string: {}", e);
+            eprintln!("MT String was:\n{}", mt_string);
+            panic!("Failed to parse MT string: {}", e);
+        });
         println!("✓ Successfully parsed MT string to message");
-        
+
         // Serialize to JSON
-        let json_representation = serde_json::to_string_pretty(&parsed_message)
-            .expect("Failed to serialize to JSON");
+        let json_representation =
+            serde_json::to_string_pretty(&parsed_message).expect("Failed to serialize to JSON");
         println!("✓ Serialized to JSON");
-        
+
         // Deserialize from JSON
-        let deserialized_message: ParsedSwiftMessage = serde_json::from_str(&json_representation)
-            .expect("Failed to deserialize from JSON");
+        let deserialized_message: ParsedSwiftMessage =
+            serde_json::from_str(&json_representation).expect("Failed to deserialize from JSON");
         println!("✓ Deserialized from JSON");
-        
+
         // Convert back to MT format
         let regenerated_mt = match &deserialized_message {
             ParsedSwiftMessage::MT103(msg) => msg.to_mt_message(),
             _ => panic!("Expected MT103 message"),
         };
         println!("✓ Regenerated MT format");
-        
+
         // Parse the regenerated MT
-        let reparsed_message = SwiftParser::parse_auto(&regenerated_mt)
-            .expect("Failed to reparse regenerated MT");
+        let reparsed_message =
+            SwiftParser::parse_auto(&regenerated_mt).expect("Failed to reparse regenerated MT");
         println!("✓ Successfully reparsed regenerated MT");
-        
+
         // Compare JSON representations
         let original_json = serde_json::to_string_pretty(&parsed_message)
             .expect("Failed to serialize original to JSON");
         let reparsed_json = serde_json::to_string_pretty(&reparsed_message)
             .expect("Failed to serialize reparsed to JSON");
-        
-        assert_eq!(original_json, reparsed_json, "Round-trip failed: JSON representations don't match");
+
+        assert_eq!(
+            original_json, reparsed_json,
+            "Round-trip failed: JSON representations don't match"
+        );
         println!("✓ Round-trip successful: JSON representations match");
-        
+
         println!("\n=== Core Round-trip Test Results ===");
         println!("✓ All steps completed successfully");
         println!("✓ Round-trip functionality verified");
@@ -1124,13 +1148,16 @@ mod tests {
             .unwrap()
             .join("test_data");
         if !test_data_dir.exists() {
-            println!("⚠️  test_data directory not found at: {}", test_data_dir.display());
+            println!(
+                "⚠️  test_data directory not found at: {}",
+                test_data_dir.display()
+            );
             return;
         }
 
         let entries = fs::read_dir(&test_data_dir).unwrap();
         let mut test_files = Vec::new();
-        
+
         for entry in entries {
             let entry = entry.unwrap();
             let path = entry.path();
@@ -1149,7 +1176,7 @@ mod tests {
 
         for file_path in test_files {
             println!("Testing round-trip for: {}", file_path.display());
-            
+
             let original_content = match fs::read_to_string(&file_path) {
                 Ok(content) => content,
                 Err(e) => {
@@ -1171,20 +1198,29 @@ mod tests {
             let json_representation = match serde_json::to_string_pretty(&parsed_message) {
                 Ok(json) => json,
                 Err(e) => {
-                    println!("⚠️  Failed to serialize to JSON {}: {}", file_path.display(), e);
+                    println!(
+                        "⚠️  Failed to serialize to JSON {}: {}",
+                        file_path.display(),
+                        e
+                    );
                     failed_tests += 1;
                     continue;
                 }
             };
 
-            let deserialized_message: ParsedSwiftMessage = match serde_json::from_str(&json_representation) {
-                Ok(msg) => msg,
-                Err(e) => {
-                    println!("⚠️  Failed to deserialize from JSON {}: {}", file_path.display(), e);
-                    failed_tests += 1;
-                    continue;
-                }
-            };
+            let deserialized_message: ParsedSwiftMessage =
+                match serde_json::from_str(&json_representation) {
+                    Ok(msg) => msg,
+                    Err(e) => {
+                        println!(
+                            "⚠️  Failed to deserialize from JSON {}: {}",
+                            file_path.display(),
+                            e
+                        );
+                        failed_tests += 1;
+                        continue;
+                    }
+                };
 
             let regenerated_mt = match &deserialized_message {
                 ParsedSwiftMessage::MT101(msg) => msg.to_mt_message(),
@@ -1216,7 +1252,11 @@ mod tests {
             let reparsed_message = match SwiftParser::parse_auto(&regenerated_mt) {
                 Ok(msg) => msg,
                 Err(e) => {
-                    println!("⚠️  Failed to reparse regenerated MT for {}: {}", file_path.display(), e);
+                    println!(
+                        "⚠️  Failed to reparse regenerated MT for {}: {}",
+                        file_path.display(),
+                        e
+                    );
                     failed_tests += 1;
                     continue;
                 }
@@ -1225,16 +1265,24 @@ mod tests {
             let original_json = match serde_json::to_string_pretty(&parsed_message) {
                 Ok(json) => json,
                 Err(e) => {
-                    println!("⚠️  Failed to serialize original to JSON {}: {}", file_path.display(), e);
+                    println!(
+                        "⚠️  Failed to serialize original to JSON {}: {}",
+                        file_path.display(),
+                        e
+                    );
                     failed_tests += 1;
                     continue;
                 }
             };
-            
+
             let reparsed_json = match serde_json::to_string_pretty(&reparsed_message) {
                 Ok(json) => json,
                 Err(e) => {
-                    println!("⚠️  Failed to serialize reparsed to JSON {}: {}", file_path.display(), e);
+                    println!(
+                        "⚠️  Failed to serialize reparsed to JSON {}: {}",
+                        file_path.display(),
+                        e
+                    );
                     failed_tests += 1;
                     continue;
                 }
@@ -1244,7 +1292,10 @@ mod tests {
                 println!("✓ Round-trip successful for: {}", file_path.display());
                 successful_tests += 1;
             } else {
-                println!("✗ Round-trip failed for {}: original and reparsed JSON don't match", file_path.display());
+                println!(
+                    "✗ Round-trip failed for {}: original and reparsed JSON don't match",
+                    file_path.display()
+                );
                 failed_tests += 1;
             }
         }
@@ -1253,14 +1304,17 @@ mod tests {
         println!("✓ Successful: {}", successful_tests);
         println!("✗ Failed: {}", failed_tests);
         println!("Total files tested: {}", successful_tests + failed_tests);
-        
+
         // Fail the test if any files failed to parse or round-trip
         if failed_tests > 0 {
             panic!("Round-trip test failed: {} out of {} files failed to parse or round-trip successfully", failed_tests, successful_tests + failed_tests);
         }
-        
+
         if successful_tests > 0 {
-            println!("✓ Round-trip functionality works with {} test files", successful_tests);
+            println!(
+                "✓ Round-trip functionality works with {} test files",
+                successful_tests
+            );
         }
     }
 }

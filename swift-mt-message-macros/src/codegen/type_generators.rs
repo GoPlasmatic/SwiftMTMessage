@@ -14,8 +14,8 @@ use syn::Type;
 pub fn generate_to_swift_string_for_component(component: &Component) -> TokenStream {
     let field_name = &component.name;
     let field_type = &component.field_type;
-    
-    // Handle special format patterns that require delimiters
+
+    // Handle special format patterns that require delimiters or specific formatting
     match component.format.pattern.as_str() {
         "/8c/" => {
             // For /8c/ format, wrap the value in slashes
@@ -23,14 +23,47 @@ pub fn generate_to_swift_string_for_component(component: &Component) -> TokenStr
                 format!("/{}/", self.#field_name)
             }
         }
-        _ => {
-            generate_to_swift_string_for_type(field_name, field_type)
+        // Handle optional prefix patterns like [/34x], [/2n], [/5n]
+        pattern if pattern.starts_with("[/") && pattern.ends_with("]") => {
+            if is_option_string_type(field_type) {
+                quote! {
+                    self.#field_name.as_ref()
+                        .map(|value| format!("/{}", value))
+                        .unwrap_or_default()
+                }
+            } else if is_option_u32_type(field_type) || is_option_u8_type(field_type) {
+                quote! {
+                    self.#field_name
+                        .map(|value| format!("/{}", value))
+                        .unwrap_or_default()
+                }
+            } else {
+                generate_to_swift_string_for_type(field_name, field_type)
+            }
         }
+        // Handle multi-line with line numbering like 4*(1!n/33x)
+        pattern if pattern.contains("*(1!n/") => {
+            if is_vec_string_type(field_type) {
+                quote! {
+                    self.#field_name.iter()
+                        .enumerate()
+                        .map(|(i, line)| format!("{}/{}", i + 1, line))
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                }
+            } else {
+                generate_to_swift_string_for_type(field_name, field_type)
+            }
+        }
+        _ => generate_to_swift_string_for_type(field_name, field_type),
     }
 }
 
 /// Generate to_swift_string code for a field with a specific type
-pub fn generate_to_swift_string_for_type(field_name: &syn::Ident, field_type: &Type) -> TokenStream {
+pub fn generate_to_swift_string_for_type(
+    field_name: &syn::Ident,
+    field_type: &Type,
+) -> TokenStream {
     // Generate conversion based on field type
     if is_naive_date_type(field_type) {
         quote! {
@@ -80,7 +113,7 @@ pub fn generate_to_swift_string_for_type(field_name: &syn::Ident, field_type: &T
         }
     } else if is_vec_string_type(field_type) {
         quote! {
-            self.#field_name.join("")
+            self.#field_name.join("\n")
         }
     } else if is_vec_type(field_type) {
         quote! {
@@ -115,7 +148,7 @@ pub fn generate_to_swift_string_for_type(field_name: &syn::Ident, field_type: &T
 pub fn generate_sample_for_component(component: &Component) -> TokenStream {
     let field_name = &component.name;
     let sample_expr = generate_sample_expr_for_component(component);
-    
+
     quote! {
         #field_name: #sample_expr
     }
@@ -126,12 +159,15 @@ pub fn generate_sample_expr_for_component(component: &Component) -> TokenStream 
     let field_name = &component.name;
     let field_type = &component.field_type;
     let format_spec = &component.format;
-    
+
     // Handle special cases based on field name and format
     if is_string_type(field_type) {
-        match (field_name.to_string().as_str(), format_spec.pattern.as_str()) {
+        match (
+            field_name.to_string().as_str(),
+            format_spec.pattern.as_str(),
+        ) {
             ("offset", "4!n") => {
-                // For offset fields, use "0000" 
+                // For offset fields, use "0000"
                 return quote! { "0000".to_string() };
             }
             ("time", "4!n") => {
@@ -141,14 +177,16 @@ pub fn generate_sample_expr_for_component(component: &Component) -> TokenStream 
             _ => {}
         }
     }
-    
+
     // Fall back to the original logic
     generate_sample_expr_for_type(field_type, format_spec)
 }
 
 /// Generate sample expression for a field type
-pub fn generate_sample_expr_for_type(field_type: &Type, format_spec: &crate::format::FormatSpec) -> TokenStream {
-    
+pub fn generate_sample_expr_for_type(
+    field_type: &Type,
+    format_spec: &crate::format::FormatSpec,
+) -> TokenStream {
     // Generate sample code based on the actual field type
     if is_naive_date_type(field_type) {
         quote! {
@@ -234,7 +272,7 @@ fn generate_sample_string_literal(format_spec: &crate::format::FormatSpec) -> St
                 FormatType::Numeric => {
                     let length = format_spec.length.unwrap_or(6);
                     match length {
-                        4 => "1200".to_string(), // Time format HHMM or offset
+                        4 => "1200".to_string(),   // Time format HHMM or offset
                         6 => "123456".to_string(), // Date format YYMMDD
                         _ => "1".repeat(length),
                     }
@@ -267,12 +305,12 @@ mod tests {
     fn test_generate_to_swift_string_for_string_type() {
         let field_name: syn::Ident = parse_quote!(test_field);
         let field_type: syn::Type = parse_quote!(String);
-        
+
         let result = generate_to_swift_string_for_type(&field_name, &field_type);
         let expected = quote! {
             self.test_field.clone()
         };
-        
+
         assert_eq!(result.to_string(), expected.to_string());
     }
 
@@ -280,12 +318,12 @@ mod tests {
     fn test_generate_to_swift_string_for_option_string_type() {
         let field_name: syn::Ident = parse_quote!(test_field);
         let field_type: syn::Type = parse_quote!(Option<String>);
-        
+
         let result = generate_to_swift_string_for_type(&field_name, &field_type);
         let expected = quote! {
             self.test_field.as_ref().unwrap_or(&String::new()).clone()
         };
-        
+
         assert_eq!(result.to_string(), expected.to_string());
     }
 
@@ -293,12 +331,12 @@ mod tests {
     fn test_generate_sample_expr_for_string_type() {
         let field_type: syn::Type = parse_quote!(String);
         let format_spec = FormatSpec::parse("4!a").unwrap();
-        
+
         let result = generate_sample_expr_for_type(&field_type, &format_spec);
         let expected = quote! {
             "TEST".to_string()
         };
-        
+
         assert_eq!(result.to_string(), expected.to_string());
     }
 }

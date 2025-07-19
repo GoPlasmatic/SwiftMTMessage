@@ -13,7 +13,7 @@ pub struct MT202 {
     pub field_21: Field21NoOption,
 
     #[field("13C")]
-    pub field_13c: Vec<Field13C>,
+    pub field_13c: Option<Vec<Field13C>>,
 
     #[field("32A")]
     pub field_32a: Field32A,

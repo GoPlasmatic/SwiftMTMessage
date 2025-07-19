@@ -54,7 +54,7 @@ pub struct MT101Transaction {
     pub field_21f: Option<Field21F>, // F/X Deal Reference
 
     #[field("23E")]
-    pub field_23e: Vec<Field23E>, // Instruction Code
+    pub field_23e: Option<Vec<Field23E>>, // Instruction Code
 
     #[field("32B")]
     pub field_32b: Field32B, // Currency/Amount

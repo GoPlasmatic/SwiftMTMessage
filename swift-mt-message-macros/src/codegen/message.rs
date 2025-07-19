@@ -4,6 +4,7 @@ use crate::ast::{MessageDefinition, MessageField};
 use crate::error::MacroResult;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Type;
 
 /// Generate SwiftMessage implementation for a message definition
 pub fn generate_swift_message_impl(definition: &MessageDefinition) -> MacroResult<TokenStream> {
@@ -215,12 +216,22 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                     }
                 });
             } else {
-                // Optional T
-                field_serializers.push(quote! {
-                    if let Some(ref value) = self.#field_name {
-                        fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
-                    }
-                });
+                // Optional T - check if it's an enum field that needs variant handling
+                let field_type = &field.inner_type;
+                if is_enum_field_type(field_type) {
+                    field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            let field_tag_with_variant = crate::get_field_tag_with_variant(#tag, value);
+                            fields.insert(field_tag_with_variant, vec![value.to_swift_string()]);
+                        }
+                    });
+                } else {
+                    field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
+                        }
+                    });
+                }
             }
         } else if field.is_repetitive {
             // Required Vec<T>
@@ -231,10 +242,18 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                 fields.insert(#tag.to_string(), serialized_values);
             });
         } else {
-            // Required T
-            field_serializers.push(quote! {
-                fields.insert(#tag.to_string(), vec![self.#field_name.to_swift_string()]);
-            });
+            // Required T - check if it's an enum field that needs variant handling
+            let field_type = &field.inner_type;
+            if is_enum_field_type(field_type) {
+                field_serializers.push(quote! {
+                    let field_tag_with_variant = crate::get_field_tag_with_variant(#tag, &self.#field_name);
+                    fields.insert(field_tag_with_variant, vec![self.#field_name.to_swift_string()]);
+                });
+            } else {
+                field_serializers.push(quote! {
+                    fields.insert(#tag.to_string(), vec![self.#field_name.to_swift_string()]);
+                });
+            }
         }
     }
 
@@ -494,4 +513,33 @@ fn generate_message_format_spec_impl(definition: &MessageDefinition) -> MacroRes
     Ok(quote! {
         #message_type
     })
+}
+
+/// Check if a type is an enum field type that needs variant handling
+fn is_enum_field_type(field_type: &Type) -> bool {
+    if let Type::Path(type_path) = field_type {
+        if let Some(last_segment) = type_path.path.segments.last() {
+            let type_name = last_segment.ident.to_string();
+            // Check if this is a Field enum type (like Field50OrderingCustomerAFK)
+            type_name.starts_with("Field") && 
+            (type_name.contains("Ordering") || 
+             type_name.contains("Creditor") || 
+             type_name.contains("Debtor") ||
+             type_name.contains("Beneficiary") ||
+             type_name.contains("Instructing") ||
+             type_name.contains("Party") ||
+             type_name.contains("SenderCorrespondent") ||
+             type_name.contains("ReceiverCorrespondent") ||
+             type_name.contains("Intermediary") ||
+             type_name.contains("AccountWithInstitution") ||
+             type_name.contains("DebtorBank") ||
+             type_name.ends_with("AFK") ||
+             type_name.ends_with("NCF") ||
+             type_name.ends_with("FGH"))
+        } else {
+            false
+        }
+    } else {
+        false
+    }
 }

@@ -100,7 +100,7 @@ mod tests {
         let option_string: Type = parse_quote!(Option<String>);
         let sample = generate_sample_value(&option_string);
         assert!(sample.to_string().contains("Some"));
-        
+
         let minimal = generate_minimal_sample_value(&option_string);
         assert!(minimal.to_string().contains("None"));
     }

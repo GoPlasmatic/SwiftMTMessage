@@ -94,26 +94,28 @@ mod tests {
         if let syn::Data::Struct(data_struct) = &input.data {
             if let syn::Fields::Named(fields) = &data_struct.fields {
                 let fields: Vec<_> = fields.named.iter().collect();
-                
+
                 // Required field should have no serde attributes
                 assert!(fields[0].attrs.is_empty());
-                
+
                 // Optional field should have skip_serializing_if attribute
                 assert!(fields[1].attrs.iter().any(|attr| {
-                    attr.path().is_ident("serde") && 
-                    attr.parse_args::<proc_macro2::TokenStream>()
-                        .unwrap()
-                        .to_string()
-                        .contains("skip_serializing_if")
+                    attr.path().is_ident("serde")
+                        && attr
+                            .parse_args::<proc_macro2::TokenStream>()
+                            .unwrap()
+                            .to_string()
+                            .contains("skip_serializing_if")
                 }));
-                
+
                 // Vec field should have skip_serializing_if attribute
                 assert!(fields[2].attrs.iter().any(|attr| {
-                    attr.path().is_ident("serde") && 
-                    attr.parse_args::<proc_macro2::TokenStream>()
-                        .unwrap()
-                        .to_string()
-                        .contains("skip_serializing_if")
+                    attr.path().is_ident("serde")
+                        && attr
+                            .parse_args::<proc_macro2::TokenStream>()
+                            .unwrap()
+                            .to_string()
+                            .contains("skip_serializing_if")
                 }));
             }
         }
@@ -132,11 +134,12 @@ mod tests {
 
         // Check that untagged attribute was added
         assert!(input.attrs.iter().any(|attr| {
-            attr.path().is_ident("serde") && 
-            attr.parse_args::<proc_macro2::TokenStream>()
-                .unwrap()
-                .to_string()
-                .contains("untagged")
+            attr.path().is_ident("serde")
+                && attr
+                    .parse_args::<proc_macro2::TokenStream>()
+                    .unwrap()
+                    .to_string()
+                    .contains("untagged")
         }));
     }
 }

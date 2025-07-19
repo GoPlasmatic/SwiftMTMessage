@@ -14,7 +14,7 @@ pub struct MT205 {
     pub field_21: Field21NoOption, // Related Reference
 
     #[field("13C")]
-    pub field_13c: Vec<Field13C>, // Time Indication (repetitive)
+    pub field_13c: Option<Vec<Field13C>>, // Time Indication (repetitive)
 
     #[field("32A")]
     pub field_32a: Field32A, // Value Date/Currency/Amount

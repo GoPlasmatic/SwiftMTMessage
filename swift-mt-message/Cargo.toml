@@ -62,3 +62,7 @@ path = "../examples/sample_generation.rs"
 name = "minimal_mt103"
 path = "../examples/minimal_mt103.rs"
 
+[[example]]
+name = "debug_round_trip"
+path = "../examples/debug_round_trip.rs"
+

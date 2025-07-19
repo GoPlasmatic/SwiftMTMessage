@@ -420,15 +420,132 @@ pub fn generate_regex_parse_impl(
     // Determine if this is a multiline field that needs newline separators
     let is_multiline_field = is_multiline_field_type(name, struct_field);
 
-    // For Field50K and Field59NoOption specifically, handle the optional account pattern followed by multiline address
-    if (name.to_string() == "Field50K" || name.to_string() == "Field59NoOption")
+    // Check if this is a field with an optional first component followed by a required component
+    // These fields need special handling because when the optional component is present, 
+    // it appears on its own line, followed by the required component on the next line
+    if struct_field.components.len() == 2 {
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        
+        // Check if first component is optional (starts and ends with brackets)
+        // BUT exclude fields with Vec<String> second component (those are handled separately below)
+        if first_component.is_optional && 
+           (first_component.format.pattern.starts_with('[') && first_component.format.pattern.ends_with(']')) &&
+           !second_component.is_repetitive {
+            
+            // For fields like Field51A-58A with optional party ID + BIC, or Field52B-57B with optional components
+            // We need special parsing logic that handles the multiline nature when first component is present
+            
+            let first_pattern = &regex_parts[0];
+            let second_pattern = &regex_parts[1];
+            
+            // Create a pattern that matches either:
+            // 1. Optional first component on line 1, required second component on line 2
+            // 2. Just the second component on line 1 (when optional is not present)
+            let _regex_pattern = if second_component.is_optional {
+                // Both components are optional - more complex handling needed
+                format!("^(?:{}(?:\\n{})?|{})$", 
+                    first_pattern.trim_start_matches("(?:").trim_end_matches(")?"),
+                    second_pattern.trim_start_matches("(?:").trim_end_matches(")?"),
+                    second_pattern.trim_start_matches("(?:").trim_end_matches(")?")
+                )
+            } else {
+                // First optional, second required
+                format!("^(?:{}\\n)?{}$", 
+                    first_pattern.trim_start_matches("(?:").trim_end_matches(")?"),
+                    second_pattern.trim_start_matches("(").trim_end_matches(")")
+                )
+            };
+            
+            let first_field_name = &first_component.name;
+            let second_field_name = &second_component.name;
+            
+            let mut field_assignments = Vec::new();
+            
+            // Parse the value to handle both cases
+            field_assignments.push(quote! {
+                let lines: Vec<&str> = value.trim().lines().collect();
+                
+                let (#first_field_name, #second_field_name) = if lines.len() == 2 {
+                    // Two lines: first is optional component, second is required component
+                    let first_line = lines[0];
+                    let second_line = lines[1];
+                    
+                    // Parse first component
+                    let first_val = if first_line.starts_with('/') {
+                        // Remove leading slash for party identifiers
+                        Some(first_line.trim_start_matches('/').to_string())
+                    } else {
+                        Some(first_line.to_string())
+                    };
+                    
+                    // Parse second component
+                    #[allow(clippy::redundant_clone)]
+                    let second_val = second_line.to_string();
+                    
+                    (first_val, second_val)
+                } else if lines.len() == 1 {
+                    // One line: only second component is present
+                    let line = lines[0];
+                    
+                    // Check if this line could be the optional first component
+                    // (This handles edge cases where optional component exists alone)
+                    if line.starts_with('/') && line.len() <= 35 {
+                        // Looks like a party identifier - but where's the second component?
+                        // This might be an error case, but let's try to parse it
+                        (None, line.to_string())
+                    } else {
+                        // This is the second component
+                        (None, line.to_string())
+                    }
+                } else {
+                    // Unexpected format
+                    return Err(crate::errors::ParseError::InvalidFormat {
+                        message: format!("Expected 1 or 2 lines, got {}", lines.len())
+                    });
+                };
+            });
+            
+            // For optional second components, wrap in Option
+            if second_component.is_optional {
+                field_assignments.push(quote! {
+                    let #second_field_name = if #second_field_name.is_empty() {
+                        None
+                    } else {
+                        Some(#second_field_name)
+                    };
+                });
+            }
+            
+            return Ok(quote! {
+                #(#field_assignments)*
+                
+                Ok(Self {
+                    #first_field_name,
+                    #second_field_name,
+                })
+            });
+        }
+    }
+
+    // For fields with optional party identifier followed by multiline address, handle special parsing
+    if (name.to_string() == "Field50K"
+        || name.to_string() == "Field59NoOption"
+        || name.to_string() == "Field53D"
+        || name.to_string() == "Field52D"
+        || name.to_string() == "Field56D"
+        || name.to_string() == "Field57D"
+        || name.to_string() == "Field59F")
         && struct_field.components.len() == 2
     {
-        // Verify the field has the expected pattern: [/34x] followed by 4*35x
+        // Verify the field has the expected pattern: [/34x] or [/1!a][/34x] followed by multiline pattern
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
 
-        if first_component.format.pattern == "[/34x]" && second_component.format.pattern == "4*35x"
+        if (first_component.format.pattern == "[/34x]"
+            || first_component.format.pattern == "[/1!a][/34x]")
+            && (second_component.format.pattern == "4*35x"
+                || second_component.format.pattern == "4*(1!n/33x)")
         {
             // These fields have optional account [/34x] followed by multiline address 4*35x
             // We need to handle both cases: with and without account
@@ -452,13 +569,14 @@ pub fn generate_regex_parse_impl(
             let mut field_assignments = Vec::new();
 
             // Account field (optional) - extract from the beginning of the input if present
+            let first_field_name = &struct_field.components[0].name;
             field_assignments.push(quote! {
-                let account = if value.trim().starts_with('/') {
+                let #first_field_name = if value.trim().starts_with('/') {
                     // Extract account from the first line if it starts with '/'
                     let lines: Vec<&str> = value.trim().lines().collect();
                     if let Some(first_line) = lines.first() {
                         if first_line.starts_with('/') {
-                            // For Field50K/Field59NoOption, account is optional and doesn't include the slash
+                            // For Field50K/Field59NoOption/Field53D, account is optional and doesn't include the slash
                             let account_value = first_line.trim_start_matches('/');
                             Some(account_value.to_string())
                         } else {
@@ -473,8 +591,9 @@ pub fn generate_regex_parse_impl(
             });
 
             // Name and address field (required) - skip first line if it's an account
+            let second_field_name = &struct_field.components[1].name;
             field_assignments.push(quote! {
-                let name_and_address = {
+                let #second_field_name = {
                     // Split the input into lines
                     let lines: Vec<&str> = value.trim().lines().collect();
 
@@ -509,8 +628,8 @@ pub fn generate_regex_parse_impl(
                 #(#field_assignments)*
 
                 Ok(Self {
-                    account,
-                    name_and_address,
+                    #first_field_name,
+                    #second_field_name,
                 })
             });
         }

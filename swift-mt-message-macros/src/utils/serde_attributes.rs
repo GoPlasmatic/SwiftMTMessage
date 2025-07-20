@@ -4,7 +4,7 @@
 //! to structs and enums for clean JSON serialization without enum wrappers.
 
 use crate::error::MacroError;
-use crate::utils::types::{is_option_type, is_vec_type};
+use crate::utils::types::{categorize_type, TypeCategory};
 use syn::DeriveInput;
 
 /// Add serde attributes to optional and vector fields, and enum flattening
@@ -53,19 +53,30 @@ pub fn add_serde_attributes_to_optional_fields(input: &mut DeriveInput) -> Resul
                     continue;
                 }
 
-                // Check if field type is Option<T>
-                if is_option_type(&field.ty) {
-                    let skip_attr = syn::parse_quote! {
-                        #[serde(skip_serializing_if = "Option::is_none")]
-                    };
-                    field.attrs.push(skip_attr);
-                }
-                // Check if field type is Vec<T>
-                else if is_vec_type(&field.ty) {
-                    let skip_attr = syn::parse_quote! {
-                        #[serde(skip_serializing_if = "Vec::is_empty")]
-                    };
-                    field.attrs.push(skip_attr);
+                // Check if field type is Option<T> or Vec<T>
+                match categorize_type(&field.ty) {
+                    TypeCategory::OptionString
+                    | TypeCategory::OptionNaiveDate
+                    | TypeCategory::OptionNaiveTime
+                    | TypeCategory::OptionF64
+                    | TypeCategory::OptionU32
+                    | TypeCategory::OptionU8
+                    | TypeCategory::OptionBool
+                    | TypeCategory::OptionChar
+                    | TypeCategory::OptionField
+                    | TypeCategory::OptionVec => {
+                        let skip_attr = syn::parse_quote! {
+                            #[serde(skip_serializing_if = "Option::is_none")]
+                        };
+                        field.attrs.push(skip_attr);
+                    }
+                    TypeCategory::Vec | TypeCategory::VecString => {
+                        let skip_attr = syn::parse_quote! {
+                            #[serde(skip_serializing_if = "Vec::is_empty")]
+                        };
+                        field.attrs.push(skip_attr);
+                    }
+                    _ => {} // No action for other types
                 }
             }
         }

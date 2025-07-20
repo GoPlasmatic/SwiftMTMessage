@@ -1,7 +1,7 @@
 //! Serde integration for clean JSON serialization
 
 use crate::error::MacroResult;
-use crate::utils::types::{is_option_type, is_vec_type};
+use crate::utils::types::{categorize_type, TypeCategory};
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::DeriveInput;
@@ -18,7 +18,20 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
                 // Look for #[field("tag")] attributes
                 if let Some(field_tag) = extract_field_tag(&field.attrs) {
                     // Check if the field is an Option type
-                    if is_option_type(&field.ty) {
+                    let type_category = categorize_type(&field.ty);
+                    if matches!(
+                        type_category,
+                        TypeCategory::OptionString
+                            | TypeCategory::OptionNaiveDate
+                            | TypeCategory::OptionNaiveTime
+                            | TypeCategory::OptionF64
+                            | TypeCategory::OptionU32
+                            | TypeCategory::OptionU8
+                            | TypeCategory::OptionBool
+                            | TypeCategory::OptionChar
+                            | TypeCategory::OptionField
+                            | TypeCategory::OptionVec
+                    ) {
                         // Add serde(rename = "tag", skip_serializing_if = "Option::is_none") attribute
                         let serde_attr = syn::parse_quote! {
                             #[serde(rename = #field_tag, skip_serializing_if = "Option::is_none")]
@@ -26,7 +39,7 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
                         field.attrs.push(serde_attr);
                     }
                     // Check if the field is a Vec type
-                    else if is_vec_type(&field.ty) {
+                    else if matches!(type_category, TypeCategory::Vec | TypeCategory::VecString) {
                         // Add serde(rename = "tag", skip_serializing_if = "Vec::is_empty") attribute
                         let serde_attr = syn::parse_quote! {
                             #[serde(rename = #field_tag, skip_serializing_if = "Vec::is_empty")]

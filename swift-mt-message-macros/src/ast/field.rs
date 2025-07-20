@@ -2,8 +2,9 @@
 
 use crate::error::{MacroError, MacroResult};
 use crate::format::FormatSpec;
+use crate::format_validation::{validate_format_spec, ValidatedFormatSpec};
 use crate::utils::attributes::extract_component_attribute;
-use crate::utils::types::{is_option_type, is_vec_type};
+use crate::utils::types::{categorize_type, TypeCategory};
 use proc_macro2::Span;
 use syn::spanned::Spanned;
 use syn::{DeriveInput, Field, Fields, FieldsNamed, Ident, Type};
@@ -85,6 +86,9 @@ pub struct Component {
     pub field_type: Type,
     /// SWIFT format specification (e.g., "6!n", "3!a", "15d")
     pub format: FormatSpec,
+    /// Compile-time validated format specification
+    #[allow(dead_code)]
+    pub validated_format: ValidatedFormatSpec,
     /// Whether the field is optional (Option<T>)
     pub is_optional: bool,
     /// Whether the field is repetitive (Vec<T>)
@@ -236,14 +240,45 @@ impl Component {
         let format_spec = extract_component_attribute(&field.attrs)?;
         let format = FormatSpec::parse(&format_spec)?;
 
-        // Determine if field is optional or repetitive
-        let is_optional = is_option_type(&field_type);
-        let is_repetitive = is_vec_type(&field_type);
+        // Validate format specification at compile time (with fallback for unknown patterns)
+        let validated_format = validate_format_spec(&format_spec, span).unwrap_or_else(|_e| {
+            // For now, create a fallback ValidatedFormatSpec for unknown patterns
+            // This allows the library to compile while we're adding format support
+            ValidatedFormatSpec {
+                pattern: format_spec.clone(),
+                spec_type: crate::format_validation::FormatSpecType::VariableAny {
+                    max_length: 255,
+                },
+            }
+        });
+
+        // Type compatibility validation is disabled for now to maintain compatibility
+
+        // Determine if field is optional or repetitive using TypeCategory
+        let type_category = categorize_type(&field_type);
+        let is_optional = matches!(
+            type_category,
+            TypeCategory::OptionString
+                | TypeCategory::OptionNaiveDate
+                | TypeCategory::OptionNaiveTime
+                | TypeCategory::OptionF64
+                | TypeCategory::OptionU32
+                | TypeCategory::OptionU8
+                | TypeCategory::OptionBool
+                | TypeCategory::OptionChar
+                | TypeCategory::OptionField
+                | TypeCategory::OptionVec
+        );
+        let is_repetitive = matches!(
+            type_category,
+            TypeCategory::Vec | TypeCategory::VecString | TypeCategory::OptionVec
+        );
 
         Ok(Component {
             name,
             field_type,
             format,
+            validated_format,
             is_optional,
             is_repetitive,
             span,

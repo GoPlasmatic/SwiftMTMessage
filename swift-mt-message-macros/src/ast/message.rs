@@ -3,8 +3,7 @@
 use crate::error::{MacroError, MacroResult};
 use crate::utils::attributes::extract_field_attribute;
 use crate::utils::types::{
-    extract_inner_type, extract_option_vec_inner_type, is_option_type, is_option_vec_type,
-    is_vec_type,
+    categorize_type, extract_inner_type, extract_option_vec_inner_type, TypeCategory,
 };
 use proc_macro2::Span;
 use syn::spanned::Spanned;
@@ -152,10 +151,26 @@ impl MessageField {
         // Extract field tag from #[field("tag")] attribute
         let tag = extract_field_attribute(&field.attrs)?;
 
-        // Determine if field is optional or repetitive
-        let is_option_vec = is_option_vec_type(&field_type);
-        let is_optional = is_option_type(&field_type) || is_option_vec;
-        let is_repetitive = is_vec_type(&field_type) || is_option_vec;
+        // Determine if field is optional or repetitive using TypeCategory
+        let type_category = categorize_type(&field_type);
+        let is_option_vec = matches!(type_category, TypeCategory::OptionVec);
+        let is_optional = matches!(
+            type_category,
+            TypeCategory::OptionString
+                | TypeCategory::OptionNaiveDate
+                | TypeCategory::OptionNaiveTime
+                | TypeCategory::OptionF64
+                | TypeCategory::OptionU32
+                | TypeCategory::OptionU8
+                | TypeCategory::OptionBool
+                | TypeCategory::OptionChar
+                | TypeCategory::OptionField
+                | TypeCategory::OptionVec
+        );
+        let is_repetitive = matches!(
+            type_category,
+            TypeCategory::Vec | TypeCategory::VecString | TypeCategory::OptionVec
+        );
 
         // Extract inner type
         let inner_type = if is_option_vec {

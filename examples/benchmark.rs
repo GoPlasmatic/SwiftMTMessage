@@ -6,7 +6,7 @@ const ITERATIONS: usize = 100_000;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SWIFT MT Message Round-trip Benchmark");
     println!("=====================================");
-    println!("Iterations: {}", ITERATIONS);
+    println!("Iterations: {ITERATIONS}");
     println!();
 
     // MT103 STP (Straight Through Processing) message
@@ -41,7 +41,7 @@ LONDON
         if i % 10_000 == 0 && i > 0 {
             let elapsed = total_start.elapsed();
             let rate = i as f64 / elapsed.as_secs_f64();
-            println!("  {:>6} iterations completed ({:.0} ops/sec)", i, rate);
+            println!("  {i:>6} iterations completed ({rate:.0} ops/sec)");
         }
 
         // Full round-trip conversion
@@ -57,23 +57,44 @@ LONDON
     println!();
     println!("Benchmark Results");
     println!("=================");
-    println!("Total iterations:    {:>10}", ITERATIONS);
-    println!("Successful rounds:   {:>10}", successful_rounds);
-    println!("Failed rounds:       {:>10}", failed_rounds);
-    println!("Success rate:        {:>9.2}%", (successful_rounds as f64 / ITERATIONS as f64) * 100.0);
+    println!("Total iterations:    {ITERATIONS:>10}");
+    println!("Successful rounds:   {successful_rounds:>10}");
+    println!("Failed rounds:       {failed_rounds:>10}");
+    println!(
+        "Success rate:        {:>9.2}%",
+        (successful_rounds as f64 / ITERATIONS as f64) * 100.0
+    );
     println!();
-    println!("Total time:          {:>7.3} seconds", total_time.as_secs_f64());
-    println!("Average per round:   {:>7.1} μs", total_time.as_micros() as f64 / ITERATIONS as f64);
-    println!("Throughput:          {:>7.0} rounds/sec", ITERATIONS as f64 / total_time.as_secs_f64());
+    println!(
+        "Total time:          {:>7.3} seconds",
+        total_time.as_secs_f64()
+    );
+    println!(
+        "Average per round:   {:>7.1} μs",
+        total_time.as_micros() as f64 / ITERATIONS as f64
+    );
+    println!(
+        "Throughput:          {:>7.0} rounds/sec",
+        ITERATIONS as f64 / total_time.as_secs_f64()
+    );
     println!();
     println!("Performance Summary:");
-    println!("  - Messages per second: {:>10.0}", ITERATIONS as f64 / total_time.as_secs_f64());
-    println!("  - Messages per minute: {:>10.0}", (ITERATIONS as f64 / total_time.as_secs_f64()) * 60.0);
-    println!("  - Messages per hour:   {:>10.0}", (ITERATIONS as f64 / total_time.as_secs_f64()) * 3600.0);
+    println!(
+        "  - Messages per second: {:>10.0}",
+        ITERATIONS as f64 / total_time.as_secs_f64()
+    );
+    println!(
+        "  - Messages per minute: {:>10.0}",
+        (ITERATIONS as f64 / total_time.as_secs_f64()) * 60.0
+    );
+    println!(
+        "  - Messages per hour:   {:>10.0}",
+        (ITERATIONS as f64 / total_time.as_secs_f64()) * 3600.0
+    );
 
     if failed_rounds > 0 {
-        println!("\n⚠️  Warning: {} rounds failed", failed_rounds);
-        return Err(format!("Benchmark had {} failures", failed_rounds).into());
+        println!("\n⚠️  Warning: {failed_rounds} rounds failed");
+        return Err(format!("Benchmark had {failed_rounds} failures").into());
     }
 
     println!("\n✅ Benchmark completed successfully!");

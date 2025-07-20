@@ -10,6 +10,8 @@ mod ast;
 mod codegen;
 mod error;
 mod format;
+mod format_validation;
+mod sample_generation;
 mod utils;
 
 use error::MacroError;

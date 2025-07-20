@@ -8,78 +8,103 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Type;
 
-use crate::utils::types::*;
+use crate::utils::types::{categorize_type, extract_generic_inner_type, TypeCategory};
 
 /// Generate a sample value expression for a given type
 #[allow(dead_code)]
 pub fn generate_sample_value(ty: &Type) -> TokenStream {
-    if is_string_type(ty) {
-        quote! { "SAMPLE".to_string() }
-    } else if is_naive_date_type(ty) {
-        quote! { chrono::NaiveDate::from_ymd_opt(2024, 1, 1).unwrap() }
-    } else if is_naive_time_type(ty) {
-        quote! { chrono::NaiveTime::from_hms_opt(12, 0, 0).unwrap() }
-    } else if is_f64_type(ty) {
-        quote! { 100.0 }
-    } else if is_u32_type(ty) {
-        quote! { 123 }
-    } else if is_u8_type(ty) {
-        quote! { 1 }
-    } else if is_bool_type(ty) {
-        quote! { true }
-    } else if is_char_type(ty) {
-        quote! { 'A' }
-    } else if is_option_type(ty) {
-        if let Some(inner_ty) = extract_generic_inner_type(ty) {
-            let inner_sample = generate_sample_value(&inner_ty);
-            quote! { Some(#inner_sample) }
-        } else {
-            quote! { None }
+    match categorize_type(ty) {
+        TypeCategory::String => quote! { "SAMPLE".to_string() },
+        TypeCategory::NaiveDate => quote! { chrono::NaiveDate::from_ymd_opt(2024, 1, 1).unwrap() },
+        TypeCategory::NaiveTime => quote! { chrono::NaiveTime::from_hms_opt(12, 0, 0).unwrap() },
+        TypeCategory::F64 => quote! { 100.0 },
+        TypeCategory::U32 => quote! { 123 },
+        TypeCategory::U8 => quote! { 1 },
+        TypeCategory::Bool => quote! { true },
+        TypeCategory::Char => quote! { 'A' },
+        TypeCategory::OptionString
+        | TypeCategory::OptionNaiveDate
+        | TypeCategory::OptionNaiveTime
+        | TypeCategory::OptionF64
+        | TypeCategory::OptionU32
+        | TypeCategory::OptionU8
+        | TypeCategory::OptionBool
+        | TypeCategory::OptionChar
+        | TypeCategory::OptionField => {
+            if let Some(inner_ty) = extract_generic_inner_type(ty) {
+                let inner_sample = generate_sample_value(&inner_ty);
+                quote! { Some(#inner_sample) }
+            } else {
+                quote! { None }
+            }
         }
-    } else if is_vec_type(ty) {
-        if let Some(inner_ty) = extract_generic_inner_type(ty) {
-            let inner_sample = generate_sample_value(&inner_ty);
-            quote! { vec![#inner_sample] }
-        } else {
-            quote! { vec![] }
+        TypeCategory::Vec | TypeCategory::VecString => {
+            if let Some(inner_ty) = extract_generic_inner_type(ty) {
+                let inner_sample = generate_sample_value(&inner_ty);
+                quote! { vec![#inner_sample] }
+            } else {
+                quote! { vec![] }
+            }
         }
-    } else {
-        // For field types, try to call their sample method
-        quote! { #ty::sample() }
+        TypeCategory::Field => {
+            // For field types, try to call their sample method
+            quote! { #ty::sample() }
+        }
+        _ => {
+            // Default for unknown types
+            quote! { #ty::sample() }
+        }
     }
 }
 
 /// Generate a minimal sample value (for optional fields, use None)
 #[allow(dead_code)]
 pub fn generate_minimal_sample_value(ty: &Type) -> TokenStream {
-    if is_option_type(ty) {
-        quote! { None }
-    } else if is_vec_type(ty) {
-        quote! { vec![] }
-    } else {
-        generate_sample_value(ty)
+    match categorize_type(ty) {
+        TypeCategory::OptionString
+        | TypeCategory::OptionNaiveDate
+        | TypeCategory::OptionNaiveTime
+        | TypeCategory::OptionF64
+        | TypeCategory::OptionU32
+        | TypeCategory::OptionU8
+        | TypeCategory::OptionBool
+        | TypeCategory::OptionChar
+        | TypeCategory::OptionField
+        | TypeCategory::OptionVec => quote! { None },
+        TypeCategory::Vec | TypeCategory::VecString => quote! { vec![] },
+        _ => generate_sample_value(ty),
     }
 }
 
 /// Generate a full sample value (for optional fields, use Some(value))
 #[allow(dead_code)]
 pub fn generate_full_sample_value(ty: &Type) -> TokenStream {
-    if is_option_type(ty) {
-        if let Some(inner_ty) = extract_generic_inner_type(ty) {
-            let inner_sample = generate_sample_value(&inner_ty);
-            quote! { Some(#inner_sample) }
-        } else {
-            quote! { None }
+    match categorize_type(ty) {
+        TypeCategory::OptionString
+        | TypeCategory::OptionNaiveDate
+        | TypeCategory::OptionNaiveTime
+        | TypeCategory::OptionF64
+        | TypeCategory::OptionU32
+        | TypeCategory::OptionU8
+        | TypeCategory::OptionBool
+        | TypeCategory::OptionChar
+        | TypeCategory::OptionField => {
+            if let Some(inner_ty) = extract_generic_inner_type(ty) {
+                let inner_sample = generate_sample_value(&inner_ty);
+                quote! { Some(#inner_sample) }
+            } else {
+                quote! { None }
+            }
         }
-    } else if is_vec_type(ty) {
-        if let Some(inner_ty) = extract_generic_inner_type(ty) {
-            let inner_sample = generate_sample_value(&inner_ty);
-            quote! { vec![#inner_sample, #inner_sample] }
-        } else {
-            quote! { vec![] }
+        TypeCategory::Vec | TypeCategory::VecString => {
+            if let Some(inner_ty) = extract_generic_inner_type(ty) {
+                let inner_sample = generate_sample_value(&inner_ty);
+                quote! { vec![#inner_sample, #inner_sample] }
+            } else {
+                quote! { vec![] }
+            }
         }
-    } else {
-        generate_sample_value(ty)
+        _ => generate_sample_value(ty),
     }
 }
 

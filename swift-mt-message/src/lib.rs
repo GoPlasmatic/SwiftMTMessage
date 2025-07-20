@@ -56,10 +56,16 @@ pub mod messages;
 pub use messages::*;
 pub mod parser;
 pub mod sample;
+pub mod swift_error_codes;
 pub mod validation;
 
 // Re-export core types
-pub use errors::{ParseError, Result, ValidationError};
+pub use errors::{
+    ParseError, Result, ValidationError, SwiftValidationError, SwiftValidationResult,
+    SwiftFormatError, SwiftBusinessError, SwiftContentError, SwiftRelationError, SwiftGeneralError,
+    error_codes,
+};
+pub use swift_error_codes as swift_codes;
 pub use headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 pub use parser::SwiftParser;
 

@@ -24,7 +24,10 @@
 //! ```rust
 //! use swift_mt_message::parser::SwiftParser;
 //! use swift_mt_message::messages::MT103;
+//! use swift_mt_message::ParsedSwiftMessage;
 //!
+//! # fn main() -> swift_mt_message::Result<()> {
+//! # let swift_message_string = "{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:\n:20:TXN123456\n:23B:CRED\n:32A:240315USD1000,00\n:50K:JOHN DOE\n123 MAIN ST\n:59:DE89370400440532013000\nBENEFICIARY NAME\n:71A:SHA\n-}";
 //! // Parse specific message type
 //! let mt103 = SwiftParser::parse::<MT103>(&swift_message_string)?;
 //!
@@ -35,6 +38,8 @@
 //!     ParsedSwiftMessage::MT202(msg) => println!("Parsed MT202: {:?}", msg),
 //!     _ => println!("Other message type"),
 //! }
+//! # Ok(())
+//! # }
 //! ```
 
 use std::collections::{HashMap, HashSet};
@@ -67,8 +72,15 @@ type FieldParseResult = Result<HashMap<String, Vec<(String, usize)>>>;
 ///
 /// ## Example
 /// ```rust
+/// use swift_mt_message::parser::FieldConsumptionTracker;
+/// 
 /// let mut tracker = FieldConsumptionTracker::new();
 /// // Field "50" has values at positions [5, 15, 25] in message
+/// let field_values = vec![
+///     ("value1".to_string(), 5),
+///     ("value2".to_string(), 15),
+///     ("value3".to_string(), 25),
+/// ];
 /// let (value1, pos1) = tracker.get_next_available("50", &field_values).unwrap();
 /// tracker.mark_consumed("50", pos1);
 /// let (value2, pos2) = tracker.get_next_available("50", &field_values).unwrap();
@@ -218,12 +230,9 @@ impl SwiftParser {
         // Extract message type from application header
         let message_type = application_header.message_type.clone();
 
-        // Validate message type matches expected type
+        // Validate message type matches expected type using SWIFT error codes
         if message_type != T::message_type() {
-            return Err(ParseError::WrongMessageType {
-                expected: T::message_type().to_string(),
-                actual: message_type,
-            });
+            crate::validation::validate_message_type(&message_type, T::message_type())?;
         }
 
         // Parse block 4 fields with position tracking
@@ -355,8 +364,21 @@ impl SwiftParser {
         }
     }
 
-    /// Extract a specific message block from raw SWIFT message
+    /// Extract a specific message block from raw SWIFT message with SWIFT validation
     pub fn extract_block(raw_message: &str, block_index: u8) -> Result<Option<String>> {
+        // Validate block index using SWIFT error codes
+        if !(1..=5).contains(&block_index) {
+            return Err(ParseError::SwiftValidation(
+                crate::errors::SwiftValidationError::format_error(
+                    crate::swift_error_codes::t_series::T01,
+                    "BLOCK_INDEX",
+                    &block_index.to_string(),
+                    "1-5",
+                    &format!("Invalid block index: {}", block_index)
+                )
+            ));
+        }
+
         let block_marker = format!("{{{block_index}:");
 
         if let Some(start) = raw_message.find(&block_marker) {
@@ -390,9 +412,15 @@ impl SwiftParser {
                         Ok(None)
                     }
                 }
-                _ => Err(ParseError::InvalidBlockStructure {
-                    message: format!("Invalid block index: {block_index}"),
-                }),
+                _ => Err(ParseError::SwiftValidation(
+                    crate::errors::SwiftValidationError::format_error(
+                        crate::swift_error_codes::t_series::T02,
+                        "BLOCK",
+                        &block_index.to_string(),
+                        "1-5",
+                        &format!("Invalid block index: {block_index}")
+                    )
+                )),
             }
         } else {
             Ok(None)
@@ -654,10 +682,14 @@ mod tests {
         let result = SwiftParser::extract_block(invalid_message, 6);
         assert!(result.is_err());
 
-        // Test block that doesn't exist (should return Ok(None))
+        // Test invalid block index (should return SWIFT validation error)
         let result_none = SwiftParser::extract_block(raw_message, 6);
-        assert!(result_none.is_ok());
-        assert!(result_none.unwrap().is_none());
+        assert!(result_none.is_err());
+        
+        // Test valid block that doesn't exist (should return Ok(None))
+        let result_block3 = SwiftParser::extract_block(raw_message, 3);
+        assert!(result_block3.is_ok());
+        assert!(result_block3.unwrap().is_none());
     }
 
     #[test]

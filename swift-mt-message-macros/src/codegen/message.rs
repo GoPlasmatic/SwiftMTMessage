@@ -176,9 +176,17 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
             field_parsers.push(quote! {
                 #field_name: {
                     let (value, variant_tag, _pos) = crate::parser::find_field_with_variant_sequential(&fields, #tag, &mut tracker)
-                        .ok_or_else(|| crate::errors::ParseError::MissingRequiredField {
-                            field_tag: #tag.to_string()
-                        })?;
+                        .ok_or_else(|| crate::errors::ParseError::SwiftValidation(
+                            crate::errors::SwiftValidationError::format_error(
+                                crate::swift_error_codes::t_series::T09,
+                                #tag,
+                                "",
+                                "Required field",
+                                &format!("Missing required field: {}", #tag)
+                            )
+                        ))?;
+                    
+                    // Parse field with variant support  
                     #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(#tag))?
                 }
             });

@@ -32,6 +32,8 @@ fn generate_struct_field_impl(
     Ok(quote! {
         impl crate::SwiftField for #name {
             fn parse(value: &str) -> crate::Result<Self> {
+                // Note: SWIFT field validation is now handled at the component level
+                // to allow for proper field-specific validation rules
                 #parse_impl
             }
 
@@ -69,6 +71,8 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
     Ok(quote! {
         impl crate::SwiftField for #name {
             fn parse(value: &str) -> crate::Result<Self> {
+                // Note: SWIFT field validation is now handled at the component level
+                // to allow for proper field-specific validation rules  
                 #parse_impl
             }
 

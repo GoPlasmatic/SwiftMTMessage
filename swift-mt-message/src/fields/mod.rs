@@ -31,8 +31,10 @@
 //!
 //! ## Usage Example
 //! ```rust
-//! use swift_mt_message::fields::{Field20, Field32A, Field50, Field59};
+//! use swift_mt_message::fields::{Field20, Field32A, Field50OrderingCustomerAFK, Field59};
+//! use swift_mt_message::SwiftField;
 //!
+//! # fn main() -> swift_mt_message::Result<()> {
 //! // Parse simple field
 //! let field_20 = Field20::parse("TXN123456")?;
 //!
@@ -40,10 +42,12 @@
 //! let field_32a = Field32A::parse("240315USD1000,00")?;
 //!
 //! // Parse enum field with variant
-//! let field_50 = Field50::parse_with_variant("JOHN DOE\n123 MAIN ST", Some("K"), Some("50"))?;
+//! let field_50 = Field50OrderingCustomerAFK::parse_with_variant("JOHN DOE\n123 MAIN ST", Some("K"), Some("50"))?;
 //!
 //! // Generate samples
 //! let sample_field = Field59::sample();
+//! # Ok(())
+//! # }
 //! ```
 
 pub mod field11;

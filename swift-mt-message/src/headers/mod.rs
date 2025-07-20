@@ -555,7 +555,7 @@ impl std::fmt::Display for ApplicationHeader {
 /// - **Usage**: Message recovery and reconciliation
 ///
 /// ### Tag 423: Balance Checkpoint
-/// - **Format**: YYMMDDHHMMSS[ss]
+/// - **Format**: YYMMDDHHMMSS\[ss\]
 /// - **Purpose**: Balance snapshot timing
 /// - **Service**: MIRS recovery service
 /// - **Precision**: Optional hundredths of second

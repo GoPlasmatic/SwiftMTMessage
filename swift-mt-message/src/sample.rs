@@ -23,6 +23,7 @@
 //! ```rust
 //! use swift_mt_message::sample::{MessageConfig, MessageScenario, FieldConfig, LengthPreference};
 //! use swift_mt_message::messages::MT103;
+//! use swift_mt_message::SwiftMessageBody;
 //!
 //! // Generate standard MT103 sample
 //! let mt103 = MT103::sample();

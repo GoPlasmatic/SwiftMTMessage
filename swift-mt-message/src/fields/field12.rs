@@ -1,8 +1,83 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
+/// **Field 12: Sub Message Type**
+///
+/// ## Purpose
+/// Specifies a sub-message type or additional message categorization code that supplements
+/// the main MT message type. This field provides further classification within a message
+/// category, enabling more precise message routing and processing.
+///
+/// ## Format
+/// - **Swift Format**: `3!n`
+/// - **Description**: Exactly 3 numeric digits
+/// - **Character Set**: 0-9 only, no alphabetic characters
+///
+/// ## Presence
+/// - **Status**: Optional in most contexts, mandatory when sub-classification is required
+/// - **Swift Error Codes**: T12 (invalid format), T50 (invalid sub-type code)
+/// - **Usage Context**: Varies by message type and processing requirements
+///
+/// ## Usage Rules
+/// - **Sub-Classification**: Provides additional categorization within main message type
+/// - **Processing Logic**: Used by routing and processing systems for message handling
+/// - **Validation**: Must be valid sub-type code for the specific message context
+/// - **Range Validation**: Valid codes depend on the parent message type and business context
+///
+/// ## Network Validation Rules
+/// - **Format Validation**: Must be exactly 3 numeric digits
+/// - **Code Validation**: Sub-type code must be valid for the message context
+/// - **Processing Rules**: Used by SWIFT network for routing and validation decisions
+/// - **System Integration**: Enables automated processing based on sub-type classification
+///
+/// ## Business Context
+/// - **Message Routing**: Determines specific processing paths within message categories
+/// - **System Processing**: Enables automated handling based on sub-type requirements
+/// - **Compliance**: May be required for certain regulatory or business requirements
+/// - **Integration**: Facilitates system-to-system communication with precise message typing
+///
+/// ## Examples
+/// ```swift
+/// :12:103    // Sub-type 103 (customer credit transfer variant)
+/// :12:102    // Sub-type 102 (multiple customer credit transfer)
+/// :12:950    // Sub-type 950 (statement message variant)
+/// :12:001    // Sub-type 001 (standard processing)
+/// ```
+///
+/// ## Regional Considerations
+/// - **Local Variations**: Some regions may use specific sub-type codes
+/// - **Processing Standards**: Different markets may have preferred sub-type classifications
+/// - **Regulatory Requirements**: Certain jurisdictions may mandate specific sub-types
+/// - **System Integration**: Local clearing systems may require specific sub-type codes
+///
+/// ## Error Prevention
+/// - **Code Validation**: Verify sub-type code is valid for message context
+/// - **Format Checking**: Ensure exactly 3 numeric digits
+/// - **Context Validation**: Confirm sub-type is appropriate for business scenario
+/// - **System Compatibility**: Check receiving system supports the sub-type code
+///
+/// ## Related Fields
+/// - **Block 2**: Application Header (contains main message type)
+/// - **Field 11**: MT Reference (may reference messages with specific sub-types)
+/// - **Message Body**: Other fields may have dependencies on sub-type classification
+///
+/// ## Processing Impact
+/// - **Routing Decisions**: Influences how messages are routed through SWIFT network
+/// - **Validation Rules**: May trigger specific validation requirements
+/// - **STP Processing**: Can affect straight-through processing capabilities
+/// - **Exception Handling**: Determines appropriate exception handling procedures
+///
+/// ## See Also
+/// - Swift FIN User Handbook: Message Type Classification
+/// - Network Rules: Sub-Message Type Standards
+/// - Processing Guidelines: Sub-Type Routing Rules
+/// - System Integration Guide: Sub-Type Code Usage
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct Field12 {
+    /// Sub-message type or categorization code
+    ///
+    /// Format: 3!n - Exactly 3 numeric digits (0-9)
+    /// Used for additional message classification within main MT type
     #[component("3!n")]
     pub type_code: String,
 }

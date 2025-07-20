@@ -521,9 +521,10 @@ fn is_enum_field_type(field_type: &Type) -> bool {
         if let Some(last_segment) = type_path.path.segments.last() {
             let type_name = last_segment.ident.to_string();
             // Check if this is a Field enum type
-            type_name.starts_with("Field") && 
-            (// Specific enum patterns
-             type_name.contains("Ordering") || 
+            type_name.starts_with("Field")
+                && (
+                    // Specific enum patterns
+                    type_name.contains("Ordering") || 
              type_name.contains("Creditor") || 
              type_name.contains("Debtor") ||
              type_name.contains("Beneficiary") ||
@@ -539,7 +540,8 @@ fn is_enum_field_type(field_type: &Type) -> bool {
              type_name.ends_with("FGH") ||
              // Simple field enum patterns like Field50, Field52, Field58, Field59, etc.
              // These are just "Field" + number with no suffix
-             (type_name.len() <= 8 && type_name.chars().skip(5).all(|c| c.is_ascii_digit())))
+             (type_name.len() <= 8 && type_name.chars().skip(5).all(|c| c.is_ascii_digit()))
+                )
         } else {
             false
         }

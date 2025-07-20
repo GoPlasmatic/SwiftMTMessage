@@ -1,4 +1,57 @@
-//! Sample generation utilities for SWIFT MT messages and fields
+//! # Sample Generation Utilities for SWIFT MT Messages
+//!
+//! ## Purpose
+//! Comprehensive sample data generation for SWIFT MT messages and individual fields, supporting
+//! various scenarios including STP compliance, cover payments, and regulatory testing.
+//!
+//! ## Features
+//! - **Configurable Generation**: Flexible configuration options for field-level and message-level generation
+//! - **Scenario-Based Sampling**: Pre-defined scenarios for common use cases (STP, Cover Payment, etc.)
+//! - **Format-Driven Generation**: Automatic generation based on SWIFT format specifications
+//! - **Validation-Aware**: Generates valid BIC codes, currency codes, dates, and amounts
+//! - **Realistic Data**: Uses realistic names, addresses, and financial values
+//! - **Compliance Testing**: Supports generation for regulatory and compliance testing scenarios
+//!
+//! ## Generation Scenarios
+//! - **Standard**: Basic compliant messages with typical field combinations
+//! - **STP Compliant**: Messages that meet Straight Through Processing requirements
+//! - **Cover Payment**: Messages with cover payment structures (COV fields)
+//! - **Minimal**: Only mandatory fields for basic functionality testing
+//! - **Full**: All possible fields populated for comprehensive testing
+//!
+//! ## Usage Examples
+//! ```rust
+//! use swift_mt_message::sample::{MessageConfig, MessageScenario, FieldConfig, LengthPreference};
+//! use swift_mt_message::messages::MT103;
+//!
+//! // Generate standard MT103 sample
+//! let mt103 = MT103::sample();
+//!
+//! // Generate STP-compliant sample
+//! let stp_config = MessageConfig {
+//!     scenario: Some(MessageScenario::StpCompliant),
+//!     include_optional: false,
+//!     ..Default::default()
+//! };
+//! let mt103_stp = MT103::sample_with_config(&stp_config);
+//!
+//! // Generate with custom field configurations
+//! let mut field_configs = std::collections::HashMap::new();
+//! field_configs.insert("20".to_string(), FieldConfig {
+//!     fixed_values: Some(vec!["TXN123456".to_string()]),
+//!     ..Default::default()
+//! });
+//! let custom_config = MessageConfig {
+//!     field_configs,
+//!     include_optional: true,
+//!     ..Default::default()
+//! };
+//! let mt103_custom = MT103::sample_with_config(&custom_config);
+//! ```
+//!
+//! ## Thread Safety
+//! All generation functions are thread-safe and can be called concurrently.
+//! Random number generation uses thread-local RNG for optimal performance.
 
 use rand::Rng;
 use std::collections::HashMap;

@@ -1,7 +1,45 @@
-//! SWIFT validation utilities
+//! # SWIFT Validation Utilities
 //!
-//! This module provides validation functions for SWIFT-specific data types
-//! like BIC codes, currency codes, and other financial identifiers.
+//! ## Purpose
+//! Comprehensive validation functions for SWIFT-specific data types including BIC codes, currency codes,
+//! account numbers, and other financial identifiers used in MT message processing.
+//!
+//! ## Features
+//! - **BIC Code Validation**: Full SWIFT BIC format validation with ISO 3166-1 country code verification
+//! - **Currency Code Validation**: ISO 4217 currency code validation for major global currencies
+//! - **Format Validation**: SWIFT field format validation (4!c, 6!n, 35x, etc.)
+//! - **Account Validation**: IBAN and generic account number format validation
+//! - **Reference Validation**: Transaction reference and message reference format checking
+//!
+//! ## Validation Standards
+//! - **BIC Codes**: ISO 9362 (SWIFT BIC) standard compliance
+//! - **Currency Codes**: ISO 4217 standard with comprehensive currency support
+//! - **Country Codes**: ISO 3166-1 alpha-2 standard for geographic validation
+//! - **SWIFT Formats**: Official SWIFT User Handbook format specifications
+//!
+//! ## Usage Examples
+//! ```rust
+//! use swift_mt_message::validation::{is_valid_bic, is_valid_currency, validate_swift_format};
+//!
+//! // BIC validation
+//! assert!(is_valid_bic("DEUTDEFFXXX")); // Valid 11-character BIC
+//! assert!(is_valid_bic("DEUTDEFF"));    // Valid 8-character BIC
+//! assert!(!is_valid_bic("INVALID"));    // Invalid format
+//!
+//! // Currency validation
+//! assert!(is_valid_currency("USD"));    // Valid ISO 4217 code
+//! assert!(is_valid_currency("EUR"));    // Valid ISO 4217 code
+//! assert!(!is_valid_currency("XYZ"));   // Invalid currency
+//!
+//! // SWIFT format validation
+//! assert!(validate_swift_format("1234", "4!n"));     // 4 numeric characters
+//! assert!(validate_swift_format("ABCD", "4!c"));     // 4 uppercase letters
+//! assert!(!validate_swift_format("12345", "4!n"));   // Too long
+//! ```
+//!
+//! ## Performance
+//! All validation functions use pre-compiled static data structures for optimal performance.
+//! Currency and country code lookups use HashSet for O(1) validation time.
 
 use once_cell::sync::Lazy;
 use std::collections::HashSet;

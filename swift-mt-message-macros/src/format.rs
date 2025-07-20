@@ -38,11 +38,11 @@ use regex::Regex;
 use syn::Type;
 
 /// SWIFT format specification parser and formatter
-/// 
+///
 /// Represents a parsed SWIFT format specification that can be used to generate
 /// parsing and validation code. This structure captures all the important
 /// aspects of a SWIFT format pattern.
-/// 
+///
 /// ## Examples
 /// - Pattern `"3!a"` → `{ length: Some(3), format_type: Alpha, is_fixed: true }`
 /// - Pattern `"[35x]"` → `{ max_length: Some(35), format_type: AnyCharacter, is_optional: true }`
@@ -462,41 +462,41 @@ pub fn generate_regex_parse_impl(
     let is_multiline_field = is_multiline_field_type(name, struct_field);
 
     // Special handling for Field53B and Field57B with pattern [/1!a][/34x] + [35x]
-    if struct_field.components.len() == 2 &&
-       struct_field.components[0].format.pattern == "[/1!a][/34x]" &&
-       struct_field.components[1].format.pattern == "[35x]" {
-        
+    if struct_field.components.len() == 2
+        && struct_field.components[0].format.pattern == "[/1!a][/34x]"
+        && struct_field.components[1].format.pattern == "[35x]"
+    {
         let first_field_name = &struct_field.components[0].name;
         let second_field_name = &struct_field.components[1].name;
-        
+
         return Ok(quote! {
             // Handle Field53B/Field57B parsing: optional party identifier + optional location
             let lines: Vec<&str> = value.trim().lines().collect();
-            
+
             let (#first_field_name, #second_field_name) = if lines.len() == 2 {
                 // Two lines: first is party identifier, second is location
                 let first_line = lines[0];
                 let second_line = lines[1];
-                
+
                 // Parse party identifier (remove leading slash)
                 let party_id = if first_line.starts_with('/') {
                     Some(first_line.trim_start_matches('/').to_string())
                 } else {
                     None
                 };
-                
+
                 // Parse location
                 let location = if !second_line.is_empty() {
                     Some(second_line.to_string())
                 } else {
                     None
                 };
-                
+
                 (party_id, location)
             } else if lines.len() == 1 {
                 // One line: could be either party identifier or location
                 let line = lines[0];
-                
+
                 if line.starts_with('/') {
                     // This is a party identifier only
                     (Some(line.trim_start_matches('/').to_string()), None)
@@ -508,7 +508,7 @@ pub fn generate_regex_parse_impl(
                 // Empty or unexpected format
                 (None, None)
             };
-            
+
             Ok(Self {
                 #first_field_name,
                 #second_field_name,
@@ -517,56 +517,67 @@ pub fn generate_regex_parse_impl(
     }
 
     // Check if this is a field with an optional first component followed by a required component
-    // These fields need special handling because when the optional component is present, 
+    // These fields need special handling because when the optional component is present,
     // it appears on its own line, followed by the required component on the next line
     if struct_field.components.len() == 2 {
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
-        
+
         // Check if first component is optional (starts and ends with brackets)
         // BUT exclude fields with Vec<String> second component (those are handled separately below)
-        if first_component.is_optional && 
-           (first_component.format.pattern.starts_with('[') && first_component.format.pattern.ends_with(']')) &&
-           !second_component.is_repetitive {
-            
+        if first_component.is_optional
+            && (first_component.format.pattern.starts_with('[')
+                && first_component.format.pattern.ends_with(']'))
+            && !second_component.is_repetitive
+        {
             // For fields like Field51A-58A with optional party ID + BIC, or Field52B-57B with optional components
             // We need special parsing logic that handles the multiline nature when first component is present
-            
+
             let first_pattern = &regex_parts[0];
             let second_pattern = &regex_parts[1];
-            
+
             // Create a pattern that matches either:
             // 1. Optional first component on line 1, required second component on line 2
             // 2. Just the second component on line 1 (when optional is not present)
             let _regex_pattern = if second_component.is_optional {
                 // Both components are optional - more complex handling needed
-                format!("^(?:{}(?:\\n{})?|{})$", 
-                    first_pattern.trim_start_matches("(?:").trim_end_matches(")?"),
-                    second_pattern.trim_start_matches("(?:").trim_end_matches(")?"),
-                    second_pattern.trim_start_matches("(?:").trim_end_matches(")?")
+                format!(
+                    "^(?:{}(?:\\n{})?|{})$",
+                    first_pattern
+                        .trim_start_matches("(?:")
+                        .trim_end_matches(")?"),
+                    second_pattern
+                        .trim_start_matches("(?:")
+                        .trim_end_matches(")?"),
+                    second_pattern
+                        .trim_start_matches("(?:")
+                        .trim_end_matches(")?")
                 )
             } else {
                 // First optional, second required
-                format!("^(?:{}\\n)?{}$", 
-                    first_pattern.trim_start_matches("(?:").trim_end_matches(")?"),
+                format!(
+                    "^(?:{}\\n)?{}$",
+                    first_pattern
+                        .trim_start_matches("(?:")
+                        .trim_end_matches(")?"),
                     second_pattern.trim_start_matches("(").trim_end_matches(")")
                 )
             };
-            
+
             let first_field_name = &first_component.name;
             let second_field_name = &second_component.name;
-            
+
             let mut field_assignments = Vec::new();
-            
+
             // Parse the value to handle both cases
             field_assignments.push(quote! {
                 let lines: Vec<&str> = value.trim().lines().collect();
-                
+
                 let (#first_field_name, #second_field_name) = if lines.len() == 2 {
                     // Two lines: first is optional component, second is required component
                     let first_line = lines[0];
                     let second_line = lines[1];
-                    
+
                     // Parse first component
                     let first_val = if first_line.starts_with('/') {
                         // Remove leading slash for party identifiers
@@ -574,16 +585,16 @@ pub fn generate_regex_parse_impl(
                     } else {
                         Some(first_line.to_string())
                     };
-                    
+
                     // Parse second component
                     #[allow(clippy::redundant_clone)]
                     let second_val = second_line.to_string();
-                    
+
                     (first_val, second_val)
                 } else if lines.len() == 1 {
                     // One line: only second component is present
                     let line = lines[0];
-                    
+
                     // Check if this line could be the optional first component
                     // (This handles edge cases where optional component exists alone)
                     if line.starts_with('/') && line.len() <= 35 {
@@ -601,7 +612,7 @@ pub fn generate_regex_parse_impl(
                     });
                 };
             });
-            
+
             // For optional second components, wrap in Option
             if second_component.is_optional {
                 field_assignments.push(quote! {
@@ -612,10 +623,10 @@ pub fn generate_regex_parse_impl(
                     };
                 });
             }
-            
+
             return Ok(quote! {
                 #(#field_assignments)*
-                
+
                 Ok(Self {
                     #first_field_name,
                     #second_field_name,

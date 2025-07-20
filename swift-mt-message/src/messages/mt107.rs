@@ -2,6 +2,96 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
+/// MT107: General Direct Debit Message
+///
+/// ## Purpose
+/// Used for general direct debit instructions where a creditor requests the debit of multiple debtor accounts.
+/// This message provides more flexibility than MT104 for complex direct debit scenarios with enhanced authorization
+/// control and flexible party identification options.
+///
+/// ## Scope
+/// This message is:
+/// - Used for general direct debit processing between financial institutions
+/// - Applicable for bulk direct debit operations with flexible authorization control
+/// - Designed for complex direct debit scenarios requiring detailed transaction control
+/// - Compatible with both domestic and cross-border direct debit schemes
+/// - Subject to authorization validation rules for debtor consent management
+/// - Integrated with return processing mechanisms for failed direct debits
+///
+/// ## Key Features
+/// - **Enhanced Flexibility**: More sophisticated than MT104 for complex direct debit scenarios
+/// - **Authorization Management**: Field 23E supports AUTH/NAUT/OTHR authorization status codes
+/// - **Party Identification Options**: Instructing party can appear in Sequence A or individual transactions
+/// - **Return Processing Support**: Special handling for returned direct debits with RTND codes
+/// - **Settlement Consolidation**: Optional settlement sequence for consolidated settlement details
+/// - **Multi-Transaction Support**: Supports multiple debtor accounts in single message
+///
+/// ## Common Use Cases
+/// - Corporate direct debit collections for subscription services and utilities
+/// - Bulk salary and pension direct debit processing
+/// - Recurring payment collections for insurance and loan payments
+/// - Cross-border direct debit schemes for international service providers
+/// - Return processing for previously failed direct debit attempts
+/// - Multi-party direct debit scenarios with complex authorization requirements
+/// - Government tax and fee collection via direct debit
+///
+/// ## Message Structure
+/// ### Sequence A (General Information)
+/// - **Field 20**: Transaction Reference (mandatory) - Unique message identifier
+/// - **Field 23E**: Instruction Code (optional) - Authorization status (AUTH/NAUT/OTHR/RTND)
+/// - **Field 21E**: Related Reference (optional) - Reference to related message
+/// - **Field 30**: Execution Date (mandatory) - Date for direct debit execution
+/// - **Field 51A**: Sending Institution (optional) - Institution sending the message
+/// - **Field 50**: Instructing Party/Creditor (optional) - Party requesting direct debits
+/// - **Field 52**: Creditor Bank (optional) - Bank of the creditor
+/// - **Field 26T**: Transaction Type Code (optional) - Classification of direct debit type
+/// - **Field 77B**: Regulatory Reporting (optional) - Compliance reporting information
+/// - **Field 71A**: Details of Charges (optional) - Charge allocation instructions
+/// - **Field 72**: Sender to Receiver Information (optional) - Additional processing instructions
+///
+/// ### Sequence B (Transaction Details - Repetitive)
+/// - **Field 21**: Transaction Reference (mandatory) - Unique reference for each direct debit
+/// - **Field 32B**: Currency/Amount (mandatory) - Amount to be debited from each account
+/// - **Field 59**: Debtor (mandatory) - Account and details of party being debited
+/// - **Field 23E**: Instruction Code (optional) - Transaction-level authorization status
+/// - **Field 50**: Instructing Party/Creditor (optional) - Transaction-level party identification
+/// - **Field 57**: Debtor Bank (optional) - Bank holding the debtor account
+/// - **Field 70**: Remittance Information (optional) - Purpose and details of direct debit
+/// - **Field 33B/36**: Currency conversion fields for cross-currency direct debits
+///
+/// ### Sequence C (Settlement Information - Optional)
+/// - **Field 32B**: Settlement Amount (optional) - Total settlement amount
+/// - **Field 19**: Sum of Amounts (optional) - Control total for validation
+/// - **Field 71F/71G**: Charges (optional) - Settlement charges information
+/// - **Field 53**: Sender's Correspondent (optional) - Settlement correspondent
+///
+/// ## Network Validation Rules
+/// - **Authorization Consistency**: If 23E is AUTH/NAUT/OTHR in Sequence A, same restriction applies to Sequence B
+/// - **Party Identification**: Instructing party must appear in exactly one sequence (A or B per transaction)
+/// - **Return Processing**: Field 72 required when 23E = RTND for returned direct debit details
+/// - **Currency Conversion**: Exchange rate (36) required when 33B currency differs from 32B
+/// - **Transaction Limits**: Maximum transaction count per message enforced
+/// - **Reference Validation**: All transaction references must be unique within message
+/// - **Authorization Validation**: Authorization codes must be consistent with regulatory requirements
+///
+/// ## SRG2025 Status
+/// - **Structural Changes**: None - MT107 format remains stable
+/// - **Validation Updates**: Enhanced authorization validation for regulatory compliance
+/// - **Processing Improvements**: Improved handling of return processing scenarios
+/// - **Compliance Notes**: Strengthened regulatory reporting requirements for cross-border transactions
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Compatible with direct debit processing engines and mandate management systems
+/// - **API Integration**: RESTful API support for modern direct debit collection platforms
+/// - **Processing Requirements**: Supports batch processing with individual transaction validation
+/// - **Compliance Integration**: Built-in mandate validation and regulatory reporting capabilities
+///
+/// ## Relationship to Other Messages
+/// - **Triggers**: Often triggered by direct debit collection schedules or mandate execution systems
+/// - **Responses**: May generate MT900/MT910 (confirmations) or status notification messages
+/// - **Related**: Works with MT104 (simplified direct debits) and account reporting messages
+/// - **Alternatives**: MT104 for simpler direct debit scenarios without complex authorization
+/// - **Status Updates**: May receive return or reject messages for failed direct debit attempts
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT107_VALIDATION_RULES)]
@@ -61,6 +151,32 @@ pub struct MT107 {
     pub field_53: Option<Field53SenderCorrespondent>,
 }
 
+/// MT107 Transaction (Sequence B)
+///
+/// ## Purpose
+/// Represents a single direct debit transaction within an MT107 message. Each occurrence
+/// provides details for one direct debit request with flexible authorization and processing
+/// options.
+///
+/// ## Field Details
+/// - **21**: Transaction Reference (mandatory) - Unique reference for this direct debit
+/// - **32B**: Currency/Transaction Amount (mandatory) - Amount to be debited
+/// - **59**: Debtor (mandatory) - Account and details of party being debited
+/// - **23E**: Instruction Code - Authorization status (AUTH/NAUT/OTHR) or processing instructions
+/// - **21C/21D/21E**: Various reference fields for transaction linking
+/// - **50**: Instructing Party/Creditor - Can be at transaction level if not in Sequence A
+/// - **33B/36**: Currency conversion fields when amounts differ
+///
+/// ## Authorization Types (23E)
+/// - **AUTH**: Authorized direct debit - pre-authorized by debtor
+/// - **NAUT**: Non-authorized direct debit - requires special handling
+/// - **OTHR**: Other processing instruction - specific business rules apply
+/// - **RTND**: Returned direct debit - previously failed transaction
+///
+/// ## Validation Notes
+/// - Transaction reference (21) must be unique within the message
+/// - If 33B present and amount differs from 32B, exchange rate (36) required
+/// - Authorization status in 23E must be consistent with Sequence A if specified there
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT107_TRANSACTION_VALIDATION_RULES)]

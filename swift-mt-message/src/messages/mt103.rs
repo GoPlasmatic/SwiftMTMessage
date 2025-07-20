@@ -2,10 +2,90 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// MT103: Customer Credit Transfer (Standard and STP variants)
+/// MT103: Single Customer Credit Transfer
 ///
-/// Unified structure supporting both standard MT103 and MT103 STP variants.
-/// Use `is_stp_compliant()` to check if the message meets STP requirements.
+/// ## Purpose
+/// Used to convey funds transfer instructions between financial institutions where the ordering or beneficiary customer (or both) are non-financial institutions. 
+/// This is the most common payment message in the SWIFT network for retail and commercial payments worldwide.
+///
+/// ## Scope
+/// This message is:
+/// - Used for clean payment instructions without additional documents
+/// - Applicable for cross-border payments between different countries/currencies
+/// - Used for high-value domestic transfers via SWIFT network
+/// - Not applicable for collection advices, documentary credits, or cover transactions
+/// - Compatible with STP (Straight Through Processing) requirements
+/// - Subject to comprehensive network validation rules for payment integrity
+///
+/// ## Key Features
+/// - **Universal Payment Format**: Most widely used SWIFT payment message globally
+/// - **STP Compliance**: Built-in support for straight-through processing requirements
+/// - **REMIT Support**: Enhanced remittance information using field 77T for regulatory compliance
+/// - **Service Level Options**: Multiple processing speeds and cost tiers available
+/// - **Charge Allocation Flexibility**: OUR/SHA/BEN charge allocation options
+/// - **Comprehensive Validation**: 18 network validation rules ensure message integrity
+///
+/// ## Common Use Cases
+/// - International wire transfers for trade settlements and remittances
+/// - Corporate payments for supplier settlements and salary transfers
+/// - High-value domestic payments requiring SWIFT network routing
+/// - Cross-border e-commerce and marketplace settlements
+/// - Foreign exchange spot and forward settlement payments
+/// - Investment and securities transaction settlements
+/// - Emergency and expedited payment transfers
+///
+/// ## Message Structure
+/// - **Field 20**: Sender's Reference (mandatory) - Unique transaction identifier
+/// - **Field 13C**: Time Indication (optional, repetitive) - Processing time constraints
+/// - **Field 23B**: Bank Operation Code (mandatory) - Service level (CRED/SPRI/SSTD/SPAY)
+/// - **Field 23E**: Instruction Code (optional, repetitive) - Special processing instructions
+/// - **Field 26T**: Transaction Type Code (optional) - Payment category classification
+/// - **Field 32A**: Value Date/Currency/Amount (mandatory) - Settlement details
+/// - **Field 33B**: Currency/Instructed Amount (optional) - Original currency before conversion
+/// - **Field 36**: Exchange Rate (optional) - Rate for currency conversion
+/// - **Field 50**: Ordering Customer (mandatory) - Customer initiating payment
+/// - **Field 51A**: Sending Institution (optional) - Institution sending the payment
+/// - **Field 52**: Ordering Institution (optional) - Institution of ordering customer
+/// - **Field 53**: Sender's Correspondent (optional) - Sender's correspondent bank
+/// - **Field 54**: Receiver's Correspondent (optional) - Receiver's correspondent bank  
+/// - **Field 56**: Intermediary Institution (optional) - Intermediary in payment chain
+/// - **Field 57**: Account With Institution (optional) - Institution crediting beneficiary
+/// - **Field 59**: Beneficiary Customer (mandatory) - Final recipient of funds
+/// - **Field 70**: Remittance Information (optional) - Payment purpose and details
+/// - **Field 71A**: Details of Charges (mandatory) - Charge allocation (OUR/SHA/BEN)
+/// - **Field 71F**: Sender's Charges (optional) - Charges claimed by sender
+/// - **Field 71G**: Receiver's Charges (optional) - Charges claimed by receiver
+/// - **Field 72**: Sender to Receiver Information (optional) - Additional instructions
+/// - **Field 77B**: Regulatory Reporting (optional) - Compliance reporting information
+/// - **Field 77T**: Envelope for Remittance Info (optional) - Structured remittance data
+///
+/// ## Network Validation Rules
+/// - **Exchange Rate Logic**: Field 36 requirements when currencies differ (C1)
+/// - **EU/EEA Requirements**: Field 33B validation for specific country combinations (C2)
+/// - **Service Level Compatibility**: Instruction code restrictions by service level (C3-C6)
+/// - **Correspondent Dependencies**: Field dependencies for correspondent institutions (C7)
+/// - **Charge Allocation**: Currency and charge consistency rules (C8-C9)
+/// - **STP Restrictions**: Service level limitations on intermediary fields (C10-C12)
+/// - **Enhanced Validation**: Detailed charge handling and instruction code rules (C14-C18)
+///
+/// ## SRG2025 Status
+/// - **Structural Changes**: None - MT103 format remains stable
+/// - **Enhanced STP**: Strengthened straight-through processing requirements
+/// - **REMIT Enhancement**: Improved structured remittance information support
+/// - **Regulatory Compliance**: Enhanced field 77B validation for reporting requirements
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Compatible with all major core banking and payment processing systems
+/// - **API Integration**: Full RESTful API support for modern payment platforms
+/// - **Processing Requirements**: Supports real-time, same-day, and next-day processing
+/// - **Compliance Integration**: Built-in AML, sanctions screening, and regulatory reporting hooks
+///
+/// ## Relationship to Other Messages
+/// - **Triggers**: Often triggered by customer payment instructions or corporate ERP systems
+/// - **Responses**: May generate MT910 (confirmation) or MT900 (debit confirmation)
+/// - **Related**: Works with MT202 (cover payment) and MT940/MT950 (account reporting)
+/// - **Alternatives**: MT101 (bulk transfers), MT200 (financial institution transfers)
+/// - **Status Updates**: May receive MT192/MT196/MT199 for status notifications
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT103_VALIDATION_RULES)]

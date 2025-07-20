@@ -155,35 +155,39 @@ fn generate_struct_to_swift_string_impl(struct_field: &StructField) -> MacroResu
 }
 
 /// Generate to_swift_string for multi-component fields with smart formatting
-fn generate_multi_component_to_swift_string(struct_field: &StructField) -> MacroResult<TokenStream> {
+fn generate_multi_component_to_swift_string(
+    struct_field: &StructField,
+) -> MacroResult<TokenStream> {
     // Check for specific patterns that need custom handling
-    let patterns: Vec<&str> = struct_field.components.iter()
+    let patterns: Vec<&str> = struct_field
+        .components
+        .iter()
         .map(|c| c.format.pattern.as_str())
         .collect();
-    
+
     // Check for specific patterns that need custom handling
-    
+
     // Pattern: [/34x] + 4*35x (Field50K style - optional string + vec string)
     if patterns.len() == 2 &&
        patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&
        patterns[0].contains("x") && // Ensure it's a text field
-       patterns[1].contains("*") && patterns[1].contains("x") {
-        
+       patterns[1].contains("*") && patterns[1].contains("x")
+    {
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
         let first_field = &first_component.name;
         let second_field = &second_component.name;
-        
+
         return Ok(quote! {
             {
                 let mut result = String::new();
-                
+
                 // Add first component with prefix if present
                 if let Some(ref value) = self.#first_field {
                     result.push('/');
                     result.push_str(value);
                 }
-                
+
                 // Add second component (address lines)
                 if !self.#second_field.is_empty() {
                     if !result.is_empty() {
@@ -191,88 +195,89 @@ fn generate_multi_component_to_swift_string(struct_field: &StructField) -> Macro
                     }
                     result.push_str(&self.#second_field.join("\n"));
                 }
-                
+
                 result
             }
         });
     }
-    
+
     // Pattern: 4!c + [/30x] (Field23E style - string + optional string)
-    if patterns.len() == 2 &&
-       !patterns[0].starts_with("[") && !patterns[0].ends_with("]") &&
-       patterns[1].starts_with("[/") && patterns[1].ends_with("]") &&
-       patterns[1].contains("x") { // Ensure it's a text field, not numeric
-        
+    if patterns.len() == 2
+        && !patterns[0].starts_with("[")
+        && !patterns[0].ends_with("]")
+        && patterns[1].starts_with("[/")
+        && patterns[1].ends_with("]")
+        && patterns[1].contains("x")
+    {
+        // Ensure it's a text field, not numeric
+
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
         let first_field = &first_component.name;
         let second_field = &second_component.name;
-        
+
         return Ok(quote! {
             {
                 let mut result = self.#first_field.clone();
-                
+
                 // Add second component with prefix if present
                 if let Some(ref value) = self.#second_field {
                     result.push('/');
                     result.push_str(value);
                 }
-                
+
                 result
             }
         });
     }
-    
+
     // Pattern: [/34x] + BIC (Field59A style - optional string + BIC string)
     if patterns.len() == 2 &&
        patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&
        patterns[0].contains("x") && // Ensure it's a text field
-       patterns[1].contains("!a") && patterns[1].contains("!c") {
-        
+       patterns[1].contains("!a") && patterns[1].contains("!c")
+    {
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
         let first_field = &first_component.name;
         let second_field = &second_component.name;
-        
+
         return Ok(quote! {
             {
                 let mut result = String::new();
-                
+
                 // Add account if present (with "/" prefix)
                 if let Some(ref account) = self.#first_field {
                     result.push('/');
                     result.push_str(account);
                     result.push_str("\n");
                 }
-                
+
                 // Add BIC code
                 result.push_str(&self.#second_field);
-                
+
                 result
             }
         });
     }
-    
+
     // Pattern: [/1!a][/34x] + [35x] (Field53B/Field57B style - optional party identifier + optional location)
-    if patterns.len() == 2 &&
-       patterns[0] == "[/1!a][/34x]" &&
-       patterns[1] == "[35x]" {
-        
+    if patterns.len() == 2 && patterns[0] == "[/1!a][/34x]" && patterns[1] == "[35x]" {
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
         let first_field = &first_component.name;
         let second_field = &second_component.name;
-        
+
         return Ok(quote! {
             {
                 let mut result = String::new();
-                
+
                 // Add party identifier if present (with "/" prefix)
                 if let Some(ref party_id) = self.#first_field {
                     result.push('/');
                     result.push_str(party_id);
                 }
-                
+
                 // Add location on new line if present
                 if let Some(ref location) = self.#second_field {
                     if !result.is_empty() {
@@ -280,33 +285,35 @@ fn generate_multi_component_to_swift_string(struct_field: &StructField) -> Macro
                     }
                     result.push_str(location);
                 }
-                
+
                 result
             }
         });
     }
-    
+
     // Pattern: [/34x] + 4*(1!n/33x) (Field59F style - optional string + vec string with line numbering)
     if patterns.len() == 2 &&
        patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&
        patterns[0].contains("x") && // Ensure it's a text field
-       patterns[1] == "4*(1!n/33x)" { // Exact match for Field59F
-        
+       patterns[1] == "4*(1!n/33x)"
+    {
+        // Exact match for Field59F
+
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
         let first_field = &first_component.name;
         let second_field = &second_component.name;
-        
+
         return Ok(quote! {
             {
                 let mut result = String::new();
-                
+
                 // Add party identifier if present (with "/" prefix)
                 if let Some(ref party_id) = self.#first_field {
                     result.push('/');
                     result.push_str(party_id);
                 }
-                
+
                 // Add name and address lines with proper line number formatting
                 for (i, line) in self.#second_field.iter().enumerate() {
                     if !result.is_empty() || i > 0 {
@@ -315,12 +322,12 @@ fn generate_multi_component_to_swift_string(struct_field: &StructField) -> Macro
                     // Format: line number + "/" + text (per 4*(1!n/33x) format)
                     result.push_str(&format!("{}/{}", i + 1, line));
                 }
-                
+
                 result
             }
         });
     }
-    
+
     // Default: use original concatenation logic for multi-component fields
     let component_conversions: Vec<_> = struct_field
         .components

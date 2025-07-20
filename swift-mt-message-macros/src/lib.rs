@@ -23,7 +23,7 @@ use utils::serde_attributes::add_serde_attributes_to_optional_fields;
 /// ## Basic Usage
 ///
 /// ### Simple Field
-/// ```ignore
+/// ```logic
 /// use swift_mt_message_macros::SwiftField;
 /// use serde::{Deserialize, Serialize};
 ///
@@ -35,7 +35,7 @@ use utils::serde_attributes::add_serde_attributes_to_optional_fields;
 /// ```
 ///
 /// ### Multi-Component Field
-/// ```ignore
+/// ```logic
 /// #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 /// struct Field32A {
 ///     #[component("6!n")]     // Date: YYMMDD
@@ -48,7 +48,7 @@ use utils::serde_attributes::add_serde_attributes_to_optional_fields;
 /// ```
 ///
 /// ### Enum Field (Multiple Variants)
-/// ```ignore
+/// ```logic
 /// #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
 /// enum Field50 {
 ///     A(Field50A),
@@ -89,7 +89,7 @@ pub fn derive_swift_field(input: TokenStream) -> TokenStream {
 ///
 /// ## Basic Usage
 ///
-/// ```ignore
+/// ```logic
 /// use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 /// use serde::{Deserialize, Serialize};
 /// use crate::fields::*;
@@ -154,7 +154,7 @@ pub fn derive_swift_message(input: TokenStream) -> TokenStream {
 ///
 /// Apply this attribute to message structs before the derive attributes:
 ///
-/// ```ignore
+/// ```logic
 /// use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 /// use serde::{Deserialize, Serialize};
 ///

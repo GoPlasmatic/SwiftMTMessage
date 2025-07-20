@@ -326,8 +326,12 @@ pub fn extract_option_vec_inner_type(ty: &Type) -> Type {
                         if let Type::Path(vec_type_path) = vec_type {
                             if let Some(vec_segment) = vec_type_path.path.segments.last() {
                                 if vec_segment.ident == "Vec" {
-                                    if let PathArguments::AngleBracketed(vec_args) = &vec_segment.arguments {
-                                        if let Some(GenericArgument::Type(inner_type)) = vec_args.args.first() {
+                                    if let PathArguments::AngleBracketed(vec_args) =
+                                        &vec_segment.arguments
+                                    {
+                                        if let Some(GenericArgument::Type(inner_type)) =
+                                            vec_args.args.first()
+                                        {
                                             return inner_type.clone();
                                         }
                                     }

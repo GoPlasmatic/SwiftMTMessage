@@ -2,6 +2,92 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
+/// MT202: General Financial Institution Transfer
+///
+/// ## Purpose
+/// Used for financial institution-to-financial institution payments where both the ordering
+/// and beneficiary customers are financial institutions. This message facilitates transfers
+/// of funds between institutions for their own account or on behalf of third parties.
+///
+/// ## Scope
+/// This message is:
+/// - Sent between financial institutions for interbank transfers
+/// - Used for settlement of obligations between financial institutions
+/// - Applicable for both cover payments (with underlying customer details) and direct institution transfers
+/// - Compatible with real-time gross settlement (RTGS) systems
+/// - Subject to SRG2025 contingency processing for FI-to-FI transfers
+///
+/// ## Key Features
+/// - **Dual Sequence Structure**: 
+///   - Sequence A: Basic interbank transfer details
+///   - Sequence B: Cover payment details (when applicable)
+/// - **Flexible Routing**: Support for correspondent banking chains through fields 52-57
+/// - **Cover Payment Detection**: Automatic identification of cover vs. direct transfers
+/// - **Reject/Return Handling**: Built-in support for payment exception processing
+/// - **Settlement Integration**: Compatible with various settlement methods and systems
+/// - **SRG2025 Compliance**: Enhanced network validation rules for contingency processing
+///
+/// ## Common Use Cases
+/// - Interbank settlement transactions
+/// - Cover payments for underlying customer transfers
+/// - Foreign exchange settlement
+/// - Correspondent banking transfers
+/// - Central bank operations
+/// - Cross-border payment settlement
+/// - SWIFT gpi (global payments innovation) transactions
+///
+/// ## Message Structure
+/// ### Sequence A (Mandatory)
+/// - **Field 20**: Transaction Reference (mandatory) - Unique sender reference
+/// - **Field 21**: Related Reference (mandatory) - Reference to related message/transaction
+/// - **Field 13C**: Time Indication (optional, repetitive) - Processing time constraints
+/// - **Field 32A**: Value Date/Currency/Amount (mandatory) - Settlement details
+/// - **Field 52**: Ordering Institution (optional) - Institution initiating the transfer
+/// - **Field 53**: Sender's Correspondent (optional) - Sender's correspondent bank
+/// - **Field 54**: Receiver's Correspondent (optional) - Receiver's correspondent bank
+/// - **Field 56**: Intermediary Institution (optional) - Intermediary in the payment chain
+/// - **Field 57**: Account With Institution (optional) - Final crediting institution
+/// - **Field 58**: Beneficiary Institution (mandatory) - Final beneficiary institution
+/// - **Field 72**: Sender to Receiver Information (optional) - Additional instructions
+///
+/// ### Sequence B (Optional - Cover Payment Details)
+/// - **Field 50**: Ordering Customer (optional) - Underlying ordering customer
+/// - **Field 52**: Ordering Institution (optional) - Ordering institution details for cover
+/// - **Field 56**: Intermediary Institution (optional) - Intermediary for cover payment
+/// - **Field 57**: Account With Institution (optional) - Account details for cover
+/// - **Field 59**: Beneficiary Customer (optional) - Underlying beneficiary customer
+/// - **Field 70**: Remittance Information (optional) - Payment purpose/details
+/// - **Field 72**: Sender to Receiver Info (optional) - Cover-specific instructions
+/// - **Field 33B**: Currency/Instructed Amount (optional) - Original instructed amount
+///
+/// ## Network Validation Rules
+/// - **Intermediary Chain Validation**: If field 56 is present, field 57 becomes mandatory
+/// - **Cover Payment Structure**: Validation of Sequence B customer fields for cover detection
+/// - **Cross-border Compliance**: Enhanced validation for contingency processing (SRG2025)
+/// - **Settlement Method Validation**: Proper correspondent banking chain validation
+/// - **Time Indication Compliance**: CLS/TARGET timing constraint validation
+/// - **Reference Format Validation**: Proper format validation for all reference fields
+/// - **REJT/RETN Indicators**: Structured validation of reject/return codes in field 72
+///
+/// ## SRG2025 Status
+/// - **Structural Changes**: Enhanced - Additional network validated rules for contingency processing
+/// - **Validation Updates**: Contingency processing applicable to FI-to-FI transfers
+/// - **Processing Improvements**: ISO 20022 automatic conversion for compliant messages
+/// - **Compliance Notes**: Scope includes FI-to-FI including MA-CUGs (excludes SCORE, MI-CUGs)
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Compatible with real-time gross settlement (RTGS) systems and net settlement systems
+/// - **API Integration**: RESTful API support for modern interbank payment platforms
+/// - **Processing Requirements**: Supports correspondent banking arrangements and central bank settlement
+/// - **Compliance Integration**: Built-in support for cross-currency settlement and regulatory reporting
+///
+/// ## Relationship to Other Messages
+/// - **Triggers**: Often triggered by MT103 customer payments requiring cover or institutional settlement
+/// - **Responses**: May generate MT900/MT910 (confirmations) or MT292/MT296 (reject notifications)
+/// - **Related**: Works with MT205 (with mandatory ordering institution) and account reporting messages
+/// - **Alternatives**: MT205 for transfers requiring explicit ordering institution identification
+/// - **Status Updates**: May receive MT192/MT196/MT199 for status notifications and inquiry responses
+
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT202_VALIDATION_RULES)]

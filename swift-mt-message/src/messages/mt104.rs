@@ -2,9 +2,90 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// MT104: Customer Direct Debit
+/// MT104: Direct Debit and Request for Debit Transfer Message
 ///
-/// Message for customer direct debit instructions with transaction details.
+/// ## Purpose
+/// Used for customer direct debit instructions between financial institutions, allowing creditors to request debiting of debtor accounts through the banking network.
+/// This message enables efficient collection of payments through authorized direct debit arrangements.
+///
+/// ## Scope
+/// This message is:
+/// - Sent by corporate entities to their financial institutions for payment collection
+/// - Used to request direct debit of debtor accounts with proper authorization
+/// - Applicable for both domestic and international direct debit scenarios
+/// - Compatible with bulk processing of multiple direct debit transactions
+/// - Subject to strict authorization and regulatory compliance requirements
+/// - Used in conjunction with direct debit mandates and agreements
+///
+/// ## Key Features
+/// - **Multi-Transaction Support**: Single message can contain multiple direct debit requests
+/// - **Three-Sequence Architecture**: General info, transaction details, and settlement information
+/// - **Authorization Framework**: Built-in support for direct debit mandates and agreements
+/// - **Currency Flexibility**: Supports different currencies and exchange rate conversions
+/// - **Charge Allocation Options**: Configurable charge handling (OUR/SHA/BEN)
+/// - **Regulatory Compliance**: Comprehensive fields for regulatory reporting requirements
+///
+/// ## Common Use Cases
+/// - Utility companies collecting monthly bills from customer accounts
+/// - Insurance companies collecting premium payments via direct debit
+/// - Subscription service providers collecting recurring fees
+/// - Loan servicing companies collecting installment payments
+/// - Government agencies collecting taxes and fees
+/// - Corporate collection of accounts receivable from customers
+/// - Automated clearing house (ACH) equivalent processing
+///
+/// ## Message Structure
+/// ### Sequence A (General Information - Mandatory, Single)
+/// - **Field 20**: Sender's Reference (mandatory) - Unique message identifier
+/// - **Field 21R**: Customer Specified Reference (optional) - Creditor's batch reference
+/// - **Field 28D**: Message Index/Total (mandatory) - For chained messages
+/// - **Field 30**: Requested Execution Date (mandatory) - When debits should be executed
+/// - **Field 25**: Account Identification (optional) - Creditor's account for credits
+/// - **Field 50**: Instructing Party (optional) - Party authorizing the direct debits
+///
+/// ### Sequence B (Transaction Details - Mandatory, Repetitive)
+/// - **Field 21**: Transaction Reference (mandatory) - Unique transaction identifier
+/// - **Field 32B**: Currency/Amount (mandatory) - Amount to be debited
+/// - **Field 50**: Ordering Customer/Debtor (mandatory) - Account to be debited
+/// - **Field 52**: Account Servicing Institution (optional) - Debtor's bank
+/// - **Field 57**: Account With Institution (optional) - Intermediary institution
+/// - **Field 59**: Beneficiary/Creditor (mandatory) - Account to be credited
+/// - **Field 70**: Remittance Information (optional) - Payment purpose and details
+/// - **Field 77B**: Regulatory Reporting (optional) - Compliance information
+/// - **Field 71A**: Details of Charges (mandatory) - Charge allocation instructions
+///
+/// ### Sequence C (Settlement Information - Optional, Single)
+/// - **Field 32A**: Value Date/Currency/Total Amount (optional) - Settlement summary
+/// - **Field 19**: Sum of Amounts (optional) - Total amount of all transactions
+/// - **Field 71F**: Sender's Charges (optional) - Total charges claimed
+/// - **Field 71G**: Receiver's Charges (optional) - Total charges to be deducted
+///
+/// ## Network Validation Rules
+/// - **Authorization Validation**: Proper direct debit mandate verification required
+/// - **Transaction Limits**: Individual and batch transaction limit enforcement
+/// - **Currency Consistency**: Currency validation across sequences
+/// - **Charge Allocation**: Consistent charge handling across all transactions
+/// - **Settlement Totals**: Sequence C totals must match sum of Sequence B amounts
+/// - **Reference Uniqueness**: Transaction references must be unique within batch
+///
+/// ## SRG2025 Status
+/// - **Structural Changes**: None - MT104 format remains unchanged
+/// - **Enhanced Validation**: Strengthened authorization and mandate validation
+/// - **Regulatory Compliance**: Enhanced field 77B validation for reporting
+/// - **Processing Improvements**: Better support for modern direct debit frameworks
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Compatible with core banking and payment processing systems
+/// - **Authorization Systems**: Integration with direct debit mandate management systems
+/// - **API Integration**: RESTful API support for modern payment platforms
+/// - **Processing Requirements**: Supports batch processing with settlement coordination
+///
+/// ## Relationship to Other Messages
+/// - **Triggers**: Often triggered by recurring payment schedules or collection processes
+/// - **Responses**: May generate MT103 (credit transfers) for creditor account credits
+/// - **Related**: Works with MT202 for settlement and MT940/MT950 for account reporting
+/// - **Alternatives**: MT101 for credit transfers, MT103 for individual payments
+/// - **Authorization**: Requires underlying direct debit mandates and agreements
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT104_VALIDATION_RULES)]

@@ -9,7 +9,7 @@ use syn::spanned::Spanned;
 use syn::{DeriveInput, Field, Fields, FieldsNamed, Ident, Type};
 
 /// Parsed field structure information
-/// 
+///
 /// Represents a complete field definition parsed from a Rust struct or enum
 /// that uses the `#[derive(SwiftField)]` macro. This structure contains all
 /// the information needed to generate the SwiftField trait implementation.
@@ -60,14 +60,14 @@ pub struct EnumVariant {
 }
 
 /// Component field within a struct
-/// 
+///
 /// Represents a single component of a SWIFT field, extracted from a struct field
 /// with a `#[component("format")]` attribute. Components define the individual
 /// parts that make up a complete SWIFT field.
-/// 
+///
 /// ## Example
 /// For a field like `Field32A`, this would represent each component:
-/// ```ignore
+/// ```logic
 /// struct Field32A {
 ///     #[component("6!n")]   // Component: date
 ///     date: String,

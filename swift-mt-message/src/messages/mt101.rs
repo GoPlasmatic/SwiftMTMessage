@@ -2,9 +2,93 @@ use crate::fields::*;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// MT101: Request for Credit Transfer
+/// MT101: Request for Transfer
 ///
-/// Message for requesting multiple credit transfers with transaction details.
+/// ## Purpose
+/// Used to request the movement of funds from the ordering customer's account(s) serviced at the receiving financial institution. 
+/// This message enables institutions and authorized parties to initiate multiple transactions in a single message with comprehensive transfer details.
+///
+/// ## Scope
+/// This message is:
+/// - Sent by financial institutions on behalf of non-financial account owners
+/// - Sent by non-financial institution account owners or authorized parties
+/// - Used for moving funds between ordering customer accounts or to third parties
+/// - Applicable for both domestic and cross-border payment requests
+/// - Compatible with bulk payment processing and corporate treasury operations
+/// - Subject to comprehensive network validation rules for transaction integrity
+///
+/// ## Key Features
+/// - **Multi-Transaction Support**: Single message can contain multiple transaction requests
+/// - **Dual Sequence Architecture**: Sequence A (general info) and Sequence B (transaction details)
+/// - **Flexible Party Specification**: Ordering customer can be specified in either sequence
+/// - **Foreign Exchange Support**: Built-in support for currency conversion instructions
+/// - **Chained Message Capability**: Support for large transaction sets across multiple messages
+/// - **Regulatory Compliance**: Includes regulatory reporting fields for compliance requirements
+///
+/// ## Common Use Cases
+/// - Corporate bulk payment processing for payroll and supplier payments
+/// - Treasury operations requiring multiple fund transfers
+/// - Cross-border payment requests with currency conversion
+/// - Inter-company fund transfers within corporate groups
+/// - Standing instruction execution for recurring payments
+/// - Cash management and liquidity optimization transfers
+/// - Trade finance settlement instructions
+///
+/// ## Message Structure
+/// ### Sequence A (General Information - Mandatory, Single)
+/// - **Field 20**: Sender's Reference (mandatory) - Unique message identifier
+/// - **Field 21R**: Customer Specified Reference (optional) - Customer reference for all transactions
+/// - **Field 28D**: Message Index/Total (mandatory) - For chained messages
+/// - **Field 50**: Instructing Party/Ordering Customer (optional) - Party initiating request
+/// - **Field 52A**: Account Servicing Institution (optional) - Institution holding accounts
+/// - **Field 51A**: Sending Institution (optional) - Institution sending the message
+/// - **Field 30**: Requested Execution Date (mandatory) - When transfers should be executed
+/// - **Field 25**: Account Identification (optional) - Account to be debited
+///
+/// ### Sequence B (Transaction Details - Mandatory, Repetitive)
+/// - **Field 21**: Transaction Reference (mandatory) - Unique transaction identifier
+/// - **Field 21F**: F/X Deal Reference (optional) - Foreign exchange deal reference
+/// - **Field 23E**: Instruction Code (optional) - Special processing instructions
+/// - **Field 32B**: Currency/Transaction Amount (mandatory) - Transfer amount and currency
+/// - **Field 50**: Ordering Customer (optional) - Customer specific to this transaction
+/// - **Field 52**: Account Servicing Institution (optional) - Institution for this transaction
+/// - **Field 56**: Intermediary Institution (optional) - Intermediary in payment chain
+/// - **Field 57**: Account With Institution (optional) - Crediting institution
+/// - **Field 59**: Beneficiary Customer (mandatory) - Final beneficiary of funds
+/// - **Field 70**: Remittance Information (optional) - Payment purpose and details
+/// - **Field 77B**: Regulatory Reporting (optional) - Compliance reporting information
+/// - **Field 33B**: Currency/Original Amount (optional) - For currency conversion
+/// - **Field 71A**: Details of Charges (mandatory) - Charge allocation instructions
+/// - **Field 25A**: Charges Account (optional) - Account for charge debiting
+/// - **Field 36**: Exchange Rate (optional) - Rate for currency conversion
+///
+/// ## Network Validation Rules
+/// - **Foreign Exchange Logic**: If field 36 present, field 21F mandatory (C1)
+/// - **Currency Conversion**: If field 33B present and amount ≠ 0, field 36 mandatory (C2)
+/// - **Party Specification**: Field 50a placement rules between sequences (C3, C4)
+/// - **Currency Consistency**: Currency in field 33B must differ from field 32B (C5)
+/// - **Institution Chain**: If field 56a present, field 57a mandatory (C7)
+/// - **Cross-Transaction**: If field 21R present, all 32B currencies must match (C8)
+/// - **Chained Messages**: All must have same sender's reference (field 20)
+///
+/// ## SRG2025 Status
+/// - **Structural Changes**: None - MT101 format remains stable
+/// - **Enhanced Validation**: Strengthened rules for cross-border transfers
+/// - **Regulatory Reporting**: Enhanced field 77B validation for compliance
+/// - **API Integration**: Improved support for modern banking APIs
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Compatible with core banking and payment processing systems
+/// - **API Integration**: RESTful API support for modern corporate banking platforms
+/// - **Processing Requirements**: Supports both real-time and batch processing modes
+/// - **Compliance Integration**: Built-in regulatory reporting and sanctions screening hooks
+///
+/// ## Relationship to Other Messages
+/// - **Triggers**: Often triggered by corporate ERP systems or treasury management platforms
+/// - **Responses**: Generates MT103 (customer credit transfer) for each transaction
+/// - **Related**: Works with MT202 for institutional settlement and MT940/MT950 for reporting
+/// - **Alternatives**: MT100 for single transfers, MT204 for direct debit instructions
+/// - **Status Updates**: May receive MT192/MT196/MT199 for status notifications
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT101_VALIDATION_RULES)]
 #[serde_swift_fields]
@@ -42,7 +126,27 @@ pub struct MT101 {
 
 /// MT101 Transaction (Sequence B)
 ///
-/// Single transaction within an MT101 message.
+/// ## Purpose
+/// Represents a single transaction within an MT101 message. Each occurrence provides
+/// details for one individual funds transfer request.
+///
+/// ## Field Details
+/// - **21**: Transaction Reference (mandatory) - Unique reference for this transaction
+/// - **21F**: F/X Deal Reference - Required when field 36 is present (NVR C1)
+/// - **23E**: Instruction Code - Special instructions (e.g., EQUI for equivalent transfers)
+/// - **32B**: Currency/Transaction Amount - The amount to be transferred
+/// - **33B**: Currency/Original Amount - Used for currency conversions (NVR C2, C5)
+/// - **36**: Exchange Rate - Required when 33B present and amount ≠ 0 (NVR C2)
+///
+/// ## Party Chain
+/// The transaction flow follows: Instructing Party → Ordering Customer → 
+/// Account Servicing Institution → Intermediary → Account With Institution → Beneficiary
+///
+/// ## Validation Notes
+/// - If 36 present, 21F must be present (C1)
+/// - If 33B present and 32B amount ≠ 0, then 36 mandatory (C2)
+/// - Currency in 33B must differ from 32B (C5)
+/// - If 56a present, 57a must be present (C7)
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT101_TRANSACTION_VALIDATION_RULES)]

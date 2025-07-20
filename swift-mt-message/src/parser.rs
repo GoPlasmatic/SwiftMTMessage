@@ -1,3 +1,42 @@
+//! # SWIFT MT Message Parser
+//!
+//! ## Purpose
+//! Comprehensive parser for SWIFT MT (Message Type) messages that converts raw SWIFT message strings
+//! into typed, structured data with full validation and field consumption tracking.
+//!
+//! ## Features
+//! - **Multi-Format Support**: Handles all supported MT message types (101, 103, 104, etc.)
+//! - **Block Structure Parsing**: Extracts and validates all 5 SWIFT message blocks
+//! - **Field Consumption Tracking**: Sequential processing of duplicate fields with position tracking
+//! - **Type-Safe Parsing**: Converts raw strings to strongly-typed field structures
+//! - **Automatic Message Detection**: Auto-detects message type from application header
+//! - **Comprehensive Validation**: Validates message structure, field formats, and business rules
+//!
+//! ## Architecture
+//! The parser follows a layered approach:
+//! 1. **Block Extraction**: Extracts blocks 1-5 from raw SWIFT message
+//! 2. **Header Parsing**: Parses blocks 1, 2, 3, and 5 into header structures
+//! 3. **Field Parsing**: Parses block 4 fields with position and variant tracking
+//! 4. **Message Construction**: Builds typed message structures with sequential field consumption
+//! 5. **Validation**: Applies format and business rule validation
+//!
+//! ## Usage Examples
+//! ```rust
+//! use swift_mt_message::parser::SwiftParser;
+//! use swift_mt_message::messages::MT103;
+//!
+//! // Parse specific message type
+//! let mt103 = SwiftParser::parse::<MT103>(&swift_message_string)?;
+//!
+//! // Auto-detect message type
+//! let parsed_message = SwiftParser::parse_auto(&swift_message_string)?;
+//! match parsed_message {
+//!     ParsedSwiftMessage::MT103(msg) => println!("Parsed MT103: {:?}", msg),
+//!     ParsedSwiftMessage::MT202(msg) => println!("Parsed MT202: {:?}", msg),
+//!     _ => println!("Other message type"),
+//! }
+//! ```
+
 use std::collections::{HashMap, HashSet};
 
 use crate::errors::{ParseError, Result};
@@ -8,12 +47,36 @@ use crate::messages::{
 };
 use crate::{ParsedSwiftMessage, SwiftMessage, SwiftMessageBody};
 
-/// Type alias for the field parsing result - now includes position tracking
+/// Type alias for the field parsing result with position tracking
+/// 
+/// Maps field tags to vectors of (field_value, position_in_message) tuples.
+/// This enables sequential consumption of duplicate fields while maintaining message order.
 type FieldParseResult = Result<HashMap<String, Vec<(String, usize)>>>;
 
-/// Field consumption tracker to ensure sequential processing of duplicate fields
+/// Field consumption tracker for sequential processing of duplicate fields
+///
+/// ## Purpose
+/// Ensures that when a message contains multiple instances of the same field (e.g., multiple :50: fields),
+/// they are consumed sequentially in the order they appear in the original message. This is critical
+/// for messages like MT101 where sequence matters.
+///
+/// ## Implementation
+/// - Tracks consumed field indices by tag
+/// - Provides next available field value for sequential consumption
+/// - Maintains message order integrity during field processing
+///
+/// ## Example
+/// ```rust
+/// let mut tracker = FieldConsumptionTracker::new();
+/// // Field "50" has values at positions [5, 15, 25] in message
+/// let (value1, pos1) = tracker.get_next_available("50", &field_values).unwrap();
+/// tracker.mark_consumed("50", pos1);
+/// let (value2, pos2) = tracker.get_next_available("50", &field_values).unwrap();
+/// // Ensures value2 is from position 15, not 5 or 25
+/// ```
 #[derive(Debug, Clone)]
 pub struct FieldConsumptionTracker {
+    /// Maps field tags to sets of consumed position indices
     consumed_indices: HashMap<String, HashSet<usize>>,
 }
 
@@ -56,7 +119,27 @@ impl FieldConsumptionTracker {
 }
 
 /// Find field values by base tag with sequential consumption tracking
-/// Returns (field_value, variant, position) where the field is consumed from the tracker
+///
+/// ## Purpose
+/// Locates the next available field value for a given base tag, handling both simple fields
+/// and complex enum fields with variants (e.g., 50A, 50F, 50K).
+///
+/// ## Parameters
+/// - `fields`: HashMap of all parsed fields with position tracking
+/// - `base_tag`: Base field tag (e.g., "50", "59")
+/// - `tracker`: Mutable reference to consumption tracker for sequential processing
+///
+/// ## Returns
+/// `Option<(field_value, variant, position)>` where:
+/// - `field_value`: The actual field content
+/// - `variant`: Optional variant letter (A, F, K, etc.) for enum fields
+/// - `position`: Original position in the message for ordering
+///
+/// ## Behavior
+/// 1. First attempts exact match for simple fields (e.g., "50" -> "50")
+/// 2. Then searches for variant fields (e.g., "50" -> "50A", "50F", "50K")
+/// 3. Marks found field as consumed to ensure sequential processing
+/// 4. Returns None if no unconsumed fields are available
 pub fn find_field_with_variant_sequential(
     fields: &HashMap<String, Vec<(String, usize)>>,
     base_tag: &str,
@@ -91,6 +174,30 @@ pub fn find_field_with_variant_sequential(
 }
 
 /// Main parser for SWIFT MT messages
+///
+/// ## Purpose
+/// Primary parsing engine that converts raw SWIFT message strings into typed, validated message structures.
+/// Handles all aspects of SWIFT message processing including block extraction, header parsing, field parsing,
+/// and type-safe message construction.
+///
+/// ## Capabilities
+/// - **Multi-Message Support**: Parses all 24 supported MT message types
+/// - **Flexible Parsing**: Both type-specific and auto-detection parsing modes
+/// - **Robust Error Handling**: Comprehensive error reporting for malformed messages
+/// - **Field Validation**: Format validation and business rule checking
+/// - **Position Tracking**: Maintains field order for sequential processing requirements
+///
+/// ## Parsing Process
+/// 1. **Block Extraction**: Identifies and extracts SWIFT blocks 1-5
+/// 2. **Header Validation**: Parses and validates basic, application, user headers and trailer
+/// 3. **Message Type Detection**: Determines message type from application header
+/// 4. **Field Processing**: Parses block 4 fields with position and variant tracking
+/// 5. **Type Construction**: Builds strongly-typed message structures
+/// 6. **Validation**: Applies format and business rule validation
+///
+/// ## Thread Safety
+/// SwiftParser is stateless and thread-safe. All methods are static and can be called
+/// concurrently from multiple threads.
 pub struct SwiftParser;
 
 impl SwiftParser {

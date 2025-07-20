@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 33B: Currency / Instructed Amount**
+///   **Field 33B: Currency / Instructed Amount**
 ///
 /// ## Purpose
 /// Specifies the currency code and original instructed amount when the settlement amount
@@ -112,8 +112,8 @@ use swift_mt_message_macros::SwiftField;
 /// - ISO 4217: Currency Code Standards
 /// - Exchange Rate Guidelines: Conversion Calculation Rules
 /// - Reconciliation Standards: Original vs. Settlement Amount Matching
-
-/// **Field 33B: Currency/Instructed Amount Structure**
+///
+///   **Field 33B: Currency/Instructed Amount Structure**
 ///
 /// Contains the original instructed currency and amount before conversion
 /// and charge applications.

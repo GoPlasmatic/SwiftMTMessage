@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 54: Receiver's Correspondent**
+///   **Field 54: Receiver's Correspondent**
 ///
 /// ## Purpose
 /// Specifies the branch of the Receiver or financial institution where funds will be made
@@ -68,8 +68,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Correspondent Banking Guidelines: Settlement Chain Management
 /// - Cross-Border Payments: Correspondent Banking Settlement
 /// - Risk Management: Correspondent Banking Risk Assessment
-
-/// **Field 54A: Receiver's Correspondent (BIC with Party Identifier)**
+///
+///   **Field 54A: Receiver's Correspondent (BIC with Party Identifier)**
 ///
 /// Structured receiver correspondent identification using BIC code with optional party identifier.
 /// Preferred option for automated correspondent banking processing on the receiving end.
@@ -90,7 +90,7 @@ pub struct Field54A {
     pub bic: String,
 }
 
-/// **Field 54B: Receiver's Correspondent (Party Identifier with Location)**
+///   **Field 54B: Receiver's Correspondent (Party Identifier with Location)**
 ///
 /// Domestic receiver correspondent routing using party identifier and location details.
 /// Used for location-based routing in domestic correspondent arrangements.
@@ -111,7 +111,7 @@ pub struct Field54B {
     pub location: Option<String>,
 }
 
-/// **Field 54D: Receiver's Correspondent (Party Identifier with Name and Address)**
+///   **Field 54D: Receiver's Correspondent (Party Identifier with Name and Address)**
 ///
 /// Detailed receiver correspondent identification with full name and address information.
 /// Used when structured BIC identification is not available for receiver correspondent.

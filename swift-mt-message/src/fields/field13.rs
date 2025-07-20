@@ -1,77 +1,116 @@
+//! # Field 13: Time/Date Indication
+//!
+//! ## Purpose
+//! Provides time and date indication capabilities for payment processing with timezone offset information.
+//! These fields are critical for time-sensitive payments, settlement timing, and regulatory compliance
+//! in cross-border transactions requiring precise timing documentation.
+//!
+//! ## Options Overview
+//! - **Option C**: Time Indication with codes (SNDTIME, CLSTIME, etc.)
+//! - **Option D**: Complete Date/Time indication with UTC offset
+//!
+//! ## Format Specifications
+//! ### Option C Format
+//! - **Swift Format**: `/8c/4!n1!x4!n`
+//! - **Components**: Time indication code + Time + UTC offset sign + offset amount
+//!
+//! ### Option D Format
+//! - **Swift Format**: `6!n4!n1!x4!n`
+//! - **Components**: Date + Time + UTC offset sign + offset amount
+//!
+//! ## Valid Time Indication Codes (Option C)
+//! - **CLSTIME**: CLS Time - Funding payment deadline for CLS Bank (CET)
+//! - **RNCTIME**: Receive Time - TARGET2 payment credit time at receiving central bank
+//! - **SNDTIME**: Send Time - TARGET2 payment debit time at sending central bank
+//! - **REJTIME**: Rejection Time - Payment rejection or return timestamp
+//! - **CUTTIME**: Cut-off Time - Latest processing time for payments
+//!
+//! ## Usage Guidelines
+//! ### When to Use Option C (Time Indication)
+//! - **Settlement Systems**: CLS Bank settlement timing coordination
+//! - **TARGET2 Payments**: European central bank payment timing
+//! - **Cut-off Management**: Processing deadline specifications
+//! - **Event Timing**: Specific time-based payment events
+//!
+//! ### When to Use Option D (Date/Time Indication)
+//! - **Transaction Timestamping**: Precise recording of payment events
+//! - **Audit Documentation**: Comprehensive temporal records for compliance
+//! - **Cross-Border Coordination**: Time coordination across different time zones
+//! - **Regulatory Compliance**: Meeting time-stamping requirements for reporting
+//!
+//! ## Network Validation Rules
+//! - **Time Format**: Must be valid time in HHMM format (00:00 to 23:59)
+//! - **Date Format**: Must be valid calendar date in YYMMDD format (Option D)
+//! - **Offset Sign**: Must be exactly + (ahead of UTC) or - (behind UTC)
+//! - **Offset Range**: UTC offset must be within valid timezone ranges (typically ±13 hours)
+//! - **Code Validation**: Time indication codes must be valid and recognized (Option C)
+//!
+//! ## Business Applications
+//! ### Settlement Coordination
+//! - **Timezone Management**: UTC offset enables precise time zone identification
+//! - **Multiple Indications**: Multiple time indications can be provided in sequences
+//! - **Settlement Timing**: Coordination of settlement timing across time zones
+//! - **Processing Windows**: Definition of processing cut-off times
+//!
+//! ### Regulatory Compliance
+//! - **Timestamp Requirements**: Meeting regulatory time-stamping requirements
+//! - **Audit Trails**: Creating comprehensive timestamp records for compliance
+//! - **Cross-Border Rules**: Supporting international payment timing regulations
+//! - **System Integration**: Enabling time-aware processing across systems
+//!
+//! ## Regional Considerations
+//! - **European Payments**: CET/CEST timing for TARGET2 and SEPA systems
+//! - **US Payments**: EST/EDT timing for Federal Reserve systems
+//! - **Asian Markets**: Local time zones for regional clearing systems
+//! - **Global Coordination**: UTC reference for international settlements
+//!
+//! ## Timezone Offset Guidelines
+//! - **Standard Offsets**: Most timezone offsets are in full hour increments
+//! - **Special Cases**: Some regions use 30 or 45-minute offsets
+//! - **Daylight Saving**: Offsets change with daylight saving time transitions
+//! - **UTC Reference**: All offsets calculated relative to Coordinated Universal Time
+//!
+//! ## Error Prevention Guidelines
+//! - **Time Validation**: Ensure time is valid 24-hour format
+//! - **Date Validation**: Verify date is valid and within reasonable business range
+//! - **Offset Accuracy**: Confirm timezone offset matches actual timezone
+//! - **Code Selection**: Use appropriate time indication code for context (Option C)
+//! - **Business Logic**: Ensure timing aligns with settlement windows and business processes
+//!
+//! ## Related Fields Integration
+//! - **Field 32A**: Value Date (settlement date coordination)
+//! - **Field 30**: Execution Date (date-only specifications)
+//! - **Field 72**: Sender to Receiver Information (additional timing details)
+//! - **Block Headers**: Message timestamps (system-level timing)
+//!
+//! ## Technical Implementation
+//! - **Date Handling**: Uses `chrono::NaiveDate` for robust date parsing
+//! - **Time Handling**: Uses `chrono::NaiveTime` for time validation
+//! - **Offset Storage**: String format for flexible UTC offset representation
+//! - **Validation**: Automatic format validation through Swift macro system
+//!
+//! ## See Also
+//! - Swift FIN User Handbook: Date/Time Specifications
+//! - ISO 8601: International Date/Time Standards
+//! - SWIFT Network Rules: Timestamp Requirements
+//! - Regional Payment Guides: Local Time Zone Considerations
+
 use chrono::{NaiveDate, NaiveTime};
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
 /// **Field 13C: Time Indication**
 ///
-/// ## Purpose
-/// Specifies time indication related to payment processing with timezone offset information.
-/// This field is critical for time-sensitive payments, settlement timing, and regulatory
-/// compliance in cross-border transactions requiring precise timing documentation.
+/// Time indication variant of [Field 13 module](index.html). Specifies time indication related
+/// to payment processing with timezone offset and specific timing codes.
 ///
-/// ## Format
-/// - **Swift Format**: `/8c/4!n1!x4!n`
-/// - **Components**:
-///   - `/8c/`: Time indication code enclosed in slashes (8 characters)
-///   - `4!n`: Time in HHMM format (24-hour clock)
-///   - `1!x`: Sign indicator (+ or -)
-///   - `4!n`: Time offset in HHMM format
+/// **Components:**
+/// - Time indication code (/8c/, e.g., SNDTIME, CLSTIME)
+/// - Time (4!n, HHMM format)
+/// - UTC offset sign (1!x, + or -)
+/// - UTC offset amount (4!n, HHMM format)
 ///
-/// ## Presence
-/// - **Status**: Optional in MT102 Settlement Details sequence
-/// - **Swift Error Codes**: T38 (invalid time), T16 (invalid offset), T15 (invalid sign)
-/// - **Usage Context**: Payment timing and settlement coordination
-///
-/// ## Valid Time Indication Codes
-/// - **CLSTIME**: CLS Time - Time by which funding payment must be credited to CLS Bank's account (CET)
-/// - **RNCTIME**: Receive Time - Time at which TARGET2 payment was credited at receiving central bank (CET)
-/// - **SNDTIME**: Send Time - Time at which TARGET2 payment was debited at sending central bank (CET)
-/// - **REJTIME**: Rejection Time - Time when payment was rejected or returned
-/// - **CUTTIME**: Cut-off Time - Latest time for payment processing
-///
-/// ## Network Validation Rules
-/// - **Time Format**: Must be valid time in HHMM format (00:00 to 23:59)
-/// - **Offset Hours**: Must be 00-13 hours
-/// - **Offset Minutes**: Must be 00-59 minutes
-/// - **Sign Validation**: Must be exactly + or - character
-/// - **Code Validation**: Time indication code must be valid and recognized
-///
-/// ## Usage Rules
-/// - **Timezone Context**: Time zone identified by offset against UTC (ISO 8601 standard)
-/// - **Multiple Indications**: Multiple time indications can be provided in repetitive sequences
-/// - **Settlement Coordination**: Used for coordinating settlement timing across time zones
-/// - **Regulatory Compliance**: Required for certain cross-border payment regulations
-///
-/// ## Business Applications
-/// - **Settlement Systems**: CLS Bank settlement timing coordination
-/// - **TARGET2 Payments**: European central bank payment timing
-/// - **Regulatory Reporting**: Time-stamping for compliance requirements
-/// - **STP Processing**: Automated time-based processing decisions
-///
-/// ## Examples
-/// ```logic
-/// :13C:/SNDTIME/1430+0100    // Sent at 14:30 CET (UTC+1)
-/// :13C:/CLSTIME/0930-0500    // CLS deadline 09:30 EST (UTC-5)
-/// :13C:/RNCTIME/1615+0000    // Received at 16:15 UTC
-/// :13C:/CUTTIME/1700+0200    // Cut-off at 17:00 CEST (UTC+2)
-/// ```
-///
-/// ## Regional Considerations
-/// - **European Payments**: CET/CEST timing for TARGET2 and SEPA
-/// - **US Payments**: EST/EDT timing for Federal Reserve systems
-/// - **Asian Markets**: Local time zones for regional clearing systems
-/// - **Global Coordination**: UTC reference for international settlements
-///
-/// ## Error Prevention
-/// - **Time Validation**: Ensure time is valid 24-hour format
-/// - **Offset Accuracy**: Verify timezone offset matches actual timezone
-/// - **Code Selection**: Use appropriate time indication code for context
-/// - **Business Logic**: Ensure timing aligns with settlement windows
-///
-/// ## Related Fields
-/// - **Field 32A**: Value Date (settlement date coordination)
-/// - **Field 13D**: Date/Time Indication (alternative time specification)
-/// - **Field 72**: Sender to Receiver Information (additional timing details)
+/// For complete documentation, see the [Field 13 module](index.html).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct Field13C {
     /// Time indication code with slashes
@@ -105,85 +144,16 @@ pub struct Field13C {
 
 /// **Field 13D: Date/Time Indication**
 ///
-/// ## Purpose
-/// Specifies complete date and time indication with UTC offset for precise timestamp
-/// documentation. This field provides comprehensive temporal information for payment
-/// processing events, audit trails, and regulatory compliance requirements.
+/// Complete date/time variant of [Field 13 module](index.html). Specifies complete date and time
+/// indication with UTC offset for precise timestamp documentation.
 ///
-/// ## Format
-/// - **Swift Format**: `6!n4!n1!x4!n`
-/// - **Components**:
-///   - `6!n`: Date in YYMMDD format
-///   - `4!n`: Time in HHMM format (24-hour clock)
-///   - `1!x`: UTC offset sign (+ or -)
-///   - `4!n`: UTC offset (typically in HHMM format)
+/// **Components:**
+/// - Date (6!n, YYMMDD format)
+/// - Time (4!n, HHMM format)
+/// - UTC offset sign (1!x, + or -)
+/// - UTC offset amount (4!n)
 ///
-/// ## Presence
-/// - **Status**: Optional in most message types, mandatory for time-critical transactions
-/// - **Swift Error Codes**: T40 (invalid date), T38 (invalid time), T16 (invalid offset)
-/// - **Usage Context**: Comprehensive timestamp requirements
-///
-/// ## Network Validation Rules
-/// - **Date Validation**: Must be valid calendar date in YYMMDD format
-/// - **Time Validation**: Must be valid time in HHMM format (00:00 to 23:59)
-/// - **Offset Sign**: Must be + (ahead of UTC) or - (behind UTC)
-/// - **Offset Range**: UTC offset must be within valid timezone ranges
-///
-/// ## Usage Rules
-/// - **Complete Timestamp**: Provides both date and time in single field
-/// - **Timezone Awareness**: UTC offset enables precise time zone identification
-/// - **Audit Trail**: Creates comprehensive timestamp for transaction events
-/// - **Cross-Border Coordination**: Enables time coordination across different time zones
-///
-/// ## Business Applications
-/// - **Transaction Timestamping**: Precise recording of payment events
-/// - **Regulatory Compliance**: Meeting time-stamping requirements for reporting
-/// - **Audit Documentation**: Comprehensive temporal records for compliance
-/// - **System Integration**: Enabling time-aware processing across systems
-///
-/// ## Examples
-/// ```logic
-/// :13D:2501251430+0100    // January 25, 2025 at 14:30 CET (UTC+1)
-/// :13D:2512311159-0500    // December 31, 2025 at 11:59 EST (UTC-5)
-/// :13D:2506151200+0000    // June 15, 2025 at 12:00 UTC
-/// :13D:2509301800+0900    // September 30, 2025 at 18:00 JST (UTC+9)
-/// ```
-///
-/// ## Regional Considerations
-/// - **European Markets**: CET/CEST for European business hours
-/// - **US Markets**: EST/EDT for US business hours
-/// - **Asian Markets**: Local time zones for regional processing
-/// - **Global Operations**: UTC for international coordination
-///
-/// ## Error Prevention
-/// - **Date Validation**: Ensure date is valid and within reasonable business range
-/// - **Time Validation**: Verify time is valid 24-hour format
-/// - **Offset Accuracy**: Confirm UTC offset matches actual timezone
-/// - **Business Logic**: Ensure timestamp aligns with business processes
-///
-/// ## Comparison with Field 13C
-/// - **Field 13C**: Focuses on time indication with codes (SNDTIME, CLSTIME, etc.)
-/// - **Field 13D**: Provides complete date/time without specific indication codes
-/// - **Usage Context**: 13C for specific timing events, 13D for general timestamps
-/// - **Format Difference**: 13C includes time indication codes, 13D is pure date/time
-///
-/// ## Related Fields
-/// - **Field 13C**: Time Indication (alternative time specification with codes)
-/// - **Field 32A**: Value Date (settlement date without time component)
-/// - **Field 30**: Execution Date (date-only specifications)
-/// - **Block Headers**: Message timestamps (system-level timing)
-///
-/// ## Technical Implementation
-/// - **Date Handling**: Uses `chrono::NaiveDate` for robust date parsing
-/// - **Time Handling**: Uses `chrono::NaiveTime` for time validation
-/// - **Offset Storage**: String format for flexible UTC offset representation
-/// - **Validation**: Automatic format validation through Swift macro system
-///
-/// ## See Also
-/// - Swift FIN User Handbook: Date/Time Specifications
-/// - ISO 8601: International Date/Time Standards
-/// - SWIFT Network Rules: Timestamp Requirements
-/// - Regional Payment Guides: Local Time Zone Considerations
+/// For complete documentation, see the [Field 13 module](index.html).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct Field13D {
     /// Date component in YYMMDD format

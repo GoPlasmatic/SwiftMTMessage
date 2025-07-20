@@ -5,7 +5,7 @@ use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 /// MT103: Single Customer Credit Transfer
 ///
 /// ## Purpose
-/// Used to convey funds transfer instructions between financial institutions where the ordering or beneficiary customer (or both) are non-financial institutions. 
+/// Used to convey funds transfer instructions between financial institutions where the ordering or beneficiary customer (or both) are non-financial institutions.
 /// This is the most common payment message in the SWIFT network for retail and commercial payments worldwide.
 ///
 /// ## Scope

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 37H: Interest Rate**
+///   **Field 37H: Interest Rate**
 ///
 /// ## Purpose
 /// Specifies interest rates for financial instruments, derivatives, and investment products.
@@ -133,7 +133,7 @@ use swift_mt_message_macros::SwiftField;
 /// - Market Rate Standards: Rate Quotation and Calculation Conventions
 /// - Central Bank Guidelines: Reference Rate Standards and Policies
 /// - Risk Management: Interest Rate Risk Measurement and Control
-/// **Field 37H: Interest Rate Structure**
+///   **Field 37H: Interest Rate Structure**
 ///
 /// Contains interest rate with directional indicator and negative rate support.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]

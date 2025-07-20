@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 75: Queries**
+///   **Field 75: Queries**
 ///
 /// ## Purpose
 /// Specifies query information in Swift MT message query/response workflows. This field

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 77: Narrative and Envelope Contents**
+///   **Field 77: Narrative and Envelope Contents**
 ///
 /// ## Purpose
 /// Provides extended narrative information and envelope contents for various financial
@@ -31,7 +31,7 @@ use swift_mt_message_macros::SwiftField;
 /// - Regulatory Documentation: Compliance Information Requirements
 /// - Trade Finance: Documentary Requirements
 /// - Message Documentation: Extended Information Standards
-/// **Field 77T: Envelope Contents**
+///   **Field 77T: Envelope Contents**
 ///
 /// Contains structured envelope information with specific format requirements.
 /// Used for regulatory and compliance documentation with extensive content capacity.
@@ -45,7 +45,7 @@ pub struct Field77T {
     pub envelope_content: String,
 }
 
-/// **Field 77A: Extended Narrative**
+///   **Field 77A: Extended Narrative**
 ///
 /// Provides extended narrative information with up to 20 lines of text.
 /// Used for detailed documentation and extensive information requirements.
@@ -59,7 +59,7 @@ pub struct Field77A {
     pub narrative: Vec<String>,
 }
 
-/// **Field 77B: Short Narrative**
+///   **Field 77B: Short Narrative**
 ///
 /// Provides shorter narrative information with up to 3 lines of text.
 /// Used for concise documentation and brief additional information.

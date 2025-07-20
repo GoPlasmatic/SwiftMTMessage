@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 58: Beneficiary Institution**
+///   **Field 58: Beneficiary Institution**
 ///
 /// ## Purpose
 /// Specifies the ultimate recipient institution of the funds being transferred in specialized
@@ -123,8 +123,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Central Bank Guidelines: Institutional Transfer Requirements
 /// - Financial Market Infrastructure: Institutional Settlement Standards
 /// - Regulatory Framework: Institutional Transfer Compliance
-
-/// **Field 58A: Beneficiary Institution (BIC with Party Identifier)**
+///
+///   **Field 58A: Beneficiary Institution (BIC with Party Identifier)**
 ///
 /// Structured institutional beneficiary identification using BIC code with optional party identifier.
 /// Preferred option for institutional transfers and financial institution beneficiaries.
@@ -145,7 +145,7 @@ pub struct Field58A {
     pub bic: String,
 }
 
-/// **Field 58D: Beneficiary Institution (Party Identifier with Name and Address)**
+///   **Field 58D: Beneficiary Institution (Party Identifier with Name and Address)**
 ///
 /// Detailed institutional beneficiary identification with full name and address information.
 /// Used only in exceptional circumstances when structured BIC identification is not available.

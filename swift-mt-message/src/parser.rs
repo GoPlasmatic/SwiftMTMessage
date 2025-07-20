@@ -53,7 +53,7 @@ use crate::messages::{
 use crate::{ParsedSwiftMessage, SwiftMessage, SwiftMessageBody};
 
 /// Type alias for the field parsing result with position tracking
-/// 
+///
 /// Maps field tags to vectors of (field_value, position_in_message) tuples.
 /// This enables sequential consumption of duplicate fields while maintaining message order.
 type FieldParseResult = Result<HashMap<String, Vec<(String, usize)>>>;
@@ -73,7 +73,7 @@ type FieldParseResult = Result<HashMap<String, Vec<(String, usize)>>>;
 /// ## Example
 /// ```rust
 /// use swift_mt_message::parser::FieldConsumptionTracker;
-/// 
+///
 /// let mut tracker = FieldConsumptionTracker::new();
 /// // Field "50" has values at positions [5, 15, 25] in message
 /// let field_values = vec![
@@ -368,15 +368,15 @@ impl SwiftParser {
     pub fn extract_block(raw_message: &str, block_index: u8) -> Result<Option<String>> {
         // Validate block index using SWIFT error codes
         if !(1..=5).contains(&block_index) {
-            return Err(ParseError::SwiftValidation(
+            return Err(ParseError::SwiftValidation(Box::new(
                 crate::errors::SwiftValidationError::format_error(
                     crate::swift_error_codes::t_series::T01,
                     "BLOCK_INDEX",
                     &block_index.to_string(),
                     "1-5",
-                    &format!("Invalid block index: {}", block_index)
-                )
-            ));
+                    &format!("Invalid block index: {block_index}"),
+                ),
+            )));
         }
 
         let block_marker = format!("{{{block_index}:");
@@ -412,15 +412,15 @@ impl SwiftParser {
                         Ok(None)
                     }
                 }
-                _ => Err(ParseError::SwiftValidation(
+                _ => Err(ParseError::SwiftValidation(Box::new(
                     crate::errors::SwiftValidationError::format_error(
                         crate::swift_error_codes::t_series::T02,
                         "BLOCK",
                         &block_index.to_string(),
                         "1-5",
-                        &format!("Invalid block index: {block_index}")
-                    )
-                )),
+                        &format!("Invalid block index: {block_index}"),
+                    ),
+                ))),
             }
         } else {
             Ok(None)
@@ -685,7 +685,7 @@ mod tests {
         // Test invalid block index (should return SWIFT validation error)
         let result_none = SwiftParser::extract_block(raw_message, 6);
         assert!(result_none.is_err());
-        
+
         // Test valid block that doesn't exist (should return Ok(None))
         let result_block3 = SwiftParser::extract_block(raw_message, 3);
         assert!(result_block3.is_ok());

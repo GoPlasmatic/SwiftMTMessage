@@ -39,9 +39,9 @@
 //!
 //! // Handle validation errors
 //! let validation_result = ValidationResult::with_errors(vec![
-//!     ValidationError::FormatValidation { 
-//!         field_tag: "20".to_string(), 
-//!         message: "Invalid format".to_string() 
+//!     ValidationError::FormatValidation {
+//!         field_tag: "20".to_string(),
+//!         message: "Invalid format".to_string()
 //!     },
 //! ]);
 //! if !validation_result.is_valid {
@@ -105,7 +105,7 @@ pub enum ParseError {
     IoError { message: String },
 
     #[error(transparent)]
-    SwiftValidation(SwiftValidationError),
+    SwiftValidation(Box<SwiftValidationError>),
 
     #[error("Serialization error: {message}")]
     SerializationError { message: String },
@@ -143,27 +143,27 @@ pub enum SwiftValidationError {
     /// T-Series: Technical/Format Validation Errors (275 codes)
     /// Format validation errors for field structure and basic syntax compliance
     #[error(transparent)]
-    Format(SwiftFormatError),
+    Format(Box<SwiftFormatError>),
 
     /// C-Series: Conditional/Business Rules Errors (57 codes)
     /// Business logic validation for conditional fields and cross-field relationships
     #[error(transparent)]
-    Business(SwiftBusinessError),
+    Business(Box<SwiftBusinessError>),
 
     /// D-Series: Data/Content Validation Errors (77 codes)
     /// Content-specific validation including regional requirements and dependencies
     #[error(transparent)]
-    Content(SwiftContentError),
+    Content(Box<SwiftContentError>),
 
     /// E-Series: Enhanced/Field Relation Validation Errors (86 codes)
     /// Advanced validation for instruction codes and complex business rules
     #[error(transparent)]
-    Relation(SwiftRelationError),
+    Relation(Box<SwiftRelationError>),
 
     /// G-Series: General/Field Validation Errors (823 codes)
     /// General field validation across all MT categories
     #[error(transparent)]
-    General(SwiftGeneralError),
+    General(Box<SwiftGeneralError>),
 }
 
 /// T-Series: Technical/Format Validation Error
@@ -361,14 +361,14 @@ impl SwiftValidationError {
         expected: &str,
         message: &str,
     ) -> Self {
-        SwiftValidationError::Format(SwiftFormatError {
+        SwiftValidationError::Format(Box::new(SwiftFormatError {
             code: code.to_string(),
             field: field.to_string(),
             value: value.to_string(),
             expected: expected.to_string(),
             message: message.to_string(),
             context: None,
-        })
+        }))
     }
 
     /// Create a C-series business rule validation error
@@ -379,14 +379,14 @@ impl SwiftValidationError {
         message: &str,
         rule_description: &str,
     ) -> Self {
-        SwiftValidationError::Business(SwiftBusinessError {
+        SwiftValidationError::Business(Box::new(SwiftBusinessError {
             code: code.to_string(),
             field: field.to_string(),
             related_fields,
             message: message.to_string(),
             rule_description: rule_description.to_string(),
             context: None,
-        })
+        }))
     }
 
     /// Create a D-series content validation error
@@ -397,14 +397,14 @@ impl SwiftValidationError {
         message: &str,
         requirements: &str,
     ) -> Self {
-        SwiftValidationError::Content(SwiftContentError {
+        SwiftValidationError::Content(Box::new(SwiftContentError {
             code: code.to_string(),
             field: field.to_string(),
             content: content.to_string(),
             message: message.to_string(),
             requirements: requirements.to_string(),
             context: None,
-        })
+        }))
     }
 
     /// Create an E-series relation validation error
@@ -415,7 +415,7 @@ impl SwiftValidationError {
         message: &str,
         rule_description: &str,
     ) -> Self {
-        SwiftValidationError::Relation(SwiftRelationError {
+        SwiftValidationError::Relation(Box::new(SwiftRelationError {
             code: code.to_string(),
             field: field.to_string(),
             related_fields,
@@ -423,7 +423,7 @@ impl SwiftValidationError {
             message: message.to_string(),
             rule_description: rule_description.to_string(),
             context: None,
-        })
+        }))
     }
 
     /// Create a G-series general validation error
@@ -434,14 +434,14 @@ impl SwiftValidationError {
         message: &str,
         category: Option<&str>,
     ) -> Self {
-        SwiftValidationError::General(SwiftGeneralError {
+        SwiftValidationError::General(Box::new(SwiftGeneralError {
             code: code.to_string(),
             field: field.to_string(),
             value: value.to_string(),
             message: message.to_string(),
             category: category.map(|s| s.to_string()),
             context: None,
-        })
+        }))
     }
 
     /// Get the error code from any SWIFT validation error
@@ -509,7 +509,7 @@ impl From<SwiftValidationError> for ValidationError {
 /// Convert SwiftValidationError to ParseError
 impl From<SwiftValidationError> for ParseError {
     fn from(validation_error: SwiftValidationError) -> Self {
-        ParseError::SwiftValidation(validation_error)
+        ParseError::SwiftValidation(Box::new(validation_error))
     }
 }
 

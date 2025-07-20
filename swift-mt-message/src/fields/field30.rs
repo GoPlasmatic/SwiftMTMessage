@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 30: Date Specifications**
+///   **Field 30: Date Specifications**
 ///
 /// ## Purpose
 /// Specifies various types of dates critical to financial transaction processing, including
@@ -120,8 +120,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Settlement Guidelines: Business Day Conventions
 /// - Market Calendars: Holiday and Business Day References
 /// - Processing Standards: Date-Based Transaction Handling
-
-/// **Field 30: Execution Date**
+///
+///   **Field 30: Execution Date**
 ///
 /// Basic execution date specification for transaction processing timing.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]

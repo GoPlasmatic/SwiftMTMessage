@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 72: Sender to Receiver Information**
+///   **Field 72: Sender to Receiver Information**
 ///
 /// ## Purpose
 /// Specifies additional information for the Receiver or other specified party in

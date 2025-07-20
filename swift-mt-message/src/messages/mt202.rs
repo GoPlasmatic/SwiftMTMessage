@@ -18,7 +18,7 @@ use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 /// - Subject to SRG2025 contingency processing for FI-to-FI transfers
 ///
 /// ## Key Features
-/// - **Dual Sequence Structure**: 
+/// - **Dual Sequence Structure**:
 ///   - Sequence A: Basic interbank transfer details
 ///   - Sequence B: Cover payment details (when applicable)
 /// - **Flexible Routing**: Support for correspondent banking chains through fields 52-57

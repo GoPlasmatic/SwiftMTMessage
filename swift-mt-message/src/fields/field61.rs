@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 61: Statement Line**
+///   **Field 61: Statement Line**
 ///
 /// ## Purpose
 /// Represents individual transaction entries in customer statement messages (MT 940),

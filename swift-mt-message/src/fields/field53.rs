@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 53: Sender's Correspondent**
+///   **Field 53: Sender's Correspondent**
 ///
 /// ## Purpose
 /// Specifies the account or branch of the Sender through which reimbursement will occur
@@ -97,8 +97,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Correspondent Banking Guidelines: Relationship Management Standards
 /// - Settlement Systems: Cross-Border Settlement Mechanisms
 /// - Risk Management: Correspondent Banking Risk Assessment
-
-/// **Field 53A: Sender's Correspondent (BIC with Party Identifier)**
+///
+///   **Field 53A: Sender's Correspondent (BIC with Party Identifier)**
 ///
 /// Structured correspondent identification using BIC code with optional party identifier.
 /// Preferred option for automated correspondent banking processing.
@@ -119,7 +119,7 @@ pub struct Field53A {
     pub bic: String,
 }
 
-/// **Field 53B: Sender's Correspondent (Party Identifier with Location)**
+///   **Field 53B: Sender's Correspondent (Party Identifier with Location)**
 ///
 /// Domestic correspondent routing using party identifier and location details.
 /// Used when multiple correspondent accounts exist and location-based routing is required.
@@ -140,7 +140,7 @@ pub struct Field53B {
     pub location: Option<String>,
 }
 
-/// **Field 53D: Sender's Correspondent (Party Identifier with Name and Address)**
+///   **Field 53D: Sender's Correspondent (Party Identifier with Name and Address)**
 ///
 /// Detailed correspondent identification with full name and address information.
 /// Used when structured BIC identification is not available for correspondent.

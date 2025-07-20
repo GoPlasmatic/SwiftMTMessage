@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 55: Third Reimbursement Institution**
+///   **Field 55: Third Reimbursement Institution**
 ///
 /// ## Purpose
 /// Specifies the Receiver's branch when funds are made available through a different
@@ -93,8 +93,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Correspondent Banking Guidelines: Complex Settlement Chain Management
 /// - Multi-Institution Settlement: Risk and Operational Considerations
 /// - Cross-Border Payments: Advanced Correspondent Banking Arrangements
-
-/// **Field 55A: Third Reimbursement Institution (BIC with Party Identifier)**
+///
+///   **Field 55A: Third Reimbursement Institution (BIC with Party Identifier)**
 ///
 /// Structured third institution identification using BIC code with optional party identifier.
 /// Used for complex correspondent banking chains requiring additional institutional routing.
@@ -115,7 +115,7 @@ pub struct Field55A {
     pub bic: String,
 }
 
-/// **Field 55B: Third Reimbursement Institution (Party Identifier with Location)**
+///   **Field 55B: Third Reimbursement Institution (Party Identifier with Location)**
 ///
 /// Domestic third institution routing using party identifier and location details.
 /// Used for location-based routing in complex domestic settlement arrangements.
@@ -136,7 +136,7 @@ pub struct Field55B {
     pub location: Option<String>,
 }
 
-/// **Field 55D: Third Reimbursement Institution (Party Identifier with Name and Address)**
+///   **Field 55D: Third Reimbursement Institution (Party Identifier with Name and Address)**
 ///
 /// Detailed third institution identification with full name and address information.
 /// Used when structured BIC identification is not available for third institution.

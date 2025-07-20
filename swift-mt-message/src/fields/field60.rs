@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 60: Opening Balance**
+///   **Field 60: Opening Balance**
 ///
 /// ## Purpose
 /// Specifies the opening balance of an account in customer statement messages (MT 940)
@@ -68,8 +68,8 @@ use swift_mt_message_macros::SwiftField;
 /// - MT 940 Message Standards: Customer Statement Message
 /// - Cash Management Guidelines: Balance Processing Standards
 /// - Account Statement Requirements: Regional Banking Standards
-
-/// **Field 60F: First Opening Balance**
+///
+///   **Field 60F: First Opening Balance**
 ///
 /// Initial opening balance at the beginning of a statement period.
 /// Used when starting a new statement or account balance sequence.
@@ -104,7 +104,7 @@ pub struct Field60F {
     pub amount: f64,
 }
 
-/// **Field 60M: Intermediate Opening Balance**
+///   **Field 60M: Intermediate Opening Balance**
 ///
 /// Opening balance after a sequence break within a statement period.
 /// Used to maintain balance continuity across statement sequences.

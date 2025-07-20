@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 62: Closing Balance**
+///   **Field 62: Closing Balance**
 ///
 /// ## Purpose
 /// Specifies the closing balance of an account in customer statement messages (MT 940)
@@ -80,8 +80,8 @@ use swift_mt_message_macros::SwiftField;
 /// - MT 940 Message Standards: Customer Statement Message
 /// - Cash Management Guidelines: Balance Processing Standards
 /// - Account Statement Requirements: Regional Banking Standards
-
-/// **Field 62F: Final Closing Balance**
+///
+///   **Field 62F: Final Closing Balance**
 ///
 /// Final closing balance at the end of a complete statement period.
 /// Represents the definitive account position after all transactions.
@@ -116,7 +116,7 @@ pub struct Field62F {
     pub amount: f64,
 }
 
-/// **Field 62M: Intermediate Closing Balance**
+///   **Field 62M: Intermediate Closing Balance**
 ///
 /// Closing balance at a sequence break within a statement period.
 /// Used to maintain balance continuity across statement sequences.

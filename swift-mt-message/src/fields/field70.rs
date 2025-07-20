@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 70: Remittance Information**
+///   **Field 70: Remittance Information**
 ///
 /// ## Purpose
 /// Specifies details of individual transactions or references to other messages containing

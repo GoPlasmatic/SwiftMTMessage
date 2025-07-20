@@ -71,7 +71,7 @@ use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 /// The message must identify the originator through either:
 /// - **Field 50**: When the credit originates from a customer
 /// - **Field 52**: When the credit originates from a financial institution
-/// 
+///
 /// This distinction is important for:
 /// - Compliance and regulatory reporting
 /// - Know Your Customer (KYC) requirements

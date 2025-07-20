@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 86: Information to Account Owner**
+///   **Field 86: Information to Account Owner**
 ///
 /// ## Purpose
 /// Provides additional information to the account owner regarding specific transactions

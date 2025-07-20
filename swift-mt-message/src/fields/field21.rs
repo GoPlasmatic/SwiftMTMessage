@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 21: Related Reference / Transaction Reference**
+///   **Field 21: Related Reference / Transaction Reference**
 ///
 /// ## Purpose
 /// Specifies a unique reference assigned by the sending financial institution to unambiguously
@@ -119,8 +119,8 @@ use swift_mt_message_macros::SwiftField;
 /// - MT Message Reference Guide: Field 21 Specifications
 /// - STP Guidelines: Reference Format Requirements
 /// - Payment Processing Standards: Transaction Identification
-
-/// **Field 21 NoOption: Basic Transaction Reference**
+///
+///   **Field 21 NoOption: Basic Transaction Reference**
 ///
 /// Basic transaction reference used in customer payment instructions.
 /// Limited to 16 characters for simple transaction identification.
@@ -134,7 +134,7 @@ pub struct Field21NoOption {
     pub reference: String,
 }
 
-/// **Field 21C: Customer-Specific Reference**
+///   **Field 21C: Customer-Specific Reference**
 ///
 /// Extended reference capability for customer-specific transaction identification
 /// in treasury operations and complex financial transactions.
@@ -148,7 +148,7 @@ pub struct Field21C {
     pub reference: String,
 }
 
-/// **Field 21D: Deal Reference**
+///   **Field 21D: Deal Reference**
 ///
 /// Deal reference for treasury and money market transactions, providing
 /// detailed identification for financial market operations.
@@ -162,7 +162,7 @@ pub struct Field21D {
     pub reference: String,
 }
 
-/// **Field 21E: Related Reference**
+///   **Field 21E: Related Reference**
 ///
 /// Related reference for linking transactions and instructions across
 /// multiple messages in a transaction chain.
@@ -176,7 +176,7 @@ pub struct Field21E {
     pub reference: String,
 }
 
-/// **Field 21F: File Reference**
+///   **Field 21F: File Reference**
 ///
 /// File reference for batch operations, enabling grouping and identification
 /// of multiple transactions processed together.
@@ -190,7 +190,7 @@ pub struct Field21F {
     pub reference: String,
 }
 
-/// **Field 21R: Related File Reference**
+///   **Field 21R: Related File Reference**
 ///
 /// Related file reference for linking to previously sent file references
 /// in batch processing scenarios.

@@ -61,13 +61,13 @@ pub mod validation;
 
 // Re-export core types
 pub use errors::{
-    ParseError, Result, ValidationError, SwiftValidationError, SwiftValidationResult,
-    SwiftFormatError, SwiftBusinessError, SwiftContentError, SwiftRelationError, SwiftGeneralError,
-    error_codes,
+    error_codes, ParseError, Result, SwiftBusinessError, SwiftContentError, SwiftFormatError,
+    SwiftGeneralError, SwiftRelationError, SwiftValidationError, SwiftValidationResult,
+    ValidationError,
 };
-pub use swift_error_codes as swift_codes;
 pub use headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 pub use parser::SwiftParser;
+pub use swift_error_codes as swift_codes;
 
 // Re-export derive macros
 pub use swift_mt_message_macros::{serde_swift_fields, SwiftField, SwiftMessage};
@@ -898,7 +898,7 @@ pub fn get_field_tag_with_variant<T>(base_tag: &str, field_value: &T) -> String
 where
     T: std::fmt::Debug,
 {
-    let debug_string = format!("{:?}", field_value);
+    let debug_string = format!("{field_value:?}");
 
     // Extract variant from debug string (e.g., "K(...)" -> "K")
     if let Some(variant_end) = debug_string.find('(') {
@@ -908,7 +908,7 @@ where
         if variant == "NoOption" {
             base_tag.to_string()
         } else {
-            format!("{}{}", base_tag, variant)
+            format!("{base_tag}{variant}")
         }
     } else {
         base_tag.to_string()
@@ -1105,10 +1105,10 @@ mod tests {
         println!("✓ Using known good MT103 message");
 
         // Parse the MT string
-        let parsed_message = SwiftParser::parse_auto(&mt_string).unwrap_or_else(|e| {
-            eprintln!("Failed to parse MT string: {}", e);
-            eprintln!("MT String was:\n{}", mt_string);
-            panic!("Failed to parse MT string: {}", e);
+        let parsed_message = SwiftParser::parse_auto(mt_string).unwrap_or_else(|e| {
+            eprintln!("Failed to parse MT string: {e}");
+            eprintln!("MT String was:\n{mt_string}");
+            panic!("Failed to parse MT string: {e}");
         });
         println!("✓ Successfully parsed MT string to message");
 
@@ -1313,8 +1313,8 @@ mod tests {
         }
 
         println!("\n=== Test Data Round-trip Results ===");
-        println!("✓ Successful: {}", successful_tests);
-        println!("✗ Failed: {}", failed_tests);
+        println!("✓ Successful: {successful_tests}");
+        println!("✗ Failed: {failed_tests}");
         println!("Total files tested: {}", successful_tests + failed_tests);
 
         // Fail the test if any files failed to parse or round-trip
@@ -1323,10 +1323,7 @@ mod tests {
         }
 
         if successful_tests > 0 {
-            println!(
-                "✓ Round-trip functionality works with {} test files",
-                successful_tests
-            );
+            println!("✓ Round-trip functionality works with {successful_tests} test files");
         }
     }
 }

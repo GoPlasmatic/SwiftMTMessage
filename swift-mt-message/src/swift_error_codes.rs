@@ -1,17 +1,17 @@
 //! Complete SWIFT Error Code Constants
-//! 
+//!
 //! This module contains all 1,335 official SWIFT error codes organized by series
 //! and extracted from the SWIFT Standards Release Guide 2025.
-//! 
+//!
 //! Error codes are organized into five main series:
 //! - T-Series: Technical/Format Validation (275 codes)
 //! - C-Series: Conditional/Business Rules (57 codes)
 //! - D-Series: Data/Content Validation (77 codes)
-//! - E-Series: Enhanced/Field Relation Validation (86 codes) 
+//! - E-Series: Enhanced/Field Relation Validation (86 codes)
 //! - G-Series: General/Field Validation (823 codes)
 
 /// T-Series: Technical/Format Validation Error Codes
-/// 
+///
 /// These errors relate to basic field format validation failures, including
 /// BIC validation, date formats, currency codes, and field structure.
 pub mod t_series {
@@ -27,7 +27,7 @@ pub mod t_series {
     pub const T52: &str = "T52"; // Invalid currency code (not ISO 4217 compliant)
     pub const T56: &str = "T56"; // Invalid structured address format
     pub const T73: &str = "T73"; // Invalid country code (not ISO 3166 compliant)
-    
+
     // Additional T-series codes for comprehensive validation
     pub const T01: &str = "T01"; // Invalid message structure
     pub const T02: &str = "T02"; // Invalid field tag
@@ -95,7 +95,7 @@ pub mod t_series {
 }
 
 /// C-Series: Conditional/Business Rules Error Codes
-/// 
+///
 /// These errors relate to business logic validation for conditional fields
 /// and cross-field relationships.
 pub mod c_series {
@@ -142,8 +142,8 @@ pub mod c_series {
 }
 
 /// D-Series: Data/Content Validation Error Codes
-/// 
-/// These errors relate to content-specific validation including regional 
+///
+/// These errors relate to content-specific validation including regional
 /// requirements and field dependencies.
 pub mod d_series {
     pub const D01: &str = "D01"; // Invalid data content
@@ -248,7 +248,7 @@ pub mod d_series {
 }
 
 /// E-Series: Enhanced/Field Relation Validation Error Codes
-/// 
+///
 /// These errors relate to advanced validation for instruction codes, field options,
 /// and complex business rules.
 pub mod e_series {
@@ -341,7 +341,7 @@ pub mod e_series {
 }
 
 /// G-Series: General/Field Validation Error Codes
-/// 
+///
 /// The largest category covering general field validation across all MT categories,
 /// particularly prominent in Categories 2, 3, 5-9.
 pub mod g_series {
@@ -411,14 +411,14 @@ pub mod g_series {
     pub const G700: &str = "G700"; // Method validation
     pub const G750: &str = "G750"; // Procedure validation
     pub const G800: &str = "G800"; // Process validation
-    // Note: In practice, this module would contain all 823 G-series codes
-    // This is a representative sample showing the naming convention
+                                   // Note: In practice, this module would contain all 823 G-series codes
+                                   // This is a representative sample showing the naming convention
 }
 
 /// Error code lookup and metadata
 pub mod metadata {
-    use std::collections::HashMap;
     use once_cell::sync::Lazy;
+    use std::collections::HashMap;
 
     /// Error code metadata structure
     #[derive(Debug, Clone)]
@@ -434,75 +434,96 @@ pub mod metadata {
     /// Static lookup table for error code metadata
     pub static ERROR_CODE_METADATA: Lazy<HashMap<&'static str, ErrorCodeInfo>> = Lazy::new(|| {
         let mut map = HashMap::new();
-        
+
         // T-Series metadata
-        map.insert("T08", ErrorCodeInfo {
-            code: "T08",
-            series: "T",
-            category: "Format Validation",
-            description: "Invalid code in field",
-            when_thrown: "Field contains invalid enumerated value",
-            mt_categories: &["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-        });
-        
-        map.insert("T27", ErrorCodeInfo {
-            code: "T27",
-            series: "T",
-            category: "Format Validation", 
-            description: "Invalid BIC code format",
-            when_thrown: "BIC doesn't match required pattern",
-            mt_categories: &["1", "2", "3", "5"],
-        });
-        
-        map.insert("T50", ErrorCodeInfo {
-            code: "T50",
-            series: "T",
-            category: "Format Validation",
-            description: "Invalid date format",
-            when_thrown: "Date not in YYMMDD format",
-            mt_categories: &["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-        });
-        
+        map.insert(
+            "T08",
+            ErrorCodeInfo {
+                code: "T08",
+                series: "T",
+                category: "Format Validation",
+                description: "Invalid code in field",
+                when_thrown: "Field contains invalid enumerated value",
+                mt_categories: &["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            },
+        );
+
+        map.insert(
+            "T27",
+            ErrorCodeInfo {
+                code: "T27",
+                series: "T",
+                category: "Format Validation",
+                description: "Invalid BIC code format",
+                when_thrown: "BIC doesn't match required pattern",
+                mt_categories: &["1", "2", "3", "5"],
+            },
+        );
+
+        map.insert(
+            "T50",
+            ErrorCodeInfo {
+                code: "T50",
+                series: "T",
+                category: "Format Validation",
+                description: "Invalid date format",
+                when_thrown: "Date not in YYMMDD format",
+                mt_categories: &["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            },
+        );
+
         // C-Series metadata
-        map.insert("C02", ErrorCodeInfo {
-            code: "C02",
-            series: "C",
-            category: "Business Rules",
-            description: "Currency code mismatch",
-            when_thrown: "Related fields have different currencies",
-            mt_categories: &["1", "2", "3", "5"],
-        });
-        
+        map.insert(
+            "C02",
+            ErrorCodeInfo {
+                code: "C02",
+                series: "C",
+                category: "Business Rules",
+                description: "Currency code mismatch",
+                when_thrown: "Related fields have different currencies",
+                mt_categories: &["1", "2", "3", "5"],
+            },
+        );
+
         // D-Series metadata
-        map.insert("D19", ErrorCodeInfo {
-            code: "D19",
-            series: "D", 
-            category: "Content Validation",
-            description: "IBAN mandatory for SEPA",
-            when_thrown: "EU payment without IBAN in beneficiary field",
-            mt_categories: &["1"],
-        });
-        
+        map.insert(
+            "D19",
+            ErrorCodeInfo {
+                code: "D19",
+                series: "D",
+                category: "Content Validation",
+                description: "IBAN mandatory for SEPA",
+                when_thrown: "EU payment without IBAN in beneficiary field",
+                mt_categories: &["1"],
+            },
+        );
+
         // E-Series metadata
-        map.insert("E01", ErrorCodeInfo {
-            code: "E01",
-            series: "E",
-            category: "Relation Validation",
-            description: "Instruction code restrictions",
-            when_thrown: "Field 23E with SPRI can only contain SDVA, TELB, PHOB, INTC",
-            mt_categories: &["1"],
-        });
-        
+        map.insert(
+            "E01",
+            ErrorCodeInfo {
+                code: "E01",
+                series: "E",
+                category: "Relation Validation",
+                description: "Instruction code restrictions",
+                when_thrown: "Field 23E with SPRI can only contain SDVA, TELB, PHOB, INTC",
+                mt_categories: &["1"],
+            },
+        );
+
         // G-Series metadata
-        map.insert("G001", ErrorCodeInfo {
-            code: "G001",
-            series: "G",
-            category: "General Validation",
-            description: "Field format violation",
-            when_thrown: "Field doesn't match specified format pattern",
-            mt_categories: &["2", "3", "5", "6", "7", "8", "9"],
-        });
-        
+        map.insert(
+            "G001",
+            ErrorCodeInfo {
+                code: "G001",
+                series: "G",
+                category: "General Validation",
+                description: "Field format violation",
+                when_thrown: "Field doesn't match specified format pattern",
+                mt_categories: &["2", "3", "5", "6", "7", "8", "9"],
+            },
+        );
+
         map
     });
 
@@ -534,13 +555,11 @@ pub mod metadata {
 pub mod regional {
     /// SEPA country codes requiring IBAN validation
     pub const SEPA_COUNTRIES: &[&str] = &[
-        "AD", "AT", "BE", "BG", "BV", "CH", "CY", "CZ", "DE", "DK", 
-        "EE", "ES", "FI", "FR", "GB", "GF", "GI", "GP", "GR", "HU", 
-        "IE", "IS", "IT", "LI", "LT", "LU", "LV", "MC", "MQ", "MT", 
-        "NL", "NO", "PL", "PM", "PT", "RE", "RO", "SE", "SI", "SJ", 
-        "SK", "SM", "TF", "VA"
+        "AD", "AT", "BE", "BG", "BV", "CH", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GB",
+        "GF", "GI", "GP", "GR", "HU", "IE", "IS", "IT", "LI", "LT", "LU", "LV", "MC", "MQ", "MT",
+        "NL", "NO", "PL", "PM", "PT", "RE", "RO", "SE", "SI", "SJ", "SK", "SM", "TF", "VA",
     ];
-    
+
     /// Check if a country code is in the SEPA region
     pub fn is_sepa_country(country_code: &str) -> bool {
         SEPA_COUNTRIES.contains(&country_code)
@@ -551,7 +570,7 @@ pub mod regional {
 pub mod charges {
     /// Valid charge codes
     pub const CHARGE_CODES: &[&str] = &["BEN", "OUR", "SHA"];
-    
+
     /// Check if a charge code is valid
     pub fn is_valid_charge_code(code: &str) -> bool {
         CHARGE_CODES.contains(&code)
@@ -562,7 +581,7 @@ pub mod charges {
 pub mod currencies {
     /// Commodity currencies not allowed in payment messages
     pub const COMMODITY_CURRENCIES: &[&str] = &["XAU", "XAG", "XPD", "XPT"];
-    
+
     /// Check if a currency is a commodity currency
     pub fn is_commodity_currency(currency: &str) -> bool {
         COMMODITY_CURRENCIES.contains(&currency)

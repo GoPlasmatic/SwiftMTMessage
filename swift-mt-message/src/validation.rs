@@ -45,10 +45,10 @@
 //! All validation functions use pre-compiled static data structures for optimal performance.
 //! Currency and country code lookups use HashSet for O(1) validation time.
 
+use crate::errors::{SwiftValidationError, SwiftValidationResult};
+use crate::swift_error_codes::{currencies, t_series};
 use once_cell::sync::Lazy;
 use std::collections::HashSet;
-use crate::errors::{SwiftValidationError, SwiftValidationResult};
-use crate::swift_error_codes::{t_series, currencies};
 
 /// Valid ISO 4217 currency codes (major currencies including commodity currencies)
 static VALID_CURRENCIES: Lazy<HashSet<&'static str>> = Lazy::new(|| {
@@ -320,19 +320,22 @@ pub fn validate_bic_field(bic: &str, field_tag: &str) -> SwiftValidationResult<(
             field_tag,
             bic,
             "8 or 11 characters",
-            "Invalid BIC code length (must be 8 or 11 characters)"
+            "Invalid BIC code length (must be 8 or 11 characters)",
         ));
     }
 
     // Institution Code: 4 letters
     let institution_code = &bic[0..4];
-    if !institution_code.chars().all(|c| c.is_alphabetic() && c.is_uppercase()) {
+    if !institution_code
+        .chars()
+        .all(|c| c.is_alphabetic() && c.is_uppercase())
+    {
         return Err(SwiftValidationError::format_error(
             t_series::T29,
             field_tag,
             bic,
             "4 uppercase letters for institution code",
-            "Invalid BIC structure: institution code must be 4 uppercase letters"
+            "Invalid BIC structure: institution code must be 4 uppercase letters",
         ));
     }
 
@@ -344,32 +347,38 @@ pub fn validate_bic_field(bic: &str, field_tag: &str) -> SwiftValidationResult<(
             field_tag,
             bic,
             "valid ISO 3166-1 country code",
-            "Invalid country code in BIC"
+            "Invalid country code in BIC",
         ));
     }
 
     // Location Code: 2 alphanumeric characters
     let location_code = &bic[6..8];
-    if !location_code.chars().all(|c| c.is_alphanumeric() && c.is_uppercase()) {
+    if !location_code
+        .chars()
+        .all(|c| c.is_alphanumeric() && c.is_uppercase())
+    {
         return Err(SwiftValidationError::format_error(
             t_series::T29,
             field_tag,
             bic,
             "2 uppercase alphanumeric characters for location code",
-            "Invalid BIC structure: location code must be 2 uppercase alphanumeric characters"
+            "Invalid BIC structure: location code must be 2 uppercase alphanumeric characters",
         ));
     }
 
     // Branch Code: 3 alphanumeric characters (if present)
     if bic.len() == 11 {
         let branch_code = &bic[8..11];
-        if !branch_code.chars().all(|c| c.is_alphanumeric() && c.is_uppercase()) {
+        if !branch_code
+            .chars()
+            .all(|c| c.is_alphanumeric() && c.is_uppercase())
+        {
             return Err(SwiftValidationError::format_error(
                 t_series::T29,
                 field_tag,
                 bic,
                 "3 uppercase alphanumeric characters for branch code",
-                "Invalid BIC structure: branch code must be 3 uppercase alphanumeric characters"
+                "Invalid BIC structure: branch code must be 3 uppercase alphanumeric characters",
             ));
         }
     }
@@ -379,24 +388,31 @@ pub fn validate_bic_field(bic: &str, field_tag: &str) -> SwiftValidationResult<(
 
 /// Validate currency code with proper SWIFT T-series error reporting
 /// Returns T52 for invalid currency codes, T08 for commodity currencies in payment messages
-pub fn validate_currency_field(currency: &str, field_tag: &str, allow_commodity: bool) -> SwiftValidationResult<()> {
+pub fn validate_currency_field(
+    currency: &str,
+    field_tag: &str,
+    allow_commodity: bool,
+) -> SwiftValidationResult<()> {
     if currency.len() != 3 {
         return Err(SwiftValidationError::format_error(
             t_series::T52,
             field_tag,
             currency,
             "3-character ISO 4217 currency code",
-            "Invalid currency code length (must be 3 characters)"
+            "Invalid currency code length (must be 3 characters)",
         ));
     }
 
-    if !currency.chars().all(|c| c.is_alphabetic() && c.is_uppercase()) {
+    if !currency
+        .chars()
+        .all(|c| c.is_alphabetic() && c.is_uppercase())
+    {
         return Err(SwiftValidationError::format_error(
             t_series::T52,
             field_tag,
             currency,
             "3 uppercase letters",
-            "Invalid currency code format (must be 3 uppercase letters)"
+            "Invalid currency code format (must be 3 uppercase letters)",
         ));
     }
 
@@ -406,7 +422,7 @@ pub fn validate_currency_field(currency: &str, field_tag: &str, allow_commodity:
             field_tag,
             currency,
             "valid ISO 4217 currency code",
-            "Invalid currency code (not recognized in ISO 4217)"
+            "Invalid currency code (not recognized in ISO 4217)",
         ));
     }
 
@@ -417,7 +433,7 @@ pub fn validate_currency_field(currency: &str, field_tag: &str, allow_commodity:
             field_tag,
             currency,
             "non-commodity currency",
-            "Commodity currency codes (XAU, XAG, XPD, XPT) not allowed in payment messages"
+            "Commodity currency codes (XAU, XAG, XPD, XPT) not allowed in payment messages",
         ));
     }
 
@@ -433,7 +449,7 @@ pub fn validate_date_field(date: &str, field_tag: &str) -> SwiftValidationResult
             field_tag,
             date,
             "YYMMDD format (6 digits)",
-            "Invalid date format (must be YYMMDD)"
+            "Invalid date format (must be YYMMDD)",
         ));
     }
 
@@ -443,7 +459,7 @@ pub fn validate_date_field(date: &str, field_tag: &str) -> SwiftValidationResult
             field_tag,
             date,
             "6 numeric digits",
-            "Invalid date format (must contain only digits)"
+            "Invalid date format (must contain only digits)",
         ));
     }
 
@@ -457,7 +473,7 @@ pub fn validate_date_field(date: &str, field_tag: &str) -> SwiftValidationResult
             field_tag,
             date,
             "valid month (01-12)",
-            "Invalid date: month must be between 01 and 12"
+            "Invalid date: month must be between 01 and 12",
         ));
     }
 
@@ -467,7 +483,7 @@ pub fn validate_date_field(date: &str, field_tag: &str) -> SwiftValidationResult
             field_tag,
             date,
             "valid day (01-31)",
-            "Invalid date: day must be between 01 and 31"
+            "Invalid date: day must be between 01 and 31",
         ));
     }
 
@@ -476,14 +492,18 @@ pub fn validate_date_field(date: &str, field_tag: &str) -> SwiftValidationResult
 
 /// Validate amount format with proper SWIFT T-series error reporting
 /// Returns T40 for format errors, T43 for exceeding maximum digits
-pub fn validate_amount_field(amount: &str, field_tag: &str, currency: Option<&str>) -> SwiftValidationResult<()> {
+pub fn validate_amount_field(
+    amount: &str,
+    field_tag: &str,
+    currency: Option<&str>,
+) -> SwiftValidationResult<()> {
     if amount.is_empty() {
         return Err(SwiftValidationError::format_error(
             t_series::T40,
             field_tag,
             amount,
             "non-empty decimal amount",
-            "Amount cannot be empty"
+            "Amount cannot be empty",
         ));
     }
 
@@ -494,7 +514,7 @@ pub fn validate_amount_field(amount: &str, field_tag: &str, currency: Option<&st
             field_tag,
             amount,
             "valid decimal number",
-            "Invalid amount format (must be a valid decimal number)"
+            "Invalid amount format (must be a valid decimal number)",
         )
     })?;
 
@@ -504,7 +524,7 @@ pub fn validate_amount_field(amount: &str, field_tag: &str, currency: Option<&st
             field_tag,
             amount,
             "positive amount",
-            "Negative amounts not allowed"
+            "Negative amounts not allowed",
         ));
     }
 
@@ -515,7 +535,7 @@ pub fn validate_amount_field(amount: &str, field_tag: &str, currency: Option<&st
             field_tag,
             amount,
             "amount under 15 digits",
-            "Amount exceeds maximum allowed digits (15 total digits including decimals)"
+            "Amount exceeds maximum allowed digits (15 total digits including decimals)",
         ));
     }
 
@@ -524,8 +544,9 @@ pub fn validate_amount_field(amount: &str, field_tag: &str, currency: Option<&st
         let decimal_part = &amount[decimal_pos + 1..];
         let max_decimals = match currency {
             Some("JPY") | Some("KRW") | Some("VND") => 0, // No decimal places
-            Some("BHD") | Some("IQD") | Some("JOD") | Some("KWD") | Some("LYD") | Some("OMR") | Some("TND") => 3, // 3 decimal places
-            _ => 2, // Most currencies use 2 decimal places
+            Some("BHD") | Some("IQD") | Some("JOD") | Some("KWD") | Some("LYD") | Some("OMR")
+            | Some("TND") => 3, // 3 decimal places
+            _ => 2,                                       // Most currencies use 2 decimal places
         };
 
         if decimal_part.len() > max_decimals {
@@ -533,8 +554,8 @@ pub fn validate_amount_field(amount: &str, field_tag: &str, currency: Option<&st
                 t_series::T40,
                 field_tag,
                 amount,
-                &format!("maximum {} decimal places for currency", max_decimals),
-                &format!("Too many decimal places for currency (max {} allowed)", max_decimals)
+                &format!("maximum {max_decimals} decimal places for currency"),
+                &format!("Too many decimal places for currency (max {max_decimals} allowed)"),
             ));
         }
     }
@@ -552,7 +573,7 @@ pub fn validate_slash_usage(value: &str, field_tag: &str) -> SwiftValidationResu
             field_tag,
             value,
             "field without consecutive slashes",
-            "Field must not contain consecutive slashes '//'"
+            "Field must not contain consecutive slashes '//'",
         ));
     }
 
@@ -563,7 +584,7 @@ pub fn validate_slash_usage(value: &str, field_tag: &str) -> SwiftValidationResu
             field_tag,
             value,
             "field not ending with '/'",
-            "Field must not end with slash '/'"
+            "Field must not end with slash '/'",
         ));
     }
 
@@ -582,7 +603,7 @@ pub fn validate_address_format(address: &str, field_tag: &str) -> SwiftValidatio
             field_tag,
             address,
             "non-empty address",
-            "Address cannot be empty"
+            "Address cannot be empty",
         ));
     }
 
@@ -593,7 +614,7 @@ pub fn validate_address_format(address: &str, field_tag: &str) -> SwiftValidatio
             field_tag,
             address,
             "address without control characters",
-            "Address contains invalid control characters"
+            "Address contains invalid control characters",
         ));
     }
 
@@ -612,7 +633,7 @@ pub fn validate_identifier_format(identifier: &str, field_tag: &str) -> SwiftVal
             field_tag,
             identifier,
             "non-empty identifier",
-            "Identifier cannot be empty"
+            "Identifier cannot be empty",
         ));
     }
 
@@ -623,18 +644,21 @@ pub fn validate_identifier_format(identifier: &str, field_tag: &str) -> SwiftVal
             field_tag,
             identifier,
             "identifier with max 34 characters",
-            "Identifier exceeds maximum length of 34 characters"
+            "Identifier exceeds maximum length of 34 characters",
         ));
     }
 
     // Allow alphanumeric characters and common separators
-    if !identifier.chars().all(|c| c.is_alphanumeric() || "/.,()-".contains(c)) {
+    if !identifier
+        .chars()
+        .all(|c| c.is_alphanumeric() || "/.,()-".contains(c))
+    {
         return Err(SwiftValidationError::format_error(
             t_series::T45,
             field_tag,
             identifier,
             "alphanumeric characters and common separators (/.,()-)",
-            "Identifier contains invalid characters"
+            "Identifier contains invalid characters",
         ));
     }
 
@@ -643,14 +667,22 @@ pub fn validate_identifier_format(identifier: &str, field_tag: &str) -> SwiftVal
 
 /// Validate enumerated field values (T08 validation)
 /// Check if field contains valid enumerated values
-pub fn validate_enumerated_field(value: &str, field_tag: &str, valid_values: &[&str]) -> SwiftValidationResult<()> {
+pub fn validate_enumerated_field(
+    value: &str,
+    field_tag: &str,
+    valid_values: &[&str],
+) -> SwiftValidationResult<()> {
     if !valid_values.contains(&value) {
         return Err(SwiftValidationError::format_error(
             t_series::T08,
             field_tag,
             value,
             &format!("one of: {}", valid_values.join(", ")),
-            &format!("Invalid code '{}', must be one of: {}", value, valid_values.join(", "))
+            &format!(
+                "Invalid code '{}', must be one of: {}",
+                value,
+                valid_values.join(", ")
+            ),
         ));
     }
 
@@ -663,7 +695,11 @@ pub fn validate_charge_code(code: &str, field_tag: &str) -> SwiftValidationResul
 }
 
 /// Validate instruction codes for field 23E
-pub fn validate_instruction_code(code: &str, field_tag: &str, context: Option<&str>) -> SwiftValidationResult<()> {
+pub fn validate_instruction_code(
+    code: &str,
+    field_tag: &str,
+    context: Option<&str>,
+) -> SwiftValidationResult<()> {
     // Valid instruction codes depend on context (e.g., SPRI restrictions)
     let valid_codes = match context {
         Some("SPRI") => &["SDVA", "TELB", "PHOB", "INTC"][..],
@@ -676,10 +712,10 @@ pub fn validate_instruction_code(code: &str, field_tag: &str, context: Option<&s
 /// Comprehensive field format validation dispatcher
 /// Routes to appropriate T-series validation based on field type
 pub fn validate_field_format(
-    value: &str, 
-    field_tag: &str, 
+    value: &str,
+    field_tag: &str,
     format_spec: &str,
-    context: Option<&std::collections::HashMap<String, String>>
+    context: Option<&std::collections::HashMap<String, String>>,
 ) -> SwiftValidationResult<()> {
     match format_spec {
         "BIC" => validate_bic_field(value, field_tag),
@@ -689,19 +725,21 @@ pub fn validate_field_format(
                 .map(|v| v == "true")
                 .unwrap_or(false);
             validate_currency_field(value, field_tag, allow_commodity)
-        },
+        }
         "date" => validate_date_field(value, field_tag),
         "amount" => {
             let currency = context.and_then(|c| c.get("currency")).map(|s| s.as_str());
             validate_amount_field(value, field_tag, currency)
-        },
+        }
         "address" => validate_address_format(value, field_tag),
         "identifier" => validate_identifier_format(value, field_tag),
         "charge_code" => validate_charge_code(value, field_tag),
         "instruction_code" => {
-            let inst_context = context.and_then(|c| c.get("instruction_context")).map(|s| s.as_str());
+            let inst_context = context
+                .and_then(|c| c.get("instruction_context"))
+                .map(|s| s.as_str());
             validate_instruction_code(value, field_tag, inst_context)
-        },
+        }
         _ => {
             // Generic format validation for other field types
             validate_slash_usage(value, field_tag)?;
@@ -718,7 +756,7 @@ pub fn validate_message_type(actual: &str, expected: &str) -> SwiftValidationRes
             "MESSAGE_TYPE",
             actual,
             expected,
-            &format!("Message type mismatch: expected {}, got {}", expected, actual)
+            &format!("Message type mismatch: expected {expected}, got {actual}"),
         ))
     } else {
         Ok(())
@@ -745,17 +783,18 @@ pub struct MessageValidationContext {
 pub fn validate_currency_consistency(
     field1_tag: &str,
     field1_currency: &str,
-    field2_tag: &str, 
-    field2_currency: &str
+    field2_tag: &str,
+    field2_currency: &str,
 ) -> SwiftValidationResult<()> {
     if field1_currency != field2_currency {
         return Err(SwiftValidationError::business_error(
             c_series::C02,
             field1_tag,
             vec![field2_tag.to_string()],
-            &format!("Currency mismatch: {} has '{}' but {} has '{}'", 
-                field1_tag, field1_currency, field2_tag, field2_currency),
-            "Related fields must have matching currency codes"
+            &format!(
+                "Currency mismatch: {field1_tag} has '{field1_currency}' but {field2_tag} has '{field2_currency}'"
+            ),
+            "Related fields must have matching currency codes",
         ));
     }
     Ok(())
@@ -766,7 +805,7 @@ pub fn validate_currency_consistency(
 pub fn validate_amount_currency_rules(
     amount: &str,
     currency: &str,
-    field_tag: &str
+    field_tag: &str,
 ) -> SwiftValidationResult<()> {
     // Check decimal places for specific currencies
     if let Some(decimal_pos) = amount.find('.') {
@@ -782,9 +821,14 @@ pub fn validate_amount_currency_rules(
                 c_series::C03,
                 field_tag,
                 vec![],
-                &format!("Amount '{}' has {} decimal places but currency '{}' allows maximum {}", 
-                    amount, decimal_part.len(), currency, expected_decimals),
-                "Amount decimal places must match currency requirements"
+                &format!(
+                    "Amount '{}' has {} decimal places but currency '{}' allows maximum {}",
+                    amount,
+                    decimal_part.len(),
+                    currency,
+                    expected_decimals
+                ),
+                "Amount decimal places must match currency requirements",
             ));
         }
 
@@ -794,9 +838,10 @@ pub fn validate_amount_currency_rules(
                 c_series::C03,
                 field_tag,
                 vec![],
-                &format!("Currency '{}' does not allow decimal places but amount '{}' has decimals", 
-                    currency, amount),
-                "Amount must be integer for this currency"
+                &format!(
+                    "Currency '{currency}' does not allow decimal places but amount '{amount}' has decimals"
+                ),
+                "Amount must be integer for this currency",
             ));
         }
     }
@@ -809,16 +854,17 @@ pub fn validate_amount_currency_rules(
 pub fn validate_conditional_field_presence(
     context: &MessageValidationContext,
     trigger_field: &str,
-    required_field: &str
+    required_field: &str,
 ) -> SwiftValidationResult<()> {
     if context.fields.contains_key(trigger_field) && !context.fields.contains_key(required_field) {
         return Err(SwiftValidationError::business_error(
             c_series::C81,
             trigger_field,
             vec![required_field.to_string()],
-            &format!("Field {} is present but required field {} is missing", 
-                trigger_field, required_field),
-            "Conditional field dependency violated"
+            &format!(
+                "Field {trigger_field} is present but required field {required_field} is missing"
+            ),
+            "Conditional field dependency violated",
         ));
     }
     Ok(())
@@ -830,10 +876,10 @@ pub fn validate_sepa_iban_requirement(
     beneficiary_field: &str,
     beneficiary_country: Option<&str>,
     sender_country: Option<&str>,
-    field_tag: &str
+    field_tag: &str,
 ) -> SwiftValidationResult<()> {
     use crate::swift_error_codes::regional;
-    
+
     // Check if both countries are SEPA countries
     let both_sepa = beneficiary_country
         .zip(sender_country)
@@ -844,14 +890,17 @@ pub fn validate_sepa_iban_requirement(
 
     if both_sepa {
         // For SEPA payments, IBAN should be present (simplified check for demo)
-        if !beneficiary_field.contains("IBAN") && !beneficiary_field.starts_with("DE") && 
-           !beneficiary_field.starts_with("FR") && !beneficiary_field.starts_with("IT") {
+        if !beneficiary_field.contains("IBAN")
+            && !beneficiary_field.starts_with("DE")
+            && !beneficiary_field.starts_with("FR")
+            && !beneficiary_field.starts_with("IT")
+        {
             return Err(SwiftValidationError::content_error(
                 d_series::D19,
                 field_tag,
                 beneficiary_field,
                 "IBAN is mandatory for SEPA (Single Euro Payments Area) transactions",
-                "Payments between SEPA countries must include IBAN"
+                "Payments between SEPA countries must include IBAN",
             ));
         }
     }
@@ -864,7 +913,7 @@ pub fn validate_sepa_iban_requirement(
 pub fn validate_eu_instructed_amount_requirement(
     context: &MessageValidationContext,
     sender_country: Option<&str>,
-    receiver_country: Option<&str>
+    receiver_country: Option<&str>,
 ) -> SwiftValidationResult<()> {
     use crate::swift_error_codes::regional;
 
@@ -882,7 +931,7 @@ pub fn validate_eu_instructed_amount_requirement(
             "33B",
             "",
             "Field 33B (Instructed Amount) is mandatory for intra-European transfers",
-            "European country combination requires instructed amount"
+            "European country combination requires instructed amount",
         ));
     }
 
@@ -893,7 +942,7 @@ pub fn validate_eu_instructed_amount_requirement(
 /// Validates field restrictions when SHA charge code is used
 pub fn validate_sha_charge_restrictions(
     context: &MessageValidationContext,
-    charge_code: &str
+    charge_code: &str,
 ) -> SwiftValidationResult<()> {
     if charge_code == "SHA" {
         // Field 71F is optional, 71G is not allowed with SHA
@@ -903,7 +952,7 @@ pub fn validate_sha_charge_restrictions(
                 "71G",
                 context.fields.get("71G").unwrap_or(&"".to_string()),
                 "Field 71G (Receiver's Charges) not allowed with SHA charge code",
-                "SHA (shared) charges prohibit receiver charges field"
+                "SHA (shared) charges prohibit receiver charges field",
             ));
         }
     }
@@ -916,16 +965,17 @@ pub fn validate_sha_charge_restrictions(
 pub fn validate_exchange_rate_requirement(
     context: &MessageValidationContext,
     primary_currency: &str,
-    secondary_currency: &str
+    secondary_currency: &str,
 ) -> SwiftValidationResult<()> {
     if primary_currency != secondary_currency && !context.fields.contains_key("36") {
         return Err(SwiftValidationError::content_error(
             d_series::D75,
             "36",
             "",
-            &format!("Exchange rate field 36 is mandatory when currencies differ ('{}' vs '{}')", 
-                primary_currency, secondary_currency),
-            "Different currencies require exchange rate specification"
+            &format!(
+                "Exchange rate field 36 is mandatory when currencies differ ('{primary_currency}' vs '{secondary_currency}')"
+            ),
+            "Different currencies require exchange rate specification",
         ));
     }
 
@@ -937,7 +987,7 @@ pub fn validate_exchange_rate_requirement(
 pub fn validate_spri_instruction_restrictions(
     instruction_code: &str,
     bank_operation_code: Option<&str>,
-    field_tag: &str
+    field_tag: &str,
 ) -> SwiftValidationResult<()> {
     if let Some("SPRI") = bank_operation_code {
         let allowed_codes = ["SDVA", "TELB", "PHOB", "INTC"];
@@ -946,9 +996,12 @@ pub fn validate_spri_instruction_restrictions(
                 e_series::E01,
                 field_tag,
                 vec!["23B".to_string()],
-                &format!("Instruction code '{}' not allowed with SPRI. Allowed codes: {}", 
-                    instruction_code, allowed_codes.join(", ")),
-                "SPRI bank operation code restricts allowed instruction codes"
+                &format!(
+                    "Instruction code '{}' not allowed with SPRI. Allowed codes: {}",
+                    instruction_code,
+                    allowed_codes.join(", ")
+                ),
+                "SPRI bank operation code restricts allowed instruction codes",
             ));
         }
     }
@@ -961,7 +1014,7 @@ pub fn validate_spri_instruction_restrictions(
 pub fn validate_field_option_restrictions(
     field_option: &str,
     context_code: Option<&str>,
-    field_tag: &str
+    field_tag: &str,
 ) -> SwiftValidationResult<()> {
     // Field 53a cannot use option D with SPRI/SSTD/SPAY
     if field_tag == "53A" && field_option == "D" {
@@ -971,8 +1024,8 @@ pub fn validate_field_option_restrictions(
                     e_series::E03,
                     field_tag,
                     vec!["23B".to_string()],
-                    &format!("Field {}a option D not allowed with {}", field_tag, code),
-                    "Field option restrictions apply for specific bank operation codes"
+                    &format!("Field {field_tag}a option D not allowed with {code}"),
+                    "Field option restrictions apply for specific bank operation codes",
                 ));
             }
         }
@@ -984,10 +1037,11 @@ pub fn validate_field_option_restrictions(
 /// E-Series: Multiple field dependency (E06)
 /// Validates that if field 55a is present, both 53a and 54a are required
 pub fn validate_multiple_field_dependency(
-    context: &MessageValidationContext
+    context: &MessageValidationContext,
 ) -> SwiftValidationResult<()> {
     if context.fields.contains_key("55A") {
-        let missing_fields: Vec<String> = ["53A", "54A"].iter()
+        let missing_fields: Vec<String> = ["53A", "54A"]
+            .iter()
             .filter(|&&field| !context.fields.contains_key(field))
             .map(|&field| field.to_string())
             .collect();
@@ -997,9 +1051,11 @@ pub fn validate_multiple_field_dependency(
                 e_series::E06,
                 "55A",
                 missing_fields.clone(),
-                &format!("Field 55A is present but required fields are missing: {}", 
-                    missing_fields.join(", ")),
-                "Field 55A presence requires both fields 53A and 54A"
+                &format!(
+                    "Field 55A is present but required fields are missing: {}",
+                    missing_fields.join(", ")
+                ),
+                "Field 55A presence requires both fields 53A and 54A",
             ));
         }
     }
@@ -1011,7 +1067,7 @@ pub fn validate_multiple_field_dependency(
 /// Validates field restrictions when OUR charge code is used
 pub fn validate_our_charge_restrictions(
     context: &MessageValidationContext,
-    charge_code: &str
+    charge_code: &str,
 ) -> SwiftValidationResult<()> {
     if charge_code == "OUR" {
         // Field 71F is not allowed, 71G is optional with OUR
@@ -1021,7 +1077,7 @@ pub fn validate_our_charge_restrictions(
                 "71F",
                 vec!["71A".to_string()],
                 "Field 71F (Sender's Charges) not allowed with OUR charge code",
-                "OUR (payer) charges prohibit sender charges field"
+                "OUR (payer) charges prohibit sender charges field",
             ));
         }
     }
@@ -1033,7 +1089,7 @@ pub fn validate_our_charge_restrictions(
 /// Validates field requirements when BEN charge code is used
 pub fn validate_ben_charge_requirements(
     context: &MessageValidationContext,
-    charge_code: &str
+    charge_code: &str,
 ) -> SwiftValidationResult<()> {
     if charge_code == "BEN" {
         // Field 71F is mandatory, 71G is not allowed with BEN
@@ -1043,7 +1099,7 @@ pub fn validate_ben_charge_requirements(
                 "71F",
                 vec!["71A".to_string()],
                 "Field 71F (Sender's Charges) is mandatory with BEN charge code",
-                "BEN (beneficiary) charges require sender charges field"
+                "BEN (beneficiary) charges require sender charges field",
             ));
         }
 
@@ -1053,7 +1109,7 @@ pub fn validate_ben_charge_requirements(
                 "71G",
                 vec!["71A".to_string()],
                 "Field 71G (Receiver's Charges) not allowed with BEN charge code",
-                "BEN (beneficiary) charges prohibit receiver charges field"
+                "BEN (beneficiary) charges prohibit receiver charges field",
             ));
         }
     }
@@ -1064,12 +1120,12 @@ pub fn validate_ben_charge_requirements(
 /// Comprehensive message-level business rule validation
 /// Validates all C/D/E-series business rules for a complete message
 pub fn validate_message_business_rules(
-    context: &MessageValidationContext
+    context: &MessageValidationContext,
 ) -> Vec<SwiftValidationError> {
     let mut errors = Vec::new();
 
     // Example validations - in practice, this would include all relevant business rules
-    
+
     // Validate charge code restrictions
     if let Some(charge_code) = context.fields.get("71A") {
         if let Err(error) = validate_sha_charge_restrictions(context, charge_code) {
@@ -1084,12 +1140,16 @@ pub fn validate_message_business_rules(
     }
 
     // Validate currency consistency between fields 32A and 33B
-    if let (Some(field_32a), Some(field_33b)) = (context.fields.get("32A"), context.fields.get("33B")) {
+    if let (Some(field_32a), Some(field_33b)) =
+        (context.fields.get("32A"), context.fields.get("33B"))
+    {
         // Extract currency from amount fields (simplified - in practice would parse field properly)
         if field_32a.len() >= 9 && field_33b.len() >= 3 {
             let currency_32a = &field_32a[6..9]; // Simplified extraction
             let currency_33b = &field_33b[0..3]; // Simplified extraction
-            if let Err(error) = validate_currency_consistency("32A", currency_32a, "33B", currency_33b) {
+            if let Err(error) =
+                validate_currency_consistency("32A", currency_32a, "33B", currency_33b)
+            {
                 errors.push(error);
             }
         }
@@ -1107,7 +1167,9 @@ pub fn validate_message_business_rules(
 
     // Validate SEPA requirements for European transfers
     if let (Some(sender), Some(receiver)) = (&context.sender_country, &context.receiver_country) {
-        if let Err(error) = validate_eu_instructed_amount_requirement(context, Some(sender), Some(receiver)) {
+        if let Err(error) =
+            validate_eu_instructed_amount_requirement(context, Some(sender), Some(receiver))
+        {
             errors.push(error);
         }
     }
@@ -1432,7 +1494,7 @@ mod tests {
     #[test]
     fn test_validate_conditional_field_presence() {
         use std::collections::HashMap;
-        
+
         // Both fields present - should pass
         let mut fields = HashMap::new();
         fields.insert("56A".to_string(), "DEUTDEFFXXX".to_string());

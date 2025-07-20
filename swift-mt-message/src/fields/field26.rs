@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 26T: Transaction Type Code**
+///   **Field 26T: Transaction Type Code**
 ///
 /// ## Purpose
 /// Specifies the type or nature of a financial transaction or instruction using standardized
@@ -129,8 +129,8 @@ use swift_mt_message_macros::SwiftField;
 /// - FIN User Handbook: Transaction Classification Guidelines
 /// - Regulatory Guidelines: Transaction Type Reporting Requirements
 /// - Processing Manuals: Type-Based Transaction Handling
-
-/// **Field 26T: Transaction Type Code Structure**
+///
+///   **Field 26T: Transaction Type Code Structure**
 ///
 /// Contains the 3-character transaction type code for categorizing
 /// and processing financial transactions.

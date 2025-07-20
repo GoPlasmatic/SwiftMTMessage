@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 34F: Floor Limit**
+///   **Field 34F: Floor Limit**
 ///
 /// ## Purpose
 /// Specifies the floor limit amount and currency for automatic processing thresholds
@@ -125,7 +125,7 @@ use swift_mt_message_macros::SwiftField;
 /// - Risk Management Guidelines: Amount-Based Processing Controls
 /// - Regulatory Standards: Transaction Threshold Requirements
 /// - Processing Manuals: Automated vs. Manual Transaction Handling
-/// **Field 34F: Floor Limit Structure**
+///   **Field 34F: Floor Limit Structure**
 ///
 /// Contains currency, optional indicator, and amount for processing threshold definition.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 79: Narrative**
+///   **Field 79: Narrative**
 ///
 /// ## Purpose
 /// Provides extended narrative information for various Swift MT messages, offering

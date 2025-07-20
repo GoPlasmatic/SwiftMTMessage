@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 64: Closing Available Balance**
+///   **Field 64: Closing Available Balance**
 ///
 /// ## Purpose
 /// Specifies the closing available balance of an account, representing the funds that are
@@ -64,8 +64,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Banking Regulations: Fund Availability Requirements
 /// - Cash Management Standards: Available Balance Calculation
 /// - Risk Management: Available Fund Assessment
-
-/// **Field 64: Closing Available Balance Structure**
+///
+///   **Field 64: Closing Available Balance Structure**
 ///
 /// Contains the closing available balance with debit/credit indication, value date,
 /// currency, and amount representing immediately usable funds.

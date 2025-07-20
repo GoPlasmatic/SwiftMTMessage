@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 51A: Sending Institution**
+///   **Field 51A: Sending Institution**
 ///
 /// ## Purpose
 /// Identifies the Sender of the message, primarily used in FileAct messages

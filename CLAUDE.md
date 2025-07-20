@@ -41,6 +41,17 @@ cargo clippy
 cargo clippy --all-features
 ```
 
+### Quality Assurance (CI Pipeline Commands)
+```bash
+# Full quality gate (matches CI pipeline)
+cargo test --workspace --all-features
+cargo fmt --all -- --check
+cargo clippy --workspace --all-features -- -D warnings
+
+# Fix formatting issues
+cargo fmt --all
+```
+
 ### Documentation
 ```bash
 # Generate and open documentation
@@ -78,6 +89,16 @@ cargo clean
 cargo build --release --features local --no-default-features
 ./target/release/generate_new_json
 ./target/release/compare_compatibility --detailed --output compatibility_report.md
+```
+
+### Release Management
+```bash
+# Manual release (requires GitHub permissions)
+gh workflow run crate-publish.yml --field release_type=patch
+
+# Version management with cargo-workspaces
+cargo install cargo-workspaces
+cargo ws version patch --all --no-git-commit
 ```
 
 ### Sample Generation
@@ -159,9 +180,14 @@ cargo test sample::tests --lib
 ### Testing Strategy
 - Unit tests: Inline with code using `#[cfg(test)]`
 - Integration tests: Examples directory
-- Test data: test_data/ with real MT messages
+- Test data: test_data/ with real MT messages (16 variants covering MT103, MT202, MT205)
 - Backward compatibility: Automated JSON comparison
 - Sample generation: Automated test data creation
+
+### Test Data Management
+- **Location**: test_data/ directory with 16 message variants
+- **Types**: MT103 (norm, stp, rejt, retn), MT202 (core, cov, minimal, rejt, retn, serial), MT205 (core, cover, rejt, retn, serial)
+- **Adding new test data**: Ensure .txt extension and run compatibility tests
 
 ### Sample Generation Features
 - **Field-level generation**: All fields support `sample()` and `sample_with_config()`
@@ -170,6 +196,13 @@ cargo test sample::tests --lib
 - **Validation-aware**: Generates valid BIC codes, currency codes, dates, amounts
 - **Configurable**: Custom constraints, scenarios (STP, Cover Payment), optional field control
 - **Macro-generated**: Automatic implementation via derive macros
+
+### Parser Architecture
+- **SwiftParser**: Main entry point with auto-detection capability
+- **Field Consumption Tracking**: Sequential processing of duplicate fields with position tracking
+- **Field Variant Support**: Handles enum fields like Field50 (A/F/K variants) automatically
+- **Block Extraction**: Robust parsing of SWIFT blocks 1-5 with nested brace handling
+- **Header Processing**: Complete header validation (basic, application, user, trailer)
 
 ## Important Notes
 

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 57: Account With Institution**
+///   **Field 57: Account With Institution**
 ///
 /// ## Purpose
 /// Specifies the financial institution that services the account for the beneficiary customer
@@ -116,8 +116,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Payment Settlement Guidelines: Beneficiary Institution Requirements
 /// - Cross-Border Payments: Final Settlement Standards
 /// - Regulatory Compliance: Beneficiary Institution Due Diligence
-
-/// **Field 57A: Account With Institution (BIC with Party Identifier)**
+///
+///   **Field 57A: Account With Institution (BIC with Party Identifier)**
 ///
 /// Structured beneficiary bank identification using BIC code with optional party identifier.
 /// Preferred option for automated settlement and final fund delivery.
@@ -138,7 +138,7 @@ pub struct Field57A {
     pub bic: String,
 }
 
-/// **Field 57B: Account With Institution (Party Identifier with Location)**
+///   **Field 57B: Account With Institution (Party Identifier with Location)**
 ///
 /// Domestic beneficiary bank routing using party identifier and location details.
 /// Used for location-based settlement in domestic payment systems.
@@ -159,7 +159,7 @@ pub struct Field57B {
     pub location: Option<String>,
 }
 
-/// **Field 57C: Account With Institution (Party Identifier Only)**
+///   **Field 57C: Account With Institution (Party Identifier Only)**
 ///
 /// Simplified beneficiary bank reference using party identifier only.
 /// Used when BIC is not required or available for settlement purposes.
@@ -173,7 +173,7 @@ pub struct Field57C {
     pub party_identifier: String,
 }
 
-/// **Field 57D: Account With Institution (Party Identifier with Name and Address)**
+///   **Field 57D: Account With Institution (Party Identifier with Name and Address)**
 ///
 /// Detailed beneficiary bank identification with full name and address information.
 /// Used when structured BIC identification is not available for beneficiary bank.

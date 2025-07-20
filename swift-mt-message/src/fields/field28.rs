@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 28: Statement Number / Sequence Number / Message Index**
+///   **Field 28: Statement Number / Sequence Number / Message Index**
 ///
 /// ## Purpose
 /// Provides statement numbering, sequence identification, and message indexing capabilities
@@ -120,7 +120,7 @@ use swift_mt_message_macros::SwiftField;
 /// - MT940/942 Guidelines: Statement Sequence Requirements
 /// - Batch Processing Standards: Message Indexing Specifications
 /// - Regulatory Guidelines: Statement Numbering Compliance
-/// **Field 28: Basic Statement Number/Sequence Number**
+///   **Field 28: Basic Statement Number/Sequence Number**
 ///
 /// Basic statement numbering with optional sequence for account statements
 /// and transaction reports.
@@ -141,7 +141,7 @@ pub struct Field28 {
     pub sequence_number: Option<u8>,
 }
 
-/// **Field 28C: Extended Statement Number/Sequence Number**
+///   **Field 28C: Extended Statement Number/Sequence Number**
 ///
 /// Extended statement numbering with larger sequence capacity for
 /// complex statement structures and detailed transaction reports.
@@ -162,7 +162,7 @@ pub struct Field28C {
     pub sequence_number: Option<u32>,
 }
 
-/// **Field 28D: Message Index/Total**
+///   **Field 28D: Message Index/Total**
 ///
 /// Message indexing for batch operations enabling completeness verification
 /// and proper sequencing of related messages.

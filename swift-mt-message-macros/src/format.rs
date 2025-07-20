@@ -194,7 +194,7 @@ fn extract_next_pattern(remaining: &mut &str) -> MacroResult<Option<String>> {
                 // We need to combine them into a single pattern
                 if let Some(second_end) = remaining.find(']') {
                     let second_pattern = &remaining[..=second_end];
-                    let combined_pattern = format!("{}{}", pattern, second_pattern);
+                    let combined_pattern = format!("{pattern}{second_pattern}");
                     *remaining = &remaining[second_end + 1..];
                     return Ok(Some(combined_pattern));
                 }
@@ -279,7 +279,7 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
             let inner_regex = pattern_to_regex(parts[0])?;
             let inner_regex_no_parens = inner_regex.trim_start_matches('(').trim_end_matches(')');
             // Return the pattern that captures only the content between slashes
-            return Ok(format!("/({}))/", inner_regex_no_parens));
+            return Ok(format!("/({inner_regex_no_parens}))/"));
         }
 
         // Handle compound patterns like /1!a/34x
@@ -294,7 +294,7 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
                 .trim_start_matches('(')
                 .trim_end_matches(')');
             // Create a single capturing group that captures both parts including the leading slash
-            return Ok(format!("(/{}{})", first_no_parens, second_no_parens));
+            return Ok(format!("(/{first_no_parens}{second_no_parens})"));
         }
     }
 
@@ -636,13 +636,13 @@ pub fn generate_regex_parse_impl(
     }
 
     // For fields with optional party identifier followed by multiline address, handle special parsing
-    if (name.to_string() == "Field50K"
-        || name.to_string() == "Field59NoOption"
-        || name.to_string() == "Field53D"
-        || name.to_string() == "Field52D"
-        || name.to_string() == "Field56D"
-        || name.to_string() == "Field57D"
-        || name.to_string() == "Field59F")
+    if (*name == "Field50K"
+        || *name == "Field59NoOption"
+        || *name == "Field53D"
+        || *name == "Field52D"
+        || *name == "Field56D"
+        || *name == "Field57D"
+        || *name == "Field59F")
         && struct_field.components.len() == 2
     {
         // Verify the field has the expected pattern: [/34x] or [/1!a][/34x] followed by multiline pattern
@@ -670,7 +670,7 @@ pub fn generate_regex_parse_impl(
             // Create a pattern that matches either:
             // 1. /account followed by newline and addresses, or
             // 2. Just the addresses without account
-            let regex_pattern = format!("^(?:{}\\n)?({})$", account_inner, address_inner);
+            let regex_pattern = format!("^(?:{account_inner}\\n)?({address_inner})$");
 
             // We need to adjust the field assignments for this special case
             let mut field_assignments = Vec::new();

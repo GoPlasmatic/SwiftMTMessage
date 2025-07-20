@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 56: Intermediary**
+///   **Field 56: Intermediary**
 ///
 /// ## Purpose
 /// Specifies the financial institution through which the transaction must pass to reach
@@ -104,8 +104,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Payment System Guides: National Payment System Routing
 /// - Correspondent Banking: Intermediary Routing Arrangements
 /// - Cross-Border Payments: International Routing Standards
-
-/// **Field 56A: Intermediary (BIC with Party Identifier)**
+///
+///   **Field 56A: Intermediary (BIC with Party Identifier)**
 ///
 /// Structured intermediary identification using BIC code with optional party identifier.
 /// Preferred option for automated payment routing and system integration.
@@ -126,7 +126,7 @@ pub struct Field56A {
     pub bic: String,
 }
 
-/// **Field 56C: Intermediary (Party Identifier Only)**
+///   **Field 56C: Intermediary (Party Identifier Only)**
 ///
 /// Simplified intermediary reference using party identifier only.
 /// Used when BIC is not required or available for routing purposes.
@@ -140,7 +140,7 @@ pub struct Field56C {
     pub party_identifier: String,
 }
 
-/// **Field 56D: Intermediary (Party Identifier with Name and Address)**
+///   **Field 56D: Intermediary (Party Identifier with Name and Address)**
 ///
 /// Detailed intermediary identification with full name and address information.
 /// Used when structured BIC identification is not available for intermediary.

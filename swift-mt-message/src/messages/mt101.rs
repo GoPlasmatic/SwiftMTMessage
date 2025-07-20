@@ -5,7 +5,7 @@ use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 /// MT101: Request for Transfer
 ///
 /// ## Purpose
-/// Used to request the movement of funds from the ordering customer's account(s) serviced at the receiving financial institution. 
+/// Used to request the movement of funds from the ordering customer's account(s) serviced at the receiving financial institution.
 /// This message enables institutions and authorized parties to initiate multiple transactions in a single message with comprehensive transfer details.
 ///
 /// ## Scope
@@ -139,7 +139,7 @@ pub struct MT101 {
 /// - **36**: Exchange Rate - Required when 33B present and amount ≠ 0 (NVR C2)
 ///
 /// ## Party Chain
-/// The transaction flow follows: Instructing Party → Ordering Customer → 
+/// The transaction flow follows: Instructing Party → Ordering Customer →
 /// Account Servicing Institution → Intermediary → Account With Institution → Beneficiary
 ///
 /// ## Validation Notes

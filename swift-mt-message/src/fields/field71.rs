@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 71: Charges and Fee Information**
+///   **Field 71: Charges and Fee Information**
 ///
 /// ## Purpose
 /// Specifies charge allocation and fee details for payment transactions. This field family
@@ -61,8 +61,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Payment Regulations: Charge Transparency Requirements
 /// - Banking Fee Standards: International Charge Allocation
 /// - Customer Protection: Charge Disclosure Guidelines
-
-/// **Field 71A: Details of Charges**
+///
+///   **Field 71A: Details of Charges**
 ///
 /// Specifies which party will bear the charges for the transaction.
 /// Mandatory field in payment messages for charge allocation transparency.
@@ -77,7 +77,7 @@ pub struct Field71A {
     pub code: String,
 }
 
-/// **Field 71F: Sender's Charges**
+///   **Field 71F: Sender's Charges**
 ///
 /// Specifies the currency and amount of charges to be borne by the sender.
 /// Used to detail specific charge amounts in sender's currency.
@@ -98,7 +98,7 @@ pub struct Field71F {
     pub amount: f64,
 }
 
-/// **Field 71G: Receiver's Charges**
+///   **Field 71G: Receiver's Charges**
 ///
 /// Specifies the currency and amount of charges to be borne by the receiver.
 /// Used to detail specific charge amounts in receiver's currency.

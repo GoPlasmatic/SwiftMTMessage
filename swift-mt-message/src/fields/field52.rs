@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 52: Ordering Institution / Account Servicing Institution**
+///   **Field 52: Ordering Institution / Account Servicing Institution**
 ///
 /// ## Purpose
 /// Specifies the financial institution of the ordering customer when different from
@@ -85,8 +85,8 @@ use swift_mt_message_macros::SwiftField;
 /// - National Clearing Code Directory: Country-Specific Routing Codes
 /// - Correspondent Banking Guidelines: Institutional Relationship Standards
 /// - BIC Directory: Registered Financial Institution Codes
-
-/// **Field 52A: Ordering Institution (BIC with Party Identifier)**
+///
+///   **Field 52A: Ordering Institution (BIC with Party Identifier)**
 ///
 /// Structured institutional identification using BIC code with optional party identifier.
 /// Preferred option for automated processing and correspondent banking.
@@ -107,7 +107,7 @@ pub struct Field52A {
     pub bic: String,
 }
 
-/// **Field 52B: Ordering Institution (Party Identifier with Location)**
+///   **Field 52B: Ordering Institution (Party Identifier with Location)**
 ///
 /// Domestic routing information using party identifier and location details.
 /// Used for national clearing systems requiring location-based routing.
@@ -128,7 +128,7 @@ pub struct Field52B {
     pub location: Option<String>,
 }
 
-/// **Field 52C: Ordering Institution (Party Identifier Only)**
+///   **Field 52C: Ordering Institution (Party Identifier Only)**
 ///
 /// Simplified institutional reference using party identifier only.
 /// Used when BIC is not required or available for institutional identification.
@@ -142,7 +142,7 @@ pub struct Field52C {
     pub party_identifier: String,
 }
 
-/// **Field 52D: Ordering Institution (Party Identifier with Name and Address)**
+///   **Field 52D: Ordering Institution (Party Identifier with Name and Address)**
 ///
 /// Detailed institutional identification with full name and address information.
 /// Used when structured BIC identification is not available or sufficient.

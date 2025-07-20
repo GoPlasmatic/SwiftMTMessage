@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 76: Answers**
+///   **Field 76: Answers**
 ///
 /// ## Purpose
 /// Specifies answer information in Swift MT message query/response workflows. This field

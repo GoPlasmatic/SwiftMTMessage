@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 59F: Beneficiary Customer (Option F)**
+///   **Field 59F: Beneficiary Customer (Option F)**
 ///
 /// ## Purpose
 /// Provides detailed beneficiary customer identification using party identifier combined
@@ -114,7 +114,7 @@ pub struct Field59F {
     pub name_and_address: Vec<String>,
 }
 
-/// **Field 59A: Beneficiary Customer (Option A)**
+///   **Field 59A: Beneficiary Customer (Option A)**
 ///
 /// ## Purpose
 /// Provides structured beneficiary customer identification using BIC-based format
@@ -243,132 +243,14 @@ pub struct Field59A {
 
 /// **Field 59 (No Option): Beneficiary Customer**
 ///
-/// ## Purpose
-/// Provides flexible beneficiary customer identification combining optional account
-/// information with free-format name and address details. This option offers the
-/// most versatile format for beneficiary identification, balancing structural
-/// requirements with flexibility for diverse customer information scenarios.
+/// Flexible variant of [Field 59 module](index.html). Provides beneficiary customer
+/// identification combining optional account information with free-format name and address.
 ///
-/// ## Format Specification
-/// - **Swift Format**: `[/34x]4*35x`
-/// - **Account**: Optional 34-character account identifier
-/// - **Name/Address**: Up to 4 lines of 35 characters each
-/// - **Total Capacity**: 140 characters for name and address information
+/// **Components:**
+/// - Account identifier (optional, [/34x])
+/// - Name and address lines (4*35x)
 ///
-/// ## Business Context Applications
-/// - **General Payments**: Most common beneficiary format for standard transfers
-/// - **Legacy Systems**: Compatible with older payment processing systems
-/// - **Flexible Requirements**: Accommodates various customer information formats
-/// - **Mixed Environments**: Suitable for diverse correspondent banking relationships
-///
-/// ## Account Information Guidelines
-/// ### Account Format Flexibility
-/// - **IBAN**: International Bank Account Number for international transfers
-/// - **Domestic Accounts**: Local account number formats (varies by country)
-/// - **Special Identifiers**: Customer reference numbers or unique identifiers
-/// - **No Account**: Account-less transfers (certain transaction types)
-///
-/// ### Account Usage Scenarios
-/// - **Standard Transfers**: Most common account-based payments
-/// - **Cash Pickup**: Account information may be optional for cash services
-/// - **Mobile Money**: Special account formats for mobile money services
-/// - **Correspondent Relations**: Account formats specific to correspondent agreements
-///
-/// ## Name and Address Format
-/// ### Line Usage Guidelines
-/// - **Line 1**: Primary beneficiary name (mandatory for most transactions)
-/// - **Line 2**: Additional name information or company designation
-/// - **Line 3**: Street address, PO Box, or building information
-/// - **Line 4**: City, state/province, postal code, and country
-///
-/// ### Content Requirements
-/// - **Character Limit**: 35 characters per line
-/// - **Character Set**: Standard SWIFT character set compliance
-/// - **Address Completeness**: Sufficient detail for payment delivery
-/// - **Name Accuracy**: Legal name matching identification documents
-///
-/// ## STP Processing Considerations
-/// - **Automated Processing**: Compatible with STP when properly formatted
-/// - **Manual Review**: May require manual intervention for incomplete information
-/// - **Validation Challenges**: Less structured format requires enhanced validation
-/// - **Processing Time**: May be slower than Option A due to format flexibility
-///
-/// ## Network Validation Requirements
-/// - **Character Set Compliance**: Must use valid SWIFT character set
-/// - **Length Validation**: Each line maximum 35 characters
-/// - **Address Sufficiency**: Adequate information for payment delivery
-/// - **Name Consistency**: Consistent beneficiary identification across lines
-///
-/// ## Regional Considerations
-/// ### Address Format Standards
-/// - **Local Conventions**: Compliance with local address formatting
-/// - **Postal Standards**: Adherence to national postal service requirements
-/// - **Cultural Sensitivity**: Appropriate cultural name and address conventions
-/// - **Language Requirements**: English language for international payments
-///
-/// ### Regulatory Compliance
-/// - **KYC Requirements**: Sufficient information for customer identification
-/// - **AML Compliance**: Adequate detail for anti-money laundering screening
-/// - **Sanctions Screening**: Complete name information for watchlist checks
-/// - **Record Keeping**: Comprehensive beneficiary information retention
-///
-/// ## Error Prevention Guidelines
-/// - **Complete Information**: Provide comprehensive name and address details
-/// - **Accurate Formatting**: Follow local address and name conventions
-/// - **Character Validation**: Ensure SWIFT character set compliance
-/// - **Address Verification**: Confirm address accuracy for successful delivery
-///
-/// ## Usage Examples
-/// ```logic
-/// // With IBAN account
-/// :59:/GB82WEST12345698765432
-/// JOHN SMITH
-/// 123 RESIDENTIAL STREET
-/// MANCHESTER M1 1AA
-/// UNITED KINGDOM
-///
-/// // With domestic account
-/// :59:/123456789
-/// ACME CORPORATION LIMITED
-/// BUSINESS PLAZA SUITE 456
-/// NEW YORK NY 10001
-/// UNITED STATES
-///
-/// // No account (cash pickup)
-/// :59:MARIA GONZALEZ
-/// MAIN STREET 789
-/// MEXICO CITY 12345
-/// MEXICO
-/// ```
-///
-/// ## Related Fields Integration
-/// - **Field 57A/D**: Account with Institution (beneficiary bank)
-/// - **Field 70**: Remittance Information (payment purpose and references)
-/// - **Field 72**: Sender to Receiver Information (additional beneficiary details)
-/// - **Field 77T**: Structured Remittance Information (enhanced payment details)
-///
-/// ## Compliance Framework
-/// - **Regulatory Documentation**: Complete beneficiary information for compliance
-/// - **Audit Requirements**: Comprehensive beneficiary identification records
-/// - **KYC Standards**: Adequate information for customer due diligence
-/// - **AML Compliance**: Sufficient detail for anti-money laundering procedures
-///
-/// ## Processing Impact
-/// - **Flexibility Advantage**: Accommodates diverse beneficiary information formats
-/// - **Manual Processing Risk**: May require manual intervention for validation
-/// - **Cost Considerations**: Potential additional costs for manual processing
-/// - **Delivery Efficiency**: Success depends on address accuracy and completeness
-///
-/// ## Best Practices
-/// - **Complete Documentation**: Provide all available beneficiary information
-/// - **Structured Approach**: Use consistent line formatting for address information
-/// - **Accuracy Verification**: Verify all name and address details before transmission
-/// - **Local Standards**: Follow local conventions for name and address formatting
-///
-/// ## See Also
-/// - Swift FIN User Handbook: No Option Beneficiary Specifications
-/// - Address Standards: International Address Formatting Guidelines
-/// - KYC Guidelines: Beneficiary Information Requirements
+/// For complete documentation, see the [Field 59 module](index.html).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
 pub struct Field59NoOption {
     /// Account number (optional)
@@ -386,7 +268,7 @@ pub struct Field59NoOption {
     pub name_and_address: Vec<String>,
 }
 
-/// **Field 59: Beneficiary Customer**
+///   **Field 59: Beneficiary Customer**
 ///
 /// ## Purpose
 /// Identifies the ultimate beneficiary of the payment instruction. The beneficiary customer

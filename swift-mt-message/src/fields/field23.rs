@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 23: Further Identification**
+///   **Field 23: Further Identification**
 ///
 /// ## Purpose
 /// Provides additional identification information for financial transactions, particularly
@@ -106,7 +106,7 @@ pub struct Field23 {
     pub reference: String,
 }
 
-/// **Field 23B: Bank Operation Code**
+///   **Field 23B: Bank Operation Code**
 ///
 /// ## Purpose
 /// Identifies the type of operation and associated service level for the payment instruction.
@@ -186,7 +186,7 @@ pub struct Field23B {
     pub instruction_code: String,
 }
 
-/// **Field 23E: Instruction Code**
+///   **Field 23E: Instruction Code**
 ///
 /// ## Purpose
 /// Specifies detailed payment instructions and processing directives that complement

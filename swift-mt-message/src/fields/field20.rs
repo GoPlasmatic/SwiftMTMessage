@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 20: Sender's Reference**
+///   **Field 20: Sender's Reference**
 ///
 /// ## Purpose
 /// Specifies the reference assigned by the Sender to unambiguously identify the message.

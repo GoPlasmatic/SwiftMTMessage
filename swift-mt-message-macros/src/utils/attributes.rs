@@ -37,7 +37,7 @@ pub fn extract_string_attribute(attrs: &[Attribute], attr_name: &str) -> MacroRe
                         attr.span(),
                         attr_name,
                         "invalid syntax",
-                        &format!("#[{}(\"value\")]", attr_name),
+                        &format!("#[{attr_name}(\"value\")]"),
                     ));
                 }
             }
@@ -47,7 +47,7 @@ pub fn extract_string_attribute(attrs: &[Attribute], attr_name: &str) -> MacroRe
     Err(MacroError::missing_attribute(
         Span::call_site(),
         attr_name,
-        &format!("{} attribute", attr_name),
+        &format!("{attr_name} attribute"),
     ))
 }
 

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 25: Account Identification / Authorisation**
+///   **Field 25: Account Identification / Authorisation**
 ///
 /// ## Purpose
 /// Provides account identification or authorization information for payment instructions.
@@ -119,8 +119,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Authorization Guidelines: Security Code Requirements
 /// - IBAN Standards: International Account Number Specifications
 /// - BIC Directory: Institution Identifier Validation
-
-/// **Field 25 NoOption: Authorisation**
+///
+///   **Field 25 NoOption: Authorisation**
 ///
 /// Security authorization code or digital signature between ordering customer
 /// and account servicing financial institution.
@@ -134,7 +134,7 @@ pub struct Field25NoOption {
     pub authorisation: String,
 }
 
-/// **Field 25A: Account Identifier**
+///   **Field 25A: Account Identifier**
 ///
 /// Simple account identification with slash prefix for basic account specification.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
@@ -147,7 +147,7 @@ pub struct Field25A {
     pub account: String,
 }
 
-/// **Field 25P: Account with Institution**
+///   **Field 25P: Account with Institution**
 ///
 /// Account identification with associated financial institution BIC code
 /// for complete account specification.
@@ -168,7 +168,7 @@ pub struct Field25P {
     pub bic: String,
 }
 
-/// **Field 25 Account Identification Enum**
+///   **Field 25 Account Identification Enum**
 ///
 /// Enumeration of account identification options providing flexibility
 /// for different account specification needs.

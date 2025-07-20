@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 65: Forward Available Balance**
+///   **Field 65: Forward Available Balance**
 ///
 /// ## Purpose
 /// Specifies the forward available balance of an account, representing the funds that will
@@ -77,8 +77,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Treasury Management: Forward Liquidity Planning
 /// - Cash Flow Forecasting: Forward Balance Projections
 /// - Basel Liquidity Standards: Forward Liquidity Requirements
-
-/// **Field 65: Forward Available Balance Structure**
+///
+///   **Field 65: Forward Available Balance Structure**
 ///
 /// Contains the forward available balance with debit/credit indication, future value date,
 /// currency, and amount representing funds that will be available.

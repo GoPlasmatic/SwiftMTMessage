@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
-/// **Field 36: Exchange Rate**
+///   **Field 36: Exchange Rate**
 ///
 /// ## Purpose
 /// Specifies the exchange rate used to convert the instructed currency amount to the
@@ -123,7 +123,7 @@ use swift_mt_message_macros::SwiftField;
 /// - Currency Conversion Guidelines: Rate Application Standards
 /// - Market Rate Sources: Authorized Rate Providers
 /// - Risk Management: Currency Conversion Risk Controls
-/// **Field 36: Exchange Rate Structure**
+///   **Field 36: Exchange Rate Structure**
 ///
 /// Contains the exchange rate for currency conversion calculations.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]

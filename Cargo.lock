@@ -379,6 +379,7 @@ name = "swift-mt-message-macros"
 version = "3.0.0"
 dependencies = [
  "datalogic-rs",
+ "once_cell",
  "proc-macro2",
  "quote",
  "regex",

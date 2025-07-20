@@ -22,3 +22,4 @@ syn = { workspace = true }
 regex = { workspace = true }
 datalogic-rs = { workspace = true }
 serde_json = { workspace = true }
+once_cell = "1.19"

@@ -22,7 +22,7 @@ syn = { version = "2.0", features = ["full", "extra-traits"] }
 datalogic-rs = "3.0.29"
 
 # Random number generation for sample data
-rand = "0.8" 
+rand = "0.8"
 
 # UUID generation
-uuid = { version = "1.11", features = ["v4", "serde"] } 
+uuid = { version = "1.11", features = ["v4", "serde"] }

@@ -917,7 +917,10 @@ where
 
 impl<T: SwiftMessageBody> SwiftMessage<T> {
     pub fn to_mt_message(&self) -> String {
-        let mut swift_message = String::new();
+        // Pre-allocate capacity based on typical message size
+        // Headers ~200 chars + fields vary but typically 20-100 chars each
+        let estimated_size = 200 + self.fields.to_fields().len() * 50;
+        let mut swift_message = String::with_capacity(estimated_size);
 
         // Block 1: Basic Header
         let block1 = &self.basic_header.to_string();
@@ -944,25 +947,21 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             .collect();
 
         // Create ascending field order by sorting field tags numerically
-        let mut field_tags: Vec<_> = field_map.keys().collect();
-        field_tags.sort_by(|a, b| {
-            let a_num: u32 = a
-                .chars()
-                .take_while(|c| c.is_ascii_digit())
-                .collect::<String>()
-                .parse()
-                .unwrap_or(0);
-            let b_num: u32 = b
-                .chars()
-                .take_while(|c| c.is_ascii_digit())
-                .collect::<String>()
-                .parse()
-                .unwrap_or(0);
-            a_num.cmp(&b_num)
-        });
+        // Optimize by parsing numbers without allocating strings
+        let mut field_tags: Vec<(&String, u32)> = field_map
+            .keys()
+            .map(|tag| {
+                let num = tag
+                    .chars()
+                    .take_while(|c| c.is_ascii_digit())
+                    .fold(0u32, |acc, c| acc * 10 + (c as u32 - '0' as u32));
+                (tag, num)
+            })
+            .collect();
+        field_tags.sort_unstable_by_key(|(_, num)| *num);
 
         // Output fields in ascending numerical order
-        for field_tag in field_tags {
+        for (field_tag, _) in field_tags {
             if let Some(field_values) = field_map.get(field_tag) {
                 for field_value in field_values {
                     // Skip empty optional fields

@@ -708,10 +708,9 @@ fn suggest_format_correction(pattern: &str) -> Option<String> {
     // Missing type indicator
     if clean_pattern.contains('!') && clean_pattern.len() >= 3 {
         let parts: Vec<&str> = clean_pattern.split('!').collect();
-        if parts.len() == 2 && parts[0].chars().all(|c| c.is_ascii_digit())
-            && parts[1].is_empty() {
-                return Some(format!("{}!a", parts[0]));
-            }
+        if parts.len() == 2 && parts[0].chars().all(|c| c.is_ascii_digit()) && parts[1].is_empty() {
+            return Some(format!("{}!a", parts[0]));
+        }
     }
 
     // Lowercase to uppercase correction

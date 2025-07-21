@@ -184,7 +184,10 @@ fn generate_multi_component_to_swift_string(
 
         return Ok(quote! {
             {
-                let mut result = String::new();
+                // Pre-calculate capacity
+                let capacity = self.#first_field.as_ref().map(|s| s.len() + 1).unwrap_or(0)
+                    + self.#second_field.iter().map(|s| s.len() + 1).sum::<usize>();
+                let mut result = String::with_capacity(capacity);
 
                 // Add first component with prefix if present
                 if let Some(ref value) = self.#first_field {
@@ -222,7 +225,11 @@ fn generate_multi_component_to_swift_string(
 
         return Ok(quote! {
             {
-                let mut result = self.#first_field.clone();
+                // Pre-calculate capacity
+                let capacity = self.#first_field.len()
+                    + self.#second_field.as_ref().map(|s| s.len() + 1).unwrap_or(0);
+                let mut result = String::with_capacity(capacity);
+                result.push_str(&self.#first_field);
 
                 // Add second component with prefix if present
                 if let Some(ref value) = self.#second_field {
@@ -248,7 +255,10 @@ fn generate_multi_component_to_swift_string(
 
         return Ok(quote! {
             {
-                let mut result = String::new();
+                // Pre-calculate capacity
+                let capacity = self.#first_field.as_ref().map(|s| s.len() + 2).unwrap_or(0)
+                    + self.#second_field.len();
+                let mut result = String::with_capacity(capacity);
 
                 // Add account if present (with "/" prefix)
                 if let Some(ref account) = self.#first_field {
@@ -274,7 +284,10 @@ fn generate_multi_component_to_swift_string(
 
         return Ok(quote! {
             {
-                let mut result = String::new();
+                // Pre-calculate capacity
+                let capacity = self.#first_field.as_ref().map(|s| s.len() + 1).unwrap_or(0)
+                    + self.#second_field.as_ref().map(|s| s.len() + 1).unwrap_or(0);
+                let mut result = String::with_capacity(capacity);
 
                 // Add party identifier if present (with "/" prefix)
                 if let Some(ref party_id) = self.#first_field {
@@ -310,7 +323,12 @@ fn generate_multi_component_to_swift_string(
 
         return Ok(quote! {
             {
-                let mut result = String::new();
+                // Pre-calculate capacity
+                let capacity = self.#first_field.as_ref().map(|s| s.len() + 1).unwrap_or(0)
+                    + self.#second_field.iter().enumerate()
+                        .map(|(i, s)| s.len() + 3 + (i + 1).to_string().len())
+                        .sum::<usize>();
+                let mut result = String::with_capacity(capacity);
 
                 // Add party identifier if present (with "/" prefix)
                 if let Some(ref party_id) = self.#first_field {
@@ -319,12 +337,13 @@ fn generate_multi_component_to_swift_string(
                 }
 
                 // Add name and address lines with proper line number formatting
+                use std::fmt::Write;
                 for (i, line) in self.#second_field.iter().enumerate() {
                     if !result.is_empty() || i > 0 {
                         result.push_str("\n");
                     }
                     // Format: line number + "/" + text (per 4*(1!n/33x) format)
-                    result.push_str(&format!("{}/{}", i + 1, line));
+                    write!(&mut result, "{}/{}", i + 1, line).unwrap();
                 }
 
                 result

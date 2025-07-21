@@ -490,7 +490,9 @@ impl SampleGenerator<String> for NumericGenerator {
     fn generate_with_config(&self, config: &SampleConfig) -> String {
         // Apply constraints
         for constraint in &config.constraints {
-            if let SampleConstraint::ValidDate { format } = constraint { return generate_date_with_format(format) }
+            if let SampleConstraint::ValidDate { format } = constraint {
+                return generate_date_with_format(format);
+            }
         }
 
         match config.scenario {
@@ -507,7 +509,9 @@ impl SampleGenerator<String> for NumericGenerator {
 
     fn generate_with_constraints(&self, constraints: &[SampleConstraint]) -> String {
         for constraint in constraints {
-            if let SampleConstraint::ValidDate { format } = constraint { return generate_date_with_format(format) }
+            if let SampleConstraint::ValidDate { format } = constraint {
+                return generate_date_with_format(format);
+            }
         }
         self.generate_sample()
     }

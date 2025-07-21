@@ -417,11 +417,12 @@ pub mod recovery {
         if invalid_spec.chars().any(|c| c.is_ascii_digit())
             && !invalid_spec.contains('!')
             && !invalid_spec.ends_with('x')
-            && invalid_spec.len() <= 3 {
-                suggestions.push(format!(
+            && invalid_spec.len() <= 3
+        {
+            suggestions.push(format!(
                     "Did you mean '{invalid_spec}!a' for fixed alphabetic or '{invalid_spec}x' for variable?"
                 ));
-            }
+        }
 
         // Common valid patterns
         if suggestions.is_empty() {

@@ -42,6 +42,7 @@
 //! # }
 //! ```
 
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 
 use crate::errors::{ParseError, Result};
@@ -108,10 +109,18 @@ impl FieldConsumptionTracker {
 
     /// Mark a field value at a specific position as consumed
     pub fn mark_consumed(&mut self, tag: &str, index: usize) {
-        self.consumed_indices
-            .entry(tag.to_string())
-            .or_default()
-            .insert(index);
+        // Avoid allocation when the key already exists
+        use std::collections::hash_map::Entry;
+        match self.consumed_indices.entry(tag.to_string()) {
+            Entry::Occupied(mut e) => {
+                e.get_mut().insert(index);
+            }
+            Entry::Vacant(e) => {
+                let mut set = HashSet::new();
+                set.insert(index);
+                e.insert(set);
+            }
+        }
     }
 
     /// Get the next available (unconsumed) field value for a tag
@@ -168,15 +177,12 @@ pub fn find_field_with_variant_sequential(
     // For enum fields, look for variant tags (50A, 50F, 50K, etc.)
     for (tag, values) in fields {
         if tag.starts_with(base_tag) && tag.len() == base_tag.len() + 1 {
-            let variant = tag.chars().last().unwrap().to_string();
+            let variant_char = tag.chars().last().unwrap();
             // Check if it's a valid variant letter (A-Z)
-            if variant
-                .chars()
-                .all(|c| c.is_ascii_alphabetic() && c.is_ascii_uppercase())
-            {
+            if variant_char.is_ascii_alphabetic() && variant_char.is_ascii_uppercase() {
                 if let Some((value, pos)) = tracker.get_next_available(tag, values) {
                     tracker.mark_consumed(tag, pos);
-                    return Some((value.to_string(), Some(variant), pos));
+                    return Some((value.to_string(), Some(variant_char.to_string()), pos));
                 }
             }
         }
@@ -429,7 +435,11 @@ impl SwiftParser {
 
     /// Parse block 4 fields into a field map with position tracking
     fn parse_block4_fields(block4: &str) -> FieldParseResult {
-        let mut field_map: HashMap<String, Vec<(String, usize)>> = HashMap::new();
+        // Pre-allocate HashMap with estimated capacity based on typical field count
+        // Most messages have between 10-60 fields
+        let estimated_fields = block4.matches("\n:").count().max(10);
+        let mut field_map: HashMap<String, Vec<(String, usize)>> =
+            HashMap::with_capacity(estimated_fields);
 
         // Remove leading/trailing whitespace and newlines
         let content = block4.trim();
@@ -446,10 +456,10 @@ impl SwiftParser {
                 // Extract field tag (characters after : until next :)
                 if let Some(tag_end) = content[field_start + 1..].find(':') {
                     let tag_end = field_start + 1 + tag_end;
-                    let raw_field_tag = content[field_start + 1..tag_end].to_string();
+                    let raw_field_tag = &content[field_start + 1..tag_end];
 
                     // Normalize field tag by removing option letters (A, F, K, etc.)
-                    let field_tag = Self::normalize_field_tag(&raw_field_tag);
+                    let field_tag = Self::normalize_field_tag(raw_field_tag);
 
                     // Find the end of field value (next field marker or end of content)
                     let value_start = tag_end + 1;
@@ -459,16 +469,18 @@ impl SwiftParser {
                         content.len()
                     };
 
-                    let field_value = content[value_start..value_end].trim().to_string();
+                    // Avoid unnecessary string allocation - trim inline during push
+                    let field_value_slice = &content[value_start..value_end];
+                    let trimmed_value = field_value_slice.trim();
 
                     // Store field value with position for sequential consumption tracking
                     // The field validators expect only the field content, not the tag
 
                     // Add to existing Vec or create new Vec for this field tag
                     field_map
-                        .entry(field_tag.clone())
+                        .entry(field_tag.into_owned())
                         .or_default()
-                        .push((field_value, field_position));
+                        .push((trimmed_value.to_string(), field_position));
 
                     field_position += 1; // Increment position for next field
                     current_pos = value_end;
@@ -487,59 +499,54 @@ impl SwiftParser {
     /// Normalize field tag by removing option letters (A, F, K, etc.)
     /// Example: "50K" -> "50", "59A" -> "59", "20" -> "20"
     /// But preserve option letters for fields that have multiple variants like 23B/23E, 71A/71F/71G
-    fn normalize_field_tag(raw_tag: &str) -> String {
-        // Extract the numeric part at the beginning
-        let mut numeric_part = String::new();
-        for ch in raw_tag.chars() {
-            if ch.is_ascii_digit() {
-                numeric_part.push(ch);
-            } else {
-                break;
-            }
+    fn normalize_field_tag(raw_tag: &str) -> Cow<'_, str> {
+        // Find where the numeric part ends
+        let numeric_end = raw_tag
+            .find(|c: char| !c.is_ascii_digit())
+            .unwrap_or(raw_tag.len());
+
+        // If no suffix, return the tag as-is
+        if numeric_end == raw_tag.len() {
+            return Cow::Borrowed(raw_tag);
         }
 
-        // If we have letters after the number, check if it's a known option
-        if numeric_part.len() < raw_tag.len() {
-            let remaining = &raw_tag[numeric_part.len()..];
+        let numeric_part = &raw_tag[..numeric_end];
+        let suffix = &raw_tag[numeric_end..];
 
-            // For certain field numbers, preserve the option letter to avoid conflicts
-            match numeric_part.as_str() {
-                "11" | "13" | "23" | "26" | "32" | "33" | "50" | "52" | "53" | "54" | "55"
-                | "56" | "57" | "58" | "59" | "71" | "77" => {
-                    // Keep option letters for fields that have multiple variants or specific formats
-                    // 11A (MT and Date - Option A), 11S (MT and Date - Option S)
-                    // 13C (Time Indication)
-                    // 23B (Bank Operation Code) vs 23E (Instruction Code)
-                    // 26T (Transaction Type Code)
-                    // 32A (Value Date/Currency/Amount)
-                    // 33B (Currency/Instructed Amount)
-                    // 50A/F/K (Ordering Customer)
-                    // 59A/F (Beneficiary Customer)
-                    // 52A (Ordering Institution)
-                    // 53A (Sender's Correspondent)
-                    // 54A (Receiver's Correspondent)
-                    // 55A (Third Reimbursement Institution)
-                    // 56A (Intermediary Institution)
-                    // 57A (Account With Institution)
-                    // 71A (Details of Charges) vs 71F (Sender's Charges) vs 71G (Receiver's Charges)
-                    // 77B (Regulatory Reporting)
-                    return raw_tag.to_string();
-                }
-                _ => {
-                    // For other fields, remove option letters as before
-                    if remaining
-                        .chars()
-                        .all(|c| c.is_ascii_alphabetic() && c.is_ascii_uppercase())
-                    {
-                        // It's an option letter, return just the numeric part
-                        return numeric_part;
-                    }
+        // For certain field numbers, preserve the option letter to avoid conflicts
+        match numeric_part {
+            "11" | "13" | "23" | "26" | "32" | "33" | "50" | "52" | "53" | "54" | "55" | "56"
+            | "57" | "58" | "59" | "71" | "77" => {
+                // Keep option letters for fields that have multiple variants or specific formats
+                // 11A (MT and Date - Option A), 11S (MT and Date - Option S)
+                // 13C (Time Indication)
+                // 23B (Bank Operation Code) vs 23E (Instruction Code)
+                // 26T (Transaction Type Code)
+                // 32A (Value Date/Currency/Amount)
+                // 33B (Currency/Instructed Amount)
+                // 50A/F/K (Ordering Customer)
+                // 59A/F (Beneficiary Customer)
+                // 52A (Ordering Institution)
+                // 53A (Sender's Correspondent)
+                // 54A (Receiver's Correspondent)
+                // 55A (Third Reimbursement Institution)
+                // 56A (Intermediary Institution)
+                // 57A (Account With Institution)
+                // 71A (Details of Charges) vs 71F (Sender's Charges) vs 71G (Receiver's Charges)
+                // 77B (Regulatory Reporting)
+                Cow::Borrowed(raw_tag)
+            }
+            _ => {
+                // For other fields, check if suffix is just uppercase letters
+                if suffix.chars().all(|c| c.is_ascii_uppercase()) {
+                    // It's an option letter, return just the numeric part
+                    Cow::Owned(numeric_part.to_string())
+                } else {
+                    // Not a simple option letter, keep the full tag
+                    Cow::Borrowed(raw_tag)
                 }
             }
         }
-
-        // If no option letter found, return the original tag
-        raw_tag.to_string()
     }
 
     /// Find the matching closing brace for a block that starts with an opening brace

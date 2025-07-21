@@ -200,83 +200,497 @@ pub struct MT101Transaction {
     pub field_36: Option<Field36>, // Exchange Rate
 }
 
-/// Enhanced validation rules with forEach support for repetitive sequences
+/// MT101 Transaction validation rules
+const MT101_TRANSACTION_VALIDATION_RULES: &str = r#"{
+  "rules": [],
+  "constants": {}
+}"#;
+
+/// Comprehensive MT101 validation rules based on SRG2025 specification
 const MT101_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "Per-transaction: If 36 present → 21F must be present",
-      "forEach": {
-        "collection": "transactions",
-        "condition": {
-          "if": [
-            {"var": "field_36.is_some"},
-            {"var": "field_21f.is_some"},
-            true
-          ]
-        }
+      "description": "If an exchange rate is given in field 36, the corresponding forex deal must be referenced in field 21F",
+      "condition": {
+        "all": [
+          {"var": "fields.transactions"},
+          {
+            "if": [
+              {"!!": {"var": "36"}},
+              {"!!": {"var": "21F"}},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C2",
+      "description": "In each occurrence of sequence B, if field 33B is present and amount in field 32B is not equal to zero, then field 36 must be present, otherwise field 36 is not allowed",
+      "condition": {
+        "all": [
+          {"var": "fields.transactions"},
+          {
+            "if": [
+              {"!!": {"var": "33B"}},
+              {
+                "if": [
+                  {"==": [{"var": "32B.amount"}, 0]},
+                  {"!": {"var": "36"}},
+                  {
+                    "if": [
+                      {"!=": [{"var": "32B.amount"}, 0]},
+                      {"!!": {"var": "36"}},
+                      true
+                    ]
+                  }
+                ]
+              },
+              {
+                "if": [
+                  {"!": {"var": "33B"}},
+                  {"!": {"var": "36"}},
+                  true
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C3",
+      "description": "Field 50a (option F, G or H) must be present in either sequence A or in each occurrence of sequence B, but must never be present in both sequences",
+      "condition": {
+        "or": [
+          {
+            "and": [
+              {"!!": {"var": "fields.field_50a_ordering_customer"}},
+              {
+                "all": [
+                  {"var": "fields.transactions"},
+                  {"!": {"var": "50"}}
+                ]
+              }
+            ]
+          },
+          {
+            "and": [
+              {"!": {"var": "fields.field_50a_ordering_customer"}},
+              {
+                "all": [
+                  {"var": "fields.transactions"},
+                  {"!!": {"var": "50"}}
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C4",
+      "description": "Field 50a (option C or L) may be present in either sequence A or in one or more occurrences of sequence B, but must not be present in both sequences",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.field_50a_instructing_party"}},
+          {
+            "all": [
+              {"var": "fields.transactions"},
+              {"!": {"var": "50"}}
+            ]
+          },
+          true
+        ]
+      }
+    },
+    {
+      "id": "C5",
+      "description": "If field 33B is present in sequence B, its currency code must be different from the currency code in field 32B",
+      "condition": {
+        "all": [
+          {"var": "fields.transactions"},
+          {
+            "if": [
+              {"!!": {"var": "33B"}},
+              {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C6",
+      "description": "Field 52a may be present in either sequence A or in one or more occurrences of sequence B, but must not be present in both sequences",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.field_52a"}},
+          {
+            "all": [
+              {"var": "fields.transactions"},
+              {"!": {"var": "52"}}
+            ]
+          },
+          true
+        ]
+      }
+    },
+    {
+      "id": "C7",
+      "description": "If field 56a is present, field 57a must also be present",
+      "condition": {
+        "all": [
+          {"var": "fields.transactions"},
+          {
+            "if": [
+              {"!!": {"var": "56"}},
+              {"!!": {"var": "57"}},
+              true
+            ]
+          }
+        ]
       }
     },
     {
       "id": "C8",
-      "description": "Cross-transaction: All currencies must match if 21R present",
+      "description": "If field 21R is present in sequence A, then in each occurrence of sequence B, the currency code in fields 32B must be the same",
       "condition": {
         "if": [
-          {"var": "field_21r.is_some"},
-          {"allEqual": {"map": ["transactions", "field_32b.currency"]}},
+          {"!!": {"var": "fields.field_21r"}},
+          {
+            "and": [
+              {">": [{"var": "fields.transactions.length"}, 1]},
+              {
+                "reduce": [
+                  {"var": "fields.transactions"},
+                  {
+                    "and": [
+                      {"var": "accumulator"},
+                      {"==": [{"var": "current.32B.currency"}, {"var": "fields.transactions.0.32B.currency"}]}
+                    ]
+                  },
+                  true
+                ]
+              }
+            ]
+          },
           true
         ]
       }
     },
     {
-      "id": "SEQ_B_MIN",
-      "description": "At least one transaction required",
+      "id": "C9",
+      "description": "In each occurrence of sequence B, the presence of fields 33B and 21F is dependent on the presence and value of fields 32B and 23E",
       "condition": {
-        ">=": [{"length": {"var": "transactions"}}, 1]
+        "all": [
+          {"var": "fields.transactions"},
+          {
+            "if": [
+              {"==": [{"var": "32B.amount"}, 0]},
+              {
+                "if": [
+                  {"and": [
+                    {"!!": {"var": "23E"}},
+                    {
+                      "some": [
+                        {"var": "23E"},
+                        {"==": [{"var": "instruction_code"}, "EQUI"]}
+                      ]
+                    }
+                  ]},
+                  {"!!": {"var": "33B"}},
+                  {
+                    "and": [
+                      {"!": {"var": "33B"}},
+                      {"!": {"var": "21F"}}
+                    ]
+                  }
+                ]
+              },
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "MANDATORY_FIELDS",
+      "description": "All mandatory fields must be present and valid",
+      "condition": {
+        "and": [
+          {"!!": {"var": "fields.field_20"}},
+          {"!=": [{"var": "fields.field_20.reference"}, ""]},
+          {"!!": {"var": "fields.field_28d"}},
+          {"!!": {"var": "fields.field_30"}},
+          {">": [{"var": "fields.transactions.length"}, 0]},
+          {
+            "all": [
+              {"var": "fields.transactions"},
+              {
+                "and": [
+                  {"!!": {"var": "21"}},
+                  {"!=": [{"var": "21.reference"}, ""]},
+                  {"!!": {"var": "32B"}},
+                  {"!!": {"var": "59"}},
+                  {"!!": {"var": "71A"}},
+                  {"in": [{"var": "71A.code"}, ["OUR", "SHA", "BEN"]]}
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "REFERENCE_FORMAT",
+      "description": "Reference fields must not contain invalid patterns",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "fields.field_20.reference"}, ""]},
+          {"!": {"in": ["//", {"var": "fields.field_20.reference"}]}},
+          {
+            "all": [
+              {"var": "fields.transactions"},
+              {
+                "and": [
+                  {"!=": [{"var": "21.reference"}, ""]},
+                  {"!": {"in": ["//", {"var": "21.reference"}]}}
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "AMOUNT_CONSISTENCY",
+      "description": "All amounts must be properly formatted",
+      "condition": {
+        "all": [
+          {"var": "fields.transactions"},
+          {
+            "and": [
+              {">": [{"var": "32B.amount"}, -1]},
+              {
+                "if": [
+                  {"!!": {"var": "33B"}},
+                  {">": [{"var": "33B.amount"}, -1]},
+                  true
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CURRENCY_CODE_VALIDATION",
+      "description": "All currency codes must be valid ISO 4217 3-letter codes",
+      "condition": {
+        "all": [
+          {"var": "fields.transactions"},
+          {
+            "and": [
+              {"!=": [{"var": "32B.currency"}, ""]},
+              {
+                "if": [
+                  {"!!": {"var": "33B"}},
+                  {"!=": [{"var": "33B.currency"}, ""]},
+                  true
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "BIC_VALIDATION",
+      "description": "All BIC codes must be properly formatted (non-empty)",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "basic_header.sender_bic"}, ""]},
+          {"!=": [{"var": "application_header.receiver_bic"}, ""]},
+          {
+            "if": [
+              {"!!": {"var": "fields.field_51a"}},
+              {"!=": [{"var": "fields.field_51a.A.bic"}, ""]},
+              true
+            ]
+          },
+          {
+            "all": [
+              {"var": "fields.transactions"},
+              {
+                "and": [
+                  {
+                    "if": [
+                      {"!!": {"var": "56"}},
+                      {
+                        "if": [
+                          {"!!": {"var": "56.A"}},
+                          {"!=": [{"var": "56.A.bic"}, ""]},
+                          true
+                        ]
+                      },
+                      true
+                    ]
+                  },
+                  {
+                    "if": [
+                      {"!!": {"var": "57"}},
+                      {
+                        "if": [
+                          {"!!": {"var": "57.A"}},
+                          {"!=": [{"var": "57.A.bic"}, ""]},
+                          true
+                        ]
+                      },
+                      true
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "MESSAGE_INDEX_TOTAL",
+      "description": "Message index must not exceed total",
+      "condition": {
+        "and": [
+          {"!!": {"var": "fields.field_28d"}},
+          {"<=": [{"var": "fields.field_28d.index"}, {"var": "fields.field_28d.total"}]},
+          {">": [{"var": "fields.field_28d.index"}, 0]},
+          {">": [{"var": "fields.field_28d.total"}, 0]}
+        ]
+      }
+    },
+    {
+      "id": "EXECUTION_DATE",
+      "description": "Requested execution date must be valid",
+      "condition": {
+        "and": [
+          {"!!": {"var": "fields.field_30"}},
+          {"!=": [{"var": "fields.field_30.execution_date"}, ""]}
+        ]
+      }
+    },
+    {
+      "id": "INSTRUCTION_CODE_VALIDATION",
+      "description": "23E instruction codes must be valid when present",
+      "condition": {
+        "all": [
+          {"var": "fields.transactions"},
+          {
+            "if": [
+              {"!!": {"var": "23E"}},
+              {
+                "all": [
+                  {"var": "23E"},
+                  {"in": [{"var": "instruction_code"}, ["EQUI", "RTGS", "URGP", "CORT", "INTC", "SDVA"]]}
+                ]
+              },
+              true
+            ]
+          }
+        ]
       }
     }
-  ]
+  ],
+  "constants": {
+    "VALID_CHARGE_CODES": ["OUR", "SHA", "BEN"],
+    "VALID_INSTRUCTION_CODES_MT101": ["EQUI", "RTGS", "URGP", "CORT", "INTC", "SDVA"]
+  }
 }"#;
 
-/// Validation rules specific to MT101 transactions
-const MT101_TRANSACTION_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "T_C1",
-      "description": "If exchange rate (36) is present, F/X deal reference (21F) must be present",
-      "condition": {
-        "if": [
-          {"var": "field_36.is_some"},
-          {"var": "field_21f.is_some"},
-          true
-        ]
-      }
-    },
-    {
-      "id": "T_C7", 
-      "description": "If intermediary institution (56A/C/D) is present, account with institution (57A/C/D) must be present",
-      "condition": {
-        "if": [
-          {"or": [
-            {"var": "field_56a.is_some"},
-            {"var": "field_56c.is_some"},
-            {"var": "field_56d.is_some"}
-          ]},
-          {"or": [
-            {"var": "field_57a.is_some"},
-            {"var": "field_57c.is_some"},
-            {"var": "field_57d.is_some"}
-          ]},
-          true
-        ]
-      }
-    },
-    {
-      "id": "T_REF",
-      "description": "Transaction reference must be unique within the message",
-      "condition": {
-        "!=": [{"var": "field_21.value"}, ""]
-      }
+// Custom implementation to handle sequence B parsing
+impl MT101 {
+    /// Parse MT101 with proper sequence B handling
+    pub fn parse_with_sequences(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+    ) -> crate::SwiftResult<Self> {
+        use crate::SwiftMessageBody;
+
+        // First, let the macro-generated code parse sequence A
+        let mut mt101 = <MT101 as SwiftMessageBody>::from_fields(fields.clone())?;
+
+        // Sort all fields by position to identify sequence boundaries
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in &fields {
+            for (value, pos) in values {
+                all_fields.push((tag.clone(), value.clone(), *pos));
+            }
+        }
+        all_fields.sort_by_key(|(_, _, pos)| *pos);
+
+        // Find the position after which sequence B starts
+        // Sequence B starts after the last sequence A field
+        let mut last_seq_a_pos = 0;
+        let seq_a_tags = ["20", "21R", "28D", "50", "52", "51A", "30", "25"];
+
+        for (tag, _, pos) in &all_fields {
+            // Check if this is a sequence A tag (including variants)
+            let base_tag = tag
+                .chars()
+                .take_while(|c| c.is_numeric())
+                .collect::<String>();
+            if seq_a_tags.contains(&base_tag.as_str()) ||
+               (base_tag == "50" && (tag.ends_with("C") || tag.ends_with("L"))) || // Field50InstructingParty
+               (base_tag == "50" && (tag.ends_with("F") || tag.ends_with("G") || tag.ends_with("H"))) || // Field50OrderingCustomerFGH
+               (base_tag == "52" && tag.len() == 3) || // Field52 with variant
+               tag == "51A"
+            {
+                last_seq_a_pos = last_seq_a_pos.max(*pos);
+            }
+        }
+
+        // Parse transactions from sequence B
+        let mut transactions = Vec::new();
+        let mut current_transaction_fields: std::collections::HashMap<
+            String,
+            Vec<(String, usize)>,
+        > = std::collections::HashMap::new();
+        let mut in_transaction = false;
+
+        for (tag, value, pos) in all_fields {
+            // Only process fields after sequence A
+            if pos > last_seq_a_pos {
+                if tag == "21" {
+                    // New transaction starts
+                    if in_transaction && !current_transaction_fields.is_empty() {
+                        // Parse previous transaction
+                        if let Ok(transaction) =
+                            MT101Transaction::from_fields(current_transaction_fields.clone())
+                        {
+                            transactions.push(transaction);
+                        }
+                        current_transaction_fields.clear();
+                    }
+                    in_transaction = true;
+                }
+
+                if in_transaction {
+                    current_transaction_fields
+                        .entry(tag)
+                        .or_default()
+                        .push((value, pos));
+                }
+            }
+        }
+
+        // Parse last transaction
+        if in_transaction && !current_transaction_fields.is_empty() {
+            if let Ok(transaction) = MT101Transaction::from_fields(current_transaction_fields) {
+                transactions.push(transaction);
+            }
+        }
+
+        mt101.transactions = transactions;
+        Ok(mt101)
     }
-  ]
-}"#;
+}

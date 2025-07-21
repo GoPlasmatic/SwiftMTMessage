@@ -592,7 +592,8 @@ fn build_slash_compound_pattern(first_no_parens: &str, second_no_parens: &str) -
 /// Build slash pattern efficiently
 fn build_slash_pattern(inner_regex_no_parens: &str) -> String {
     let mut result = String::with_capacity(inner_regex_no_parens.len() + 4);
-    result.push_str("/(");
+    result.push('/');
+    result.push('(');
     result.push_str(inner_regex_no_parens);
     result.push(')');
     result

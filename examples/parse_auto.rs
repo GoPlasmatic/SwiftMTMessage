@@ -1,40 +1,39 @@
+use std::env;
+use std::fs;
 use swift_mt_message::{ParsedSwiftMessage, SwiftParser};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Sample SWIFT message (MT900 - Confirmation of Debit)
-    // This example works with any supported message type (MT103, MT202, MT205, MT900)
-    let raw_swift_message = r#"{1:F01CHASUS33AXXX0000000000}{2:I103DEUTDEFFAXXXN}{3:{113:SEPA}{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}}{4:
-:13C:/SNDTIME/1200+0100
-:20:STP2024123456
-:23B:CRED
-:23E:INTC/COMPLIANCE
-:26T:A01
-:32A:241231USD1500000,00
-:33B:EUR1375000,00
-:36:1,0909
-:50K:/1234567890
-GLOBAL TECH CORPORATION
-456 INNOVATION DRIVE
-SAN FRANCISCO CA 94105 US
+    // Get the raw message either from file or use default
+    let raw_swift_message = if let Some(filename) = env::args().nth(1) {
+        // Read from file
+        fs::read_to_string(&filename)
+            .map_err(|e| format!("Failed to read file '{}': {}", filename, e))?
+    } else {
+        // Use default sample message
+        r#"{1:F01BANKAUS33AXXX0001234567}{2:I101DEUTDEFFXXXXN}{3:{103:AAA}{113:XXXX}}{4:
+:20:BATCH20241231
+:28D:1/1
+:50C:BANKUS33
 :52A:CHASUS33
-:53A:BNPAFRPP
-:54A:DEUTDEFF
-:57A:DEUTDEFF
+:30:241231
+:25:/1234567890USD
+:21:TX001
+:32B:USD50000,00
 :59:/DE89370400440532013000
-DEUTDEFF
-:70:/INV/INVOICE-2024-Q4-789
-/RFB/SOFTWARE LICENSE PAYMENT
-ENTERPRISE SOFTWARE LICENSES
-ANNUAL SUBSCRIPTION RENEWAL
-:71A:SHA
-:71F:USD50,00
-:72:/ACC/STANDARD PROCESSING
-/INS/COMPLY WITH LOCAL REGS
-AUTOMATED STP PROCESSING
-:77B:/ORDERRES/DE//REGULATORY INFO
-SOFTWARE LICENSE COMPLIANCE
-TRADE RELATED TRANSACTION
--}"#;
+SUPPLIER GMBH
+INDUSTRIAL STRASSE 456
+60329 FRANKFURT GERMANY
+:71A:OUR
+:21:TX002
+:32B:USD25000,00
+:59:/GB98MIDL07009312345678
+UK SUPPLIER LTD
+456 HIGH STREET
+LONDON EC1A 1BB UK
+:71A:OUR
+-}"#
+        .to_string()
+    };
 
     println!("🔍 SWIFT Message Auto-Parser with JSON Conversion");
     println!("{}", "=".repeat(60));
@@ -43,7 +42,7 @@ TRADE RELATED TRANSACTION
     println!("\n📊 Parsing with automatic message type detection...");
     println!("{}", "-".repeat(50));
 
-    match SwiftParser::parse_auto(raw_swift_message) {
+    match SwiftParser::parse_auto(&raw_swift_message) {
         Ok(parsed_message) => {
             println!("✅ Successfully parsed SWIFT message!");
 
@@ -55,6 +54,9 @@ TRADE RELATED TRANSACTION
 
             // Convert to JSON and display
             convert_to_json(&parsed_message)?;
+
+            // Validate the message
+            validate_message(&parsed_message)?;
         }
         Err(e) => {
             println!("❌ Failed to parse SWIFT message: {e:?}");
@@ -107,6 +109,55 @@ fn convert_to_json(parsed_message: &ParsedSwiftMessage) -> Result<(), Box<dyn st
     let full_json = serde_json::to_string_pretty(parsed_message)?;
     println!("\n📄 Complete Message JSON:");
     println!("{full_json}");
+
+    Ok(())
+}
+
+fn validate_message(parsed_message: &ParsedSwiftMessage) -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n✨ Validating SWIFT Message:");
+    println!("{}", "-".repeat(50));
+
+    // Perform validation based on message type
+    let validation_errors = match parsed_message {
+        ParsedSwiftMessage::MT101(mt101) => {
+            println!("🔍 Validating MT101 message...");
+            mt101.validate_business_rules()
+        }
+        ParsedSwiftMessage::MT103(mt103) => {
+            println!("🔍 Validating MT103 message...");
+            mt103.validate_business_rules()
+        }
+        ParsedSwiftMessage::MT202(mt202) => {
+            println!("🔍 Validating MT202 message...");
+            mt202.validate_business_rules()
+        }
+        ParsedSwiftMessage::MT205(mt205) => {
+            println!("🔍 Validating MT205 message...");
+            mt205.validate_business_rules()
+        }
+        ParsedSwiftMessage::MT900(mt900) => {
+            println!("🔍 Validating MT900 message...");
+            mt900.validate_business_rules()
+        }
+        _ => {
+            println!("❌ Unsupported message type for validation.");
+            return Ok(());
+        }
+    };
+
+    // Display validation results
+    if validation_errors.errors.is_empty() {
+        println!("\n✅ Message validation passed!");
+    } else {
+        println!(
+            "\n❌ Message validation failed with {} error(s):",
+            validation_errors.errors.len()
+        );
+
+        for (index, error) in validation_errors.errors.iter().enumerate() {
+            println!("\n   {}. {}", index + 1, error);
+        }
+    }
 
     Ok(())
 }

@@ -136,6 +136,27 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
         let inner_type = &field.inner_type;
         let tag = &field.tag;
 
+        // Special handling for sequence fields marked with "#"
+        if tag == "#" {
+            if field.is_repetitive {
+                // This is a sequence field (like transactions in MT101)
+                field_parsers.push(quote! {
+                    #field_name: {
+                        // Parse sequence B fields
+                        // This will be handled by the message-specific logic
+                        // For now, return empty vec
+                        Vec::new()
+                    }
+                });
+            } else {
+                return Err(crate::error::MacroError::internal(
+                    proc_macro2::Span::call_site(),
+                    "Field with tag '#' must be repetitive (Vec<T>)",
+                ));
+            }
+            continue;
+        }
+
         if field.is_optional {
             if field.is_repetitive {
                 // Optional Vec<T> - consume all values for this tag with enhanced error context
@@ -249,6 +270,11 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
     for field in fields {
         let field_name = &field.name;
         let tag = &field.tag;
+
+        // Skip sequence fields marked with "#"
+        if tag == "#" {
+            continue;
+        }
 
         if field.is_optional {
             if field.is_repetitive {

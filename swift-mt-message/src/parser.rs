@@ -309,7 +309,35 @@ impl SwiftParser {
         // Route to appropriate parser based on message type
         match message_type.as_str() {
             "101" => {
-                let parsed = Self::parse::<MT101>(raw_message)?;
+                // Parse MT101 with custom sequence handling
+                let block1 = Self::extract_block(raw_message, 1)?;
+                let block2 = Self::extract_block(raw_message, 2)?;
+                let block3 = Self::extract_block(raw_message, 3)?;
+                let block4 = Self::extract_block(raw_message, 4)?;
+                let block5 = Self::extract_block(raw_message, 5)?;
+
+                // Parse headers
+                let basic_header = BasicHeader::parse(&block1.unwrap_or_default())?;
+                let application_header = ApplicationHeader::parse(&block2.unwrap_or_default())?;
+                let user_header = block3.map(|b| UserHeader::parse(&b)).transpose()?;
+                let trailer = block5.map(|b| Trailer::parse(&b)).transpose()?;
+
+                // Parse block 4 fields with position tracking
+                let field_map_with_positions =
+                    Self::parse_block4_fields(&block4.unwrap_or_default())?;
+
+                // Use custom parsing for MT101
+                let fields = MT101::parse_with_sequences(field_map_with_positions)?;
+
+                let parsed = SwiftMessage {
+                    basic_header,
+                    application_header,
+                    user_header,
+                    trailer,
+                    message_type: "101".to_string(),
+                    fields,
+                };
+
                 Ok(ParsedSwiftMessage::MT101(Box::new(parsed)))
             }
             "103" => {
@@ -567,8 +595,8 @@ impl SwiftParser {
 
         // For certain field numbers, preserve the option letter to avoid conflicts
         match numeric_part {
-            "11" | "13" | "23" | "26" | "32" | "33" | "50" | "52" | "53" | "54" | "55" | "56"
-            | "57" | "58" | "59" | "71" | "77" => {
+            "11" | "13" | "23" | "26" | "28" | "32" | "33" | "50" | "52" | "53" | "54" | "55"
+            | "56" | "57" | "58" | "59" | "71" | "77" => {
                 // Keep option letters for fields that have multiple variants or specific formats
                 // 11A (MT and Date - Option A), 11S (MT and Date - Option S)
                 // 13C (Time Indication)

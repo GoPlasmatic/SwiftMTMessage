@@ -578,6 +578,17 @@ impl FieldParserGenerator {
 
         let pattern_without_anchors = regex_pattern.trim_start_matches('^').trim_end_matches('$');
 
+        // Check if this is a known pattern that should use the cache
+        let cache_key = if field.components.len() == 2
+            && field.components[0].format.pattern == "5n"
+            && field.components[1].format.pattern == "/5n"
+        {
+            // This is the Field28D pattern "5n/5n"
+            "5n/5n"
+        } else {
+            pattern_without_anchors
+        };
+
         // Generate the friendly format at compile time
         let friendly_format_desc = crate::format::format_to_description(&regex_pattern);
 
@@ -597,12 +608,13 @@ impl FieldParserGenerator {
                 cache.insert("15d", Regex::new(r"^(\d{1,15}(?:[.,]\d+)?)$").unwrap());
                 cache.insert("16x", Regex::new(r"^(.{1,16})$").unwrap());
                 cache.insert("35x", Regex::new(r"^(.{1,35})$").unwrap());
+                cache.insert("5n/5n", Regex::new(r"^(\d{1,5})/(\d{1,5})$").unwrap());
 
                 cache
             });
 
             // Try to get regex from cache first
-            let regex = if let Some(cached_regex) = REGEX_CACHE.get(#pattern_without_anchors) {
+            let regex = if let Some(cached_regex) = REGEX_CACHE.get(#cache_key) {
                 cached_regex
             } else {
                 static FALLBACK_REGEX: Lazy<Regex> = Lazy::new(|| {

@@ -193,6 +193,18 @@ fn generate_multi_component_to_swift_string(
 
     // Check for specific patterns that need custom handling
 
+    // Pattern: 5n + /5n (Field28D style - numeric / numeric)
+    if patterns.len() == 2 && patterns[0] == "5n" && patterns[1] == "/5n" {
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        let first_field = &first_component.name;
+        let second_field = &second_component.name;
+
+        return Ok(quote! {
+            format!("{}/{}", self.#first_field, self.#second_field)
+        });
+    }
+
     // Pattern: [/34x] + 4*35x (Field50K style - optional string + vec string)
     if patterns.len() == 2 &&
        patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&

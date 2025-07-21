@@ -1,6 +1,10 @@
 //! Code generation for SwiftField derive macro
 
 use crate::ast::{EnumField, FieldDefinition, FieldKind, StructField};
+use crate::codegen::helpers::{
+    generate_optional_prefix_field, generate_account_bic_field, 
+    generate_numbered_lines_field
+};
 use crate::codegen::type_generators::{
     generate_sample_for_component, generate_to_swift_string_for_component,
 };
@@ -201,30 +205,15 @@ fn generate_multi_component_to_swift_string(
         let first_field = &first_component.name;
         let second_field = &second_component.name;
 
-        return Ok(quote! {
-            {
-                // Pre-calculate capacity
-                let capacity = self.#first_field.as_ref().map(|s| s.len() + 1).unwrap_or(0)
-                    + self.#second_field.iter().map(|s| s.len() + 1).sum::<usize>();
-                let mut result = String::with_capacity(capacity);
-
-                // Add first component with prefix if present
-                if let Some(ref value) = self.#first_field {
-                    result.push('/');
-                    result.push_str(value);
-                }
-
-                // Add second component (address lines)
-                if !self.#second_field.is_empty() {
-                    if !result.is_empty() {
-                        result.push_str("\n");
-                    }
-                    result.push_str(&self.#second_field.join("\n"));
-                }
-
-                result
-            }
-        });
+        return Ok(generate_optional_prefix_field(
+            first_field,
+            second_field,
+            '/',
+            "\n",
+            true,  // first is optional
+            false, // second is not optional (it's a vec)
+            true,  // second is vec
+        ));
     }
 
     // Pattern: 4!c + [/30x] (Field23E style - string + optional string)
@@ -235,30 +224,20 @@ fn generate_multi_component_to_swift_string(
         && patterns[1].ends_with("]")
         && patterns[1].contains("x")
     {
-        // Ensure it's a text field, not numeric
-
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
         let first_field = &first_component.name;
         let second_field = &second_component.name;
 
-        return Ok(quote! {
-            {
-                // Pre-calculate capacity
-                let capacity = self.#first_field.len()
-                    + self.#second_field.as_ref().map(|s| s.len() + 1).unwrap_or(0);
-                let mut result = String::with_capacity(capacity);
-                result.push_str(&self.#first_field);
-
-                // Add second component with prefix if present
-                if let Some(ref value) = self.#second_field {
-                    result.push('/');
-                    result.push_str(value);
-                }
-
-                result
-            }
-        });
+        return Ok(generate_optional_prefix_field(
+            first_field,
+            second_field,
+            '/',
+            "",    // no separator between components
+            false, // first is not optional
+            true,  // second is optional
+            false, // second is not vec
+        ));
     }
 
     // Pattern: [/34x] + BIC (Field59A style - optional string + BIC string)
@@ -272,26 +251,7 @@ fn generate_multi_component_to_swift_string(
         let first_field = &first_component.name;
         let second_field = &second_component.name;
 
-        return Ok(quote! {
-            {
-                // Pre-calculate capacity
-                let capacity = self.#first_field.as_ref().map(|s| s.len() + 2).unwrap_or(0)
-                    + self.#second_field.len();
-                let mut result = String::with_capacity(capacity);
-
-                // Add account if present (with "/" prefix)
-                if let Some(ref account) = self.#first_field {
-                    result.push('/');
-                    result.push_str(account);
-                    result.push_str("\n");
-                }
-
-                // Add BIC code
-                result.push_str(&self.#second_field);
-
-                result
-            }
-        });
+        return Ok(generate_account_bic_field(first_field, second_field));
     }
 
     // Pattern: [/1!a][/34x] + [35x] (Field53B/Field57B style - optional party identifier + optional location)
@@ -301,20 +261,17 @@ fn generate_multi_component_to_swift_string(
         let first_field = &first_component.name;
         let second_field = &second_component.name;
 
+        // This pattern is simpler - just two optional fields concatenated
         return Ok(quote! {
             {
-                // Pre-calculate capacity
-                let capacity = self.#first_field.as_ref().map(|s| s.len() + 1).unwrap_or(0)
+                let capacity = self.#first_field.as_ref().map(|s| s.len()).unwrap_or(0)
                     + self.#second_field.as_ref().map(|s| s.len() + 1).unwrap_or(0);
                 let mut result = String::with_capacity(capacity);
 
-                // Add party identifier if present (with "/" prefix)
                 if let Some(ref party_id) = self.#first_field {
-                    result.push('/');
                     result.push_str(party_id);
                 }
 
-                // Add location on new line if present
                 if let Some(ref location) = self.#second_field {
                     if !result.is_empty() {
                         result.push_str("\n");
@@ -333,41 +290,12 @@ fn generate_multi_component_to_swift_string(
        patterns[0].contains("x") && // Ensure it's a text field
        patterns[1] == "4*(1!n/33x)"
     {
-        // Exact match for Field59F
-
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
         let first_field = &first_component.name;
         let second_field = &second_component.name;
 
-        return Ok(quote! {
-            {
-                // Pre-calculate capacity
-                let capacity = self.#first_field.as_ref().map(|s| s.len() + 1).unwrap_or(0)
-                    + self.#second_field.iter().enumerate()
-                        .map(|(i, s)| s.len() + 3 + (i + 1).to_string().len())
-                        .sum::<usize>();
-                let mut result = String::with_capacity(capacity);
-
-                // Add party identifier if present (with "/" prefix)
-                if let Some(ref party_id) = self.#first_field {
-                    result.push('/');
-                    result.push_str(party_id);
-                }
-
-                // Add name and address lines with proper line number formatting
-                use std::fmt::Write;
-                for (i, line) in self.#second_field.iter().enumerate() {
-                    if !result.is_empty() || i > 0 {
-                        result.push_str("\n");
-                    }
-                    // Format: line number + "/" + text (per 4*(1!n/33x) format)
-                    write!(&mut result, "{}/{}", i + 1, line).unwrap();
-                }
-
-                result
-            }
-        });
+        return Ok(generate_numbered_lines_field(first_field, second_field));
     }
 
     // Default: use original concatenation logic for multi-component fields

@@ -161,33 +161,37 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
             if field.is_repetitive {
                 // Optional Vec<T> - consume all values for this tag with enhanced error context
                 field_parsers.push(quote! {
-                    #field_name: fields.get(#tag)
-                        .map(|values| {
-                            values.iter()
-                                .enumerate()
-                                .map(|(idx, (v, pos))| {
-                                    #inner_type::parse(v)
-                                        .map_err(|e| {
-                                            let line_num = *pos >> 16;
-                                            crate::errors::ParseError::FieldParsingFailed {
-                                                field_tag: #tag.to_string(),
-                                                field_type: stringify!(#inner_type).to_string(),
-                                                position: line_num,
-                                                original_error: format!("Item {}: {}", idx, e),
-                                            }
-                                        })
-                                })
-                                .collect::<crate::SwiftResult<Vec<_>>>()
-                        })
-                        .transpose()?
+                    #field_name: {
+                        let base_tag = crate::extract_base_tag(#tag);
+                        fields.get(base_tag)
+                            .map(|values| {
+                                values.iter()
+                                    .enumerate()
+                                    .map(|(idx, (v, pos))| {
+                                        #inner_type::parse(v)
+                                            .map_err(|e| {
+                                                let line_num = *pos >> 16;
+                                                crate::errors::ParseError::FieldParsingFailed {
+                                                    field_tag: #tag.to_string(),
+                                                    field_type: stringify!(#inner_type).to_string(),
+                                                    position: line_num,
+                                                    original_error: format!("Item {}: {}", idx, e),
+                                                }
+                                            })
+                                    })
+                                    .collect::<crate::SwiftResult<Vec<_>>>()
+                            })
+                            .transpose()?
+                    }
                 });
             } else {
                 // Optional T - use sequential consumption with enhanced error context
                 field_parsers.push(quote! {
                     #field_name: {
+                        let base_tag = crate::extract_base_tag(#tag);
                         if let Some((value, variant_tag, pos)) =
-                            crate::parser::find_field_with_variant_sequential(&fields, #tag, &mut tracker) {
-                            Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(#tag))
+                            crate::parser::find_field_with_variant_sequential(&fields, base_tag, &mut tracker) {
+                            Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
                                 .map_err(|e| {
                                     let line_num = pos >> 16;
                                     crate::errors::ParseError::FieldParsingFailed {
@@ -206,32 +210,36 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
         } else if field.is_repetitive {
             // Required Vec<T> - consume all values for this tag with enhanced error context
             field_parsers.push(quote! {
-                #field_name: fields.get(#tag)
-                    .map(|values| {
-                        values.iter()
-                            .enumerate()
-                            .map(|(idx, (v, pos))| {
-                                #inner_type::parse(v)
-                                    .map_err(|e| {
-                                        let line_num = *pos >> 16;
-                                        crate::errors::ParseError::FieldParsingFailed {
-                                            field_tag: #tag.to_string(),
-                                            field_type: stringify!(#inner_type).to_string(),
-                                            position: line_num,
-                                            original_error: format!("Item {}: {}", idx, e),
-                                        }
-                                    })
-                            })
-                            .collect::<crate::SwiftResult<Vec<_>>>()
-                    })
-                    .unwrap_or_else(|| Ok(Vec::new()))?
+                #field_name: {
+                    let base_tag = crate::extract_base_tag(#tag);
+                    fields.get(base_tag)
+                        .map(|values| {
+                            values.iter()
+                                .enumerate()
+                                .map(|(idx, (v, pos))| {
+                                    #inner_type::parse(v)
+                                        .map_err(|e| {
+                                            let line_num = *pos >> 16;
+                                            crate::errors::ParseError::FieldParsingFailed {
+                                                field_tag: #tag.to_string(),
+                                                field_type: stringify!(#inner_type).to_string(),
+                                                position: line_num,
+                                                original_error: format!("Item {}: {}", idx, e),
+                                            }
+                                        })
+                                })
+                                .collect::<crate::SwiftResult<Vec<_>>>()
+                        })
+                        .unwrap_or_else(|| Ok(Vec::new()))?
+                }
             });
         } else {
             // Required T - use sequential consumption with enhanced error context
             field_parsers.push(quote! {
                 #field_name: {
+                    let base_tag = crate::extract_base_tag(#tag);
                     let (value, variant_tag, pos) =
-                        crate::parser::find_field_with_variant_sequential(&fields, #tag, &mut tracker)
+                        crate::parser::find_field_with_variant_sequential(&fields, base_tag, &mut tracker)
                             .ok_or_else(|| crate::errors::ParseError::MissingRequiredField {
                                 field_tag: #tag.to_string(),
                                 field_name: stringify!(#field_name).to_string(),
@@ -239,7 +247,7 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                                 position_in_block4: None,
                             })?;
 
-                    #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(#tag))
+                    #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
                         .map_err(|e| {
                             let line_num = pos >> 16;
                             crate::errors::ParseError::FieldParsingFailed {
@@ -285,7 +293,8 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                             .map(|v| v.to_swift_string())
                             .collect();
                         if !serialized_values.is_empty() {
-                            fields.insert(#tag.to_string(), serialized_values);
+                            let mt_tag = crate::get_field_tag_for_mt(#tag);
+                            fields.insert(mt_tag, serialized_values);
                         }
                     }
                 });
@@ -295,14 +304,16 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                 if is_enum_field_type(field_type) {
                     field_serializers.push(quote! {
                         if let Some(ref value) = self.#field_name {
-                            let field_tag_with_variant = crate::get_field_tag_with_variant(#tag, value);
+                            let base_tag = crate::get_field_tag_for_mt(#tag);
+                            let field_tag_with_variant = crate::get_field_tag_with_variant(&base_tag, value);
                             fields.insert(field_tag_with_variant, vec![value.to_swift_string()]);
                         }
                     });
                 } else {
                     field_serializers.push(quote! {
                         if let Some(ref value) = self.#field_name {
-                            fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
+                            let mt_tag = crate::get_field_tag_for_mt(#tag);
+                            fields.insert(mt_tag, vec![value.to_swift_string()]);
                         }
                     });
                 }
@@ -313,19 +324,22 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                 let serialized_values: Vec<String> = self.#field_name.iter()
                     .map(|v| v.to_swift_string())
                     .collect();
-                fields.insert(#tag.to_string(), serialized_values);
+                let mt_tag = crate::get_field_tag_for_mt(#tag);
+                fields.insert(mt_tag, serialized_values);
             });
         } else {
             // Required T - check if it's an enum field that needs variant handling
             let field_type = &field.inner_type;
             if is_enum_field_type(field_type) {
                 field_serializers.push(quote! {
-                    let field_tag_with_variant = crate::get_field_tag_with_variant(#tag, &self.#field_name);
+                    let base_tag = crate::get_field_tag_for_mt(#tag);
+                    let field_tag_with_variant = crate::get_field_tag_with_variant(&base_tag, &self.#field_name);
                     fields.insert(field_tag_with_variant, vec![self.#field_name.to_swift_string()]);
                 });
             } else {
                 field_serializers.push(quote! {
-                    fields.insert(#tag.to_string(), vec![self.#field_name.to_swift_string()]);
+                    let mt_tag = crate::get_field_tag_for_mt(#tag);
+                    fields.insert(mt_tag, vec![self.#field_name.to_swift_string()]);
                 });
             }
         }

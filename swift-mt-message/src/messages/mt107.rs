@@ -111,10 +111,10 @@ pub struct MT107 {
     #[field("51A")]
     pub field_51a: Option<Field51A>,
 
-    #[field("50")]
+    #[field("50#1")]
     pub field_50_instructing: Option<Field50InstructingParty>,
 
-    #[field("50")]
+    #[field("50#2")]
     pub field_50_creditor: Option<Field50Creditor>,
 
     #[field("52")]
@@ -199,10 +199,10 @@ pub struct MT107Transaction {
     #[field("32B")]
     pub field_32b: Field32B,
 
-    #[field("50")]
+    #[field("50#1")]
     pub field_50_instructing: Option<Field50InstructingParty>,
 
-    #[field("50")]
+    #[field("50#2")]
     pub field_50_creditor: Option<Field50Creditor>,
 
     #[field("52")]

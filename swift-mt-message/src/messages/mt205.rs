@@ -124,28 +124,28 @@ pub struct MT205 {
     pub field_72: Option<Field72>, // Sender to Receiver Information
 
     // Sequence B: COV Cover Message Fields (Optional)
-    #[field("50")]
+    #[field("50#b")]
     pub field_50_seq_b: Option<Field50OrderingCustomerAFK>, // Ordering Customer
 
-    #[field("52")]
+    #[field("52#b")]
     pub field_52_seq_b: Option<Field52OrderingInstitution>, // Ordering Institution (Seq B)
 
-    #[field("56")]
+    #[field("56#b")]
     pub field_56_seq_b: Option<Field56Intermediary>, // Intermediary Institution (Seq B)
 
-    #[field("57")]
+    #[field("57#b")]
     pub field_57_seq_b: Option<Field57AccountWithInstitution>, // Account With Institution (Seq B)
 
-    #[field("59")]
+    #[field("59#b")]
     pub field_59_seq_b: Option<Field59>, // Beneficiary Customer
 
-    #[field("70")]
+    #[field("70#b")]
     pub field_70_seq_b: Option<Field70>, // Remittance Information
 
-    #[field("72")]
+    #[field("72#b")]
     pub field_72_seq_b: Option<Field72>, // Sender to Receiver Info (Seq B)
 
-    #[field("33B")]
+    #[field("33B#b")]
     pub field_33b_seq_b: Option<Field33B>, // Currency/Instructed Amount
 }
 

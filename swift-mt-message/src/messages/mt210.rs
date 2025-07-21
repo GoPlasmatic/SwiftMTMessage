@@ -105,6 +105,7 @@ pub struct MT210 {
     pub sequence: Vec<MT210Sequence>, // Sequence of Fields
 }
 
+#[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 pub struct MT210Sequence {
     #[field("21")]

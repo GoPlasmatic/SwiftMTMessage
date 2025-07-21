@@ -119,6 +119,7 @@ pub struct MT935 {
     pub field_72: Option<Field72>,
 }
 
+#[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT935_RATE_CHANGE_VALIDATION_RULES)]
 pub struct MT935RateChange {

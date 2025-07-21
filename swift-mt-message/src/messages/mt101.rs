@@ -89,9 +89,9 @@ use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 /// - **Related**: Works with MT202 for institutional settlement and MT940/MT950 for reporting
 /// - **Alternatives**: MT100 for single transfers, MT204 for direct debit instructions
 /// - **Status Updates**: May receive MT192/MT196/MT199 for status notifications
+#[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT101_VALIDATION_RULES)]
-#[serde_swift_fields]
 pub struct MT101 {
     #[field("20")]
     pub field_20: Field20, // Sender's Reference
@@ -102,11 +102,11 @@ pub struct MT101 {
     #[field("28D")]
     pub field_28d: Field28D, // Message Index/Total
 
-    #[field("50")]
-    pub field_50a_instructing_party: Option<Field50InstructingParty>, // Instructing Party
+    #[field("50#1")]
+    pub field_50_instructing_party: Option<Field50InstructingParty>, // Instructing Party
 
-    #[field("50")]
-    pub field_50a_ordering_customer: Option<Field50OrderingCustomerFGH>, // Ordering Customer
+    #[field("50#2")]
+    pub field_50_ordering_customer: Option<Field50OrderingCustomerFGH>, // Ordering Customer
 
     #[field("52")]
     pub field_52a: Option<Field52AccountServicingInstitution>, // Account Servicing Institution (Seq A)
@@ -163,10 +163,10 @@ pub struct MT101Transaction {
     #[field("32B")]
     pub field_32b: Field32B, // Currency/Amount
 
-    #[field("50")]
+    #[field("50#1")]
     pub field_50_instructing_party: Option<Field50InstructingParty>, // Instructing Party
 
-    #[field("50")]
+    #[field("50#2")]
     pub field_50_ordering_customer: Option<Field50OrderingCustomerFGH>, // Ordering Customer
 
     #[field("52")]
@@ -214,7 +214,7 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "If an exchange rate is given in field 36, the corresponding forex deal must be referenced in field 21F",
       "condition": {
         "all": [
-          {"var": "fields.transactions"},
+          {"var": "fields.#"},
           {
             "if": [
               {"!!": {"var": "36"}},
@@ -230,7 +230,7 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "In each occurrence of sequence B, if field 33B is present and amount in field 32B is not equal to zero, then field 36 must be present, otherwise field 36 is not allowed",
       "condition": {
         "all": [
-          {"var": "fields.transactions"},
+          {"var": "fields.#"},
           {
             "if": [
               {"!!": {"var": "33B"}},
@@ -266,22 +266,22 @@ const MT101_VALIDATION_RULES: &str = r#"{
         "or": [
           {
             "and": [
-              {"!!": {"var": "fields.field_50a_ordering_customer"}},
+              {"!!": {"var": "fields.50#2"}},
               {
                 "all": [
-                  {"var": "fields.transactions"},
-                  {"!": {"var": "50"}}
+                  {"var": "fields.#"},
+                  {"!": {"var": "50#2"}}
                 ]
               }
             ]
           },
           {
             "and": [
-              {"!": {"var": "fields.field_50a_ordering_customer"}},
+              {"!": {"var": "fields.50#2"}},
               {
                 "all": [
-                  {"var": "fields.transactions"},
-                  {"!!": {"var": "50"}}
+                  {"var": "fields.#"},
+                  {"!!": {"var": "50#2"}}
                 ]
               }
             ]
@@ -294,10 +294,10 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "Field 50a (option C or L) may be present in either sequence A or in one or more occurrences of sequence B, but must not be present in both sequences",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.field_50a_instructing_party"}},
+          {"!!": {"var": "fields.50#1"}},
           {
             "all": [
-              {"var": "fields.transactions"},
+              {"var": "fields.#"},
               {"!": {"var": "50"}}
             ]
           },
@@ -310,7 +310,7 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "If field 33B is present in sequence B, its currency code must be different from the currency code in field 32B",
       "condition": {
         "all": [
-          {"var": "fields.transactions"},
+          {"var": "fields.#"},
           {
             "if": [
               {"!!": {"var": "33B"}},
@@ -326,10 +326,10 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "Field 52a may be present in either sequence A or in one or more occurrences of sequence B, but must not be present in both sequences",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.field_52a"}},
+          {"!!": {"var": "fields.52"}},
           {
             "all": [
-              {"var": "fields.transactions"},
+              {"var": "fields.#"},
               {"!": {"var": "52"}}
             ]
           },
@@ -342,7 +342,7 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "If field 56a is present, field 57a must also be present",
       "condition": {
         "all": [
-          {"var": "fields.transactions"},
+          {"var": "fields.#"},
           {
             "if": [
               {"!!": {"var": "56"}},
@@ -358,17 +358,17 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "If field 21R is present in sequence A, then in each occurrence of sequence B, the currency code in fields 32B must be the same",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.field_21r"}},
+          {"!!": {"var": "fields.21r"}},
           {
             "and": [
-              {">": [{"var": "fields.transactions.length"}, 1]},
+              {">": [{"var": "fields.#.length"}, 1]},
               {
                 "reduce": [
-                  {"var": "fields.transactions"},
+                  {"var": "fields.#"},
                   {
                     "and": [
                       {"var": "accumulator"},
-                      {"==": [{"var": "current.32B.currency"}, {"var": "fields.transactions.0.32B.currency"}]}
+                      {"==": [{"var": "current.32B.currency"}, {"var": "fields.#.0.32B.currency"}]}
                     ]
                   },
                   true
@@ -385,7 +385,7 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "In each occurrence of sequence B, the presence of fields 33B and 21F is dependent on the presence and value of fields 32B and 23E",
       "condition": {
         "all": [
-          {"var": "fields.transactions"},
+          {"var": "fields.#"},
           {
             "if": [
               {"==": [{"var": "32B.amount"}, 0]},
@@ -416,43 +416,15 @@ const MT101_VALIDATION_RULES: &str = r#"{
       }
     },
     {
-      "id": "MANDATORY_FIELDS",
-      "description": "All mandatory fields must be present and valid",
-      "condition": {
-        "and": [
-          {"!!": {"var": "fields.field_20"}},
-          {"!=": [{"var": "fields.field_20.reference"}, ""]},
-          {"!!": {"var": "fields.field_28d"}},
-          {"!!": {"var": "fields.field_30"}},
-          {">": [{"var": "fields.transactions.length"}, 0]},
-          {
-            "all": [
-              {"var": "fields.transactions"},
-              {
-                "and": [
-                  {"!!": {"var": "21"}},
-                  {"!=": [{"var": "21.reference"}, ""]},
-                  {"!!": {"var": "32B"}},
-                  {"!!": {"var": "59"}},
-                  {"!!": {"var": "71A"}},
-                  {"in": [{"var": "71A.code"}, ["OUR", "SHA", "BEN"]]}
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
       "id": "REFERENCE_FORMAT",
       "description": "Reference fields must not contain invalid patterns",
       "condition": {
         "and": [
-          {"!=": [{"var": "fields.field_20.reference"}, ""]},
-          {"!": {"in": ["//", {"var": "fields.field_20.reference"}]}},
+          {"!=": [{"var": "fields.20.reference"}, ""]},
+          {"!": {"in": ["//", {"var": "fields.20.reference"}]}},
           {
             "all": [
-              {"var": "fields.transactions"},
+              {"var": "fields.#"},
               {
                 "and": [
                   {"!=": [{"var": "21.reference"}, ""]},
@@ -469,7 +441,7 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "All amounts must be properly formatted",
       "condition": {
         "all": [
-          {"var": "fields.transactions"},
+          {"var": "fields.#"},
           {
             "and": [
               {">": [{"var": "32B.amount"}, -1]},
@@ -490,7 +462,7 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "All currency codes must be valid ISO 4217 3-letter codes",
       "condition": {
         "all": [
-          {"var": "fields.transactions"},
+          {"var": "fields.#"},
           {
             "and": [
               {"!=": [{"var": "32B.currency"}, ""]},
@@ -507,66 +479,14 @@ const MT101_VALIDATION_RULES: &str = r#"{
       }
     },
     {
-      "id": "BIC_VALIDATION",
-      "description": "All BIC codes must be properly formatted (non-empty)",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "basic_header.sender_bic"}, ""]},
-          {"!=": [{"var": "application_header.receiver_bic"}, ""]},
-          {
-            "if": [
-              {"!!": {"var": "fields.field_51a"}},
-              {"!=": [{"var": "fields.field_51a.A.bic"}, ""]},
-              true
-            ]
-          },
-          {
-            "all": [
-              {"var": "fields.transactions"},
-              {
-                "and": [
-                  {
-                    "if": [
-                      {"!!": {"var": "56"}},
-                      {
-                        "if": [
-                          {"!!": {"var": "56.A"}},
-                          {"!=": [{"var": "56.A.bic"}, ""]},
-                          true
-                        ]
-                      },
-                      true
-                    ]
-                  },
-                  {
-                    "if": [
-                      {"!!": {"var": "57"}},
-                      {
-                        "if": [
-                          {"!!": {"var": "57.A"}},
-                          {"!=": [{"var": "57.A.bic"}, ""]},
-                          true
-                        ]
-                      },
-                      true
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
       "id": "MESSAGE_INDEX_TOTAL",
       "description": "Message index must not exceed total",
       "condition": {
         "and": [
-          {"!!": {"var": "fields.field_28d"}},
-          {"<=": [{"var": "fields.field_28d.index"}, {"var": "fields.field_28d.total"}]},
-          {">": [{"var": "fields.field_28d.index"}, 0]},
-          {">": [{"var": "fields.field_28d.total"}, 0]}
+          {"!!": {"var": "fields.28d"}},
+          {"<=": [{"var": "fields.28d.index"}, {"var": "fields.28d.total"}]},
+          {">": [{"var": "fields.28d.index"}, 0]},
+          {">": [{"var": "fields.28d.total"}, 0]}
         ]
       }
     },
@@ -575,8 +495,8 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "Requested execution date must be valid",
       "condition": {
         "and": [
-          {"!!": {"var": "fields.field_30"}},
-          {"!=": [{"var": "fields.field_30.execution_date"}, ""]}
+          {"!!": {"var": "fields.30"}},
+          {"!=": [{"var": "fields.30.execution_date"}, ""]}
         ]
       }
     },
@@ -585,7 +505,7 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "23E instruction codes must be valid when present",
       "condition": {
         "all": [
-          {"var": "fields.transactions"},
+          {"var": "fields.#"},
           {
             "if": [
               {"!!": {"var": "23E"}},

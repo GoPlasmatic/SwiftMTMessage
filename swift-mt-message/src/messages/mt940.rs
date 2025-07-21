@@ -147,6 +147,7 @@ pub struct MT940 {
     pub field_86: Option<Field86>,
 }
 
+#[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT940_STATEMENT_LINE_VALIDATION_RULES)]
 pub struct MT940StatementLine {

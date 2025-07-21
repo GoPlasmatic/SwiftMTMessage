@@ -89,10 +89,10 @@ pub struct MT942 {
     #[field("28C")]
     pub field_28c: Field28C,
 
-    #[field("34F")]
+    #[field("34F#1")]
     pub field_34f_debit_limit: Field34F,
 
-    #[field("34F")]
+    #[field("34F#2")]
     pub field_34f_credit_limit: Option<Field34F>,
 
     #[field("13D")]
@@ -111,6 +111,7 @@ pub struct MT942 {
     pub field_86: Option<Field86>,
 }
 
+#[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT942_STATEMENT_LINE_VALIDATION_RULES)]
 pub struct MT942StatementLine {

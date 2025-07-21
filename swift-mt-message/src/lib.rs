@@ -763,6 +763,8 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             }
         };
 
+        println!("Validation context: {}", context_value.to_string());
+
         // Validate each rule using datalogic-rs
         let mut errors = Vec::new();
         let mut warnings = Vec::new();
@@ -913,6 +915,20 @@ where
     } else {
         base_tag.to_string()
     }
+}
+
+/// Extract base field tag by removing index suffix (e.g., "50#1" -> "50")
+pub fn extract_base_tag(tag: &str) -> &str {
+    if let Some(index_pos) = tag.find('#') {
+        &tag[..index_pos]
+    } else {
+        tag
+    }
+}
+
+/// Get field tag for MT serialization by stripping index suffix
+pub fn get_field_tag_for_mt(tag: &str) -> String {
+    extract_base_tag(tag).to_string()
 }
 
 impl<T: SwiftMessageBody> SwiftMessage<T> {
@@ -1077,6 +1093,37 @@ mod tests {
     use super::*;
     use crate::parser::SwiftParser;
     use std::fs;
+
+    #[test]
+    fn test_extract_base_tag() {
+        // Test extraction of base tag from indexed tags
+        assert_eq!(extract_base_tag("50"), "50");
+        assert_eq!(extract_base_tag("50#1"), "50");
+        assert_eq!(extract_base_tag("50#2"), "50");
+        assert_eq!(extract_base_tag("32A#1"), "32A");
+        assert_eq!(extract_base_tag("34F#10"), "34F");
+        assert_eq!(extract_base_tag("50C#123"), "50C");
+
+        // Test tags without index
+        assert_eq!(extract_base_tag("20"), "20");
+        assert_eq!(extract_base_tag("32A"), "32A");
+        assert_eq!(extract_base_tag("59F"), "59F");
+    }
+
+    #[test]
+    fn test_get_field_tag_for_mt() {
+        // Test conversion for MT serialization
+        assert_eq!(get_field_tag_for_mt("50"), "50");
+        assert_eq!(get_field_tag_for_mt("50#1"), "50");
+        assert_eq!(get_field_tag_for_mt("50#2"), "50");
+        assert_eq!(get_field_tag_for_mt("32A#1"), "32A");
+        assert_eq!(get_field_tag_for_mt("34F#10"), "34F");
+
+        // Test tags without index
+        assert_eq!(get_field_tag_for_mt("20"), "20");
+        assert_eq!(get_field_tag_for_mt("32A"), "32A");
+        assert_eq!(get_field_tag_for_mt("59F"), "59F");
+    }
 
     #[test]
     fn test_round_trip_core_functionality() {

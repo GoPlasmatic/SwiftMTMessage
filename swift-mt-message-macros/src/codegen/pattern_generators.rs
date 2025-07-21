@@ -32,7 +32,7 @@ impl FieldPatternGenerator for SimplePatternGenerator {
             && !field.components[0].format.pattern.contains('[')
     }
 
-    fn generate_parser(&self, _name: &syn::Ident, field: &StructField) -> MacroResult<TokenStream> {
+    fn generate_parser(&self, name: &syn::Ident, field: &StructField) -> MacroResult<TokenStream> {
         let component = &field.components[0];
         let field_name = &component.name;
         let pattern = &component.format.pattern;
@@ -44,6 +44,8 @@ impl FieldPatternGenerator for SimplePatternGenerator {
         let conversion_expr =
             generate_type_conversion_expr(&component.field_type, quote! { raw_value })?;
 
+        let name_str = name.to_string();
+
         Ok(quote! {
             use once_cell::sync::Lazy;
             use regex::Regex;
@@ -53,13 +55,21 @@ impl FieldPatternGenerator for SimplePatternGenerator {
             });
 
             let captures = PATTERN_REGEX.captures(value.trim())
-                .ok_or_else(|| crate::errors::ParseError::InvalidFormat {
-                    message: format!("Value does not match expected pattern: {}", #regex_pattern),
+                .ok_or_else(|| crate::errors::ParseError::ComponentParseError {
+                    field_tag: #name_str.to_string(),
+                    component_index: 0,
+                    component_name: stringify!(#field_name).to_string(),
+                    expected_format: #pattern.to_string(),
+                    actual_value: value.to_string(),
                 })?;
 
             let raw_value = captures.get(1)
-                .ok_or_else(|| crate::errors::ParseError::InvalidFormat {
-                    message: "Missing required value".to_string(),
+                .ok_or_else(|| crate::errors::ParseError::ComponentParseError {
+                    field_tag: #name_str.to_string(),
+                    component_index: 0,
+                    component_name: stringify!(#field_name).to_string(),
+                    expected_format: #pattern.to_string(),
+                    actual_value: value.to_string(),
                 })?
                 .as_str();
 
@@ -82,13 +92,16 @@ impl FieldPatternGenerator for OptionalPatternGenerator {
             && field.components[0].format.pattern.ends_with(']')
     }
 
-    fn generate_parser(&self, _name: &syn::Ident, field: &StructField) -> MacroResult<TokenStream> {
+    fn generate_parser(&self, name: &syn::Ident, field: &StructField) -> MacroResult<TokenStream> {
         let component = &field.components[0];
         let field_name = &component.name;
         let pattern = &component.format.pattern;
 
         // Generate regex
         let regex_pattern = swift_format_to_regex(pattern)?;
+        
+        // Generate human-readable format description
+        let format_desc = crate::format::format_to_description(pattern);
 
         // Extract inner type from Option<T>
         let inner_type = extract_inner_type(&component.field_type, true, false);
@@ -103,8 +116,13 @@ impl FieldPatternGenerator for OptionalPatternGenerator {
             });
 
             let captures = PATTERN_REGEX.captures(value.trim())
-                .ok_or_else(|| crate::errors::ParseError::InvalidFormat {
-                    message: format!("Value does not match expected pattern: {}", #regex_pattern),
+                .ok_or_else(|| crate::errors::ParseError::InvalidFieldFormat {
+                    field_tag: stringify!(#name).to_string(),
+                    component_name: stringify!(#field_name).to_string(),
+                    value: value.to_string(),
+                    format_spec: #format_desc.to_string(),
+                    position: None,
+                    inner_error: "Value does not match expected pattern".to_string(),
                 })?;
 
             let #field_name = if let Some(captured) = captures.get(1) {
@@ -134,13 +152,29 @@ impl FieldPatternGenerator for RepetitivePatternGenerator {
                 || field.components[0].format.pattern.contains('*'))
     }
 
-    fn generate_parser(&self, _name: &syn::Ident, field: &StructField) -> MacroResult<TokenStream> {
+    fn generate_parser(&self, name: &syn::Ident, field: &StructField) -> MacroResult<TokenStream> {
         let component = &field.components[0];
         let field_name = &component.name;
         let pattern = &component.format.pattern;
 
         // Generate regex
         let regex_pattern = swift_format_to_regex(pattern)?;
+        
+        // Generate human-readable format description
+        let format_desc = match pattern.as_str() {
+            "4*35x" => "Up to 4 lines of 35 characters each".to_string(),
+            "3*35x" => "Up to 3 lines of 35 characters each".to_string(),
+            "6*35x" => "Up to 6 lines of 35 characters each".to_string(),
+            _ if pattern.contains('*') => {
+                let parts: Vec<&str> = pattern.split('*').collect();
+                if parts.len() == 2 {
+                    format!("Up to {} lines of {} characters each", parts[0], parts[1].trim_end_matches(char::is_alphabetic))
+                } else {
+                    pattern.to_string()
+                }
+            },
+            _ => pattern.to_string(),
+        };
 
         Ok(quote! {
             use once_cell::sync::Lazy;
@@ -151,8 +185,13 @@ impl FieldPatternGenerator for RepetitivePatternGenerator {
             });
 
             let captures = PATTERN_REGEX.captures(value.trim())
-                .ok_or_else(|| crate::errors::ParseError::InvalidFormat {
-                    message: format!("Value does not match expected pattern: {}", #regex_pattern),
+                .ok_or_else(|| crate::errors::ParseError::InvalidFieldFormat {
+                    field_tag: stringify!(#name).to_string(),
+                    component_name: stringify!(#field_name).to_string(),
+                    value: value.to_string(),
+                    format_spec: #format_desc.to_string(),
+                    position: None,
+                    inner_error: "Value does not match expected pattern".to_string(),
                 })?;
 
             let #field_name = if let Some(captured) = captures.get(1) {
@@ -321,7 +360,7 @@ impl FieldPatternGenerator for OptionalMultilinePatternGenerator {
             && !field.components[1].is_repetitive
     }
 
-    fn generate_parser(&self, _name: &syn::Ident, field: &StructField) -> MacroResult<TokenStream> {
+    fn generate_parser(&self, name: &syn::Ident, field: &StructField) -> MacroResult<TokenStream> {
         let first_field_name = &field.components[0].name;
         let second_field_name = &field.components[1].name;
         let second_is_optional = field.components[1].is_optional;
@@ -361,8 +400,13 @@ impl FieldPatternGenerator for OptionalMultilinePatternGenerator {
                 }
             } else {
                 // Unexpected format
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: format!("Expected 1 or 2 lines, got {}", lines.len())
+                return Err(crate::errors::ParseError::InvalidFieldFormat {
+                    field_tag: stringify!(#name).to_string(),
+                    component_name: "multiline".to_string(),
+                    value: value.to_string(),
+                    format_spec: "1 or 2 lines".to_string(),
+                    position: None,
+                    inner_error: format!("Expected 1 or 2 lines, got {}", lines.len()),
                 });
             };
         }];
@@ -437,8 +481,13 @@ impl FieldParserGenerator {
 
         if field.components.is_empty() {
             return Ok(quote! {
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: "No components defined".to_string(),
+                return Err(crate::errors::ParseError::InvalidFieldFormat {
+                    field_tag: stringify!(#name).to_string(),
+                    component_name: "components".to_string(),
+                    value: value.to_string(),
+                    format_spec: "at least one component".to_string(),
+                    position: None,
+                    inner_error: "No components defined".to_string(),
                 });
             });
         }
@@ -505,12 +554,17 @@ impl FieldParserGenerator {
                     };
                 });
             } else {
+                let component_pattern = &component.format.pattern;
                 let conversion_expr =
                     generate_type_conversion_expr(&component.field_type, quote! { raw_value })?;
                 field_assignments.push(quote! {
                     let raw_value = captures.get(#capture_index)
-                        .ok_or_else(|| crate::errors::ParseError::InvalidFormat {
-                            message: format!("Missing component {}", stringify!(#field_name)),
+                        .ok_or_else(|| crate::errors::ParseError::ComponentParseError {
+                            field_tag: stringify!(#name).to_string(),
+                            component_index: #i,
+                            component_name: stringify!(#field_name).to_string(),
+                            expected_format: #component_pattern.to_string(),
+                            actual_value: value.to_string(),
                         })?
                         .as_str();
                     let #field_name = #conversion_expr;
@@ -519,6 +573,9 @@ impl FieldParserGenerator {
         }
 
         let pattern_without_anchors = regex_pattern.trim_start_matches('^').trim_end_matches('$');
+        
+        // Generate the friendly format at compile time
+        let friendly_format_desc = crate::format::format_to_description(&regex_pattern);
 
         Ok(quote! {
             use once_cell::sync::Lazy;
@@ -550,8 +607,15 @@ impl FieldParserGenerator {
                 &*FALLBACK_REGEX
             };
 
-            let captures = regex.captures(value.trim()).ok_or_else(|| crate::errors::ParseError::InvalidFormat {
-                message: format!("Value does not match expected pattern: {}", #regex_pattern),
+            let captures = regex.captures(value.trim()).ok_or_else(|| {
+                crate::errors::ParseError::InvalidFieldFormat {
+                    field_tag: stringify!(#name).to_string(),
+                    component_name: "value".to_string(),
+                    value: value.to_string(),
+                    format_spec: #friendly_format_desc.to_string(),
+                    position: None,
+                    inner_error: "Format validation failed".to_string(),
+                }
             })?;
 
             #(#field_assignments)*

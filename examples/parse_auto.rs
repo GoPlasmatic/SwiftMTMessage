@@ -67,11 +67,28 @@ TRADE RELATED TRANSACTION
                     );
                     println!("   Supported types: MT103, MT202, MT205, MT900");
                 }
-                swift_mt_message::ParseError::InvalidFormat { message } => {
-                    println!("💡 The message format is invalid: {message}");
+                swift_mt_message::ParseError::InvalidFieldFormat {
+                    field_tag,
+                    component_name,
+                    value,
+                    format_spec,
+                    ..
+                } => {
+                    println!("💡 Invalid field format:");
+                    println!("   Field: {field_tag}");
+                    println!("   Component: {component_name}");
+                    println!("   Value: '{value}'");
+                    println!("   Expected: {format_spec}");
                 }
-                swift_mt_message::ParseError::MissingRequiredField { field_tag } => {
-                    println!("💡 Missing required field: {field_tag}");
+                swift_mt_message::ParseError::MissingRequiredField {
+                    field_tag,
+                    field_name,
+                    message_type,
+                    ..
+                } => {
+                    println!(
+                        "💡 Missing required field: {field_tag} ({field_name}) in {message_type}"
+                    );
                 }
                 _ => {
                     println!("💡 Check the message format and try again.");

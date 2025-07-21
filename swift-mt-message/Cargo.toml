@@ -61,3 +61,11 @@ path = "../examples/sample_generation.rs"
 [[example]]
 name = "benchmark"
 path = "../examples/benchmark.rs"
+
+[[example]]
+name = "test_error_messages"
+path = "../examples/test_error_messages.rs"
+
+[[example]]
+name = "test_enhanced_errors_debug"
+path = "../examples/test_enhanced_errors_debug.rs"

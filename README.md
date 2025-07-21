@@ -343,12 +343,20 @@ DEUTDEFF
 :71A:OUR
 -}"#;
 
-// Macro-powered parsing with automatic validation
-let parsed: SwiftMessage<MT103> = SwiftParser::parse(raw_mt103)?;
-
-// Serde-like JSON serialization
-let json = serde_json::to_string_pretty(&parsed)?;
-println!("Financial Message JSON: {}", json);
+// Macro-powered parsing with enhanced error handling
+match SwiftParser::parse::<MT103>(raw_mt103) {
+    Ok(parsed) => {
+        // Serde-like JSON serialization
+        let json = serde_json::to_string_pretty(&parsed)?;
+        println!("Financial Message JSON: {}", json);
+    }
+    Err(e) => {
+        // Enhanced error reporting
+        eprintln!("Parse error: {}", e.brief_message());
+        eprintln!("\nDetails:\n{}", e.debug_report());
+        eprintln!("\n{}", e.format_with_context(raw_mt103));
+    }
+}
 ```
 
 ### Working with Financial Field Macros
@@ -433,17 +441,25 @@ Complete MT Message:
 - **Currency Codes**: ISO 4217 currency validation
 - **Date Formats**: SWIFT-compliant date parsing (YYMMDD)
 
+### Enhanced Error Context
+- **Component-Level Errors**: Identifies exact field component that failed
+- **Position Tracking**: Line number and field position in original message
+- **Format Hints**: Expected format shown in error messages
+- **Debug Reports**: Tree-formatted error output with actionable hints
+- **Context Display**: Shows surrounding message lines for debugging
+
 ### Performance Optimizations
 - **Zero-Copy Parsing**: Minimal memory allocations during parsing
 - **Compile-Time Generation**: Macro-generated code for optimal performance
 - **Efficient Serialization**: Custom serialization for financial data structures
 - **Memory Safety**: Rust's ownership system prevents financial data corruption
 
-### Error Handling
-- **Structured Errors**: Detailed error types for financial message validation
-- **Field-Level Errors**: Precise error reporting with field tags
-- **Compliance Reporting**: SWIFT standard violation reporting
-- **Recovery Strategies**: Graceful handling of malformed financial data
+### Enhanced Error Handling
+- **Contextual Errors**: Rich error information with field tags, components, and positions
+- **Debug-Friendly**: Tree-formatted error reports with hints and suggestions
+- **Position Tracking**: Line numbers and field positions preserved throughout parsing
+- **Message Context**: Errors show surrounding lines from original message
+- **Recovery Strategies**: Detailed error information enables targeted recovery
 
 ## 🧪 Testing
 
@@ -467,6 +483,9 @@ cargo run --example sample_generation
 
 # JSON configuration-based generation
 cargo run --example json_config_sample_generation
+
+# Parse with enhanced error display
+cargo run --example parse_auto -- path/to/message.txt
 ```
 
 ## 📚 Macro Reference

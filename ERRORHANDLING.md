@@ -149,48 +149,140 @@ The largest category covering general field validation across all MT categories,
 
 ### Error Handling Architecture
 
+### Enhanced Error Types
+
+The library now uses enhanced error types that provide rich contextual information:
+
 ```rust
-// Recommended error enum structure
-#[derive(Debug, Clone, PartialEq)]
-pub enum SwiftValidationError {
-    Format(SwiftFormatError),
-    Business(SwiftBusinessError),
-    Content(SwiftContentError),
-    Relation(SwiftRelationError),
-    General(SwiftGeneralError),
+// Main parse error enum with enhanced variants
+#[derive(Error, Debug, Clone, Serialize, Deserialize)]
+pub enum ParseError {
+    // Field format error with full context
+    #[error("Invalid field format - Field: {field_tag}, Component: {component_name}, Value: '{value}', Expected: {format_spec}")]
+    InvalidFieldFormat {
+        field_tag: String,        // SWIFT field tag (e.g., "50K", "32A")
+        component_name: String,   // Component within field (e.g., "currency", "amount")
+        value: String,           // The actual value that failed
+        format_spec: String,     // Expected format specification
+        position: Option<usize>, // Position in original message
+        inner_error: String,     // Detailed parsing error
+    },
+
+    // Missing required field with context
+    #[error("Missing required field {field_tag} ({field_name}) in {message_type}")]
+    MissingRequiredField {
+        field_tag: String,       // SWIFT field tag
+        field_name: String,      // Rust field name in struct
+        message_type: String,    // Message type (MT103, MT202, etc.)
+        position_in_block4: Option<usize>, // Expected position
+    },
+
+    // Field parsing failure with position
+    #[error("Failed to parse field {field_tag} of type {field_type} at position {position}")]
+    FieldParsingFailed {
+        field_tag: String,
+        field_type: String,
+        position: usize,         // Encoded position (line << 16 | field_pos)
+        original_error: String,
+    },
+
+    // Component parse error
+    #[error("Component parse error in field {field_tag}: {component_name} (index {component_index})")]
+    ComponentParseError {
+        field_tag: String,
+        component_index: usize,
+        component_name: String,
+        expected_format: String,
+        actual_value: String,
+    },
+
+    // Invalid block structure
+    #[error("Invalid block {block} structure: {message}")]
+    InvalidBlockStructure {
+        block: String,           // Block number (1-5)
+        message: String,         // Detailed error message
+    },
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct SwiftFormatError {
-    pub code: String,        // e.g., "T50"
-    pub field: String,       // e.g., "32A"
-    pub value: String,       // Invalid value
-    pub expected: String,    // Expected format
-    pub message: String,     // Human-readable description
+// SWIFT validation errors remain structured by series
+#[derive(Error, Debug, Clone, Serialize, Deserialize)]
+pub enum SwiftValidationError {
+    Format(Box<SwiftFormatError>),    // T-Series
+    Business(Box<SwiftBusinessError>), // C-Series  
+    Content(Box<SwiftContentError>),   // D-Series
+    Relation(Box<SwiftRelationError>), // E-Series
+    General(Box<SwiftGeneralError>),   // G-Series
 }
 ```
 
-### When to Throw Each Error Type
+### Enhanced Error Methods
 
-#### During Parsing
-- **T-Series errors**: Immediate format validation failures
-- **Field format errors**: Invalid characters, length violations, pattern mismatches
-- **Syntax errors**: Malformed message structure
+The enhanced errors provide helpful methods for debugging:
 
-#### During Field Validation
-- **Content validation**: Currency codes, country codes, BIC format
-- **Range validation**: Amount limits, date ranges
-- **Enumeration validation**: Invalid code values
+```rust
+impl ParseError {
+    /// Get a detailed debug report with tree formatting
+    pub fn debug_report(&self) -> String { /* ... */ }
+    
+    /// Get a concise error message for logging
+    pub fn brief_message(&self) -> String { /* ... */ }
+    
+    /// Format error with original message context
+    pub fn format_with_context(&self, original_message: &str) -> String { /* ... */ }
+}
+```
 
-#### During Business Rule Validation
-- **C-Series errors**: Conditional business logic violations
-- **D-Series errors**: Regional requirements, field dependencies
-- **E-Series errors**: Complex instruction code logic
+### When to Use Each Error Type
 
-#### During Cross-Field Validation
-- **Currency consistency**: Related fields with different currencies
-- **Amount relationships**: Field totals and calculations
-- **Conditional presence**: Required fields based on other field values
+#### Enhanced Parse Errors (Primary)
+
+1. **InvalidFieldFormat** - Use when field content doesn't match expected format
+   - Component-level parsing failures
+   - Format specification violations
+   - Type conversion errors
+   - Includes position tracking for debugging
+
+2. **MissingRequiredField** - Use when mandatory field is absent
+   - Message-level field requirements
+   - Includes field name and message type context
+   - Tracks expected position in block 4
+
+3. **FieldParsingFailed** - Use for general field parsing failures
+   - Higher-level field errors
+   - Includes encoded position (line number + field position)
+   - Preserves original error details
+
+4. **ComponentParseError** - Use for specific component failures
+   - Multi-component field errors
+   - Identifies exact component that failed
+   - Includes expected vs actual format
+
+5. **InvalidBlockStructure** - Use for SWIFT block structure errors
+   - Block 1-5 parsing failures
+   - Malformed message structure
+   - Block-specific error details
+
+#### SWIFT Validation Errors (Secondary)
+
+- **T-Series errors**: Format validation after parsing
+- **C-Series errors**: Business rule validation
+- **D-Series errors**: Regional and content requirements
+- **E-Series errors**: Complex relationship validation
+- **G-Series errors**: General field validation
+
+### Line Number Tracking
+
+The library tracks line numbers for error reporting:
+
+```rust
+// FieldParsingFailed now includes the line number where the field was found
+ParseError::FieldParsingFailed {
+    field_tag: "23B",          // Which field failed
+    field_type: "Field23B",    // The type being parsed
+    position: 2,               // Line number in the message
+    original_error: "...",     // Detailed error description
+}
+```
 
 ### Error Recovery Strategies
 
@@ -250,33 +342,83 @@ fn test_sepa_iban_requirement() {
 
 ## Error Message Guidelines
 
-### User-Friendly Error Messages
+### Enhanced Error Display
+
+The enhanced errors provide rich, actionable error messages:
 
 ```rust
-impl Display for SwiftValidationError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            SwiftValidationError::Format(err) => {
-                write!(f, "Format Error {}: Field {} contains '{}', expected {}. {}",
-                    err.code, err.field, err.value, err.expected, err.message)
+// Example error output with debug_report():
+Field Parsing Error:
+├─ Field Tag: 32A
+├─ Component: amount
+├─ Value: '1,000.00'
+├─ Expected Format: 15d (decimal with period separator)
+├─ Position in Message: Line 5
+├─ Details: Invalid decimal number: expected period not comma
+└─ Hint: Check SWIFT format specification for field 32A
+
+// Example with format_with_context():
+Field Parsing Failed:
+├─ Field Tag: 32A
+├─ Field Type: Field32A
+├─ Position: 327681  // Line 5, field position 1
+├─ Error: Component parse error
+└─ Hint: Check the field value matches the expected type
+
+Context:
+    3 │ :23B:CRED
+    4 │ :50K:JOHN DOE
+>>> 5 │ :32A:240315USD1,000.00
+    6 │ :59:JANE SMITH
+    7 │ :71A:SHA
+```
+
+### Error Context Methods
+
+```rust
+// Get detailed debug output
+let debug_info = error.debug_report();
+
+// Get brief message for logs
+let log_msg = error.brief_message();
+// Output: "Field 32A component 'amount' format error"
+
+// Get error with surrounding context
+let context = error.format_with_context(&original_message);
+```
+
+### Practical Error Handling
+
+```rust
+use swift_mt_message::{SwiftParser, ParseError};
+
+match SwiftParser::parse::<MT103>(&message) {
+    Ok(parsed) => process_message(parsed),
+    Err(e) => match e {
+        ParseError::InvalidFieldFormat { 
+            field_tag, 
+            component_name,
+            value,
+            format_spec,
+            .. 
+        } => {
+            eprintln!("Field {} error: {} '{}' doesn't match {}", 
+                     field_tag, component_name, value, format_spec);
+            // Provide specific guidance based on component
+            match component_name.as_str() {
+                "currency" => eprintln!("Use 3-letter ISO currency code"),
+                "amount" => eprintln!("Use decimal point, not comma"),
+                "date" => eprintln!("Use YYMMDD format"),
+                _ => eprintln!("Check SWIFT format guide")
             }
-            SwiftValidationError::Business(err) => {
-                write!(f, "Business Rule Violation {}: {} (Field: {})",
-                    err.code, err.message, err.field)
-            }
-            // ... other error types
-        }
+        },
+        ParseError::MissingRequiredField { field_tag, field_name, .. } => {
+            eprintln!("Missing {}: {} is required", field_tag, field_name);
+        },
+        _ => eprintln!("Parse error: {}", e.debug_report())
     }
 }
 ```
-
-### Error Context Enrichment
-
-Provide context-specific guidance:
-- **Field-specific help**: What the field should contain
-- **Business context**: Why the rule exists
-- **Correction suggestions**: How to fix the error
-- **Related documentation**: SWIFT standard references
 
 ## Migration and Compatibility
 
@@ -305,50 +447,200 @@ Provide context-specific guidance:
 
 ## Integration Examples
 
-### Basic Usage
+### Basic Usage with Enhanced Errors
 
 ```rust
-use swift_mt_message::{SwiftMessage, SwiftValidationError};
+use swift_mt_message::{SwiftParser, ParseError, messages::MT103};
 
-// Parse and validate a message
-match SwiftMessage::from_str(message_text) {
+// Parse with enhanced error handling
+match SwiftParser::parse::<MT103>(&raw_message) {
     Ok(message) => {
+        println!("Successfully parsed MT103");
+        // Additional validation if needed
         match message.validate() {
             Ok(_) => println!("Message valid"),
-            Err(errors) => {
-                for error in errors {
-                    println!("Validation Error: {}", error);
+            Err(validation_errors) => {
+                for error in validation_errors {
+                    println!("Validation: {}", error);
                 }
             }
         }
     }
-    Err(parse_error) => {
-        println!("Parse Error: {}", parse_error);
+    Err(e) => {
+        // Use enhanced error methods
+        eprintln!("Parse failed: {}", e.brief_message());
+        eprintln!("\nDetails:\n{}", e.debug_report());
+        
+        // Show context if available
+        if let Some(context) = get_original_message() {
+            eprintln!("\n{}", e.format_with_context(&context));
+        }
     }
 }
 ```
 
-### Custom Error Handling
+### Production Error Handling
 
 ```rust
-// Handle specific error types
-match validation_result {
-    Err(SwiftValidationError::Format(fmt_err)) if fmt_err.code == "T50" => {
-        println!("Date format error: Use YYMMDD format");
+use swift_mt_message::{SwiftParser, ParseError, ParsedSwiftMessage};
+use log::{error, warn, info};
+
+/// Process SWIFT message with comprehensive error handling
+fn process_swift_message(raw: &str) -> Result<ProcessedMessage, ProcessingError> {
+    match SwiftParser::parse_auto(raw) {
+        Ok(parsed) => {
+            info!("Parsed message type: {}", parsed.message_type());
+            process_parsed_message(parsed)
+        }
+        Err(e) => {
+            // Log brief error for monitoring
+            error!("SWIFT parse error: {}", e.brief_message());
+            
+            // Detailed logging for debugging
+            error!("Parse details: {}", e.debug_report());
+            
+            // Handle specific error types
+            match e {
+                ParseError::InvalidFieldFormat { field_tag, component_name, .. } => {
+                    warn!("Field {} component {} failed validation", field_tag, component_name);
+                    Err(ProcessingError::InvalidField(field_tag))
+                }
+                ParseError::MissingRequiredField { field_tag, message_type, .. } => {
+                    warn!("Required field {} missing in {}", field_tag, message_type);
+                    Err(ProcessingError::MissingField(field_tag))
+                }
+                ParseError::InvalidBlockStructure { block, .. } => {
+                    error!("Malformed block {}", block);
+                    Err(ProcessingError::MalformedMessage)
+                }
+                _ => Err(ProcessingError::GeneralParseError(e.to_string()))
+            }
+        }
     }
-    Err(SwiftValidationError::Content(content_err)) if content_err.code == "D19" => {
-        println!("IBAN required for SEPA payments");
+}
+```
+
+### Error Recovery Strategies
+
+```rust
+/// Attempt to recover from parsing errors
+fn parse_with_recovery(raw: &str) -> Result<PartialMessage, String> {
+    match SwiftParser::parse_auto(raw) {
+        Ok(msg) => Ok(PartialMessage::Complete(msg)),
+        Err(e) => {
+            match e {
+                ParseError::MissingRequiredField { field_tag, .. } => {
+                    // Try parsing as draft/incomplete message
+                    info!("Attempting partial parse without field {}", field_tag);
+                    parse_as_draft(raw)
+                }
+                ParseError::InvalidFieldFormat { field_tag, position, .. } => {
+                    // Skip invalid field and continue
+                    if let Some(pos) = position {
+                        let line_num = pos >> 16;
+                        info!("Skipping invalid field {} at line {}", field_tag, line_num);
+                        parse_without_field(raw, &field_tag)
+                    } else {
+                        Err(format!("Cannot recover from field {} error", field_tag))
+                    }
+                }
+                _ => {
+                    // Log full context for investigation
+                    error!("Unrecoverable error:\n{}", e.format_with_context(raw));
+                    Err(e.to_string())
+                }
+            }
+        }
     }
-    Err(other_error) => {
-        println!("Other validation error: {}", other_error);
+}
+```
+
+## Best Practices with Enhanced Errors
+
+### 1. Use Error Context Methods
+
+Always leverage the enhanced error methods for better debugging:
+
+```rust
+match result {
+    Err(e) => {
+        // For user-facing messages
+        println!("Error: {}", e.brief_message());
+        
+        // For detailed logs
+        log::error!("{}", e.debug_report());
+        
+        // For debugging with context
+        if let Some(original) = get_original_message() {
+            eprintln!("{}", e.format_with_context(&original));
+        }
     }
-    Ok(_) => println!("Validation successful"),
+    Ok(_) => { /* ... */ }
+}
+```
+
+### 2. Component-Level Error Handling
+
+Handle errors at the component level for precise recovery:
+
+```rust
+match error {
+    ParseError::InvalidFieldFormat { component_name, .. } => {
+        match component_name.as_str() {
+            "currency" => suggest_valid_currencies(),
+            "amount" => explain_decimal_format(),
+            "date" => show_date_format_examples(),
+            _ => show_general_format_help()
+        }
+    }
+    _ => { /* ... */ }
+}
+```
+
+### 3. Line-Aware Debugging
+
+Use line number information for targeted debugging:
+
+```rust
+if let ParseError::FieldParsingFailed { position, field_tag, .. } = error {
+    println!("Error parsing field {} at line {}", field_tag, position);
+    // Show specific line from original message
+    show_message_line(original_message, position);
+}
+```
+
+### 4. Error Recovery Patterns
+
+Implement graceful degradation based on error types:
+
+```rust
+fn parse_with_fallback(message: &str) -> ParseResult {
+    match SwiftParser::parse(message) {
+        Ok(msg) => Ok(msg),
+        Err(ParseError::MissingRequiredField { field_tag, .. }) 
+            if is_recoverable_field(&field_tag) => {
+            // Try with default value
+            parse_with_default_field(message, &field_tag)
+        }
+        Err(ParseError::InvalidFieldFormat { field_tag, position, .. }) => {
+            // Skip invalid field and continue
+            parse_excluding_field(message, &field_tag, position)
+        }
+        Err(e) => Err(e)
+    }
 }
 ```
 
 ## Conclusion
 
-This error handling system ensures strict compliance with SWIFT standards while providing clear, actionable feedback to developers. The comprehensive error code coverage (1,335 codes) guarantees that all SWIFT validation rules are properly implemented and enforced.
+The enhanced error handling system in SwiftMTMessage provides both SWIFT standards compliance (1,335 error codes) and rich contextual information for effective debugging. The dual approach of enhanced parse errors for immediate feedback and SWIFT validation errors for compliance ensures developers have all the tools needed for robust financial message processing.
+
+Key benefits:
+- **Precise Error Location**: Line numbers and field positions
+- **Component Identification**: Exact component that failed within complex fields
+- **Actionable Messages**: Clear format specifications and hints
+- **Debugging Context**: Surrounding message lines for investigation
+- **Standards Compliance**: Full SWIFT error code coverage
 
 For questions about specific error codes or validation scenarios, refer to the SWIFT Standards Release Guide 2025 or the library's test suite for practical examples.
 

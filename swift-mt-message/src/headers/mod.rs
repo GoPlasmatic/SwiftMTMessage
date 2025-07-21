@@ -169,6 +169,7 @@ impl BasicHeader {
     pub fn parse(block1: &str) -> Result<Self> {
         if block1.len() < 21 {
             return Err(ParseError::InvalidBlockStructure {
+                block: "1".to_string(),
                 message: format!(
                     "Block 1 too short: expected at least 21 characters, got {}",
                     block1.len()
@@ -404,6 +405,7 @@ impl ApplicationHeader {
     pub fn parse(block2: &str) -> Result<Self> {
         if block2.len() < 17 {
             return Err(ParseError::InvalidBlockStructure {
+                block: "2".to_string(),
                 message: format!(
                     "Block 2 too short: expected at least 18 characters, got {}",
                     block2.len()

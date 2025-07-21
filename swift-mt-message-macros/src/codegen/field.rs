@@ -59,7 +59,7 @@ fn generate_struct_field_impl(
 
 /// Generate SwiftField implementation for enum fields
 fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroResult<TokenStream> {
-    let parse_impl = generate_enum_parse_impl(enum_field)?;
+    let parse_impl = generate_enum_parse_impl(name, enum_field)?;
     let to_swift_string_impl = generate_enum_to_swift_string_impl(enum_field)?;
     let format_spec_impl = generate_enum_format_spec_impl(enum_field)?;
     let sample_impl = generate_enum_sample_impl(enum_field)?;
@@ -77,33 +77,36 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
             }
 
             fn parse_with_variant(value: &str, variant: Option<&str>, field_tag: Option<&str>) -> crate::Result<Self> {
+                let field_tag = field_tag.unwrap_or("unknown");
+
                 // Try direct variant first if provided
                 if let Some(variant_letter) = variant {
                     #(
                         if variant_letter == stringify!(#variant_idents) {
-                            // When variant hint is provided, respect it strictly
                             return #variant_types::parse(value)
                                 .map(|parsed| Self::#variant_idents(parsed))
-                                .map_err(|_| crate::errors::ParseError::InvalidFormat {
-                                    message: format!(
-                                        "Failed to parse as variant '{}' for field '{}'",
-                                        variant_letter,
-                                        field_tag.unwrap_or("unknown")
-                                    )
+                                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat {
+                                    field_tag: field_tag.to_string(),
+                                    component_name: format!("variant_{}", variant_letter),
+                                    value: value.to_string(),
+                                    format_spec: #variant_types::format_spec().to_string(),
+                                    position: None,
+                                    inner_error: e.to_string(),
                                 });
                         }
                     )*
 
-                    // If variant hint doesn't match any known variant, return error
-                    return Err(crate::errors::ParseError::InvalidFormat {
-                        message: format!(
-                            "Unknown variant '{}' for field '{}'",
-                            variant_letter,
-                            field_tag.unwrap_or("unknown")
-                        )
+                    // Unknown variant
+                    return Err(crate::errors::ParseError::InvalidFieldFormat {
+                        field_tag: field_tag.to_string(),
+                        component_name: "variant".to_string(),
+                        value: variant_letter.to_string(),
+                        format_spec: "Valid variant letter".to_string(),
+                        position: None,
+                        inner_error: format!("Unknown variant '{}' for field {}", variant_letter, field_tag),
                     });
                 } else {
-                    // No variant letter provided - try NoOption variant first if it exists
+                    // Try NoOption variant first if it exists
                     #(
                         if stringify!(#variant_idents) == "NoOption" {
                             if let Ok(parsed) = #variant_types::parse(value) {
@@ -112,8 +115,24 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
                         }
                     )*
 
-                    // If no variant hint and no NoOption, fall back to trying all variants
-                    return Self::parse(value);
+                    // Try all variants and collect errors
+                    let mut errors = Vec::new();
+                    #(
+                        match #variant_types::parse(value) {
+                            Ok(parsed) => return Ok(Self::#variant_idents(parsed)),
+                            Err(e) => errors.push(format!("{}: {}", stringify!(#variant_idents), e)),
+                        }
+                    )*
+
+                    // All variants failed
+                    Err(crate::errors::ParseError::InvalidFieldFormat {
+                        field_tag: field_tag.to_string(),
+                        component_name: "any_variant".to_string(),
+                        value: value.to_string(),
+                        format_spec: "One of the valid variants".to_string(),
+                        position: None,
+                        inner_error: format!("All variants failed: {}", errors.join("; ")),
+                    })
                 }
             }
 
@@ -393,8 +412,12 @@ fn generate_struct_sample_impl(struct_field: &StructField) -> MacroResult<TokenS
 }
 
 /// Generate parse implementation for enum fields
-fn generate_enum_parse_impl(enum_field: &EnumField) -> MacroResult<TokenStream> {
+fn generate_enum_parse_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroResult<TokenStream> {
     let mut variant_attempts = Vec::new();
+    let variant_names: Vec<String> = enum_field.variants.iter()
+        .map(|v| v.ident.to_string())
+        .collect();
+    let variants_list = variant_names.join(", ");
 
     for variant in &enum_field.variants {
         let variant_ident = &variant.ident;
@@ -410,8 +433,13 @@ fn generate_enum_parse_impl(enum_field: &EnumField) -> MacroResult<TokenStream> 
     Ok(quote! {
         #(#variant_attempts)*
 
-        Err(crate::errors::ParseError::InvalidFormat {
-            message: format!("Unable to parse value '{}' as any variant", value)
+        Err(crate::errors::ParseError::InvalidFieldFormat {
+            field_tag: stringify!(#name).to_string(),
+            component_name: "variant".to_string(),
+            value: value.to_string(),
+            format_spec: format!("One of the following variants: {}", #variants_list),
+            position: None,
+            inner_error: "Unable to parse value as any variant".to_string(),
         })
     })
 }

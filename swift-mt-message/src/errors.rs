@@ -28,11 +28,11 @@
 //! // Handle parsing errors
 //! match SwiftParser::parse_auto(&invalid_message) {
 //!     Ok(message) => println!("Parsed successfully: {:?}", message),
-//!     Err(ParseError::InvalidFormat { message }) => {
-//!         eprintln!("Format error: {}", message);
+//!     Err(ParseError::InvalidFieldFormat { field_tag, component_name, .. }) => {
+//!         eprintln!("Format error in field {}: {}", field_tag, component_name);
 //!     },
-//!     Err(ParseError::MissingRequiredField { field_tag }) => {
-//!         eprintln!("Missing required field: {}", field_tag);
+//!     Err(ParseError::MissingRequiredField { field_tag, field_name, .. }) => {
+//!         eprintln!("Missing required field: {} ({})", field_tag, field_name);
 //!     },
 //!     Err(other) => eprintln!("Other error: {}", other),
 //! }
@@ -80,20 +80,8 @@ pub type SwiftValidationResult<T> = std::result::Result<T, SwiftValidationError>
 /// Main error type for parsing operations
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum ParseError {
-    #[error("Invalid message format: {message}")]
-    InvalidFormat { message: String },
-
-    #[error("Missing required field: {field_tag}")]
-    MissingRequiredField { field_tag: String },
-
-    #[error("Invalid field format for {field_tag}: {message}")]
-    InvalidFieldFormat { field_tag: String, message: String },
-
     #[error("Wrong message type: expected {expected}, got {actual}")]
     WrongMessageType { expected: String, actual: String },
-
-    #[error("Invalid block structure: {message}")]
-    InvalidBlockStructure { message: String },
 
     #[error("Unsupported message type: {message_type}")]
     UnsupportedMessageType { message_type: String },
@@ -109,6 +97,79 @@ pub enum ParseError {
 
     #[error("Serialization error: {message}")]
     SerializationError { message: String },
+
+    /// Invalid message format error
+    #[error("Invalid message format: {message}")]
+    InvalidFormat { message: String },
+
+    /// Field format error with full context
+    #[error("Invalid field format - Field: {field_tag}, Component: {component_name}, Value: '{value}', Expected: {format_spec}")]
+    InvalidFieldFormat {
+        /// SWIFT field tag (e.g., "50K", "32A")
+        field_tag: String,
+        /// Component name within the field (e.g., "currency", "amount")
+        component_name: String,
+        /// The actual value that failed to parse
+        value: String,
+        /// Expected format specification
+        format_spec: String,
+        /// Position in the original message
+        position: Option<usize>,
+        /// Inner parsing error (simplified for serialization)
+        inner_error: String,
+    },
+
+    /// Missing required field with detailed context
+    #[error("Missing required field {field_tag} ({field_name}) in {message_type}")]
+    MissingRequiredField {
+        /// SWIFT field tag
+        field_tag: String,
+        /// Rust field name in the struct
+        field_name: String,
+        /// Message type (MT103, MT202, etc.)
+        message_type: String,
+        /// Position where field was expected
+        position_in_block4: Option<usize>,
+    },
+
+    /// Field parsing failed with detailed context
+    #[error("Failed to parse field {field_tag} of type {field_type} at line {position}: {original_error}")]
+    FieldParsingFailed {
+        /// SWIFT field tag
+        field_tag: String,
+        /// Type of field being parsed
+        field_type: String,
+        /// Line number in message
+        position: usize,
+        /// Original error message
+        original_error: String,
+    },
+
+    /// Component parsing error with specific details
+    #[error(
+        "Component parse error in field {field_tag}: {component_name} (index {component_index})"
+    )]
+    ComponentParseError {
+        /// Field tag containing the component
+        field_tag: String,
+        /// Index of component in field
+        component_index: usize,
+        /// Name of the component
+        component_name: String,
+        /// Expected format
+        expected_format: String,
+        /// Actual value that failed
+        actual_value: String,
+    },
+
+    /// Invalid block structure with detailed location
+    #[error("Invalid block {block} structure: {message}")]
+    InvalidBlockStructure {
+        /// Block number (1-5)
+        block: String,
+        /// Detailed error message
+        message: String,
+    },
 }
 
 /// Validation error for field-level validation
@@ -262,6 +323,209 @@ impl From<std::io::Error> for ParseError {
     fn from(err: std::io::Error) -> Self {
         ParseError::IoError {
             message: err.to_string(),
+        }
+    }
+}
+
+impl ParseError {
+    /// Get a detailed debug report for the error
+    pub fn debug_report(&self) -> String {
+        match self {
+            ParseError::InvalidFieldFormat {
+                field_tag,
+                component_name,
+                value,
+                format_spec,
+                position,
+                inner_error,
+            } => {
+                format!(
+                    "Field Parsing Error:\n\
+                     ├─ Field Tag: {}\n\
+                     ├─ Component: {}\n\
+                     ├─ Value: '{}'\n\
+                     ├─ Expected Format: {}\n\
+                     ├─ Position in Message: {}\n\
+                     ├─ Details: {}\n\
+                     └─ Hint: Check SWIFT format specification for field {}",
+                    field_tag,
+                    component_name,
+                    value,
+                    format_spec,
+                    position.map_or("unknown".to_string(), |p| p.to_string()),
+                    inner_error,
+                    field_tag
+                )
+            }
+            ParseError::MissingRequiredField {
+                field_tag,
+                field_name,
+                message_type,
+                position_in_block4,
+            } => {
+                format!(
+                    "Missing Required Field:\n\
+                     ├─ Field Tag: {}\n\
+                     ├─ Field Name: {}\n\
+                     ├─ Message Type: {}\n\
+                     ├─ Expected Position: {}\n\
+                     └─ Hint: {} requires field {} to be present",
+                    field_tag,
+                    field_name,
+                    message_type,
+                    position_in_block4.map_or("unknown".to_string(), |p| p.to_string()),
+                    message_type,
+                    field_tag
+                )
+            }
+            ParseError::ComponentParseError {
+                field_tag,
+                component_index,
+                component_name,
+                expected_format,
+                actual_value,
+            } => {
+                format!(
+                    "Component Parse Error:\n\
+                     ├─ Field Tag: {field_tag}\n\
+                     ├─ Component: {component_name} (index {component_index})\n\
+                     ├─ Expected Format: {expected_format}\n\
+                     ├─ Actual Value: '{actual_value}'\n\
+                     └─ Hint: Component '{component_name}' must match format '{expected_format}'"
+                )
+            }
+            ParseError::FieldParsingFailed {
+                field_tag,
+                field_type,
+                position,
+                original_error,
+            } => {
+                let line_num = if *position > 0xFFFF {
+                    // Old format: encoded position
+                    position >> 16
+                } else {
+                    // New format: just line number
+                    *position
+                };
+                format!(
+                    "Field Parsing Failed:\n\
+                     ├─ Field Tag: {field_tag}\n\
+                     ├─ Field Type: {field_type}\n\
+                     ├─ Line Number: {line_num}\n\
+                     ├─ Error: {original_error}\n\
+                     └─ Hint: Check the field value matches the expected type"
+                )
+            }
+            ParseError::InvalidBlockStructure { block, message } => {
+                format!(
+                    "Block Structure Error:\n\
+                     ├─ Block: {block}\n\
+                     ├─ Error: {message}\n\
+                     └─ Hint: Ensure block {block} follows SWIFT message structure"
+                )
+            }
+            // Fallback for other variants
+            _ => format!("{self}"),
+        }
+    }
+
+    /// Get a concise error message for logging
+    pub fn brief_message(&self) -> String {
+        match self {
+            ParseError::InvalidFieldFormat {
+                field_tag,
+                component_name,
+                ..
+            } => {
+                format!("Field {field_tag} component '{component_name}' format error")
+            }
+            ParseError::MissingRequiredField {
+                field_tag,
+                message_type,
+                ..
+            } => {
+                format!("Required field {field_tag} missing in {message_type}")
+            }
+            ParseError::ComponentParseError {
+                field_tag,
+                component_name,
+                ..
+            } => {
+                format!("Field {field_tag} component '{component_name}' parse error")
+            }
+            ParseError::FieldParsingFailed {
+                field_tag,
+                field_type,
+                position,
+                ..
+            } => {
+                let line_num = if *position > 0xFFFF {
+                    position >> 16
+                } else {
+                    *position
+                };
+                format!("Field {field_tag} (type {field_type}) parsing failed at line {line_num}")
+            }
+            ParseError::InvalidBlockStructure { block, .. } => {
+                format!("Block {block} structure invalid")
+            }
+            _ => self.to_string(),
+        }
+    }
+
+    /// Format error with message context
+    pub fn format_with_context(&self, original_message: &str) -> String {
+        match self {
+            ParseError::FieldParsingFailed { position, .. } => {
+                // Extract line and show context
+                let lines: Vec<&str> = original_message.lines().collect();
+                let line_num = if *position > 0xFFFF {
+                    position >> 16
+                } else {
+                    *position
+                };
+                let mut output = self.debug_report();
+
+                if line_num > 0 && line_num <= lines.len() {
+                    output.push_str("\n\nContext:\n");
+                    // Show 2 lines before and after
+                    let start = line_num.saturating_sub(3);
+                    let end = (line_num + 2).min(lines.len());
+
+                    for (i, line) in lines.iter().enumerate().take(end).skip(start) {
+                        if i == line_num - 1 {
+                            output.push_str(&format!(">>> {} │ {}\n", i + 1, line));
+                        } else {
+                            output.push_str(&format!("    {} │ {}\n", i + 1, line));
+                        }
+                    }
+                }
+                output
+            }
+            ParseError::InvalidFieldFormat {
+                position: Some(pos),
+                ..
+            } => {
+                let lines: Vec<&str> = original_message.lines().collect();
+                let line_num = pos >> 16;
+                let mut output = self.debug_report();
+
+                if line_num > 0 && line_num <= lines.len() {
+                    output.push_str("\n\nContext:\n");
+                    let start = line_num.saturating_sub(3);
+                    let end = (line_num + 2).min(lines.len());
+
+                    for (i, line) in lines.iter().enumerate().take(end).skip(start) {
+                        if i == line_num - 1 {
+                            output.push_str(&format!(">>> {} │ {}\n", i + 1, line));
+                        } else {
+                            output.push_str(&format!("    {} │ {}\n", i + 1, line));
+                        }
+                    }
+                }
+                output
+            }
+            _ => self.debug_report(),
         }
     }
 }

@@ -264,11 +264,12 @@ fn generate_multi_component_to_swift_string(
         // This pattern is simpler - just two optional fields concatenated
         return Ok(quote! {
             {
-                let capacity = self.#first_field.as_ref().map(|s| s.len()).unwrap_or(0)
+                let capacity = self.#first_field.as_ref().map(|s| s.len() + 1).unwrap_or(0)
                     + self.#second_field.as_ref().map(|s| s.len() + 1).unwrap_or(0);
                 let mut result = String::with_capacity(capacity);
 
                 if let Some(ref party_id) = self.#first_field {
+                    result.push('/');
                     result.push_str(party_id);
                 }
 

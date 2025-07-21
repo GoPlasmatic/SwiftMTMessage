@@ -1,5 +1,5 @@
 //! Helper functions for code generation to reduce duplication
-//! 
+//!
 //! This module contains reusable code generation helpers that are used across
 //! different field patterns to eliminate code duplication in the macro system.
 
@@ -8,7 +8,7 @@ use quote::quote;
 use syn;
 
 /// Generate code for fields with optional prefix pattern
-/// 
+///
 /// Handles patterns like:
 /// - [/34x] + 4*35x (Field50K, Field53B, Field57B, Field58B)
 /// - 4!c + [/30x] (Field23E)
@@ -87,17 +87,17 @@ pub fn generate_optional_prefix_field(
         {
             let capacity = #capacity_calc + #second_capacity;
             let mut result = String::with_capacity(capacity);
-            
+
             #add_first
             #add_second
-            
+
             result
         }
     }
 }
 
 /// Generate code for account/BIC pattern fields
-/// 
+///
 /// Handles patterns like:
 /// - [/34x] + BIC (Field56A, Field57A, Field59A)
 pub fn generate_account_bic_field(
@@ -109,22 +109,21 @@ pub fn generate_account_bic_field(
             let capacity = self.#account_field.as_ref().map(|s| s.len() + 2).unwrap_or(0)
                 + self.#bic_field.len();
             let mut result = String::with_capacity(capacity);
-            
+
             if let Some(ref account) = self.#account_field {
                 result.push('/');
                 result.push_str(account);
                 result.push_str("\n");
             }
-            
+
             result.push_str(&self.#bic_field);
             result
         }
     }
 }
 
-
 /// Generate code for Field59F pattern with line numbering
-/// 
+///
 /// Handles pattern: [/34x] + 4*(1!n/33x) where lines are numbered
 pub fn generate_numbered_lines_field(
     party_field: &syn::Ident,
@@ -137,12 +136,12 @@ pub fn generate_numbered_lines_field(
                     .map(|(i, s)| s.len() + 3 + (i + 1).to_string().len())
                     .sum::<usize>();
             let mut result = String::with_capacity(capacity);
-            
+
             if let Some(ref party_id) = self.#party_field {
                 result.push('/');
                 result.push_str(party_id);
             }
-            
+
             use std::fmt::Write;
             for (i, line) in self.#lines_field.iter().enumerate() {
                 if !result.is_empty() || i > 0 {
@@ -150,9 +149,8 @@ pub fn generate_numbered_lines_field(
                 }
                 write!(&mut result, "{}/{}", i + 1, line).unwrap();
             }
-            
+
             result
         }
     }
 }
-

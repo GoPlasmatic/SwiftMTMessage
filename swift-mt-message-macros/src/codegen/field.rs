@@ -2,8 +2,7 @@
 
 use crate::ast::{EnumField, FieldDefinition, FieldKind, StructField};
 use crate::codegen::helpers::{
-    generate_optional_prefix_field, generate_account_bic_field, 
-    generate_numbered_lines_field
+    generate_account_bic_field, generate_numbered_lines_field, generate_optional_prefix_field,
 };
 use crate::codegen::type_generators::{
     generate_sample_for_component, generate_to_swift_string_for_component,
@@ -343,7 +342,9 @@ fn generate_struct_sample_impl(struct_field: &StructField) -> MacroResult<TokenS
 /// Generate parse implementation for enum fields
 fn generate_enum_parse_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroResult<TokenStream> {
     let mut variant_attempts = Vec::new();
-    let variant_names: Vec<String> = enum_field.variants.iter()
+    let variant_names: Vec<String> = enum_field
+        .variants
+        .iter()
         .map(|v| v.ident.to_string())
         .collect();
     let variants_list = variant_names.join(", ");

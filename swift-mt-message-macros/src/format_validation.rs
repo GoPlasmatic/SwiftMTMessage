@@ -3,7 +3,6 @@
 //! This module provides compile-time validation of SWIFT format specifications
 //! to catch invalid format patterns at compile time rather than runtime.
 
-use crate::error::{MacroError, MacroResult};
 use once_cell::sync::Lazy;
 use proc_macro2::Span;
 use std::collections::HashMap;
@@ -574,8 +573,8 @@ fn parse_format_pattern(
 /// Parse basic format patterns (non-optional, non-repetitive)
 fn parse_basic_pattern(pattern: &str) -> Option<FormatSpecType> {
     // Handle decimal patterns (e.g., "15d")
-    if pattern.ends_with('d') {
-        if let Ok(digits) = pattern[..pattern.len() - 1].parse::<usize>() {
+    if let Some(stripped) = pattern.strip_suffix('d') {
+        if let Ok(digits) = stripped.parse::<usize>() {
             return Some(FormatSpecType::Decimal { max_digits: digits });
         }
     }
@@ -632,185 +631,6 @@ fn parse_basic_pattern(pattern: &str) -> Option<FormatSpecType> {
     None
 }
 
-/// Enhanced format validation with error recovery
-#[allow(dead_code)] // Phase 3 infrastructure - will be integrated into main validation pipeline
-pub fn validate_format_with_recovery(
-    pattern: &str,
-    field_name: &str,
-    span: Span,
-) -> MacroResult<ValidatedFormatSpec> {
-    // First try standard validation
-    if let Ok(spec) = validate_format_spec(pattern, span) {
-        return Ok(spec);
-    }
-
-    // If validation fails, try error recovery
-    if let Some(suggested_pattern) = suggest_format_correction(pattern) {
-        return Err(MacroError::invalid_format(
-            span,
-            pattern,
-            field_name,
-            &format!("Invalid format. Did you mean '{suggested_pattern}'?"),
-            None,
-        ));
-    }
-
-    // If no specific suggestion, provide general guidance
-    let common_patterns = [
-        "3!a (fixed 3 alphabetic)",
-        "6!n (fixed 6 numeric)",
-        "35x (variable up to 35 characters)",
-        "15d (decimal up to 15 digits)",
-        "[35x] (optional)",
-        "4*35x (repetitive)",
-    ];
-
-    Err(MacroError::invalid_format(
-        span,
-        pattern,
-        field_name,
-        &format!(
-            "Invalid SWIFT format specification. Common patterns: {}",
-            common_patterns.join(", ")
-        ),
-        None,
-    ))
-}
-
-/// Suggest format corrections for common mistakes
-#[allow(dead_code)] // Phase 3 infrastructure - helper function for error recovery
-fn suggest_format_correction(pattern: &str) -> Option<String> {
-    // Remove whitespace for analysis
-    let clean_pattern = pattern.trim();
-
-    // Common mistakes and corrections
-    if clean_pattern.is_empty() {
-        return Some("3!a".to_string());
-    }
-
-    // Missing exclamation for fixed length
-    if clean_pattern.chars().all(|c| c.is_ascii_digit()) {
-        if let Ok(num) = clean_pattern.parse::<usize>() {
-            if num <= 35 {
-                return Some(format!("{num}!a"));
-            }
-        }
-    }
-
-    // Wrong type indicator
-    if clean_pattern.ends_with('s') && clean_pattern.len() > 1 {
-        let without_s = &clean_pattern[..clean_pattern.len() - 1];
-        if without_s.chars().all(|c| c.is_ascii_digit()) {
-            return Some(format!("{without_s}x"));
-        }
-    }
-
-    // Missing type indicator
-    if clean_pattern.contains('!') && clean_pattern.len() >= 3 {
-        let parts: Vec<&str> = clean_pattern.split('!').collect();
-        if parts.len() == 2 && parts[0].chars().all(|c| c.is_ascii_digit()) && parts[1].is_empty() {
-            return Some(format!("{}!a", parts[0]));
-        }
-    }
-
-    // Lowercase to uppercase correction
-    if clean_pattern.contains(char::is_lowercase) {
-        return Some(clean_pattern.to_uppercase());
-    }
-
-    None
-}
-
-/// Validate format at compile time and return suggestions if invalid
-#[allow(dead_code)] // Phase 3 infrastructure - compile-time validation for future use
-pub fn compile_time_validate(pattern: &str) -> Result<ValidatedFormatSpec, Vec<String>> {
-    let span = proc_macro2::Span::call_site();
-
-    match validate_format_spec(pattern, span) {
-        Ok(spec) => Ok(spec),
-        Err(_) => {
-            let mut suggestions = Vec::new();
-
-            if let Some(correction) = suggest_format_correction(pattern) {
-                suggestions.push(format!("Did you mean '{correction}'?"));
-            }
-
-            suggestions.extend(vec![
-                "Use valid SWIFT formats like:".to_string(),
-                "- 3!a (fixed 3 alphabetic characters)".to_string(),
-                "- 6!n (fixed 6 numeric digits)".to_string(),
-                "- 35x (variable up to 35 characters)".to_string(),
-                "- 15d (decimal number)".to_string(),
-                "- [35x] (optional field)".to_string(),
-                "- 4*35x (repetitive field)".to_string(),
-            ]);
-
-            Err(suggestions)
-        }
-    }
-}
-
-/// Generate compile-time checked regex patterns for validated specs
-impl ValidatedFormatSpec {
-    /// Get the regex pattern for this format specification
-    #[allow(dead_code)]
-    pub fn regex_pattern(&self) -> String {
-        match &self.spec_type {
-            FormatSpecType::FixedAlphabetic { length } => {
-                format!("([A-Z]{{{length}}})")
-            }
-            FormatSpecType::VariableAlphabetic { max_length } => {
-                format!("([A-Z]{{1,{max_length}}})")
-            }
-            FormatSpecType::FixedNumeric { length } => {
-                format!("(\\d{{{length}}})")
-            }
-            FormatSpecType::VariableNumeric { max_length } => {
-                format!("(\\d{{1,{max_length}}})")
-            }
-            FormatSpecType::FixedCharacterSet { length } => {
-                format!("([A-Z0-9]{{{length}}})")
-            }
-            FormatSpecType::VariableCharacterSet { max_length } => {
-                format!("([A-Z0-9]{{1,{max_length}}})")
-            }
-            FormatSpecType::VariableAny { max_length } => {
-                format!("(.{{1,{max_length}}})")
-            }
-            FormatSpecType::Decimal { max_digits } => {
-                format!("(\\d{{1,{max_digits}}}(?:[.,]\\d+)?)")
-            }
-            FormatSpecType::Optional { inner } => {
-                let inner_pattern = inner.regex_pattern();
-                format!(
-                    "(?:{})?",
-                    inner_pattern.trim_start_matches('(').trim_end_matches(')')
-                )
-            }
-            FormatSpecType::Repetitive { count: _, inner } => {
-                // Repetitive patterns need special handling in the parser
-                inner.regex_pattern()
-            }
-            FormatSpecType::MultiComponent { components } => {
-                let patterns: Vec<String> = components.iter().map(|c| c.regex_pattern()).collect();
-                format!("({})", patterns.join(""))
-            }
-        }
-    }
-
-    /// Check if this pattern is optional
-    #[allow(dead_code)]
-    pub fn is_optional(&self) -> bool {
-        matches!(self.spec_type, FormatSpecType::Optional { .. })
-    }
-
-    /// Check if this pattern is repetitive
-    #[allow(dead_code)]
-    pub fn is_repetitive(&self) -> bool {
-        matches!(self.spec_type, FormatSpecType::Repetitive { .. })
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -837,19 +657,5 @@ mod tests {
         assert!(validate_format_spec("invalid", span).is_err());
         assert!(validate_format_spec("3!z", span).is_err());
         assert!(validate_format_spec("abc!n", span).is_err());
-    }
-
-    #[test]
-    fn test_regex_patterns() {
-        let span = Span::call_site();
-
-        let spec = validate_format_spec("3!a", span).unwrap();
-        assert_eq!(spec.regex_pattern(), "([A-Z]{3})");
-
-        let spec = validate_format_spec("35x", span).unwrap();
-        assert_eq!(spec.regex_pattern(), "(.{1,35})");
-
-        let spec = validate_format_spec("15d", span).unwrap();
-        assert_eq!(spec.regex_pattern(), "(\\d{1,15}(?:[.,]\\d+)?)");
     }
 }

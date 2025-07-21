@@ -454,43 +454,6 @@ pub mod recovery {
             _ => Err(MacroError::missing_attribute(span, attribute, context)),
         }
     }
-
-    /// Validate format specification and provide recovery suggestions
-    pub fn validate_format_with_recovery(
-        spec: &str,
-        field_name: &str,
-        span: Span,
-    ) -> MacroResult<()> {
-        if spec.is_empty() {
-            return Err(MacroError::invalid_format(
-                span,
-                spec,
-                field_name,
-                "Empty format specification",
-                None,
-            ));
-        }
-
-        // Basic validation - more comprehensive validation would be in format_validation.rs
-        let valid_endings = ["a", "n", "c", "x", "d"];
-        let has_valid_ending = valid_endings.iter().any(|&ending| spec.ends_with(ending));
-
-        if !has_valid_ending {
-            let suggestions = suggest_valid_format(spec);
-            return Err(MacroError::invalid_format(
-                span,
-                spec,
-                field_name,
-                &format!(
-                    "Invalid format ending. Suggestions: {}",
-                    suggestions.join(", ")
-                ),
-                None,
-            ));
-        }
-
-        Ok(())
-    }
 }
 
 /// Result type for macro operations

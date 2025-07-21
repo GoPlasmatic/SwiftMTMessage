@@ -8,19 +8,6 @@ use crate::format_validation::{FormatSpecType, ValidatedFormatSpec};
 use proc_macro2::TokenStream;
 use quote::quote;
 
-/// Enhanced configuration for sample generation with type constraints
-#[derive(Debug, Clone)]
-pub struct SampleConfig {
-    /// Generate minimal or full samples
-    pub scenario: SampleScenario,
-    /// Use specific currency codes
-    pub currency: Option<String>,
-    /// Custom constraints for generation
-    pub constraints: Vec<SampleConstraint>,
-    /// Context for smart generation (e.g., field name, message type)
-    pub context: SampleContext,
-}
-
 /// Constraints for sample generation
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Phase 3 infrastructure - constraint types for enhanced sample generation
@@ -39,6 +26,19 @@ pub enum SampleConstraint {
     OneOf { values: Vec<String> },
     /// Custom validation function
     Custom { validator_name: String },
+}
+
+/// Enhanced configuration for sample generation with type constraints
+#[derive(Debug, Clone)]
+pub struct SampleConfig {
+    /// Generate minimal or full samples
+    pub scenario: SampleScenario,
+    /// Use specific currency codes
+    pub currency: Option<String>,
+    /// Custom constraints for generation
+    pub constraints: Vec<SampleConstraint>,
+    /// Context for smart generation (e.g., field name, message type)
+    pub context: SampleContext,
 }
 
 /// Date formats for constraints

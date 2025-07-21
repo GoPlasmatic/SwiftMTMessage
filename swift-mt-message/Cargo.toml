@@ -39,20 +39,8 @@ uuid = { workspace = true }
 pretty_assertions = "1.4"
 
 [[example]]
-name = "parse_mt103"
-path = "../examples/parse_mt103.rs"
-
-[[example]]
-name = "parse_mt202"
-path = "../examples/parse_mt202.rs"
-
-[[example]]
 name = "parse_auto"
 path = "../examples/parse_auto.rs"
-
-[[example]]
-name = "json_to_mt_example"
-path = "../examples/json_to_mt_example.rs"
 
 [[example]]
 name = "sample_generation"

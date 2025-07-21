@@ -766,7 +766,7 @@ mod tests {
             let (_, pos) = &values[0];
             let line = pos >> 16;
             let field_pos = pos & 0xFFFF;
-            println!("Field 20 - Line: {}, Field position: {}", line, field_pos);
+            println!("Field 20 - Line: {line}, Field position: {field_pos}");
         }
 
         // The position info encodes line number (high 16 bits) and field position (low 16 bits)

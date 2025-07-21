@@ -34,9 +34,6 @@ pub struct MessageDefinition {
     pub fields: Vec<MessageField>,
     /// Validation rules constant name (e.g., "MT103_VALIDATION_RULES")
     pub validation_rules_const: Option<String>,
-    /// Span for error reporting
-    #[allow(dead_code)]
-    pub span: Span,
 }
 
 /// Message field definition
@@ -106,7 +103,6 @@ impl MessageDefinition {
             name,
             fields,
             validation_rules_const,
-            span,
         })
     }
 }

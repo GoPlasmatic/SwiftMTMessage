@@ -20,9 +20,6 @@ pub struct FieldDefinition {
     pub name: Ident,
     /// Field structure type (struct or enum)
     pub kind: FieldKind,
-    /// Span for error reporting
-    #[allow(dead_code)]
-    pub span: Span,
 }
 
 /// Field structure type
@@ -122,7 +119,7 @@ impl FieldDefinition {
             }
         };
 
-        Ok(FieldDefinition { name, kind, span })
+        Ok(FieldDefinition { name, kind })
     }
 }
 

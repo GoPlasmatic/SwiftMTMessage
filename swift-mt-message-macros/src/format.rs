@@ -46,7 +46,7 @@ pub fn format_to_description(pattern: &str) -> String {
         "((?:[A-Z]{3}))((?:\\d{1,15}(?:[.,]\\d+)?))" => {
             "3-letter currency code followed by amount (e.g., USD1234.56 or EUR1234,56)".to_string()
         }
-        
+
         // Complex multi-component patterns (like Field32A: date + currency + amount)
         r"^(\d{6})([A-Z]{3})(\d{1,15}(?:[.,]\d+)?)$" |
         "(\\d{6})([A-Z]{3})(\\d{1,15}(?:[.,]\\d+)?)" => {
@@ -56,13 +56,13 @@ pub fn format_to_description(pattern: &str) -> String {
         "(\\d{8})([A-Z]{3})(\\d{1,15}(?:[.,]\\d+)?)" => {
             "Date (YYYYMMDD), currency code (3 letters), and amount (e.g., 20241231USD1500000.00)".to_string()
         }
-        
+
         // Field23E pattern: instruction code + optional additional info
         r"^([A-Z]{4})(?:/(.{1,30}))?$" |
         "([A-Z]{4})(?:/(.{1,30}))?" => {
             "4-letter instruction code with optional additional info after / (e.g., INTC or INTC/COMPLIANCE)".to_string()
         }
-        
+
         // Code patterns with optional additional information
         r"^([A-Z0-9]{1,4})(?:/(.{1,30}))?$" |
         "([A-Z0-9]{1,4})(?:/(.{1,30}))?" => {
@@ -72,7 +72,7 @@ pub fn format_to_description(pattern: &str) -> String {
         "([A-Z0-9]{4})(?:/(.{1,30}))?" => {
             "4-character code with optional additional info after / (e.g., INTC/COMPLIANCE)".to_string()
         }
-        
+
         // Multiline patterns
         r"^(.{0,35}(?:\n.{0,35}){0,3})$" |
         "(.{0,35}(?:\\n.{0,35}){0,3})" => {
@@ -86,13 +86,13 @@ pub fn format_to_description(pattern: &str) -> String {
         "(.{0,35}(?:\\n.{0,35}){0,5})" => {
             "Up to 6 lines of 35 characters each".to_string()
         }
-        
+
         // BIC patterns
         r"^([A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)$" |
         "([A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)" => {
             "BIC code (8 or 11 characters, e.g., DEUTDEFF or DEUTDEFFXXX)".to_string()
         }
-        
+
         // Date patterns
         r"^(\d{6})$" | "(\\d{6})" => {
             "Date in YYMMDD format (e.g., 241231 for Dec 31, 2024)".to_string()
@@ -100,18 +100,18 @@ pub fn format_to_description(pattern: &str) -> String {
         r"^(\d{8})$" | "(\\d{8})" => {
             "Date in YYYYMMDD format (e.g., 20241231)".to_string()
         }
-        
+
         // Time patterns
         r"^(\d{4})$" if pattern.len() <= 10 => {
             "Time in HHMM format (e.g., 1430 for 2:30 PM)".to_string()
         }
-        
+
         // Time with timezone patterns
         r"^(\d{4})([+-])(\d{4})$" |
         "(\\d{4})([+-])(\\d{4})" => {
             "Time (HHMM) with timezone offset (e.g., 1200+0100)".to_string()
         }
-        
+
         // Amount patterns
         r"^(\d{1,15}(?:[.,]\d+)?)$" | "(\\d{1,15}(?:[.,]\\d+)?)" => {
             "Decimal amount up to 15 digits (e.g., 1234.56 or 1234,56)".to_string()
@@ -119,13 +119,13 @@ pub fn format_to_description(pattern: &str) -> String {
         r"^(\d{1,18}(?:[.,]\d+)?)$" | "(\\d{1,18}(?:[.,]\\d+)?)" => {
             "Decimal amount up to 18 digits (e.g., 123456789012.34)".to_string()
         }
-        
+
         // Rate/percentage patterns
         r"^(\d{1,3}(?:[.,]\d{1,10})?)$" |
         "(\\d{1,3}(?:[.,]\\d{1,10})?)" => {
             "Rate or percentage (e.g., 1.0909 or 12.5)".to_string()
         }
-        
+
         // Account patterns
         r"^(?:/(.{1,34}))?$" | "(?:/(.{1,34}))?" => {
             "Optional account number with / prefix (e.g., /1234567890)".to_string()
@@ -133,12 +133,12 @@ pub fn format_to_description(pattern: &str) -> String {
         r"^/(.{1,34})$" | "/(.{1,34})" => {
             "Account number with / prefix (e.g., /1234567890)".to_string()
         }
-        
+
         // Party identifier patterns
         r"^(?:/([A-Z]{1}))?(?:/(.{1,34}))?$" | "(?:/([A-Z]{1}))?(?:/(.{1,34}))?" => {
             "Optional party identifier (e.g., /C/12345 or /12345)".to_string()
         }
-        
+
         // Code patterns
         r"^([A-Z]{3})$" | "([A-Z]{3})" => {
             "Exactly 3 uppercase letters (e.g., SHA, BEN, OUR)".to_string()
@@ -152,7 +152,7 @@ pub fn format_to_description(pattern: &str) -> String {
         r"^([A-Z0-9]{4})$" | "([A-Z0-9]{4})" => {
             "Exactly 4 letters or digits".to_string()
         }
-        
+
         // Variable length patterns
         r"^(.{1,16})$" | "(.{1,16})" => {
             "Up to 16 characters".to_string()
@@ -172,7 +172,7 @@ pub fn format_to_description(pattern: &str) -> String {
         r"^(.{1,100})$" | "(.{1,100})" => {
             "Up to 100 characters".to_string()
         }
-        
+
         // Fixed length patterns
         r"^(.{16})$" | "(.{16})" => {
             "Exactly 16 characters".to_string()
@@ -180,7 +180,7 @@ pub fn format_to_description(pattern: &str) -> String {
         r"^(.{35})$" | "(.{35})" => {
             "Exactly 35 characters".to_string()
         }
-        
+
         // Alphanumeric patterns
         r"^([A-Z0-9]{1,16})$" | "([A-Z0-9]{1,16})" => {
             "Up to 16 letters or digits".to_string()
@@ -191,7 +191,7 @@ pub fn format_to_description(pattern: &str) -> String {
         r"^([A-Z0-9]{1,35})$" | "([A-Z0-9]{1,35})" => {
             "Up to 35 letters or digits".to_string()
         }
-        
+
         // Numeric patterns
         r"^(\d{1})$" | "(\\d{1})" => {
             "Single digit (0-9)".to_string()
@@ -217,7 +217,7 @@ pub fn format_to_description(pattern: &str) -> String {
         r"^(\d{1,15})$" | "(\\d{1,15})" => {
             "Up to 15 digits".to_string()
         }
-        
+
         // Letter patterns
         r"^([A-Z]{1})$" | "([A-Z]{1})" => {
             "Single uppercase letter".to_string()
@@ -228,7 +228,7 @@ pub fn format_to_description(pattern: &str) -> String {
         r"^([A-Z]{1,35})$" | "([A-Z]{1,35})" => {
             "Up to 35 uppercase letters".to_string()
         }
-        
+
         _ => {
             // Try to parse SWIFT format notation
             parse_swift_format_to_description(pattern)
@@ -260,7 +260,7 @@ fn parse_swift_format_to_description(pattern: &str) -> String {
         "8!n" => "Exactly 8 digits (e.g., date YYYYMMDD)".to_string(),
         "10!n" => "Exactly 10 digits".to_string(),
         "12!n" => "Exactly 12 digits".to_string(),
-        
+
         // Variable length patterns
         "16x" => "Up to 16 characters".to_string(),
         "20x" => "Up to 20 characters".to_string(),
@@ -287,21 +287,28 @@ fn parse_swift_format_to_description(pattern: &str) -> String {
         "8c" => "Up to 8 characters (letters/digits)".to_string(),
         "16c" => "Up to 16 characters (letters/digits)".to_string(),
         "34c" => "Up to 34 characters (letters/digits)".to_string(),
-        
+
         // Combined patterns
         "3!a15d" => "3-letter currency code followed by amount (e.g., USD1234.56)".to_string(),
         "3!a18d" => "3-letter currency code followed by amount up to 18 digits".to_string(),
-        "6!n3!a15d" => "Date (YYMMDD), currency code, and amount (e.g., 241231USD1500000.00)".to_string(),
+        "6!n3!a15d" => {
+            "Date (YYMMDD), currency code, and amount (e.g., 241231USD1500000.00)".to_string()
+        }
         "8!n3!a15d" => "Date (YYYYMMDD), currency code, and amount".to_string(),
-        "4!c[/30x]" => "4-character code with optional additional info after / (e.g., INTC/COMPLIANCE)".to_string(),
+        "4!c[/30x]" => {
+            "4-character code with optional additional info after / (e.g., INTC/COMPLIANCE)"
+                .to_string()
+        }
         "3!a[/30x]" => "3-letter code with optional additional info after /".to_string(),
         "1!a3!c" => "Single letter followed by 3 characters".to_string(),
-        
+
         // BIC patterns
-        "4!a2!a2!c[3!c]" => "BIC code (8 or 11 characters, e.g., DEUTDEFF or DEUTDEFFXXX)".to_string(),
+        "4!a2!a2!c[3!c]" => {
+            "BIC code (8 or 11 characters, e.g., DEUTDEFF or DEUTDEFFXXX)".to_string()
+        }
         "4!a2!a2!c" => "8-character BIC code (e.g., DEUTDEFF)".to_string(),
         "4!a2!a2!c3!c" => "11-character BIC code (e.g., DEUTDEFFXXX)".to_string(),
-        
+
         // Multiline patterns
         "4*35x" => "Up to 4 lines of 35 characters each".to_string(),
         "3*35x" => "Up to 3 lines of 35 characters each".to_string(),
@@ -311,7 +318,7 @@ fn parse_swift_format_to_description(pattern: &str) -> String {
         "4*(1!n/33x)" => "Up to 4 numbered lines (e.g., 1/text, 2/text)".to_string(),
         "6*50x" => "Up to 6 lines of 50 characters each".to_string(),
         "35*50x" => "Up to 35 lines of 50 characters each".to_string(),
-        
+
         // Optional patterns
         "[/34x]" => "Optional value with / prefix (up to 34 characters)".to_string(),
         "[/1!a][/34x]" => "Optional party code and identifier (e.g., /C/12345)".to_string(),
@@ -326,27 +333,32 @@ fn parse_swift_format_to_description(pattern: &str) -> String {
         "[4!n]" => "Optional 4 digits".to_string(),
         "[/2n]" => "Optional 2 digits with / prefix".to_string(),
         "[/5n]" => "Optional 5 digits with / prefix".to_string(),
-        
+
         // Special patterns
         "/8c/" => "8 characters between slashes (e.g., /ABCD1234/)".to_string(),
         "/16x" => "Up to 16 characters with / prefix".to_string(),
         "/30x" => "Up to 30 characters with / prefix".to_string(),
         "/34x" => "Up to 34 characters with / prefix".to_string(),
         "//16x" => "Up to 16 characters with // prefix".to_string(),
-        "/1!a/34x" => "Single letter and up to 34 characters with / prefixes (e.g., /C/12345)".to_string(),
-        
+        "/1!a/34x" => {
+            "Single letter and up to 34 characters with / prefixes (e.g., /C/12345)".to_string()
+        }
+
         // Account and reference patterns
         "16!x" => "Exactly 16 characters (reference number)".to_string(),
         "35!x" => "Exactly 35 characters".to_string(),
-        
+
         _ => {
             // Try to parse dynamic patterns
             if pattern.contains('*') {
-                if let Some(captures) = regex::Regex::new(r"(\d+)\*(\d+)([a-zA-Z])").unwrap().captures(pattern) {
+                if let Some(captures) = regex::Regex::new(r"(\d+)\*(\d+)([a-zA-Z])")
+                    .unwrap()
+                    .captures(pattern)
+                {
                     let lines = captures.get(1).map_or("", |m| m.as_str());
                     let chars = captures.get(2).map_or("", |m| m.as_str());
                     let format_type = captures.get(3).map_or("", |m| m.as_str());
-                    
+
                     let char_type = match format_type {
                         "a" => "letters",
                         "n" => "digits",
@@ -354,18 +366,18 @@ fn parse_swift_format_to_description(pattern: &str) -> String {
                         "x" => "characters",
                         _ => "characters",
                     };
-                    
-                    return format!("Up to {} lines of {} {} each", lines, chars, char_type);
+
+                    return format!("Up to {lines} lines of {chars} {char_type} each");
                 }
             }
-            
+
             // Try to parse simple patterns with regex
             if let Ok(re) = regex::Regex::new(r"^(\d+)(!?)([a-zA-Z])$") {
                 if let Some(captures) = re.captures(pattern) {
                     let length = captures.get(1).map_or("", |m| m.as_str());
                     let is_fixed = captures.get(2).map_or("", |m| m.as_str()) == "!";
                     let format_type = captures.get(3).map_or("", |m| m.as_str());
-                    
+
                     let type_desc = match format_type {
                         "a" => "uppercase letters",
                         "n" => "digits",
@@ -374,25 +386,31 @@ fn parse_swift_format_to_description(pattern: &str) -> String {
                         "d" => "decimal digits",
                         _ => "characters",
                     };
-                    
+
                     if is_fixed {
-                        return format!("Exactly {} {}", length, type_desc);
+                        return format!("Exactly {length} {type_desc}");
                     } else if format_type == "d" {
-                        return format!("Decimal amount up to {} digits", length);
+                        return format!("Decimal amount up to {length} digits");
                     } else {
-                        return format!("Up to {} {}", length, type_desc);
+                        return format!("Up to {length} {type_desc}");
                     }
                 }
             }
-            
+
             // If pattern contains regex special characters, provide a more specific description
             if pattern.contains('^') || pattern.contains('$') || pattern.contains('(') {
                 // Try to analyze complex regex patterns for better descriptions
-                
+
                 // Check for specific multi-component patterns
-                if pattern.contains("\\d{6}") && pattern.contains("[A-Z]{3}") && pattern.contains("\\d{1,15}") {
+                if pattern.contains("\\d{6}")
+                    && pattern.contains("[A-Z]{3}")
+                    && pattern.contains("\\d{1,15}")
+                {
                     "Date (YYMMDD), currency code (3 letters), and amount".to_string()
-                } else if pattern.contains("\\d{8}") && pattern.contains("[A-Z]{3}") && pattern.contains("\\d{1,15}") {
+                } else if pattern.contains("\\d{8}")
+                    && pattern.contains("[A-Z]{3}")
+                    && pattern.contains("\\d{1,15}")
+                {
                     "Date (YYYYMMDD), currency code (3 letters), and amount".to_string()
                 } else if pattern.contains("[A-Z]{4}") && pattern.contains("(?:/") {
                     "4-letter code with optional additional information".to_string()
@@ -429,7 +447,7 @@ fn parse_swift_format_to_description(pattern: &str) -> String {
                 }
             } else {
                 // Return a generic description for unknown patterns
-                format!("Format: {}", pattern)
+                format!("Format: {pattern}")
             }
         }
     }

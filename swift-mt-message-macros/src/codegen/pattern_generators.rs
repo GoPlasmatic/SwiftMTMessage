@@ -99,7 +99,7 @@ impl FieldPatternGenerator for OptionalPatternGenerator {
 
         // Generate regex
         let regex_pattern = swift_format_to_regex(pattern)?;
-        
+
         // Generate human-readable format description
         let format_desc = crate::format::format_to_description(pattern);
 
@@ -159,7 +159,7 @@ impl FieldPatternGenerator for RepetitivePatternGenerator {
 
         // Generate regex
         let regex_pattern = swift_format_to_regex(pattern)?;
-        
+
         // Generate human-readable format description
         let format_desc = match pattern.as_str() {
             "4*35x" => "Up to 4 lines of 35 characters each".to_string(),
@@ -168,11 +168,15 @@ impl FieldPatternGenerator for RepetitivePatternGenerator {
             _ if pattern.contains('*') => {
                 let parts: Vec<&str> = pattern.split('*').collect();
                 if parts.len() == 2 {
-                    format!("Up to {} lines of {} characters each", parts[0], parts[1].trim_end_matches(char::is_alphabetic))
+                    format!(
+                        "Up to {} lines of {} characters each",
+                        parts[0],
+                        parts[1].trim_end_matches(char::is_alphabetic)
+                    )
                 } else {
                     pattern.to_string()
                 }
-            },
+            }
             _ => pattern.to_string(),
         };
 
@@ -573,7 +577,7 @@ impl FieldParserGenerator {
         }
 
         let pattern_without_anchors = regex_pattern.trim_start_matches('^').trim_end_matches('$');
-        
+
         // Generate the friendly format at compile time
         let friendly_format_desc = crate::format::format_to_description(&regex_pattern);
 

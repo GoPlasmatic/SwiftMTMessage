@@ -131,6 +131,38 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
     /// Convert to field map
     fn to_fields(&self) -> HashMap<String, Vec<String>>;
 
+    /// Convert to ordered field list for MT serialization
+    /// Returns fields in the correct sequence order for multi-sequence messages
+    fn to_ordered_fields(&self) -> Vec<(String, String)> {
+        // Default implementation: just flatten the HashMap in numeric order
+        let field_map = self.to_fields();
+        let mut ordered_fields = Vec::new();
+
+        // Create ascending field order by sorting field tags numerically
+        let mut field_tags: Vec<(&String, u32)> = field_map
+            .keys()
+            .map(|tag| {
+                let num = tag
+                    .chars()
+                    .take_while(|c| c.is_ascii_digit())
+                    .fold(0u32, |acc, c| acc * 10 + (c as u32 - '0' as u32));
+                (tag, num)
+            })
+            .collect();
+        field_tags.sort_unstable_by_key(|(_, num)| *num);
+
+        // Output fields in ascending numerical order
+        for (field_tag, _) in field_tags {
+            if let Some(field_values) = field_map.get(field_tag) {
+                for field_value in field_values {
+                    ordered_fields.push((field_tag.clone(), field_value.clone()));
+                }
+            }
+        }
+
+        ordered_fields
+    }
+
     /// Get required field tags for this message type
     fn required_fields() -> Vec<&'static str>;
 
@@ -959,7 +991,6 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         }
 
         // Block 4: Text Block with fields
-        let field_map = self.fields.to_fields();
         let mut block4 = String::new();
 
         // Get optional field tags for this message type to determine which fields can be skipped
@@ -968,39 +999,24 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             .map(|s| s.to_string())
             .collect();
 
-        // Create ascending field order by sorting field tags numerically
-        // Optimize by parsing numbers without allocating strings
-        let mut field_tags: Vec<(&String, u32)> = field_map
-            .keys()
-            .map(|tag| {
-                let num = tag
-                    .chars()
-                    .take_while(|c| c.is_ascii_digit())
-                    .fold(0u32, |acc, c| acc * 10 + (c as u32 - '0' as u32));
-                (tag, num)
-            })
-            .collect();
-        field_tags.sort_unstable_by_key(|(_, num)| *num);
+        // Use to_ordered_fields for proper sequence ordering
+        let ordered_fields = self.fields.to_ordered_fields();
 
-        // Output fields in ascending numerical order
-        for (field_tag, _) in field_tags {
-            if let Some(field_values) = field_map.get(field_tag) {
-                for field_value in field_values {
-                    // Skip empty optional fields
-                    if optional_fields.contains(field_tag) && field_value.trim().is_empty() {
-                        continue;
-                    }
+        // Output fields in the correct order
+        for (field_tag, field_value) in ordered_fields {
+            // Skip empty optional fields
+            if optional_fields.contains(&field_tag) && field_value.trim().is_empty() {
+                continue;
+            }
 
-                    // field_value already includes the field tag prefix from to_swift_string()
-                    // but we need to check if it starts with ':' to avoid double prefixing
-                    if field_value.starts_with(':') {
-                        // Value already has field tag prefix, use as-is
-                        block4.push_str(&format!("\n{field_value}"));
-                    } else {
-                        // Value doesn't have field tag prefix, add it
-                        block4.push_str(&format!("\n:{field_tag}:{field_value}"));
-                    }
-                }
+            // field_value already includes the field tag prefix from to_swift_string()
+            // but we need to check if it starts with ':' to avoid double prefixing
+            if field_value.starts_with(':') {
+                // Value already has field tag prefix, use as-is
+                block4.push_str(&format!("\n{field_value}"));
+            } else {
+                // Value doesn't have field tag prefix, add it
+                block4.push_str(&format!("\n:{field_tag}:{field_value}"));
             }
         }
 
@@ -1204,6 +1220,123 @@ mod tests {
     }
 
     #[test]
+    fn test_round_trip_trailer_chk_field() {
+        // Test that the CHK field in the trailer is preserved during round-trip
+        println!("Testing round-trip with trailer CHK field...");
+
+        let mt_string = r#"{1:F01BANKBEBBAXXX0000000000}
+{2:I103BANKDEFFXXXXN}
+{3:{113:SEPA}{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}}
+{4:
+:20:TXN123456
+:13C:/SNDTIME/1200+0000
+:23B:CRED
+:23E:SDVA
+:32A:250615EUR1000,00
+:50K:JOHN DOE
+:59:JANE SMITH
+:71A:OUR
+:71F:USD10,00
+-}
+{5:{CHK:ABCD1234567890}}"#;
+
+        println!("Original MT string contains trailer with CHK:ABCD1234567890");
+
+        // Parse the MT string
+        let parsed_message = SwiftParser::parse_auto(mt_string).expect("Failed to parse MT string");
+        println!("✓ Successfully parsed MT string");
+
+        // Check that trailer was parsed
+        match &parsed_message {
+            ParsedSwiftMessage::MT103(msg) => {
+                assert!(msg.trailer.is_some(), "Trailer should be present");
+                let trailer = msg.trailer.as_ref().unwrap();
+                assert!(trailer.checksum.is_some(), "Checksum should be present");
+                assert_eq!(trailer.checksum.as_ref().unwrap(), "ABCD1234567890");
+                println!("✓ Trailer CHK field was correctly parsed");
+            }
+            _ => panic!("Expected MT103 message"),
+        }
+
+        // Serialize to JSON
+        let json_representation =
+            serde_json::to_string_pretty(&parsed_message).expect("Failed to serialize to JSON");
+        println!("✓ Serialized to JSON");
+
+        // Deserialize from JSON
+        let deserialized_message: ParsedSwiftMessage =
+            serde_json::from_str(&json_representation).expect("Failed to deserialize from JSON");
+        println!("✓ Deserialized from JSON");
+
+        // Check that trailer is still present after JSON round-trip
+        match &deserialized_message {
+            ParsedSwiftMessage::MT103(msg) => {
+                assert!(
+                    msg.trailer.is_some(),
+                    "Trailer should be present after JSON round-trip"
+                );
+                let trailer = msg.trailer.as_ref().unwrap();
+                assert!(
+                    trailer.checksum.is_some(),
+                    "Checksum should be present after JSON round-trip"
+                );
+                assert_eq!(trailer.checksum.as_ref().unwrap(), "ABCD1234567890");
+                println!("✓ Trailer CHK field preserved after JSON round-trip");
+            }
+            _ => panic!("Expected MT103 message"),
+        }
+
+        // Convert back to MT format
+        let regenerated_mt = match &deserialized_message {
+            ParsedSwiftMessage::MT103(msg) => msg.to_mt_message(),
+            _ => panic!("Expected MT103 message"),
+        };
+        println!("✓ Regenerated MT format");
+
+        // Check if trailer block is present
+        assert!(
+            regenerated_mt.contains("{5:"),
+            "Trailer block should be present in regenerated MT"
+        );
+
+        // Check if CHK field is present
+        assert!(
+            regenerated_mt.contains("CHK:ABCD1234567890"),
+            "CHK field should be present in regenerated MT. Regenerated MT:\n{}",
+            regenerated_mt
+        );
+
+        println!("✓ Trailer CHK field is correctly included in regenerated MT");
+
+        // Parse the regenerated MT to ensure it's valid
+        let reparsed_message =
+            SwiftParser::parse_auto(&regenerated_mt).expect("Failed to reparse regenerated MT");
+        println!("✓ Successfully reparsed regenerated MT");
+
+        // Verify trailer is still there
+        match &reparsed_message {
+            ParsedSwiftMessage::MT103(msg) => {
+                assert!(
+                    msg.trailer.is_some(),
+                    "Trailer should be present after reparsing"
+                );
+                let trailer = msg.trailer.as_ref().unwrap();
+                assert!(
+                    trailer.checksum.is_some(),
+                    "Checksum should be present after reparsing"
+                );
+                assert_eq!(trailer.checksum.as_ref().unwrap(), "ABCD1234567890");
+                println!("✓ Trailer CHK field preserved after full round-trip");
+            }
+            _ => panic!("Expected MT103 message"),
+        }
+
+        println!("\n=== Trailer CHK Round-trip Test Results ===");
+        println!("✓ All steps completed successfully");
+        println!("✓ CHK field preserved throughout round-trip");
+    }
+
+    #[test]
     fn test_round_trip_with_test_data() {
         // Test with available test data files, but don't fail if some can't be parsed
         let test_data_dir = std::env::current_dir()
@@ -1360,6 +1493,16 @@ mod tests {
                     "✗ Round-trip failed for {}: original and reparsed JSON don't match",
                     file_path.display()
                 );
+
+                // Debug: Show the differences
+                if std::env::var("DEBUG_ROUNDTRIP").is_ok() {
+                    println!("\n=== ORIGINAL JSON ===");
+                    println!("{}", original_json);
+                    println!("\n=== REPARSED JSON ===");
+                    println!("{}", reparsed_json);
+                    println!("\n=== END DIFF ===\n");
+                }
+
                 failed_tests += 1;
             }
         }

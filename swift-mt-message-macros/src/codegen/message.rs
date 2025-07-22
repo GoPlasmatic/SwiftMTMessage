@@ -6,6 +6,15 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Type;
 
+/// Extract base tag by removing index suffix (e.g., "50#1" -> "50")
+fn extract_base_tag(tag: &str) -> &str {
+    if let Some(index_pos) = tag.find('#') {
+        &tag[..index_pos]
+    } else {
+        tag
+    }
+}
+
 /// Generate SwiftMessage implementation for a message definition
 pub fn generate_swift_message_impl(definition: &MessageDefinition) -> MacroResult<TokenStream> {
     let name = &definition.name;
@@ -19,6 +28,11 @@ pub fn generate_swift_message_impl(definition: &MessageDefinition) -> MacroResul
         generate_from_fields_impl(&definition.fields)?
     };
     let to_fields_impl = generate_to_fields_impl(&definition.fields)?;
+    let to_ordered_fields_impl = if definition.has_sequences {
+        generate_to_ordered_fields_with_sequences_impl(definition)?
+    } else {
+        quote! {} // Use default implementation
+    };
     let sample_impl = generate_sample_impl(&definition.fields)?;
     let sample_minimal_impl = generate_sample_minimal_impl(&definition.fields)?;
     let sample_full_impl = generate_sample_full_impl(&definition.fields)?;
@@ -48,6 +62,8 @@ pub fn generate_swift_message_impl(definition: &MessageDefinition) -> MacroResul
                 use crate::SwiftField;
                 #to_fields_impl
             }
+
+            #to_ordered_fields_impl
 
             fn required_fields() -> Vec<&'static str> {
                 #required_fields_impl
@@ -431,13 +447,34 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
 fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> {
     let mut field_serializers = Vec::new();
 
+    // Track fields that might appear in transactions
+    let transaction_field_tags = vec![
+        "32B", "33B", "36", "71A", "71F", "71G", "21", "23E", "50", "52", "57", "59", "70", "26T",
+        "77B", "21C", "21D", "21E", "21F",
+    ];
+    let transaction_fields_set: std::collections::HashSet<&str> =
+        transaction_field_tags.into_iter().collect();
+
     for field in fields {
         let field_name = &field.name;
         let tag = &field.tag;
 
-        // Skip sequence fields marked with "#" for MT format serialization
-        // They are handled differently in the message format
+        // Special handling for sequence fields marked with "#"
         if tag == "#" {
+            if field.is_repetitive {
+                // This is a sequence field (like transactions in MT101/MT104)
+                // Each item in the Vec needs to be serialized to its component fields
+                field_serializers.push(quote! {
+                    // Serialize each transaction/sequence item
+                    for item in &self.#field_name {
+                        let item_fields = item.to_fields();
+                        // Merge the item's fields into the main field map
+                        for (item_tag, item_values) in item_fields {
+                            fields.entry(item_tag).or_insert_with(Vec::new).extend(item_values);
+                        }
+                    }
+                });
+            }
             continue;
         }
 
@@ -458,12 +495,21 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
             } else {
                 // Optional T - check if it's an enum field that needs variant handling
                 let field_type = &field.inner_type;
+                let base_tag = extract_base_tag(tag);
                 if is_enum_field_type(field_type) {
                     field_serializers.push(quote! {
                         if let Some(ref value) = self.#field_name {
                             let base_tag = crate::get_field_tag_for_mt(#tag);
                             let field_tag_with_variant = crate::get_field_tag_with_variant(&base_tag, value);
                             fields.insert(field_tag_with_variant, vec![value.to_swift_string()]);
+                        }
+                    });
+                } else if transaction_fields_set.contains(base_tag) {
+                    // Use extend for fields that might appear in transactions
+                    field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            let mt_tag = crate::get_field_tag_for_mt(#tag);
+                            fields.entry(mt_tag).or_insert_with(Vec::new).push(value.to_swift_string());
                         }
                     });
                 } else {
@@ -494,10 +540,20 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                     fields.insert(field_tag_with_variant, vec![self.#field_name.to_swift_string()]);
                 });
             } else {
-                field_serializers.push(quote! {
-                    let mt_tag = crate::get_field_tag_for_mt(#tag);
-                    fields.insert(mt_tag, vec![self.#field_name.to_swift_string()]);
-                });
+                // Check if this field might appear in both sequence A/C and transactions
+                let base_tag = extract_base_tag(tag);
+                if transaction_fields_set.contains(base_tag) {
+                    // Use extend for fields that might appear in transactions
+                    field_serializers.push(quote! {
+                        let mt_tag = crate::get_field_tag_for_mt(#tag);
+                        fields.entry(mt_tag).or_insert_with(Vec::new).push(self.#field_name.to_swift_string());
+                    });
+                } else {
+                    field_serializers.push(quote! {
+                        let mt_tag = crate::get_field_tag_for_mt(#tag);
+                        fields.insert(mt_tag, vec![self.#field_name.to_swift_string()]);
+                    });
+                }
             }
         }
     }
@@ -506,6 +562,175 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
         let mut fields = std::collections::HashMap::new();
         #(#field_serializers)*
         fields
+    })
+}
+
+/// Generate to_ordered_fields implementation for multi-sequence messages
+fn generate_to_ordered_fields_with_sequences_impl(
+    definition: &MessageDefinition,
+) -> MacroResult<TokenStream> {
+    let message_name = &definition.name.to_string();
+
+    // Get sequence configuration
+    let _sequence_config = definition.sequence_config.as_ref().ok_or_else(|| {
+        crate::error::MacroError::internal(
+            proc_macro2::Span::call_site(),
+            "Expected sequence configuration for multi-sequence message",
+        )
+    })?;
+
+    // Identify which fields belong to sequence A (main sequence) vs sequence B (transactions)
+    let mut seq_a_fields = Vec::new();
+    let mut transaction_field_name = None;
+
+    for field in &definition.fields {
+        if field.tag == "#" {
+            transaction_field_name = Some(&field.name);
+        } else {
+            seq_a_fields.push(&field.tag);
+        }
+    }
+
+    let _transaction_field = transaction_field_name.ok_or_else(|| {
+        crate::error::MacroError::internal(
+            proc_macro2::Span::call_site(),
+            "Multi-sequence message must have a # field for transactions",
+        )
+    })?;
+
+    // For MT101/MT104, we need to know which fields belong to transactions
+    // This is determined by the transaction type structure
+    let _transaction_fields = match message_name.as_str() {
+        "MT101" => vec![
+            "21", "21F", "23E", "32B", "50", "52", "56", "57", "59", "70", "77B", "33B", "71A",
+            "25A", "36",
+        ],
+        "MT104" => vec![
+            "21", "23E", "21C", "21D", "21E", "32B", "50", "52", "57", "59", "70", "26T", "77B",
+            "33B", "71A", "71F", "71G", "36",
+        ],
+        "MT107" => vec![
+            "21", "23E", "21C", "21D", "21E", "32B", "33B", "50", "52", "56", "57", "59", "70",
+            "72", "77B", "71A", "36",
+        ],
+        _ => vec![],
+    };
+
+    // Sequence C fields that appear after all transactions
+    let sequence_c_fields = match message_name.as_str() {
+        "MT104" => vec!["32B", "19", "71F", "71G", "53"],
+        _ => vec![],
+    };
+
+    // For MT104, we need to generate field serializers directly from struct fields
+    // to maintain proper sequence ordering
+    let mut seq_a_field_serializers = Vec::new();
+    let mut seq_c_field_serializers = Vec::new();
+    let transaction_field = transaction_field_name.unwrap();
+
+    // Collect and sort sequence A fields by numeric order
+    let mut seq_a_fields_sorted: Vec<(&MessageField, u32)> = Vec::new();
+    let mut seq_c_fields_sorted: Vec<(&MessageField, u32)> = Vec::new();
+
+    for field in &definition.fields {
+        if field.tag == "#" {
+            continue; // Skip transaction field
+        }
+
+        let base_tag = extract_base_tag(&field.tag);
+        let num = base_tag
+            .chars()
+            .take_while(|c| c.is_ascii_digit())
+            .fold(0u32, |acc, c| acc * 10 + (c as u32 - '0' as u32));
+
+        if sequence_c_fields.contains(&base_tag) {
+            seq_c_fields_sorted.push((field, num));
+        } else {
+            seq_a_fields_sorted.push((field, num));
+        }
+    }
+
+    // Sort by numeric order
+    seq_a_fields_sorted.sort_by_key(|(_, num)| *num);
+    seq_c_fields_sorted.sort_by_key(|(_, num)| *num);
+
+    // Generate serializers for sorted sequence A fields
+    for (field, _) in seq_a_fields_sorted {
+        let field_name = &field.name;
+        let tag = &field.tag;
+        let base_tag = extract_base_tag(tag);
+
+        // This field is already in sequence A (not in sequence C)
+        let field_type = &field.inner_type;
+        if is_enum_field_type(field_type) {
+            // Enum field - needs variant handling
+            if field.is_optional {
+                seq_a_field_serializers.push(quote! {
+                    if let Some(ref value) = self.#field_name {
+                        let field_tag = crate::get_field_tag_with_variant(#base_tag, value);
+                        ordered_fields.push((field_tag, value.to_swift_string()));
+                    }
+                });
+            } else {
+                seq_a_field_serializers.push(quote! {
+                    let field_tag = crate::get_field_tag_with_variant(#base_tag, &self.#field_name);
+                    ordered_fields.push((field_tag, self.#field_name.to_swift_string()));
+                });
+            }
+        } else {
+            // Non-enum field - use base tag directly
+            if field.is_optional {
+                seq_a_field_serializers.push(quote! {
+                    if let Some(ref value) = self.#field_name {
+                        ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                    }
+                });
+            } else {
+                seq_a_field_serializers.push(quote! {
+                    ordered_fields.push((#base_tag.to_string(), self.#field_name.to_swift_string()));
+                });
+            }
+        }
+    }
+
+    // Generate serializers for sorted sequence C fields
+    for (field, _) in seq_c_fields_sorted {
+        let field_name = &field.name;
+        let tag = &field.tag;
+        let base_tag = extract_base_tag(tag);
+
+        if field.is_optional {
+            seq_c_field_serializers.push(quote! {
+                if let Some(ref value) = self.#field_name {
+                    ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                }
+            });
+        } else {
+            seq_c_field_serializers.push(quote! {
+                ordered_fields.push((#base_tag.to_string(), self.#field_name.to_swift_string()));
+            });
+        }
+    }
+
+    Ok(quote! {
+        fn to_ordered_fields(&self) -> Vec<(String, String)> {
+            use crate::SwiftField;
+            let mut ordered_fields = Vec::new();
+
+            // Serialize sequence A fields in order
+            #(#seq_a_field_serializers)*
+
+            // Serialize transaction fields
+            for transaction in &self.#transaction_field {
+                let tx_fields = transaction.to_ordered_fields();
+                ordered_fields.extend(tx_fields);
+            }
+
+            // Serialize sequence C fields
+            #(#seq_c_field_serializers)*
+
+            ordered_fields
+        }
     })
 }
 

@@ -460,8 +460,8 @@ impl SwiftParser {
             let content_start = start + block_marker.len();
 
             match block_index {
-                1 | 2 | 5 => {
-                    // Blocks 1, 2, and 5 end with simple closing brace
+                1 | 2 => {
+                    // Blocks 1 and 2 end with simple closing brace (no nested content)
                     if let Some(end) = raw_message[start..].find('}') {
                         let end = start + end;
                         Ok(Some(raw_message[content_start..end].to_string()))
@@ -469,8 +469,8 @@ impl SwiftParser {
                         Ok(None)
                     }
                 }
-                3 => {
-                    // Block 3 may have nested braces
+                3 | 5 => {
+                    // Blocks 3 and 5 may have nested braces (e.g., {103:EBA} or {CHK:...})
                     if let Some(end) = Self::find_matching_brace(&raw_message[start..]) {
                         let end = start + end;
                         Ok(Some(raw_message[content_start..end].to_string()))

@@ -28,8 +28,8 @@
 //! // Handle parsing errors
 //! match SwiftParser::parse_auto(&invalid_message) {
 //!     Ok(message) => println!("Parsed successfully: {:?}", message),
-//!     Err(ParseError::InvalidFieldFormat { field_tag, component_name, .. }) => {
-//!         eprintln!("Format error in field {}: {}", field_tag, component_name);
+//!     Err(ParseError::InvalidFieldFormat(err)) => {
+//!         eprintln!("Format error in field {}: {}", err.field_tag, err.component_name);
 //!     },
 //!     Err(ParseError::MissingRequiredField { field_tag, field_name, .. }) => {
 //!         eprintln!("Missing required field: {} ({})", field_tag, field_name);

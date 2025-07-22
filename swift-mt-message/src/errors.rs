@@ -77,6 +77,23 @@ pub type Result<T> = std::result::Result<T, ParseError>;
 /// Enhanced result type for SWIFT validation operations
 pub type SwiftValidationResult<T> = std::result::Result<T, SwiftValidationError>;
 
+/// Details for invalid field format errors
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InvalidFieldFormatError {
+    /// SWIFT field tag (e.g., "50K", "32A")
+    pub field_tag: String,
+    /// Component name within the field (e.g., "currency", "amount")
+    pub component_name: String,
+    /// The actual value that failed to parse
+    pub value: String,
+    /// Expected format specification
+    pub format_spec: String,
+    /// Position in the original message
+    pub position: Option<usize>,
+    /// Inner parsing error (simplified for serialization)
+    pub inner_error: String,
+}
+
 /// Main error type for parsing operations
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum ParseError {
@@ -103,21 +120,8 @@ pub enum ParseError {
     InvalidFormat { message: String },
 
     /// Field format error with full context
-    #[error("Invalid field format - Field: {field_tag}, Component: {component_name}, Value: '{value}', Expected: {format_spec}")]
-    InvalidFieldFormat {
-        /// SWIFT field tag (e.g., "50K", "32A")
-        field_tag: String,
-        /// Component name within the field (e.g., "currency", "amount")
-        component_name: String,
-        /// The actual value that failed to parse
-        value: String,
-        /// Expected format specification
-        format_spec: String,
-        /// Position in the original message
-        position: Option<usize>,
-        /// Inner parsing error (simplified for serialization)
-        inner_error: String,
-    },
+    #[error("Invalid field format - Field: {}, Component: {}, Value: '{}', Expected: {}", .0.field_tag, .0.component_name, .0.value, .0.format_spec)]
+    InvalidFieldFormat(Box<InvalidFieldFormatError>),
 
     /// Missing required field with detailed context
     #[error("Missing required field {field_tag} ({field_name}) in {message_type}")]
@@ -331,14 +335,7 @@ impl ParseError {
     /// Get a detailed debug report for the error
     pub fn debug_report(&self) -> String {
         match self {
-            ParseError::InvalidFieldFormat {
-                field_tag,
-                component_name,
-                value,
-                format_spec,
-                position,
-                inner_error,
-            } => {
+            ParseError::InvalidFieldFormat(err) => {
                 format!(
                     "Field Parsing Error:\n\
                      ├─ Field Tag: {}\n\
@@ -348,13 +345,14 @@ impl ParseError {
                      ├─ Position in Message: {}\n\
                      ├─ Details: {}\n\
                      └─ Hint: Check SWIFT format specification for field {}",
-                    field_tag,
-                    component_name,
-                    value,
-                    format_spec,
-                    position.map_or("unknown".to_string(), |p| p.to_string()),
-                    inner_error,
-                    field_tag
+                    err.field_tag,
+                    err.component_name,
+                    err.value,
+                    err.format_spec,
+                    err.position
+                        .map_or("unknown".to_string(), |p| p.to_string()),
+                    err.inner_error,
+                    err.field_tag
                 )
             }
             ParseError::MissingRequiredField {
@@ -432,12 +430,11 @@ impl ParseError {
     /// Get a concise error message for logging
     pub fn brief_message(&self) -> String {
         match self {
-            ParseError::InvalidFieldFormat {
-                field_tag,
-                component_name,
-                ..
-            } => {
-                format!("Field {field_tag} component '{component_name}' format error")
+            ParseError::InvalidFieldFormat(err) => {
+                format!(
+                    "Field {} component '{}' format error",
+                    err.field_tag, err.component_name
+                )
             }
             ParseError::MissingRequiredField {
                 field_tag,
@@ -502,11 +499,9 @@ impl ParseError {
                 }
                 output
             }
-            ParseError::InvalidFieldFormat {
-                position: Some(pos),
-                ..
-            } => {
+            ParseError::InvalidFieldFormat(err) if err.position.is_some() => {
                 let lines: Vec<&str> = original_message.lines().collect();
+                let pos = err.position.unwrap();
                 let line_num = pos >> 16;
                 let mut output = self.debug_report();
 

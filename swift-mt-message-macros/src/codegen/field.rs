@@ -88,26 +88,26 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
                         if variant_letter == stringify!(#variant_idents) {
                             return #variant_types::parse(value)
                                 .map(|parsed| Self::#variant_idents(parsed))
-                                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat {
+                                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                                     field_tag: field_tag.to_string(),
                                     component_name: format!("variant_{}", variant_letter),
                                     value: value.to_string(),
                                     format_spec: #variant_types::format_spec().to_string(),
                                     position: None,
                                     inner_error: e.to_string(),
-                                });
+                                })));
                         }
                     )*
 
                     // Unknown variant
-                    return Err(crate::errors::ParseError::InvalidFieldFormat {
+                    return Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                         field_tag: field_tag.to_string(),
                         component_name: "variant".to_string(),
                         value: variant_letter.to_string(),
                         format_spec: "Valid variant letter".to_string(),
                         position: None,
                         inner_error: format!("Unknown variant '{}' for field {}", variant_letter, field_tag),
-                    });
+                    })));
                 } else {
                     // Try NoOption variant first if it exists
                     #(
@@ -128,14 +128,14 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
                     )*
 
                     // All variants failed
-                    Err(crate::errors::ParseError::InvalidFieldFormat {
+                    Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                         field_tag: field_tag.to_string(),
                         component_name: "any_variant".to_string(),
                         value: value.to_string(),
                         format_spec: "One of the valid variants".to_string(),
                         position: None,
                         inner_error: format!("All variants failed: {}", errors.join("; ")),
-                    })
+                    })))
                 }
             }
 
@@ -155,7 +155,7 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
                 // Try each variant and return the first successful one
                 #sample_impl
             }
-            
+
             fn valid_variants() -> Option<Vec<&'static str>> {
                 Some(vec![#(stringify!(#variant_idents)),*])
             }
@@ -379,14 +379,14 @@ fn generate_enum_parse_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
     Ok(quote! {
         #(#variant_attempts)*
 
-        Err(crate::errors::ParseError::InvalidFieldFormat {
+        Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
             field_tag: stringify!(#name).to_string(),
             component_name: "variant".to_string(),
             value: value.to_string(),
             format_spec: format!("One of the following variants: {}", #variants_list),
             position: None,
             inner_error: "Unable to parse value as any variant".to_string(),
-        })
+        })))
     })
 }
 

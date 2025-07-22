@@ -10,6 +10,9 @@
 use crate::errors::Result;
 use std::collections::HashMap;
 
+/// Type alias for field storage to reduce complexity
+pub type FieldMap = HashMap<String, Vec<(String, usize)>>;
+
 /// Configuration for sequence parsing
 #[derive(Debug, Clone)]
 pub struct SequenceConfig {
@@ -35,22 +38,19 @@ impl Default for SequenceConfig {
 #[derive(Debug)]
 pub struct ParsedSequences {
     /// Sequence A fields (general information)
-    pub sequence_a: HashMap<String, Vec<(String, usize)>>,
+    pub sequence_a: FieldMap,
     /// Sequence B fields (repetitive items like transactions)
-    pub sequence_b: HashMap<String, Vec<(String, usize)>>,
+    pub sequence_b: FieldMap,
     /// Sequence C fields (optional settlement/summary information)
-    pub sequence_c: HashMap<String, Vec<(String, usize)>>,
+    pub sequence_c: FieldMap,
 }
 
 /// Split fields into sequences based on configuration
-pub fn split_into_sequences(
-    fields: &HashMap<String, Vec<(String, usize)>>,
-    config: &SequenceConfig,
-) -> Result<ParsedSequences> {
+pub fn split_into_sequences(fields: &FieldMap, config: &SequenceConfig) -> Result<ParsedSequences> {
     let mut seq_a = HashMap::new();
     let mut seq_b = HashMap::new();
     let mut seq_c = HashMap::new();
-    
+
     // Get all fields sorted by position
     let mut all_fields: Vec<(&str, &(String, usize))> = Vec::new();
     for (tag, values) in fields {
@@ -59,11 +59,11 @@ pub fn split_into_sequences(
         }
     }
     all_fields.sort_by_key(|(_, (_, pos))| *pos);
-    
+
     // Find sequence boundaries
     let mut first_b_marker_pos = None;
     let mut _last_b_marker_pos = None;
-    
+
     for (tag, (_, pos)) in &all_fields {
         if is_sequence_b_marker(tag, &config.sequence_b_marker) {
             if first_b_marker_pos.is_none() {
@@ -72,23 +72,23 @@ pub fn split_into_sequences(
             _last_b_marker_pos = Some(*pos);
         }
     }
-    
+
     // Simpler approach: find all sequence B boundaries
     // Sequence B starts at first field 21 and includes all fields until sequence C
-    let sequence_b_start_idx = all_fields.iter().position(|(tag, _)| {
-        is_sequence_b_marker(tag, &config.sequence_b_marker)
-    });
-    
+    let sequence_b_start_idx = all_fields
+        .iter()
+        .position(|(tag, _)| is_sequence_b_marker(tag, &config.sequence_b_marker));
+
     // Find where sequence C would start (if it exists)
     // This is tricky: sequence C fields appear after ALL transactions
     // We need to find the last occurrence of transaction-ending fields
     let mut sequence_c_start_idx: Option<usize> = None;
-    
+
     if config.has_sequence_c && sequence_b_start_idx.is_some() {
         // Look for sequence C fields that appear after transaction patterns
         // Transaction patterns typically end with fields like 59, 70, 71A
-        let transaction_end_fields = vec!["59", "70", "71A", "77B", "36"];
-        
+        let transaction_end_fields = ["59", "70", "71A", "77B", "36"];
+
         // Find the last occurrence of any transaction-ending field
         let mut last_trans_end_idx: Option<usize> = None;
         for (i, (tag, _)) in all_fields.iter().enumerate() {
@@ -97,7 +97,7 @@ pub fn split_into_sequences(
                 last_trans_end_idx = Some(i);
             }
         }
-        
+
         // Look for sequence C fields after the last transaction end
         if let Some(last_end) = last_trans_end_idx {
             for (i, (tag, _)) in all_fields.iter().enumerate().skip(last_end + 1) {
@@ -106,33 +106,59 @@ pub fn split_into_sequences(
                     break;
                 }
             }
+        } else {
+            // If no transaction-ending fields found, look for sequence C fields
+            // after the sequence B start
+            if let Some(seq_b_start) = sequence_b_start_idx {
+                for (i, (tag, _)) in all_fields.iter().enumerate().skip(seq_b_start) {
+                    if config.sequence_c_fields.contains(&tag.to_string()) {
+                        sequence_c_start_idx = Some(i);
+                        break;
+                    }
+                }
+            }
         }
     }
-    
+
     // Distribute fields to sequences based on boundaries
     for (i, (tag, (value, pos))) in all_fields.iter().enumerate() {
         if let Some(seq_b_start) = sequence_b_start_idx {
             if i < seq_b_start {
                 // Before sequence B = Sequence A
-                seq_a.entry(tag.to_string()).or_insert_with(Vec::new).push((value.clone(), *pos));
+                seq_a
+                    .entry(tag.to_string())
+                    .or_insert_with(Vec::new)
+                    .push((value.clone(), *pos));
             } else if let Some(seq_c_start) = sequence_c_start_idx {
                 if i >= seq_c_start {
                     // After sequence C start = Sequence C
-                    seq_c.entry(tag.to_string()).or_insert_with(Vec::new).push((value.clone(), *pos));
+                    seq_c
+                        .entry(tag.to_string())
+                        .or_insert_with(Vec::new)
+                        .push((value.clone(), *pos));
                 } else {
                     // Between sequence B start and C start = Sequence B
-                    seq_b.entry(tag.to_string()).or_insert_with(Vec::new).push((value.clone(), *pos));
+                    seq_b
+                        .entry(tag.to_string())
+                        .or_insert_with(Vec::new)
+                        .push((value.clone(), *pos));
                 }
             } else {
                 // No sequence C, everything after sequence B start is sequence B
-                seq_b.entry(tag.to_string()).or_insert_with(Vec::new).push((value.clone(), *pos));
+                seq_b
+                    .entry(tag.to_string())
+                    .or_insert_with(Vec::new)
+                    .push((value.clone(), *pos));
             }
         } else {
             // No sequence B found, everything is sequence A
-            seq_a.entry(tag.to_string()).or_insert_with(Vec::new).push((value.clone(), *pos));
+            seq_a
+                .entry(tag.to_string())
+                .or_insert_with(Vec::new)
+                .push((value.clone(), *pos));
         }
     }
-    
+
     Ok(ParsedSequences {
         sequence_a: seq_a,
         sequence_b: seq_b,
@@ -141,15 +167,12 @@ pub fn split_into_sequences(
 }
 
 /// Parse repetitive sequence items (like transactions)
-pub fn parse_repetitive_sequence<T>(
-    fields: &HashMap<String, Vec<(String, usize)>>,
-    marker_field: &str,
-) -> Result<Vec<HashMap<String, Vec<(String, usize)>>>>
+pub fn parse_repetitive_sequence<T>(fields: &FieldMap, marker_field: &str) -> Result<Vec<FieldMap>>
 where
     T: crate::SwiftMessageBody,
 {
     let mut items = Vec::new();
-    
+
     // Get all fields sorted by position
     let mut all_fields: Vec<(String, String, usize)> = Vec::new();
     for (tag, values) in fields {
@@ -158,11 +181,11 @@ where
         }
     }
     all_fields.sort_by_key(|(_, _, pos)| *pos);
-    
+
     // Group fields by item (each starting with marker field)
     let mut current_item_fields: HashMap<String, Vec<(String, usize)>> = HashMap::new();
     let mut in_item = false;
-    
+
     for (tag, value, pos) in all_fields {
         // Check if this is the start of a new item
         if is_sequence_b_marker(&tag, marker_field) {
@@ -173,7 +196,7 @@ where
             }
             in_item = true;
         }
-        
+
         // Add field to current item if we're in one
         if in_item {
             current_item_fields
@@ -182,12 +205,12 @@ where
                 .push((value, pos));
         }
     }
-    
+
     // Save the last item
     if in_item && !current_item_fields.is_empty() {
         items.push(current_item_fields);
     }
-    
+
     Ok(items)
 }
 
@@ -197,12 +220,12 @@ fn is_sequence_b_marker(tag: &str, marker: &str) -> bool {
     if tag == marker {
         return true;
     }
-    
+
     // Handle numbered markers (e.g., "21" but not "21R", "21C", etc.)
     if marker == "21" && tag == "21" {
         return true;
     }
-    
+
     false
 }
 
@@ -216,7 +239,13 @@ pub fn get_sequence_config(message_type: &str) -> SequenceConfig {
         },
         "MT104" => SequenceConfig {
             sequence_b_marker: "21".to_string(),
-            sequence_c_fields: vec!["32B".to_string(), "19".to_string(), "71F".to_string(), "71G".to_string(), "53".to_string()],
+            sequence_c_fields: vec![
+                "32B".to_string(),
+                "19".to_string(),
+                "71F".to_string(),
+                "71G".to_string(),
+                "53".to_string(),
+            ],
             has_sequence_c: true,
         },
         "MT107" => SequenceConfig {
@@ -231,30 +260,36 @@ pub fn get_sequence_config(message_type: &str) -> SequenceConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_sequence_splitting() {
         let mut fields = HashMap::new();
-        
+
         // Sequence A fields
         fields.insert("20".to_string(), vec![("REF123".to_string(), 100)]);
         fields.insert("30".to_string(), vec![("240722".to_string(), 200)]);
-        
+
         // Sequence B fields
-        fields.insert("21".to_string(), vec![("TRANS1".to_string(), 300), ("TRANS2".to_string(), 500)]);
-        fields.insert("32B".to_string(), vec![("USD1000".to_string(), 350), ("USD2000".to_string(), 550)]);
-        
+        fields.insert(
+            "21".to_string(),
+            vec![("TRANS1".to_string(), 300), ("TRANS2".to_string(), 500)],
+        );
+        fields.insert(
+            "32B".to_string(),
+            vec![("USD1000".to_string(), 350), ("USD2000".to_string(), 550)],
+        );
+
         // Sequence C fields (for MT104)
         fields.insert("19".to_string(), vec![("USD3000".to_string(), 600)]);
-        
+
         let config = SequenceConfig {
             sequence_b_marker: "21".to_string(),
             sequence_c_fields: vec!["19".to_string()],
             has_sequence_c: true,
         };
-        
+
         let sequences = split_into_sequences(&fields, &config).unwrap();
-        
+
         assert_eq!(sequences.sequence_a.len(), 2);
         assert_eq!(sequences.sequence_b.len(), 2);
         assert_eq!(sequences.sequence_c.len(), 1);

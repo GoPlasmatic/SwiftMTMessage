@@ -1036,106 +1036,106 @@ pub fn generate_type_conversion_expr(
         "String" => Ok(quote! { #value_expr.to_string() }),
         "f64" => Ok(quote! {
             #value_expr.replace(',', ".").parse::<f64>()
-                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat {
+                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: "type_conversion".to_string(),
                     component_name: "decimal".to_string(),
                     value: #value_expr.to_string(),
                     format_spec: "decimal number".to_string(),
                     position: None,
                     inner_error: e.to_string(),
-                })?
+                })))?
         }),
         "f32" => Ok(quote! {
             #value_expr.replace(',', ".").parse::<f32>()
-                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat {
+                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: "type_conversion".to_string(),
                     component_name: "decimal".to_string(),
                     value: #value_expr.to_string(),
                     format_spec: "decimal number".to_string(),
                     position: None,
                     inner_error: e.to_string(),
-                })?
+                })))?
         }),
         "u32" => Ok(quote! {
             #value_expr.parse::<u32>()
-                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat {
+                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: "type_conversion".to_string(),
                     component_name: "unsigned_integer".to_string(),
                     value: #value_expr.to_string(),
                     format_spec: "unsigned integer".to_string(),
                     position: None,
                     inner_error: e.to_string(),
-                })?
+                })))?
         }),
         "u8" => Ok(quote! {
             #value_expr.parse::<u8>()
-                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat {
+                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: "type_conversion".to_string(),
                     component_name: "byte".to_string(),
                     value: #value_expr.to_string(),
                     format_spec: "byte value (0-255)".to_string(),
                     position: None,
                     inner_error: e.to_string(),
-                })?
+                })))?
         }),
         "i32" => Ok(quote! {
             #value_expr.parse::<i32>()
-                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat {
+                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: "type_conversion".to_string(),
                     component_name: "integer".to_string(),
                     value: #value_expr.to_string(),
                     format_spec: "integer".to_string(),
                     position: None,
                     inner_error: e.to_string(),
-                })?
+                })))?
         }),
         "char" => Ok(quote! {
             #value_expr.chars().next()
-                .ok_or_else(|| crate::errors::ParseError::InvalidFieldFormat {
+                .ok_or_else(|| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: "type_conversion".to_string(),
                     component_name: "character".to_string(),
                     value: #value_expr.to_string(),
                     format_spec: "single character".to_string(),
                     position: None,
                     inner_error: "Expected single character".to_string(),
-                })?
+                })))?
         }),
         "bool" => Ok(quote! {
             match #value_expr {
                 "Y" | "1" | "true" => true,
                 "N" | "0" | "false" => false,
-                _ => return Err(crate::errors::ParseError::InvalidFieldFormat {
+                _ => return Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: "type_conversion".to_string(),
                     component_name: "boolean".to_string(),
                     value: #value_expr.to_string(),
                     format_spec: "Y/N, 1/0, or true/false".to_string(),
                     position: None,
                     inner_error: "Invalid boolean value".to_string(),
-                })
+                })))
             }
         }),
         "NaiveDate" => Ok(quote! {
             chrono::NaiveDate::parse_from_str(#value_expr, "%y%m%d")
-                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat {
+                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: "type_conversion".to_string(),
                     component_name: "date".to_string(),
                     value: #value_expr.to_string(),
                     format_spec: "YYMMDD".to_string(),
                     position: None,
                     inner_error: e.to_string(),
-                })?
+                })))?
         }),
         "NaiveTime" => Ok(quote! {
             chrono::NaiveTime::parse_from_str(#value_expr, "%H%M")
                 .or_else(|_| chrono::NaiveTime::parse_from_str(#value_expr, "%H%M%S"))
-                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat {
+                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: "type_conversion".to_string(),
                     component_name: "time".to_string(),
                     value: #value_expr.to_string(),
                     format_spec: "HHMM or HHMMSS".to_string(),
                     position: None,
                     inner_error: e.to_string(),
-                })?
+                })))?
         }),
         "Vec<String>" => Ok(quote! {
             #value_expr.lines().map(|s| s.to_string()).collect()

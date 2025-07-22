@@ -77,18 +77,12 @@ BOSTON, MA 02101
                     );
                     println!("   Supported types: MT103, MT202, MT205, MT900");
                 }
-                swift_mt_message::ParseError::InvalidFieldFormat {
-                    field_tag,
-                    component_name,
-                    value,
-                    format_spec,
-                    ..
-                } => {
+                swift_mt_message::ParseError::InvalidFieldFormat(err) => {
                     println!("💡 Invalid field format:");
-                    println!("   Field: {field_tag}");
-                    println!("   Component: {component_name}");
-                    println!("   Value: '{value}'");
-                    println!("   Expected: {format_spec}");
+                    println!("   Field: {}", err.field_tag);
+                    println!("   Component: {}", err.component_name);
+                    println!("   Value: '{}'", err.value);
+                    println!("   Expected: {}", err.format_spec);
                 }
                 swift_mt_message::ParseError::MissingRequiredField {
                     field_tag,

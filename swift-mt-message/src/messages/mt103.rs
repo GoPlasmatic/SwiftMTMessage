@@ -196,10 +196,11 @@ impl MT103 {
                     }
                 }
             }
-        } else if ["SSTD", "SPAY"].contains(&bank_op_code.as_str()) {
-            if self.field_23e.is_some() && !self.field_23e.as_ref().unwrap().is_empty() {
-                return false;
-            }
+        } else if ["SSTD", "SPAY"].contains(&bank_op_code.as_str())
+            && self.field_23e.is_some()
+            && !self.field_23e.as_ref().unwrap().is_empty()
+        {
+            return false;
         }
 
         // C4: Field 53a must not be used with option D
@@ -282,10 +283,8 @@ impl MT103 {
 
         // Additional STP-specific validation rules
         // C7: If field 55a is present, then both fields 53a and 54a must also be present
-        if self.field_55.is_some() {
-            if self.field_53.is_none() || self.field_54.is_none() {
-                return false;
-            }
+        if self.field_55.is_some() && (self.field_53.is_none() || self.field_54.is_none()) {
+            return false;
         }
 
         true

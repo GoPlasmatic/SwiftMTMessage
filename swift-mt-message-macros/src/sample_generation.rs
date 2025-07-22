@@ -45,10 +45,10 @@ pub struct SampleConfig {
 #[derive(Debug, Clone)]
 #[allow(dead_code)] // Phase 3 infrastructure - date format types for constraints
 pub enum DateFormat {
-    YYMMDD,
-    YYYYMMDD,
-    HHMM,
-    HHMMSS,
+    Yymmdd,
+    Yyyymmdd,
+    Hhmm,
+    Hhmmss,
 }
 
 /// Context for intelligent sample generation
@@ -277,10 +277,10 @@ fn generate_valid_currency() -> String {
 
 fn generate_date_with_format(format: &DateFormat) -> String {
     match format {
-        DateFormat::YYMMDD => "241201".to_string(),
-        DateFormat::YYYYMMDD => "20241201".to_string(),
-        DateFormat::HHMM => "1430".to_string(),
-        DateFormat::HHMMSS => "143045".to_string(),
+        DateFormat::Yymmdd => "241201".to_string(),
+        DateFormat::Yyyymmdd => "20241201".to_string(),
+        DateFormat::Hhmm => "1430".to_string(),
+        DateFormat::Hhmmss => "143045".to_string(),
     }
 }
 

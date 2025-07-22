@@ -116,14 +116,14 @@ impl FieldPatternGenerator for OptionalPatternGenerator {
             });
 
             let captures = PATTERN_REGEX.captures(value.trim())
-                .ok_or_else(|| crate::errors::ParseError::InvalidFieldFormat {
+                .ok_or_else(|| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: stringify!(#name).to_string(),
                     component_name: stringify!(#field_name).to_string(),
                     value: value.to_string(),
                     format_spec: #format_desc.to_string(),
                     position: None,
                     inner_error: "Value does not match expected pattern".to_string(),
-                })?;
+                })))?;
 
             let #field_name = if let Some(captured) = captures.get(1) {
                 let raw_value = captured.as_str();
@@ -189,14 +189,14 @@ impl FieldPatternGenerator for RepetitivePatternGenerator {
             });
 
             let captures = PATTERN_REGEX.captures(value.trim())
-                .ok_or_else(|| crate::errors::ParseError::InvalidFieldFormat {
+                .ok_or_else(|| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: stringify!(#name).to_string(),
                     component_name: stringify!(#field_name).to_string(),
                     value: value.to_string(),
                     format_spec: #format_desc.to_string(),
                     position: None,
                     inner_error: "Value does not match expected pattern".to_string(),
-                })?;
+                })))?;
 
             let #field_name = if let Some(captured) = captures.get(1) {
                 captured.as_str().lines()
@@ -404,14 +404,14 @@ impl FieldPatternGenerator for OptionalMultilinePatternGenerator {
                 }
             } else {
                 // Unexpected format
-                return Err(crate::errors::ParseError::InvalidFieldFormat {
+                return Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: stringify!(#name).to_string(),
                     component_name: "multiline".to_string(),
                     value: value.to_string(),
                     format_spec: "1 or 2 lines".to_string(),
                     position: None,
                     inner_error: format!("Expected 1 or 2 lines, got {}", lines.len()),
-                });
+                })));
             };
         }];
 
@@ -485,14 +485,14 @@ impl FieldParserGenerator {
 
         if field.components.is_empty() {
             return Ok(quote! {
-                return Err(crate::errors::ParseError::InvalidFieldFormat {
+                return Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: stringify!(#name).to_string(),
                     component_name: "components".to_string(),
                     value: value.to_string(),
                     format_spec: "at least one component".to_string(),
                     position: None,
                     inner_error: "No components defined".to_string(),
-                });
+                })));
             });
         }
 
@@ -624,14 +624,14 @@ impl FieldParserGenerator {
             };
 
             let captures = regex.captures(value.trim()).ok_or_else(|| {
-                crate::errors::ParseError::InvalidFieldFormat {
+                crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
                     field_tag: stringify!(#name).to_string(),
                     component_name: "value".to_string(),
                     value: value.to_string(),
                     format_spec: #friendly_format_desc.to_string(),
                     position: None,
                     inner_error: "Format validation failed".to_string(),
-                }
+                }))
             })?;
 
             #(#field_assignments)*

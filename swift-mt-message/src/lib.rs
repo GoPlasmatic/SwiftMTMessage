@@ -110,7 +110,7 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
     fn sample_with_config(config: &sample::FieldConfig) -> Self
     where
         Self: Sized;
-    
+
     /// Get valid variant letters for enum fields
     /// Returns None for non-enum fields, Some(vec) for enum fields
     fn valid_variants() -> Option<Vec<&'static str>> {
@@ -769,7 +769,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             }
         };
 
-        println!("Validation context: {}", context_value.to_string());
+        println!("Validation context: {context_value}");
 
         // Validate each rule using datalogic-rs
         let mut errors = Vec::new();

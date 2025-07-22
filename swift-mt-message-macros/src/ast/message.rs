@@ -113,9 +113,10 @@ impl MessageDefinition {
 
         // Extract validation rules from attributes
         let validation_rules_const = extract_validation_rules_attribute(&input.attrs)?;
-        
+
         // Extract sequence configuration from attributes
-        let (has_sequences, sequence_config) = extract_sequence_config(&name.to_string(), &input.attrs)?;
+        let (has_sequences, sequence_config) =
+            extract_sequence_config(&name.to_string(), &input.attrs)?;
 
         Ok(MessageDefinition {
             name,
@@ -228,7 +229,10 @@ fn extract_validation_rules_attribute(attrs: &[Attribute]) -> MacroResult<Option
 }
 
 /// Extract sequence configuration from message name and attributes
-fn extract_sequence_config(message_name: &str, attrs: &[Attribute]) -> MacroResult<(bool, Option<SequenceConfig>)> {
+fn extract_sequence_config(
+    message_name: &str,
+    attrs: &[Attribute],
+) -> MacroResult<(bool, Option<SequenceConfig>)> {
     // First check if there's an explicit #[sequences(...)] attribute
     for attr in attrs {
         if attr.path().is_ident("sequences") {
@@ -237,24 +241,39 @@ fn extract_sequence_config(message_name: &str, attrs: &[Attribute]) -> MacroResu
             return Ok((true, Some(get_default_sequence_config(message_name))));
         }
     }
-    
+
     // Check known multi-sequence messages
     match message_name {
-        "MT101" => Ok((true, Some(SequenceConfig {
-            sequence_b_marker: "21".to_string(),
-            sequence_c_fields: vec![],
-            has_sequence_c: false,
-        }))),
-        "MT104" => Ok((true, Some(SequenceConfig {
-            sequence_b_marker: "21".to_string(),
-            sequence_c_fields: vec!["32B".to_string(), "19".to_string(), "71F".to_string(), "71G".to_string(), "53".to_string()],
-            has_sequence_c: true,
-        }))),
-        "MT107" => Ok((true, Some(SequenceConfig {
-            sequence_b_marker: "21".to_string(),
-            sequence_c_fields: vec![],
-            has_sequence_c: false,
-        }))),
+        "MT101" => Ok((
+            true,
+            Some(SequenceConfig {
+                sequence_b_marker: "21".to_string(),
+                sequence_c_fields: vec![],
+                has_sequence_c: false,
+            }),
+        )),
+        "MT104" => Ok((
+            true,
+            Some(SequenceConfig {
+                sequence_b_marker: "21".to_string(),
+                sequence_c_fields: vec![
+                    "32B".to_string(),
+                    "19".to_string(),
+                    "71F".to_string(),
+                    "71G".to_string(),
+                    "53".to_string(),
+                ],
+                has_sequence_c: true,
+            }),
+        )),
+        "MT107" => Ok((
+            true,
+            Some(SequenceConfig {
+                sequence_b_marker: "21".to_string(),
+                sequence_c_fields: vec![],
+                has_sequence_c: false,
+            }),
+        )),
         _ => Ok((false, None)),
     }
 }
@@ -264,7 +283,13 @@ fn get_default_sequence_config(message_name: &str) -> SequenceConfig {
     match message_name {
         "MT104" => SequenceConfig {
             sequence_b_marker: "21".to_string(),
-            sequence_c_fields: vec!["32B".to_string(), "19".to_string(), "71F".to_string(), "71G".to_string(), "53".to_string()],
+            sequence_c_fields: vec![
+                "32B".to_string(),
+                "19".to_string(),
+                "71F".to_string(),
+                "71G".to_string(),
+                "53".to_string(),
+            ],
             has_sequence_c: true,
         },
         _ => SequenceConfig {

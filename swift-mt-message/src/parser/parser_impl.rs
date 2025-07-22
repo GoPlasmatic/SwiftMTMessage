@@ -221,7 +221,7 @@ pub fn find_field_with_variant_sequential_constrained(
                 && tag
                     .chars()
                     .last()
-                    .map_or(false, |c| c.is_ascii_alphabetic() && c.is_ascii_uppercase())
+                    .is_some_and(|c| c.is_ascii_alphabetic() && c.is_ascii_uppercase())
         })
         .collect();
 
@@ -233,7 +233,7 @@ pub fn find_field_with_variant_sequential_constrained(
                 tracker
                     .consumed_indices
                     .get(*tag)
-                    .map_or(true, |set| !set.contains(pos))
+                    .is_none_or(|set| !set.contains(pos))
             })
             .map(|(_, pos)| *pos)
             .min()
@@ -535,10 +535,7 @@ impl SwiftParser {
 
                     // Debug: print raw field tag before normalization
                     if raw_field_tag.contains('#') {
-                        eprintln!(
-                            "DEBUG: Raw field tag before normalization: '{}'",
-                            raw_field_tag
-                        );
+                        eprintln!("DEBUG: Raw field tag before normalization: '{raw_field_tag}'");
                     }
 
                     // Normalize field tag by removing option letters (A, F, K, etc.)
@@ -546,7 +543,7 @@ impl SwiftParser {
 
                     // Debug: print normalized field tag
                     if raw_field_tag.contains('#') {
-                        eprintln!("DEBUG: Normalized field tag: '{}'", field_tag);
+                        eprintln!("DEBUG: Normalized field tag: '{field_tag}'");
                     }
 
                     // Find the end of field value (next field marker or end of content)
@@ -750,7 +747,7 @@ where
             if tracker
                 .consumed_indices
                 .get(tag)
-                .map_or(true, |set| !set.contains(pos))
+                .is_none_or(|set| !set.contains(pos))
             {
                 all_fields.push((tag.clone(), value.clone(), *pos));
             }

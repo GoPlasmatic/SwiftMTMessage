@@ -115,7 +115,6 @@ pub struct MT110 {
 /// - Date information (30) required for proper clearing
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT110_CHEQUE_VALIDATION_RULES)]
 pub struct MT110Cheque {
     #[field("21")]
     pub field_21: Field21NoOption,
@@ -166,30 +165,6 @@ const MT110_VALIDATION_RULES: &str = r#"{
       "description": "At least one cheque required",
       "condition": {
         ">=": [{"length": {"var": "cheques"}}, 1]
-      }
-    }
-  ]
-}"#;
-
-/// Validation rules specific to MT110 cheques
-const MT110_CHEQUE_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "CHQ_REF",
-      "description": "Cheque reference must be unique and not contain '/' or '//'",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_21.value"}, ""]},
-          {"!": [{"in": ["/", {"var": "field_21.value"}]}]},
-          {"!": [{"in": ["//", {"var": "field_21.value"}]}]}
-        ]
-      }
-    },
-    {
-      "id": "CHQ_DATE",
-      "description": "Date of issue must be a valid date",
-      "condition": {
-        "!=": [{"var": "field_30.value"}, ""]
       }
     }
   ]

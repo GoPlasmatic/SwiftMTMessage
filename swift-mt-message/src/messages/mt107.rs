@@ -179,7 +179,6 @@ pub struct MT107 {
 /// - Authorization status in 23E must be consistent with Sequence A if specified there
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT107_TRANSACTION_VALIDATION_RULES)]
 pub struct MT107Transaction {
     #[field("21")]
     pub field_21: Field21NoOption,
@@ -297,33 +296,6 @@ const MT107_VALIDATION_RULES: &str = r#"{
       "description": "At least one transaction required",
       "condition": {
         ">=": [{"length": {"var": "transactions"}}, 1]
-      }
-    }
-  ]
-}"#;
-
-/// Validation rules specific to MT107 transactions
-const MT107_TRANSACTION_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "T_C7",
-      "description": "Exchange rate required when 33B differs from 32B",
-      "condition": {
-        "if": [
-          {"and": [
-            {"var": "field_33b.is_some"},
-            {"!=": [{"var": "field_33b.amount"}, {"var": "field_32b.amount"}]}
-          ]},
-          {"var": "field_36.is_some"},
-          true
-        ]
-      }
-    },
-    {
-      "id": "T_REF",
-      "description": "Transaction reference must be unique within the message",
-      "condition": {
-        "!=": [{"var": "field_21.value"}, ""]
       }
     }
   ]

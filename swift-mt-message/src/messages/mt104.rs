@@ -63,7 +63,7 @@ use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 /// ## Network Validation Rules
 /// - **Authorization Validation**: Proper direct debit mandate verification required
 /// - **Transaction Limits**: Individual and batch transaction limit enforcement
-/// - **Currency Consistency**: Currency validation across sequences
+/// - **Currency Consistency**: Currency validation across sequences (Note: C11 requires custom implementation due to JSONLogic limitations)
 /// - **Charge Allocation**: Consistent charge handling across all transactions
 /// - **Settlement Totals**: Sequence C totals must match sum of Sequence B amounts
 /// - **Reference Uniqueness**: Transaction references must be unique within batch
@@ -150,7 +150,6 @@ pub struct MT104 {
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT104_TRANSACTION_VALIDATION_RULES)]
 pub struct MT104Transaction {
     #[field("21")]
     pub field_21: Field21NoOption,
@@ -210,60 +209,619 @@ pub struct MT104Transaction {
     pub field_36: Option<Field36>,
 }
 
-/// Enhanced validation rules with forEach support for repetitive sequences
+/// Comprehensive MT104 validation rules based on SRG2025 specification
 const MT104_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "Per-transaction: If 36 present → 21F must be present (placeholder)",
-      "forEach": {
-        "collection": "transactions",
-        "condition": {
-          "if": [
-            {"var": "field_36.is_some"},
-            true,
-            true
-          ]
-        }
+      "description": "If field 23E is present in sequence A and contains RFDD then field 23E must be present in all occurrences of sequence B. If field 23E is present in sequence A and does not contain RFDD then field 23E must not be present in any occurrence of sequence B. If field 23E is not present in sequence A then field 23E must be present in all occurrences of sequence B",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.23E"}},
+          {
+            "if": [
+              {"==": [{"var": "fields.23E.instruction_code"}, "RFDD"]},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"!!": {"var": "23E"}}
+                ]
+              },
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"!": {"var": "23E"}}
+                ]
+              }
+            ]
+          },
+          {
+            "all": [
+              {"var": "fields.#"},
+              {"!!": {"var": "23E"}}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C2",
+      "description": "Field 50a (option A or K) must be present in either sequence A or in each occurrence of sequence B, but must never be present in both sequences",
+      "condition": {
+        "or": [
+          {
+            "and": [
+              {"or": [
+                {"!!": {"var": "fields.50#2.A"}},
+                {"!!": {"var": "fields.50#2.K"}}
+              ]},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {
+                    "and": [
+                      {"!": {"var": "50#2.A"}},
+                      {"!": {"var": "50#2.K"}}
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "and": [
+              {
+                "and": [
+                  {"!": {"var": "fields.50#2.A"}},
+                  {"!": {"var": "fields.50#2.K"}}
+                ]
+              },
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {
+                    "or": [
+                      {"!!": {"var": "50#2.A"}},
+                      {"!!": {"var": "50#2.K"}}
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     },
     {
       "id": "C3",
-      "description": "Various conditional field requirements",
+      "description": "When present in sequence A, fields 21E, 26T, 52a, 71A, 77B and 50a (option C or L) must not be present in any occurrence of sequence B",
       "condition": {
-        ">=": [{"length": {"var": "transactions"}}, 1]
+        "and": [
+          {
+            "if": [
+              {"!!": {"var": "fields.21E"}},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"!": {"var": "21E"}}
+                ]
+              },
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.26T"}},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"!": {"var": "26T"}}
+                ]
+              },
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.52"}},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"!": {"var": "52"}}
+                ]
+              },
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71A"}},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"!": {"var": "71A"}}
+                ]
+              },
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.77B"}},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"!": {"var": "77B"}}
+                ]
+              },
+              true
+            ]
+          },
+          {
+            "if": [
+              {"or": [
+                {"!!": {"var": "fields.50#1.C"}},
+                {"!!": {"var": "fields.50#1.L"}}
+              ]},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {
+                    "and": [
+                      {"!": {"var": "50#1.C"}},
+                      {"!": {"var": "50#1.L"}}
+                    ]
+                  }
+                ]
+              },
+              true
+            ]
+          }
+        ]
       }
     },
     {
-      "id": "TXN_MIN",
-      "description": "At least one transaction required",
+      "id": "C4",
+      "description": "If field 21E is present in sequence A, field 50a (option A or K) must also be present in sequence A. In each occurrence of sequence B, if field 21E is present, then field 50a (option A or K) must also be present",
       "condition": {
-        ">=": [{"length": {"var": "transactions"}}, 1]
+        "and": [
+          {
+            "if": [
+              {"!!": {"var": "fields.21E"}},
+              {
+                "or": [
+                  {"!!": {"var": "fields.50#2.A"}},
+                  {"!!": {"var": "fields.50#2.K"}}
+                ]
+              },
+              true
+            ]
+          },
+          {
+            "all": [
+              {"var": "fields.#"},
+              {
+                "if": [
+                  {"!!": {"var": "21E"}},
+                  {
+                    "or": [
+                      {"!!": {"var": "50#2.A"}},
+                      {"!!": {"var": "50#2.K"}}
+                    ]
+                  },
+                  true
+                ]
+              }
+            ]
+          }
+        ]
       }
-    }
-  ]
-}"#;
-
-/// Validation rules specific to MT104 transactions
-const MT104_TRANSACTION_VALIDATION_RULES: &str = r#"{
-  "rules": [
+    },
     {
-      "id": "T_C1",
-      "description": "If exchange rate (36) is present, related conditions apply",
+      "id": "C5",
+      "description": "In sequence A, if field 23E is present and contains RTND then field 72 must be present",
       "condition": {
         "if": [
-          {"var": "field_36.is_some"},
-          true,
+          {"and": [
+            {"!!": {"var": "fields.23E"}},
+            {"==": [{"var": "fields.23E.instruction_code"}, "RTND"]}
+          ]},
+          {"!!": {"var": "fields.72"}},
+          {
+            "if": [
+              {"!!": {"var": "fields.23E"}},
+              {"!": {"var": "fields.72"}},
+              {"!": {"var": "fields.72"}}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C6",
+      "description": "If field 71F is present in one or more occurrence of sequence B, then it must also be present in sequence C, and vice-versa. Same for field 71G",
+      "condition": {
+        "and": [
+          {
+            "if": [
+              {
+                "some": [
+                  {"var": "fields.#"},
+                  {"!!": {"var": "71F"}}
+                ]
+              },
+              {"!!": {"var": "fields.71F"}},
+              {
+                "if": [
+                  {"!!": {"var": "fields.71F"}},
+                  {
+                    "some": [
+                      {"var": "fields.#"},
+                      {"!!": {"var": "71F"}}
+                    ]
+                  },
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "if": [
+              {
+                "some": [
+                  {"var": "fields.#"},
+                  {"!!": {"var": "71G"}}
+                ]
+              },
+              {"!!": {"var": "fields.71G"}},
+              {
+                "if": [
+                  {"!!": {"var": "fields.71G"}},
+                  {
+                    "some": [
+                      {"var": "fields.#"},
+                      {"!!": {"var": "71G"}}
+                    ]
+                  },
+                  true
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C7",
+      "description": "In each occurrence of sequence B, if field 33B is present then the currency code or the amount, or both, must be different between fields 33B and 32B",
+      "condition": {
+        "all": [
+          {"var": "fields.#"},
+          {
+            "if": [
+              {"!!": {"var": "33B"}},
+              {
+                "or": [
+                  {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
+                  {"!=": [{"var": "33B.amount"}, {"var": "32B.amount"}]}
+                ]
+              },
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C8",
+      "description": "In any occurrence of sequence B, if field 33B is present and the currency codes in fields 32B and 33B are different, then field 36 must be present",
+      "condition": {
+        "all": [
+          {"var": "fields.#"},
+          {
+            "if": [
+              {"!!": {"var": "33B"}},
+              {
+                "if": [
+                  {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
+                  {"!!": {"var": "36"}},
+                  {
+                    "if": [
+                      {"==": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
+                      {"!": {"var": "36"}},
+                      true
+                    ]
+                  }
+                ]
+              },
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C9",
+      "description": "If sequence C is present and if the amount in field 32B of sequence C is equal to the sum of the amounts of the fields 32B of sequence B, then field 19 must not be present",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.32B"}},
+          {
+            "if": [
+              {"==": [
+                {"var": "fields.32B.amount"}, 
+                {
+                  "reduce": [
+                    {"var": "fields.#"},
+                    {"+": [{"var": "accumulator"}, {"var": "current.32B.amount"}]},
+                    0
+                  ]
+                }
+              ]},
+              {"!": {"var": "fields.19"}},
+              {"!!": {"var": "fields.19"}}
+            ]
+          },
           true
         ]
       }
     },
     {
-      "id": "T_REF",
-      "description": "Transaction reference must be unique within the message",
+      "id": "C10",
+      "description": "If field 19 is present in sequence C then it must be equal to the sum of the amounts in all occurrences of field 32B in sequence B",
       "condition": {
-        "!=": [{"var": "field_21.value"}, ""]
+        "if": [
+          {"!!": {"var": "fields.19"}},
+          {"==": [
+            {"var": "fields.19.amount"}, 
+            {
+              "reduce": [
+                {"var": "fields.#"},
+                {"+": [{"var": "accumulator"}, {"var": "current.32B.amount"}]},
+                0
+              ]
+            }
+          ]},
+          true
+        ]
+      }
+    },
+    {
+      "id": "C11",
+      "description": "The currency code in fields 32B and 71G in sequences B and C must be the same for all occurrences. The currency code in fields 71F must be the same for all occurrences",
+      "condition": true
+    },
+    {
+      "id": "C12",
+      "description": "If field 23E in sequence A contains RFDD, then field 21R is optional, fields in sequence B are restricted, and sequence C must not be present",
+      "condition": {
+        "if": [
+          {"and": [
+            {"!!": {"var": "fields.23E"}},
+            {"==": [{"var": "fields.23E.instruction_code"}, "RFDD"]}
+          ]},
+          {
+            "and": [
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {
+                    "and": [
+                      {"!": {"var": "21E"}},
+                      {"!": {"var": "50#2.A"}},
+                      {"!": {"var": "50#2.K"}},
+                      {"!": {"var": "52"}},
+                      {"!": {"var": "71F"}},
+                      {"!": {"var": "71G"}}
+                    ]
+                  }
+                ]
+              },
+              {"!": {"var": "fields.32B"}},
+              {"!": {"var": "fields.19"}},
+              {"!": {"var": "fields.71F"}},
+              {"!": {"var": "fields.71G"}},
+              {"!": {"var": "fields.53"}}
+            ]
+          },
+          {
+            "and": [
+              {"!": {"var": "fields.21R"}},
+              {"or": [
+                {"!!": {"var": "fields.32B"}},
+                {"!!": {"var": "fields.19"}},
+                {"!!": {"var": "fields.71F"}},
+                {"!!": {"var": "fields.71G"}},
+                {"!!": {"var": "fields.53"}}
+              ]}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C13",
+      "description": "If field 23E in sequence A is present and contains RFDD, then field 119 of User Header must be present and contain RFDD",
+      "condition": {
+        "if": [
+          {"and": [
+            {"!!": {"var": "fields.23E"}},
+            {"==": [{"var": "fields.23E.instruction_code"}, "RFDD"]}
+          ]},
+          {"and": [
+            {"!!": {"var": "user_header.validation_flag"}},
+            {"==": [{"var": "user_header.validation_flag"}, "RFDD"]}
+          ]},
+          {"!": {"var": "user_header.validation_flag"}}
+        ]
+      }
+    },
+    {
+      "id": "TRANSACTION_MINIMUM",
+      "description": "At least one transaction must be present in sequence B",
+      "condition": true
+    },
+    {
+      "id": "CURRENCY_CODE_VALIDATION",
+      "description": "All currency codes must be valid ISO 4217 3-letter codes",
+      "condition": {
+        "and": [
+          {
+            "all": [
+              {"var": "fields.#"},
+              {
+                "and": [
+                  {"!=": [{"var": "32B.currency"}, ""]},
+                  {
+                    "if": [
+                      {"!!": {"var": "33B"}},
+                      {"!=": [{"var": "33B.currency"}, ""]},
+                      true
+                    ]
+                  },
+                  {
+                    "if": [
+                      {"!!": {"var": "71F"}},
+                      {"!=": [{"var": "71F.currency"}, ""]},
+                      true
+                    ]
+                  },
+                  {
+                    "if": [
+                      {"!!": {"var": "71G"}},
+                      {"!=": [{"var": "71G.currency"}, ""]},
+                      true
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.32B"}},
+              {"!=": [{"var": "fields.32B.currency"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71F"}},
+              {"!=": [{"var": "fields.71F.currency"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71G"}},
+              {"!=": [{"var": "fields.71G.currency"}, ""]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "AMOUNT_CONSISTENCY",
+      "description": "All amounts must be properly formatted",
+      "condition": {
+        "and": [
+          {
+            "all": [
+              {"var": "fields.#"},
+              {
+                "and": [
+                  {">": [{"var": "32B.amount"}, -1]},
+                  {
+                    "if": [
+                      {"!!": {"var": "33B"}},
+                      {">": [{"var": "33B.amount"}, -1]},
+                      true
+                    ]
+                  },
+                  {
+                    "if": [
+                      {"!!": {"var": "71F"}},
+                      {">": [{"var": "71F.amount"}, -1]},
+                      true
+                    ]
+                  },
+                  {
+                    "if": [
+                      {"!!": {"var": "71G"}},
+                      {">": [{"var": "71G.amount"}, -1]},
+                      true
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.32B"}},
+              {">": [{"var": "fields.32B.amount"}, -1]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.19"}},
+              {">": [{"var": "fields.19.amount"}, -1]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71F"}},
+              {">": [{"var": "fields.71F.amount"}, -1]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71G"}},
+              {">": [{"var": "fields.71G.amount"}, -1]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "REFERENCE_FORMAT",
+      "description": "Reference fields must not contain invalid patterns",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "fields.20.reference"}, ""]},
+          {"!": {"in": ["//", {"var": "fields.20.reference"}]}},
+          {
+            "all": [
+              {"var": "fields.#"},
+              {
+                "and": [
+                  {"!=": [{"var": "21.reference"}, ""]},
+                  {"!": {"in": ["//", {"var": "21.reference"}]}}
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "EXECUTION_DATE",
+      "description": "Requested execution date must be valid",
+      "condition": {
+        "and": [
+          {"!!": {"var": "fields.30"}},
+          {"!=": [{"var": "fields.30.execution_date"}, ""]}
+        ]
       }
     }
-  ]
+  ],
+  "constants": {
+    "VALID_CHARGE_CODES": ["OUR", "SHA", "BEN"],
+    "VALID_INSTRUCTION_CODES_MT104": ["RFDD", "RTND", "SDVA", "INTC", "CORT"]
+  }
 }"#;

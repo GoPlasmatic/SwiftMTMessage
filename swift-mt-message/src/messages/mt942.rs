@@ -113,7 +113,6 @@ pub struct MT942 {
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT942_STATEMENT_LINE_VALIDATION_RULES)]
 pub struct MT942StatementLine {
     #[field("61")]
     pub field_61: Option<Field61>,
@@ -207,19 +206,6 @@ const MT942_VALIDATION_RULES: &str = r#"{
           {"var": "field_60f.is_valid"},
           {"var": "field_62f.is_valid"}
         ]
-      }
-    }
-  ]
-}"#;
-
-/// Validation rules specific to MT942 statement lines
-const MT942_STATEMENT_LINE_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "STATEMENT_LINE_VALID",
-      "description": "Statement line must be valid",
-      "condition": {
-        "var": "field_61.is_valid"
       }
     }
   ]

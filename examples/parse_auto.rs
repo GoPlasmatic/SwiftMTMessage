@@ -9,31 +9,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         fs::read_to_string(&filename)
             .map_err(|e| format!("Failed to read file '{}': {}", filename, e))?
     } else {
-        // Use default sample message
-        r#"{1:F01BANKDEFFAXXX0000000000}
-{2:I101BANKUS33XXXXN}
-{3:{113:CBPR}{121:3d6f9458-8f6b-4c42-987e-83cb43195ae7}}  
+        // Use default MT104 sample message (23E=CHQB in seq A, so NO 23E in seq B, seq C mandatory)
+        r#"{1:F01SENDERBICXXXX0000000000}
+{2:I104RECEIVERBICXXXN}
+{3:{113:CBPR}{119:RFDD}{121:bca1d755-27f0-4986-96df-e0e4f7f53c10}}
 {4:
-:20:MT101REF123456
-:21R:CLIENTREF001
-:28D:1/1
-:50H:/1234567890
-JOHN DOE
-1 MAIN STREET
-NEW YORK, NY, US
+:20:COLLECTREF002
+:23E:RFDD
+:21R:CUST/REF/002
 :30:250722
-:25:DE09876543210987654321
-:21:TXN001
-:32B:USD12345,67
-:57A:BANKUS33XXX
-:59:/0987654321
-JANE SMITH
-456 OAK AVE
-LOS ANGELES, CA, US
-:70:INVOICE 4567 PAYMENT
-:71A:SHA
+:50K:/9999999999
+DIRECT DEBIT ORIGINATOR
+999 CORPORATE BLVD
+CHICAGO, IL 60601
+:21:TRANS003
+:23E:RFDD
+:32B:USD3000,00
+:59:/2000000004
+ALICE WILLIAMS
+789 PINE ROAD
+SEATTLE, WA 98101
+:70:SUBSCRIPTION FEE JULY
+:21:TRANS004
+:23E:RFDD
+:32B:USD2000,00
+:59:/2000000005
+CHARLIE BROWN
+321 MAPLE AVE
+BOSTON, MA 02101
+:70:MEMBERSHIP FEE Q3
 -}
-{5:{CHK:123456789ABC}}"#
+{5:{CHK:ABCD1234567890}}"#
             .to_string()
     };
 
@@ -128,6 +134,10 @@ fn validate_message(parsed_message: &ParsedSwiftMessage) -> Result<(), Box<dyn s
         ParsedSwiftMessage::MT103(mt103) => {
             println!("🔍 Validating MT103 message...");
             mt103.validate_business_rules()
+        }
+        ParsedSwiftMessage::MT104(mt104) => {
+            println!("🔍 Validating MT104 message...");
+            mt104.validate_business_rules()
         }
         ParsedSwiftMessage::MT202(mt202) => {
             println!("🔍 Validating MT202 message...");

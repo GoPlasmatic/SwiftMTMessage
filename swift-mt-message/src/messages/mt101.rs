@@ -149,7 +149,6 @@ pub struct MT101 {
 /// - If 56a present, 57a must be present (C7)
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT101_TRANSACTION_VALIDATION_RULES)]
 pub struct MT101Transaction {
     #[field("21")]
     pub field_21: Field21NoOption, // Transaction Reference
@@ -199,12 +198,6 @@ pub struct MT101Transaction {
     #[field("36")]
     pub field_36: Option<Field36>, // Exchange Rate
 }
-
-/// MT101 Transaction validation rules
-const MT101_TRANSACTION_VALIDATION_RULES: &str = r#"{
-  "rules": [],
-  "constants": {}
-}"#;
 
 /// Comprehensive MT101 validation rules based on SRG2025 specification
 const MT101_VALIDATION_RULES: &str = r#"{

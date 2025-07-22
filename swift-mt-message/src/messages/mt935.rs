@@ -121,7 +121,6 @@ pub struct MT935 {
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT935_RATE_CHANGE_VALIDATION_RULES)]
 pub struct MT935RateChange {
     #[field("23")]
     pub field_23: Option<Field23>,
@@ -165,42 +164,6 @@ const MT935_VALIDATION_RULES: &str = r#"{
       "description": "All mandatory fields must be present and non-empty",
       "condition": {
         "!=": [{"var": "field_20.value"}, ""]
-      }
-    }
-  ]
-}"#;
-
-/// Validation rules specific to MT935 rate change sequences
-const MT935_RATE_CHANGE_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C2",
-      "description": "Either Field 23 or Field 25 must be present, but not both",
-      "condition": {
-        "or": [
-          {
-            "and": [
-              {"var": "field_23.is_some"},
-              {"var": "field_25.is_none"}
-            ]
-          },
-          {
-            "and": [
-              {"var": "field_23.is_none"},
-              {"var": "field_25.is_some"}
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_SEQUENCE_FIELDS",
-      "description": "Effective date and new rate must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_30.value"}, ""]},
-          {"var": "field_37h.is_valid"}
-        ]
       }
     }
   ]

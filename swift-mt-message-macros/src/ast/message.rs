@@ -9,6 +9,17 @@ use proc_macro2::Span;
 use syn::spanned::Spanned;
 use syn::{Attribute, DeriveInput, Field, Fields, Ident, Lit, Meta, Type};
 
+/// Sequence configuration for messages with multiple sequences
+#[derive(Debug, Clone)]
+pub struct SequenceConfig {
+    /// Field that marks the start of sequence B (usually "21")
+    pub sequence_b_marker: String,
+    /// Fields that belong exclusively to sequence C (if any)
+    pub sequence_c_fields: Vec<String>,
+    /// Whether sequence C exists for this message type
+    pub has_sequence_c: bool,
+}
+
 /// Parsed message structure information
 ///
 /// Represents a complete SWIFT message definition parsed from a Rust struct
@@ -34,6 +45,10 @@ pub struct MessageDefinition {
     pub fields: Vec<MessageField>,
     /// Validation rules constant name (e.g., "MT103_VALIDATION_RULES")
     pub validation_rules_const: Option<String>,
+    /// Whether this message has multiple sequences (like MT104)
+    pub has_sequences: bool,
+    /// Sequence configuration (if has_sequences is true)
+    pub sequence_config: Option<SequenceConfig>,
 }
 
 /// Message field definition
@@ -98,11 +113,16 @@ impl MessageDefinition {
 
         // Extract validation rules from attributes
         let validation_rules_const = extract_validation_rules_attribute(&input.attrs)?;
+        
+        // Extract sequence configuration from attributes
+        let (has_sequences, sequence_config) = extract_sequence_config(&name.to_string(), &input.attrs)?;
 
         Ok(MessageDefinition {
             name,
             fields,
             validation_rules_const,
+            has_sequences,
+            sequence_config,
         })
     }
 }
@@ -205,6 +225,54 @@ fn extract_validation_rules_attribute(attrs: &[Attribute]) -> MacroResult<Option
         }
     }
     Ok(None)
+}
+
+/// Extract sequence configuration from message name and attributes
+fn extract_sequence_config(message_name: &str, attrs: &[Attribute]) -> MacroResult<(bool, Option<SequenceConfig>)> {
+    // First check if there's an explicit #[sequences(...)] attribute
+    for attr in attrs {
+        if attr.path().is_ident("sequences") {
+            // Parse custom sequence configuration
+            // For now, we'll use defaults
+            return Ok((true, Some(get_default_sequence_config(message_name))));
+        }
+    }
+    
+    // Check known multi-sequence messages
+    match message_name {
+        "MT101" => Ok((true, Some(SequenceConfig {
+            sequence_b_marker: "21".to_string(),
+            sequence_c_fields: vec![],
+            has_sequence_c: false,
+        }))),
+        "MT104" => Ok((true, Some(SequenceConfig {
+            sequence_b_marker: "21".to_string(),
+            sequence_c_fields: vec!["32B".to_string(), "19".to_string(), "71F".to_string(), "71G".to_string(), "53".to_string()],
+            has_sequence_c: true,
+        }))),
+        "MT107" => Ok((true, Some(SequenceConfig {
+            sequence_b_marker: "21".to_string(),
+            sequence_c_fields: vec![],
+            has_sequence_c: false,
+        }))),
+        _ => Ok((false, None)),
+    }
+}
+
+/// Get default sequence configuration for known message types
+fn get_default_sequence_config(message_name: &str) -> SequenceConfig {
+    match message_name {
+        "MT104" => SequenceConfig {
+            sequence_b_marker: "21".to_string(),
+            sequence_c_fields: vec!["32B".to_string(), "19".to_string(), "71F".to_string(), "71G".to_string(), "53".to_string()],
+            has_sequence_c: true,
+        },
+        _ => SequenceConfig {
+            sequence_b_marker: "21".to_string(),
+            sequence_c_fields: vec![],
+            has_sequence_c: false,
+        },
+    }
 }
 
 #[cfg(test)]

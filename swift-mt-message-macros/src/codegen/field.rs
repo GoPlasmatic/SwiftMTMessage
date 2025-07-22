@@ -155,6 +155,10 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
                 // Try each variant and return the first successful one
                 #sample_impl
             }
+            
+            fn valid_variants() -> Option<Vec<&'static str>> {
+                Some(vec![#(stringify!(#variant_idents)),*])
+            }
         }
     })
 }

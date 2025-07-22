@@ -231,6 +231,80 @@ pub fn find_field_with_variant_sequential(
     None
 }
 
+/// Find field values by base tag with sequential consumption tracking and variant constraints
+///
+/// ## Purpose
+/// Enhanced version of find_field_with_variant_sequential that accepts a list of valid variants
+/// to constrain the search. This is crucial for numbered field tags like "50#1" and "50#2"
+/// where different positions accept different variants.
+///
+/// ## Parameters
+/// - `fields`: HashMap of all parsed fields with position tracking
+/// - `base_tag`: Base field tag (e.g., "50", "59")
+/// - `tracker`: Mutable reference to consumption tracker for sequential processing
+/// - `valid_variants`: Optional list of valid variant letters (e.g., ["C", "L"] for Field50InstructingParty)
+///
+/// ## Returns
+/// `Option<(field_value, variant, position)>` where:
+/// - `field_value`: The actual field content
+/// - `variant`: Optional variant letter (A, F, K, etc.) for enum fields
+/// - `position`: Original position in the message for ordering
+pub fn find_field_with_variant_sequential_constrained(
+    fields: &HashMap<String, Vec<(String, usize)>>,
+    base_tag: &str,
+    tracker: &mut FieldConsumptionTracker,
+    valid_variants: Option<&[&str]>,
+) -> Option<(String, Option<String>, usize)> {
+    // First try to find exact match (for non-variant fields)
+    if let Some(values) = fields.get(base_tag) {
+        if let Some((value, pos)) = tracker.get_next_available(base_tag, values) {
+            tracker.mark_consumed(base_tag, pos);
+            return Some((value.to_string(), None, pos));
+        }
+    }
+
+    // For enum fields, look for variant tags (50A, 50F, 50K, etc.)
+    // Sort tags by position to ensure we process them in order
+    let mut variant_candidates: Vec<(&String, &Vec<(String, usize)>)> = fields
+        .iter()
+        .filter(|(tag, _)| {
+            tag.starts_with(base_tag) && tag.len() == base_tag.len() + 1 &&
+            tag.chars().last().map_or(false, |c| c.is_ascii_alphabetic() && c.is_ascii_uppercase())
+        })
+        .collect();
+    
+    // Sort by the minimum unconsumed position in each tag's values
+    variant_candidates.sort_by_key(|(tag, values)| {
+        values
+            .iter()
+            .filter(|(_, pos)| {
+                tracker.consumed_indices.get(*tag).map_or(true, |set| !set.contains(pos))
+            })
+            .map(|(_, pos)| *pos)
+            .min()
+            .unwrap_or(usize::MAX)
+    });
+    
+    for (tag, values) in variant_candidates {
+        let variant_char = tag.chars().last().unwrap();
+        let variant_str = variant_char.to_string();
+        
+        // Check if this variant is allowed (if constraints are provided)
+        if let Some(valid) = valid_variants {
+            if !valid.contains(&variant_str.as_str()) {
+                continue; // Skip variants that aren't in the valid list
+            }
+        }
+        
+        if let Some((value, pos)) = tracker.get_next_available(tag, values) {
+            tracker.mark_consumed(tag, pos);
+            return Some((value.to_string(), Some(variant_str), pos));
+        }
+    }
+    
+    None
+}
+
 /// Main parser for SWIFT MT messages
 ///
 /// ## Purpose
@@ -309,35 +383,7 @@ impl SwiftParser {
         // Route to appropriate parser based on message type
         match message_type.as_str() {
             "101" => {
-                // Parse MT101 with custom sequence handling
-                let block1 = Self::extract_block(raw_message, 1)?;
-                let block2 = Self::extract_block(raw_message, 2)?;
-                let block3 = Self::extract_block(raw_message, 3)?;
-                let block4 = Self::extract_block(raw_message, 4)?;
-                let block5 = Self::extract_block(raw_message, 5)?;
-
-                // Parse headers
-                let basic_header = BasicHeader::parse(&block1.unwrap_or_default())?;
-                let application_header = ApplicationHeader::parse(&block2.unwrap_or_default())?;
-                let user_header = block3.map(|b| UserHeader::parse(&b)).transpose()?;
-                let trailer = block5.map(|b| Trailer::parse(&b)).transpose()?;
-
-                // Parse block 4 fields with position tracking
-                let field_map_with_positions =
-                    Self::parse_block4_fields(&block4.unwrap_or_default())?;
-
-                // Use custom parsing for MT101
-                let fields = MT101::parse_with_sequences(field_map_with_positions)?;
-
-                let parsed = SwiftMessage {
-                    basic_header,
-                    application_header,
-                    user_header,
-                    trailer,
-                    message_type: "101".to_string(),
-                    fields,
-                };
-
+                let parsed = Self::parse::<MT101>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT101(Box::new(parsed)))
             }
             "103" => {
@@ -532,8 +578,18 @@ impl SwiftParser {
                     let tag_end = field_start + 1 + tag_end;
                     let raw_field_tag = &content[field_start + 1..tag_end];
 
+                    // Debug: print raw field tag before normalization
+                    if raw_field_tag.contains('#') {
+                        eprintln!("DEBUG: Raw field tag before normalization: '{}'", raw_field_tag);
+                    }
+                    
                     // Normalize field tag by removing option letters (A, F, K, etc.)
                     let field_tag = Self::normalize_field_tag(raw_field_tag);
+                    
+                    // Debug: print normalized field tag
+                    if raw_field_tag.contains('#') {
+                        eprintln!("DEBUG: Normalized field tag: '{}'", field_tag);
+                    }
 
                     // Find the end of field value (next field marker or end of content)
                     let value_start = tag_end + 1;
@@ -579,7 +635,15 @@ impl SwiftParser {
     /// Normalize field tag by removing option letters (A, F, K, etc.)
     /// Example: "50K" -> "50", "59A" -> "59", "20" -> "20"
     /// But preserve option letters for fields that have multiple variants like 23B/23E, 71A/71F/71G
+    /// Also preserve numbered field tags like "50#1", "50#2"
     fn normalize_field_tag(raw_tag: &str) -> Cow<'_, str> {
+        // Special handling for numbered field tags (e.g., "50#1", "50#2")
+        if raw_tag.contains('#') {
+            // For numbered fields, we need to keep the full tag including the # and number
+            // This is used in MT101 and other messages to distinguish multiple occurrences
+            return Cow::Borrowed(raw_tag);
+        }
+        
         // Find where the numeric part ends
         let numeric_end = raw_tag
             .find(|c: char| !c.is_ascii_digit())
@@ -691,6 +755,74 @@ pub fn parse_swift_message_from_string(value: &str) -> Result<HashMap<String, Ve
     }
 
     Ok(field_map)
+}
+
+/// Parse sequence fields (e.g., transactions in MT101, MT104)
+/// 
+/// This function identifies sequence boundaries and parses each sequence into the target type.
+/// Sequences typically start with a mandatory field (like Field 21) that marks the beginning
+/// of each repetition.
+pub fn parse_sequences<T>(
+    fields: &HashMap<String, Vec<(String, usize)>>,
+    tracker: &mut FieldConsumptionTracker,
+) -> Result<Vec<T>>
+where
+    T: crate::SwiftMessageBody,
+{
+    
+    // Get all fields sorted by position
+    let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+    for (tag, values) in fields {
+        for (value, pos) in values {
+            // Only include unconsumed fields
+            if tracker.consumed_indices.get(tag).map_or(true, |set| !set.contains(pos)) {
+                all_fields.push((tag.clone(), value.clone(), *pos));
+            }
+        }
+    }
+    all_fields.sort_by_key(|(_, _, pos)| *pos);
+    
+    // Determine the sequence start marker
+    // For most transaction sequences, this is field 21 (Transaction Reference)
+    let sequence_start_tag = "21";
+    
+    let mut sequences = Vec::new();
+    let mut current_sequence_fields: HashMap<String, Vec<(String, usize)>> = HashMap::new();
+    let mut in_sequence = false;
+    
+    for (tag, value, pos) in all_fields {
+        // Check if this is the start of a new sequence
+        if tag == sequence_start_tag && !tag.ends_with("R") && !tag.ends_with("F") {
+            // If we were already in a sequence, parse the previous one
+            if in_sequence && !current_sequence_fields.is_empty() {
+                if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
+                    sequences.push(sequence_item);
+                }
+                current_sequence_fields.clear();
+            }
+            in_sequence = true;
+        }
+        
+        // Add field to current sequence if we're in one
+        if in_sequence {
+            current_sequence_fields
+                .entry(tag.clone())
+                .or_default()
+                .push((value, pos));
+            
+            // Mark this field as consumed
+            tracker.mark_consumed(&tag, pos);
+        }
+    }
+    
+    // Parse the last sequence if there is one
+    if in_sequence && !current_sequence_fields.is_empty() {
+        if let Ok(sequence_item) = T::from_fields(current_sequence_fields) {
+            sequences.push(sequence_item);
+        }
+    }
+    
+    Ok(sequences)
 }
 
 /// Serialize a SwiftMessage field map to a string representation

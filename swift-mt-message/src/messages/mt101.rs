@@ -358,7 +358,7 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "If field 21R is present in sequence A, then in each occurrence of sequence B, the currency code in fields 32B must be the same",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.21r"}},
+          {"!!": {"var": "fields.21R"}},
           {
             "and": [
               {">": [{"var": "fields.#.length"}, 1]},
@@ -483,10 +483,10 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "Message index must not exceed total",
       "condition": {
         "and": [
-          {"!!": {"var": "fields.28d"}},
-          {"<=": [{"var": "fields.28d.index"}, {"var": "fields.28d.total"}]},
-          {">": [{"var": "fields.28d.index"}, 0]},
-          {">": [{"var": "fields.28d.total"}, 0]}
+          {"!!": {"var": "fields.28D"}},
+          {"<=": [{"var": "fields.28D.index"}, {"var": "fields.28D.total"}]},
+          {">": [{"var": "fields.28D.index"}, 0]},
+          {">": [{"var": "fields.28D.total"}, 0]}
         ]
       }
     },
@@ -527,90 +527,3 @@ const MT101_VALIDATION_RULES: &str = r#"{
     "VALID_INSTRUCTION_CODES_MT101": ["EQUI", "RTGS", "URGP", "CORT", "INTC", "SDVA"]
   }
 }"#;
-
-// Custom implementation to handle sequence B parsing
-impl MT101 {
-    /// Parse MT101 with proper sequence B handling
-    pub fn parse_with_sequences(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        use crate::SwiftMessageBody;
-
-        // First, let the macro-generated code parse sequence A
-        let mut mt101 = <MT101 as SwiftMessageBody>::from_fields(fields.clone())?;
-
-        // Sort all fields by position to identify sequence boundaries
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in &fields {
-            for (value, pos) in values {
-                all_fields.push((tag.clone(), value.clone(), *pos));
-            }
-        }
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Find the position after which sequence B starts
-        // Sequence B starts after the last sequence A field
-        let mut last_seq_a_pos = 0;
-        let seq_a_tags = ["20", "21R", "28D", "50", "52", "51A", "30", "25"];
-
-        for (tag, _, pos) in &all_fields {
-            // Check if this is a sequence A tag (including variants)
-            let base_tag = tag
-                .chars()
-                .take_while(|c| c.is_numeric())
-                .collect::<String>();
-            if seq_a_tags.contains(&base_tag.as_str()) ||
-               (base_tag == "50" && (tag.ends_with("C") || tag.ends_with("L"))) || // Field50InstructingParty
-               (base_tag == "50" && (tag.ends_with("F") || tag.ends_with("G") || tag.ends_with("H"))) || // Field50OrderingCustomerFGH
-               (base_tag == "52" && tag.len() == 3) || // Field52 with variant
-               tag == "51A"
-            {
-                last_seq_a_pos = last_seq_a_pos.max(*pos);
-            }
-        }
-
-        // Parse transactions from sequence B
-        let mut transactions = Vec::new();
-        let mut current_transaction_fields: std::collections::HashMap<
-            String,
-            Vec<(String, usize)>,
-        > = std::collections::HashMap::new();
-        let mut in_transaction = false;
-
-        for (tag, value, pos) in all_fields {
-            // Only process fields after sequence A
-            if pos > last_seq_a_pos {
-                if tag == "21" {
-                    // New transaction starts
-                    if in_transaction && !current_transaction_fields.is_empty() {
-                        // Parse previous transaction
-                        if let Ok(transaction) =
-                            MT101Transaction::from_fields(current_transaction_fields.clone())
-                        {
-                            transactions.push(transaction);
-                        }
-                        current_transaction_fields.clear();
-                    }
-                    in_transaction = true;
-                }
-
-                if in_transaction {
-                    current_transaction_fields
-                        .entry(tag)
-                        .or_default()
-                        .push((value, pos));
-                }
-            }
-        }
-
-        // Parse last transaction
-        if in_transaction && !current_transaction_fields.is_empty() {
-            if let Ok(transaction) = MT101Transaction::from_fields(current_transaction_fields) {
-                transactions.push(transaction);
-            }
-        }
-
-        mt101.transactions = transactions;
-        Ok(mt101)
-    }
-}

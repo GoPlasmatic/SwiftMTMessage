@@ -142,10 +142,8 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                 // This is a sequence field (like transactions in MT101)
                 field_parsers.push(quote! {
                     #field_name: {
-                        // Parse sequence B fields
-                        // This will be handled by the message-specific logic
-                        // For now, return empty vec
-                        Vec::new()
+                        // Parse sequence fields by identifying boundaries
+                        crate::parser::parse_sequences::<#inner_type>(&fields, &mut tracker)?
                     }
                 });
             } else {
@@ -189,8 +187,12 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                 field_parsers.push(quote! {
                     #field_name: {
                         let base_tag = crate::extract_base_tag(#tag);
+                        // Get valid variants for this field type if it's an enum
+                        let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                        let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                        
                         if let Some((value, variant_tag, pos)) =
-                            crate::parser::find_field_with_variant_sequential(&fields, base_tag, &mut tracker) {
+                            crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice) {
                             Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
                                 .map_err(|e| {
                                     let line_num = pos >> 16;
@@ -238,8 +240,12 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
             field_parsers.push(quote! {
                 #field_name: {
                     let base_tag = crate::extract_base_tag(#tag);
+                    // Get valid variants for this field type if it's an enum
+                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                    
                     let (value, variant_tag, pos) =
-                        crate::parser::find_field_with_variant_sequential(&fields, base_tag, &mut tracker)
+                        crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
                             .ok_or_else(|| crate::errors::ParseError::MissingRequiredField {
                                 field_tag: #tag.to_string(),
                                 field_name: stringify!(#field_name).to_string(),
@@ -279,7 +285,8 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
         let field_name = &field.name;
         let tag = &field.tag;
 
-        // Skip sequence fields marked with "#"
+        // Skip sequence fields marked with "#" for MT format serialization
+        // They are handled differently in the message format
         if tag == "#" {
             continue;
         }

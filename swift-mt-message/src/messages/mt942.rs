@@ -121,90 +121,66 @@ pub struct MT942StatementLine {
     pub field_86: Option<Field86>,
 }
 
-/// Enhanced validation rules for MT942
+/// Validation rules for MT942 - Interim Transaction Report
 const MT942_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
-      "id": "CURRENCY_CONSISTENCY",
-      "description": "All balance fields must use the same currency",
+      "id": "C1",
+      "description": "The first two characters of the three-character currency code in fields 34F, 61, 90D, and 90C must be the same for all occurrences",
       "condition": {
         "and": [
-          {"==": [
-            {"var": "field_60f.currency"},
-            {"var": "field_62f.currency"}
-          ]},
+          {"!!": {"var": "fields.34F#1"}},
           {
             "if": [
-              {"var": "field_64.is_some"},
+              {"!!": {"var": "fields.34F#2"}},
               {"==": [
-                {"var": "field_60f.currency"},
-                {"var": "field_64.currency"}
+                {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.34F#2.currency"}, 0, 2]}
               ]},
               true
             ]
           },
           {
             "if": [
-              {"var": "field_65.is_some"},
+              {"!!": {"var": "fields.90D"}},
               {"==": [
-                {"var": "field_60f.currency"},
-                {"var": "field_65.currency"}
-              ]},
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "ENTRY_CURRENCY_CONSISTENCY",
-      "description": "Entry summaries must use same currency as balances",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"var": "field_90d.is_some"},
-              {"==": [
-                {"var": "field_60f.currency"},
-                {"var": "field_90d.currency"}
+                {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.90D.currency"}, 0, 2]}
               ]},
               true
             ]
           },
           {
             "if": [
-              {"var": "field_90c.is_some"},
+              {"!!": {"var": "fields.90C"}},
               {"==": [
-                {"var": "field_60f.currency"},
-                {"var": "field_90c.currency"}
+                {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.90C.currency"}, 0, 2]}
               ]},
               true
             ]
+          },
+          {
+            "if": [
+              {">=": [{"length": {"var": "fields.#"}}, 1]},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {
+                    "if": [
+                      {"!!": {"var": "61"}},
+                      {"==": [
+                        {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                        {"substr": [{"var": "61.currency"}, 0, 2]}
+                      ]},
+                      true
+                    ]
+                  }
+                ]
+              },
+              true
+            ]
           }
-        ]
-      }
-    },
-    {
-      "id": "REF_FORMAT",
-      "description": "Transaction reference must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_25.value"}, ""]},
-          {"var": "field_28c.is_valid"},
-          {"var": "field_60f.is_valid"},
-          {"var": "field_62f.is_valid"}
         ]
       }
     }

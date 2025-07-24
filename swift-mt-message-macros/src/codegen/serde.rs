@@ -17,6 +17,19 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
             for field in &mut fields.named {
                 // Look for #[field("tag")] attributes
                 if let Some(field_tag) = extract_field_tag(&field.attrs) {
+                    // Skip serde rename for sequence fields marked with "#"
+                    if field_tag == "#" {
+                        // For sequence fields, just add skip_serializing_if for Vec types
+                        let type_category = categorize_type(&field.ty);
+                        if matches!(type_category, TypeCategory::Vec | TypeCategory::VecString) {
+                            let serde_attr = syn::parse_quote! {
+                                #[serde(skip_serializing_if = "Vec::is_empty")]
+                            };
+                            field.attrs.push(serde_attr);
+                        }
+                        continue;
+                    }
+                    
                     // Check if the field is an Option type
                     let type_category = categorize_type(&field.ty);
                     if matches!(

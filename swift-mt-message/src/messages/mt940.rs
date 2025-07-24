@@ -157,40 +157,32 @@ pub struct MT940StatementLine {
     pub field_86: Option<Field86>,
 }
 
-/// Enhanced validation rules for MT940
+/// Validation rules for MT940 - Customer Statement Message
 const MT940_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
-      "id": "CURRENCY_CONSISTENCY",
-      "description": "Opening and closing balances must have consistent currency",
+      "id": "C1",
+      "description": "The repetitive sequence starting with field 61 must appear at least once and no more than 500 times",
       "condition": {
-        "==": [
-          {"var": "field_60f.currency"},
-          {"var": "field_62f.currency"}
+        "and": [
+          {">=": [{"length": {"var": "fields.statement_lines"}}, 1]},
+          {"<=": [{"length": {"var": "fields.statement_lines"}}, 500]}
         ]
       }
     },
     {
-      "id": "REF_FORMAT",
-      "description": "Transaction reference must not have invalid slash patterns",
+      "id": "C2",
+      "description": "If field 64 is present, field 60F must also be present, and field 62F must also be present",
       "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_25.value"}, ""]},
-          {"var": "field_28c.is_valid"},
-          {"var": "field_60f.is_valid"},
-          {"var": "field_62f.is_valid"}
+        "if": [
+          {"!!": {"var": "fields.64"}},
+          {
+            "and": [
+              {"!!": {"var": "fields.60"}},
+              {"!!": {"var": "fields.62"}}
+            ]
+          },
+          true
         ]
       }
     }

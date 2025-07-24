@@ -243,51 +243,309 @@ const MT107_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "If 23E is AUTH/NAUT/OTHR in Seq A, same restriction applies to Seq B",
+      "description": "Field 23E and field 50a (option A or K) must appear in Sequence A OR each Sequence B, not both",
       "condition": {
-        "if": [
-          {"var": "field_23e.is_some"},
+        "and": [
           {
-            "forEach": {
-              "collection": "transactions",
-              "condition": {
-                "if": [
-                  {"var": "field_23e.is_some"},
-                  {"in": [{"var": "field_23e.code"}, ["AUTH", "NAUT", "OTHR"]]},
-                  true
+            "if": [
+              {"!!": {"var": "fields.23E"}},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"!": {"var": "23E"}}
                 ]
-              }
-            }
+              },
+              true
+            ]
           },
-          true
+          {
+            "if": [
+              {"!!": {"var": "fields.50#2"}},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"!": {"var": "50#2"}}
+                ]
+              },
+              true
+            ]
+          }
         ]
       }
     },
     {
       "id": "C2",
-      "description": "Instructing party appears in exactly one sequence",
+      "description": "Fields 21E, 26T, 77B, 71A, 52a, 50a (option C/L) must appear only in Sequence A or Sequence B, not both",
       "condition": {
-        "xor": [
-          {"var": "field_50a_instructing.is_some"},
+        "and": [
           {
-            "any": {
-              "map": ["transactions", "field_50a_instructing.is_some"]
-            }
+            "if": [
+              {"!!": {"var": "fields.21E"}},
+              {"all": [{"var": "fields.#"}, {"!": {"var": "21E"}}]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.26T"}},
+              {"all": [{"var": "fields.#"}, {"!": {"var": "26T"}}]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.77B"}},
+              {"all": [{"var": "fields.#"}, {"!": {"var": "77B"}}]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71A"}},
+              {"all": [{"var": "fields.#"}, {"!": {"var": "71A"}}]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.52"}},
+              {"all": [{"var": "fields.#"}, {"!": {"var": "52"}}]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.50#1"}},
+              {"all": [{"var": "fields.#"}, {"!": {"var": "50#1"}}]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C3",
+      "description": "If 21E is present, then 50a (option A/K) must also be present in the same sequence",
+      "condition": {
+        "and": [
+          {
+            "if": [
+              {"!!": {"var": "fields.21E"}},
+              {"!!": {"var": "fields.50#2"}},
+              true
+            ]
+          },
+          {
+            "all": [
+              {"var": "fields.#"},
+              {
+                "if": [
+                  {"!!": {"var": "21E"}},
+                  {"!!": {"var": "50#2"}},
+                  true
+                ]
+              }
+            ]
           }
         ]
       }
     },
     {
       "id": "C4",
-      "description": "Field 72 required when 23E = RTND",
+      "description": "If 23E = RTND in Sequence A, Field 72 is mandatory; otherwise, 72 is not allowed",
       "condition": {
         "if": [
           {"and": [
-            {"var": "field_23e.is_some"},
-            {"==": [{"var": "field_23e.code"}, "RTND"]}
+            {"!!": {"var": "fields.23E"}},
+            {"==": [{"var": "fields.23E.instruction_code"}, "RTND"]}
           ]},
-          {"var": "field_72.is_some"},
-          true
+          {"!!": {"var": "fields.72"}},
+          {"!": {"var": "fields.72"}}
+        ]
+      }
+    },
+    {
+      "id": "C5",
+      "description": "If 71F or 71G present in any B, must also be in Sequence C, and vice versa",
+      "condition": {
+        "and": [
+          {
+            "if": [
+              {"some": [{"var": "fields.#"}, {"!!": {"var": "71F"}}]},
+              {"!!": {"var": "fields.71F"}},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"some": [{"var": "fields.#"}, {"!!": {"var": "71G"}}]},
+              {"!!": {"var": "fields.71G"}},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71F"}},
+              {"some": [{"var": "fields.#"}, {"!!": {"var": "71F"}}]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71G"}},
+              {"some": [{"var": "fields.#"}, {"!!": {"var": "71G"}}]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C6",
+      "description": "If 33B is present in Sequence B, must differ in either currency or amount from 32B",
+      "condition": {
+        "all": [
+          {"var": "fields.#"},
+          {
+            "if": [
+              {"!!": {"var": "33B"}},
+              {
+                "or": [
+                  {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
+                  {"!=": [{"var": "33B.amount"}, {"var": "32B.amount"}]}
+                ]
+              },
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C7",
+      "description": "If 33B and 32B currency differs, then 36 (Exchange Rate) is mandatory; otherwise, 36 must not be present",
+      "condition": {
+        "all": [
+          {"var": "fields.#"},
+          {
+            "if": [
+              {"!!": {"var": "33B"}},
+              {
+                "if": [
+                  {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
+                  {"!!": {"var": "36"}},
+                  {"!": {"var": "36"}}
+                ]
+              },
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C8",
+      "description": "The sum of 32B amounts in B must appear either in C/32B (no charges) or in C/19 (with charges)",
+      "condition": {
+        "or": [
+          {
+            "and": [
+              {"!!": {"var": "fields.32B"}},
+              {"!": {"var": "fields.19"}},
+              {
+                "==": [
+                  {"var": "fields.32B.amount"},
+                  {
+                    "reduce": [
+                      {"var": "fields.#"},
+                      {"+": [{"var": "accumulator"}, {"var": "current.32B.amount"}]},
+                      0
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "and": [
+              {"!!": {"var": "fields.19"}},
+              {"!": {"var": "fields.32B"}},
+              {
+                "==": [
+                  {"var": "fields.19.amount"},
+                  {
+                    "reduce": [
+                      {"var": "fields.#"},
+                      {"+": [{"var": "accumulator"}, {"var": "current.32B.amount"}]},
+                      0
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "and": [
+              {"!": {"var": "fields.32B"}},
+              {"!": {"var": "fields.19"}}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "C9",
+      "description": "Currency must be consistent across all instances of 32B, 71F, 71G in B and C",
+      "condition": {
+        "and": [
+          {
+            "if": [
+              {"and": [{"!!": {"var": "fields.32B"}}, {">=": [{"length": {"var": "fields.#"}}, 1]}]},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {"==": [{"var": "32B.currency"}, {"var": "fields.#.0.32B.currency"}]}
+                ]
+              },
+              true
+            ]
+          },
+          {
+            "if": [
+              {"and": [{"!!": {"var": "fields.71F"}}, {"some": [{"var": "fields.#"}, {"!!": {"var": "71F"}}]}]},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {
+                    "if": [
+                      {"!!": {"var": "71F"}},
+                      {"==": [{"var": "71F.currency"}, {"var": "fields.71F.currency"}]},
+                      true
+                    ]
+                  }
+                ]
+              },
+              true
+            ]
+          },
+          {
+            "if": [
+              {"and": [{"!!": {"var": "fields.71G"}}, {"some": [{"var": "fields.#"}, {"!!": {"var": "71G"}}]}]},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {
+                    "if": [
+                      {"!!": {"var": "71G"}},
+                      {"==": [{"var": "71G.currency"}, {"var": "fields.71G.currency"}]},
+                      true
+                    ]
+                  }
+                ]
+              },
+              true
+            ]
+          }
         ]
       }
     },
@@ -295,8 +553,170 @@ const MT107_VALIDATION_RULES: &str = r#"{
       "id": "TXN_MIN",
       "description": "At least one transaction required",
       "condition": {
-        ">=": [{"length": {"var": "transactions"}}, 1]
+        ">=": [{"length": {"var": "fields.#"}}, 1]
+      }
+    },
+    {
+      "id": "REFERENCE_FORMAT",
+      "description": "Reference fields must not contain invalid patterns",
+      "condition": {
+        "and": [
+          {"!=": [{"var": "fields.20.reference"}, ""]},
+          {"!": {"in": ["//", {"var": "fields.20.reference"}]}},
+          {
+            "all": [
+              {"var": "fields.#"},
+              {
+                "and": [
+                  {"!=": [{"var": "21.reference"}, ""]},
+                  {"!": {"in": ["//", {"var": "21.reference"}]}}
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "CURRENCY_CODE_VALIDATION",
+      "description": "All currency codes must be valid ISO 4217 3-letter codes",
+      "condition": {
+        "and": [
+          {
+            "all": [
+              {"var": "fields.#"},
+              {
+                "and": [
+                  {"!=": [{"var": "32B.currency"}, ""]},
+                  {
+                    "if": [
+                      {"!!": {"var": "33B"}},
+                      {"!=": [{"var": "33B.currency"}, ""]},
+                      true
+                    ]
+                  },
+                  {
+                    "if": [
+                      {"!!": {"var": "71F"}},
+                      {"!=": [{"var": "71F.currency"}, ""]},
+                      true
+                    ]
+                  },
+                  {
+                    "if": [
+                      {"!!": {"var": "71G"}},
+                      {"!=": [{"var": "71G.currency"}, ""]},
+                      true
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.32B"}},
+              {"!=": [{"var": "fields.32B.currency"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71F"}},
+              {"!=": [{"var": "fields.71F.currency"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71G"}},
+              {"!=": [{"var": "fields.71G.currency"}, ""]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "AMOUNT_CONSISTENCY",
+      "description": "All amounts must be properly formatted",
+      "condition": {
+        "and": [
+          {
+            "all": [
+              {"var": "fields.#"},
+              {
+                "and": [
+                  {">": [{"var": "32B.amount"}, -1]},
+                  {
+                    "if": [
+                      {"!!": {"var": "33B"}},
+                      {">": [{"var": "33B.amount"}, -1]},
+                      true
+                    ]
+                  },
+                  {
+                    "if": [
+                      {"!!": {"var": "71F"}},
+                      {">": [{"var": "71F.amount"}, -1]},
+                      true
+                    ]
+                  },
+                  {
+                    "if": [
+                      {"!!": {"var": "71G"}},
+                      {">": [{"var": "71G.amount"}, -1]},
+                      true
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.32B"}},
+              {">": [{"var": "fields.32B.amount"}, -1]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.19"}},
+              {">": [{"var": "fields.19.amount"}, -1]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71F"}},
+              {">": [{"var": "fields.71F.amount"}, -1]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.71G"}},
+              {">": [{"var": "fields.71G.amount"}, -1]},
+              true
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "EXECUTION_DATE",
+      "description": "Requested execution date must be valid",
+      "condition": {
+        "and": [
+          {"!!": {"var": "fields.30"}},
+          {"!=": [{"var": "fields.30.execution_date"}, ""]}
+        ]
       }
     }
-  ]
+  ],
+  "constants": {
+    "VALID_CHARGE_CODES": ["OUR", "SHA", "BEN"],
+    "VALID_INSTRUCTION_CODES_MT107": ["AUTH", "NAUT", "OTHR", "RTND", "SDVA", "INTC", "CORT"]
+  }
 }"#;

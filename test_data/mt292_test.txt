@@ -1,0 +1,8 @@
+{1:F01BANKUS33AXXX0000000000}{2:I292DEUTDEFFXXXXN}{4:
+:20:CANCEL202REF001
+:21:ORIGREF202001
+:11S:202241215
+:79:DUPL
+Duplicate payment detected
+Please cancel original transfer
+-}

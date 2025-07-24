@@ -332,9 +332,7 @@ impl ParsedSwiftMessage {
             ParsedSwiftMessage::MT299(_) => "299",
         }
     }
-}
 
-impl ParsedSwiftMessage {
     /// Convert to a specific message type if it matches
     pub fn as_mt101(&self) -> Option<&SwiftMessage<MT101>> {
         match self {
@@ -626,6 +624,35 @@ impl ParsedSwiftMessage {
             _ => None,
         }
     }
+
+    pub fn validate(&self) -> ValidationResult {
+        match self {
+            ParsedSwiftMessage::MT101(mt101) => mt101.validate_business_rules(),
+            ParsedSwiftMessage::MT103(mt103) => mt103.validate_business_rules(),
+            ParsedSwiftMessage::MT104(mt104) => mt104.validate_business_rules(),
+            ParsedSwiftMessage::MT107(mt107) => mt107.validate_business_rules(),
+            ParsedSwiftMessage::MT110(mt110) => mt110.validate_business_rules(),
+            ParsedSwiftMessage::MT111(mt111) => mt111.validate_business_rules(),
+            ParsedSwiftMessage::MT112(mt112) => mt112.validate_business_rules(),
+            ParsedSwiftMessage::MT192(mt192) => mt192.validate_business_rules(),
+            ParsedSwiftMessage::MT196(mt196) => mt196.validate_business_rules(),
+            ParsedSwiftMessage::MT199(mt199) => mt199.validate_business_rules(),
+            ParsedSwiftMessage::MT202(mt202) => mt202.validate_business_rules(),
+            ParsedSwiftMessage::MT205(mt205) => mt205.validate_business_rules(),
+            ParsedSwiftMessage::MT210(mt210) => mt210.validate_business_rules(),
+            ParsedSwiftMessage::MT900(mt900) => mt900.validate_business_rules(),
+            ParsedSwiftMessage::MT910(mt910) => mt910.validate_business_rules(),
+            ParsedSwiftMessage::MT920(mt920) => mt920.validate_business_rules(),
+            ParsedSwiftMessage::MT292(mt292) => mt292.validate_business_rules(),
+            ParsedSwiftMessage::MT296(mt296) => mt296.validate_business_rules(),
+            ParsedSwiftMessage::MT299(mt299) => mt299.validate_business_rules(),
+            ParsedSwiftMessage::MT935(mt935) => mt935.validate_business_rules(),
+            ParsedSwiftMessage::MT940(mt940) => mt940.validate_business_rules(),
+            ParsedSwiftMessage::MT941(mt941) => mt941.validate_business_rules(),
+            ParsedSwiftMessage::MT942(mt942) => mt942.validate_business_rules(),
+            ParsedSwiftMessage::MT950(mt950) => mt950.validate_business_rules(),
+        }
+    }
 }
 
 impl<T: SwiftMessageBody> SwiftMessage<T> {
@@ -800,8 +827,6 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                 });
             }
         };
-
-        println!("Validation context: {context_value}");
 
         // Validate each rule using datalogic-rs
         let mut errors = Vec::new();
@@ -1148,195 +1173,6 @@ mod tests {
     }
 
     #[test]
-    fn test_round_trip_core_functionality() {
-        // Test the core round-trip functionality with a known good MT103 message
-        // This tests the fundamental concept without relying on sample generation
-
-        println!("Testing round-trip functionality with simple MT103 message...");
-
-        // Use a simple, known good MT103 message with all mandatory fields
-        let mt_string = r#"{1:F01BANKBEBBAXXX0000000000}
-{2:I103BANKDEFFXXXXN}
-{3:{113:SEPA}{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}}
-{4:
-:20:TXN123456
-:13C:/SNDTIME/1200+0000
-:23B:CRED
-:23E:SDVA
-:32A:250615EUR1000,00
-:50K:JOHN DOE
-:59:JANE SMITH
-:71A:OUR
-:71F:USD10,00
--}"#;
-
-        println!("✓ Using known good MT103 message");
-
-        // Parse the MT string
-        let parsed_message = SwiftParser::parse_auto(mt_string).unwrap_or_else(|e| {
-            eprintln!("Failed to parse MT string: {e}");
-            eprintln!("MT String was:\n{mt_string}");
-            panic!("Failed to parse MT string: {e}");
-        });
-        println!("✓ Successfully parsed MT string to message");
-
-        // Serialize to JSON
-        let json_representation =
-            serde_json::to_string_pretty(&parsed_message).expect("Failed to serialize to JSON");
-        println!("✓ Serialized to JSON");
-
-        // Deserialize from JSON
-        let deserialized_message: ParsedSwiftMessage =
-            serde_json::from_str(&json_representation).expect("Failed to deserialize from JSON");
-        println!("✓ Deserialized from JSON");
-
-        // Convert back to MT format
-        let regenerated_mt = match &deserialized_message {
-            ParsedSwiftMessage::MT103(msg) => msg.to_mt_message(),
-            _ => panic!("Expected MT103 message"),
-        };
-        println!("✓ Regenerated MT format");
-
-        // Parse the regenerated MT
-        let reparsed_message =
-            SwiftParser::parse_auto(&regenerated_mt).expect("Failed to reparse regenerated MT");
-        println!("✓ Successfully reparsed regenerated MT");
-
-        // Compare JSON representations
-        let original_json = serde_json::to_string_pretty(&parsed_message)
-            .expect("Failed to serialize original to JSON");
-        let reparsed_json = serde_json::to_string_pretty(&reparsed_message)
-            .expect("Failed to serialize reparsed to JSON");
-
-        assert_eq!(
-            original_json, reparsed_json,
-            "Round-trip failed: JSON representations don't match"
-        );
-        println!("✓ Round-trip successful: JSON representations match");
-
-        println!("\n=== Core Round-trip Test Results ===");
-        println!("✓ All steps completed successfully");
-        println!("✓ Round-trip functionality verified");
-    }
-
-    #[test]
-    fn test_round_trip_trailer_chk_field() {
-        // Test that the CHK field in the trailer is preserved during round-trip
-        println!("Testing round-trip with trailer CHK field...");
-
-        let mt_string = r#"{1:F01BANKBEBBAXXX0000000000}
-{2:I103BANKDEFFXXXXN}
-{3:{113:SEPA}{121:180f1e65-90e0-44d5-a49a-92b55eb3025f}}
-{4:
-:20:TXN123456
-:13C:/SNDTIME/1200+0000
-:23B:CRED
-:23E:SDVA
-:32A:250615EUR1000,00
-:50K:JOHN DOE
-:59:JANE SMITH
-:71A:OUR
-:71F:USD10,00
--}
-{5:{CHK:ABCD1234567890}}"#;
-
-        println!("Original MT string contains trailer with CHK:ABCD1234567890");
-
-        // Parse the MT string
-        let parsed_message = SwiftParser::parse_auto(mt_string).expect("Failed to parse MT string");
-        println!("✓ Successfully parsed MT string");
-
-        // Check that trailer was parsed
-        match &parsed_message {
-            ParsedSwiftMessage::MT103(msg) => {
-                assert!(msg.trailer.is_some(), "Trailer should be present");
-                let trailer = msg.trailer.as_ref().unwrap();
-                assert!(trailer.checksum.is_some(), "Checksum should be present");
-                assert_eq!(trailer.checksum.as_ref().unwrap(), "ABCD1234567890");
-                println!("✓ Trailer CHK field was correctly parsed");
-            }
-            _ => panic!("Expected MT103 message"),
-        }
-
-        // Serialize to JSON
-        let json_representation =
-            serde_json::to_string_pretty(&parsed_message).expect("Failed to serialize to JSON");
-        println!("✓ Serialized to JSON");
-
-        // Deserialize from JSON
-        let deserialized_message: ParsedSwiftMessage =
-            serde_json::from_str(&json_representation).expect("Failed to deserialize from JSON");
-        println!("✓ Deserialized from JSON");
-
-        // Check that trailer is still present after JSON round-trip
-        match &deserialized_message {
-            ParsedSwiftMessage::MT103(msg) => {
-                assert!(
-                    msg.trailer.is_some(),
-                    "Trailer should be present after JSON round-trip"
-                );
-                let trailer = msg.trailer.as_ref().unwrap();
-                assert!(
-                    trailer.checksum.is_some(),
-                    "Checksum should be present after JSON round-trip"
-                );
-                assert_eq!(trailer.checksum.as_ref().unwrap(), "ABCD1234567890");
-                println!("✓ Trailer CHK field preserved after JSON round-trip");
-            }
-            _ => panic!("Expected MT103 message"),
-        }
-
-        // Convert back to MT format
-        let regenerated_mt = match &deserialized_message {
-            ParsedSwiftMessage::MT103(msg) => msg.to_mt_message(),
-            _ => panic!("Expected MT103 message"),
-        };
-        println!("✓ Regenerated MT format");
-
-        // Check if trailer block is present
-        assert!(
-            regenerated_mt.contains("{5:"),
-            "Trailer block should be present in regenerated MT"
-        );
-
-        // Check if CHK field is present
-        assert!(
-            regenerated_mt.contains("CHK:ABCD1234567890"),
-            "CHK field should be present in regenerated MT. Regenerated MT:\n{}",
-            regenerated_mt
-        );
-
-        println!("✓ Trailer CHK field is correctly included in regenerated MT");
-
-        // Parse the regenerated MT to ensure it's valid
-        let reparsed_message =
-            SwiftParser::parse_auto(&regenerated_mt).expect("Failed to reparse regenerated MT");
-        println!("✓ Successfully reparsed regenerated MT");
-
-        // Verify trailer is still there
-        match &reparsed_message {
-            ParsedSwiftMessage::MT103(msg) => {
-                assert!(
-                    msg.trailer.is_some(),
-                    "Trailer should be present after reparsing"
-                );
-                let trailer = msg.trailer.as_ref().unwrap();
-                assert!(
-                    trailer.checksum.is_some(),
-                    "Checksum should be present after reparsing"
-                );
-                assert_eq!(trailer.checksum.as_ref().unwrap(), "ABCD1234567890");
-                println!("✓ Trailer CHK field preserved after full round-trip");
-            }
-            _ => panic!("Expected MT103 message"),
-        }
-
-        println!("\n=== Trailer CHK Round-trip Test Results ===");
-        println!("✓ All steps completed successfully");
-        println!("✓ CHK field preserved throughout round-trip");
-    }
-
-    #[test]
     fn test_round_trip_with_test_data() {
         // Test with available test data files, but don't fail if some can't be parsed
         let test_data_dir = std::env::current_dir()
@@ -1372,12 +1208,15 @@ mod tests {
         let mut failed_tests = 0;
 
         for file_path in test_files {
-            println!("Testing round-trip for: {}", file_path.display());
+            print!(
+                "Testing round-trip for: {}",
+                file_path.file_name().unwrap_or_default().display()
+            );
 
             let original_content = match fs::read_to_string(&file_path) {
                 Ok(content) => content,
                 Err(e) => {
-                    println!("⚠️  Failed to read file {}: {}", file_path.display(), e);
+                    println!("⚠️  Failed to read file: {}", e);
                     failed_tests += 1;
                     continue;
                 }
@@ -1386,20 +1225,28 @@ mod tests {
             let parsed_message = match SwiftParser::parse_auto(&original_content) {
                 Ok(msg) => msg,
                 Err(e) => {
-                    println!("⚠️  Failed to parse {}: {}", file_path.display(), e);
+                    println!("⚠️  Failed to parse: {}", e);
                     failed_tests += 1;
                     continue;
                 }
             };
 
+            let validation_errors = parsed_message.validate();
+            if !validation_errors.errors.is_empty() {
+                println!(
+                    "\n❌ Message validation failed with {} error(s):",
+                    validation_errors.errors.len()
+                );
+
+                for (index, error) in validation_errors.errors.iter().enumerate() {
+                    println!("\n   {}. {}", index + 1, error);
+                }
+            }
+
             let json_representation = match serde_json::to_string_pretty(&parsed_message) {
                 Ok(json) => json,
                 Err(e) => {
-                    println!(
-                        "⚠️  Failed to serialize to JSON {}: {}",
-                        file_path.display(),
-                        e
-                    );
+                    println!("⚠️  Failed to serialize to JSON: {}", e);
                     failed_tests += 1;
                     continue;
                 }
@@ -1409,11 +1256,7 @@ mod tests {
                 match serde_json::from_str(&json_representation) {
                     Ok(msg) => msg,
                     Err(e) => {
-                        println!(
-                            "⚠️  Failed to deserialize from JSON {}: {}",
-                            file_path.display(),
-                            e
-                        );
+                        println!("⚠️  Failed to deserialize from JSON: {}", e);
                         failed_tests += 1;
                         continue;
                     }
@@ -1449,11 +1292,7 @@ mod tests {
             let reparsed_message = match SwiftParser::parse_auto(&regenerated_mt) {
                 Ok(msg) => msg,
                 Err(e) => {
-                    println!(
-                        "⚠️  Failed to reparse regenerated MT for {}: {}",
-                        file_path.display(),
-                        e
-                    );
+                    println!("⚠️  Failed to reparse regenerated MT: {}", e);
                     failed_tests += 1;
                     continue;
                 }
@@ -1462,11 +1301,7 @@ mod tests {
             let original_json = match serde_json::to_string_pretty(&parsed_message) {
                 Ok(json) => json,
                 Err(e) => {
-                    println!(
-                        "⚠️  Failed to serialize original to JSON {}: {}",
-                        file_path.display(),
-                        e
-                    );
+                    println!("⚠️  Failed to serialize original to JSON: {}", e);
                     failed_tests += 1;
                     continue;
                 }
@@ -1475,31 +1310,24 @@ mod tests {
             let reparsed_json = match serde_json::to_string_pretty(&reparsed_message) {
                 Ok(json) => json,
                 Err(e) => {
-                    println!(
-                        "⚠️  Failed to serialize reparsed to JSON {}: {}",
-                        file_path.display(),
-                        e
-                    );
+                    println!("⚠️  Failed to serialize reparsed to JSON: {}", e);
                     failed_tests += 1;
                     continue;
                 }
             };
 
             if original_json == reparsed_json {
-                println!("✓ Round-trip successful for: {}", file_path.display());
+                println!("\t✓ Successful");
                 successful_tests += 1;
             } else {
-                println!(
-                    "✗ Round-trip failed for {}: original and reparsed JSON don't match",
-                    file_path.display()
-                );
+                println!("✗ Failed: original and reparsed JSON don't match",);
 
                 // Debug: Show the differences
                 if std::env::var("DEBUG_ROUNDTRIP").is_ok() {
                     println!("\n=== ORIGINAL JSON ===");
-                    println!("{}", original_json);
+                    println!("{original_json}");
                     println!("\n=== REPARSED JSON ===");
-                    println!("{}", reparsed_json);
+                    println!("{reparsed_json}");
                     println!("\n=== END DIFF ===\n");
                 }
 

@@ -215,100 +215,39 @@ const MT205_VALIDATION_RULES: &str = r#"{
 	"rules": [
 		{
 			"id": "C1",
-			"description": "Transaction Reference (20) must not start or end with '/' and must not contain '//'",
+			"description": "If field 56a is present, then field 57a must also be present",
 			"condition": {
-				"and": [
-					{"!": {"matches": [{"var": "field_20.value"}, "^/"]}},
-					{"!": {"matches": [{"var": "field_20.value"}, "/$"]}},
-					{"!": {"matches": [{"var": "field_20.value"}, "//"]}}
+				"if": [
+					{"!!": {"var": "fields.56"}},
+					{"!!": {"var": "fields.57"}},
+					true
 				]
 			}
 		},
 		{
 			"id": "C2",
-			"description": "Related Reference (21) must not start or end with '/' and must not contain '//'",
+			"description": "If field 56a is present in Sequence B, then field 57a must also be present",
 			"condition": {
-				"and": [
-					{"!": {"matches": [{"var": "field_21.value"}, "^/"]}},
-					{"!": {"matches": [{"var": "field_21.value"}, "/$"]}},
-					{"!": {"matches": [{"var": "field_21.value"}, "//"]}}
+				"if": [
+					{"!!": {"var": "fields.56#b"}},
+					{"!!": {"var": "fields.57#b"}},
+					true
 				]
 			}
 		},
 		{
-			"id": "C3",
-			"description": "Field 52a is mandatory in MT205 (no fallback to sender BIC)",
-			"condition": {
-				"!=": [{"var": "field_52a.bic"}, ""]
-			}
-		},
-		{
-			"id": "C4",
-			"description": "Field 54a is not present in MT205 (structural difference from MT202)",
-			"condition": true
-		},
-		{
-			"id": "C5",
-			"description": "Cover message detection based on Sequence B customer fields presence",
+			"id": "COV_FIELDS",
+			"description": "MT205 COV must include both field 50a (Ordering Customer) and 59a (Beneficiary)",
 			"condition": {
 				"if": [
 					{"or": [
-						{"var": "field_50a.is_some"},
-						{"var": "field_59a.is_some"},
-						{"var": "field_70.is_some"}
+						{"!!": {"var": "fields.50#b"}},
+						{"!!": {"var": "fields.59#b"}}
 					]},
-					{"var": "field_52a_seq_b.is_some"},
-					true
-				]
-			}
-		},
-		{
-			"id": "C6",
-			"description": "Cross-currency validation: if 33B present, currency should differ from 32A",
-			"condition": {
-				"if": [
-					{"var": "field_33b.is_some"},
-					{"!=": [{"var": "field_33b.currency"}, {"var": "field_32a.currency"}]},
-					true
-				]
-			}
-		},
-		{
-			"id": "C7",
-			"description": "REJT/RETN indicator validation in field 72",
-			"condition": {
-				"if": [
-					{"var": "field_72.is_some"},
-					{"or": [
-						{"!": {"matches": [{"var": "field_72.lines"}, "/REJT/"]}},
-						{"!": {"matches": [{"var": "field_72.lines"}, "/RETN/"]}},
-						true
+					{"and": [
+						{"!!": {"var": "fields.50#b"}},
+						{"!!": {"var": "fields.59#b"}}
 					]},
-					true
-				]
-			}
-		},
-		{
-			"id": "C8",
-			"description": "Time indication validation for CLS/TARGET timing",
-			"condition": {
-				"if": [
-					{"var": "field_13c.is_some"},
-					{"allValid": [
-						{"var": "field_13c"},
-						{"matches": [{"var": "time_code"}, "^(SNDTIME|RNCTIME|CLSTIME|TILTIME|FROTIME|REJTIME)$"]}
-					]},
-					true
-				]
-			}
-		},
-		{
-			"id": "C9",
-			"description": "Settlement method determination (METAFCT003 - simplified scenarios)",
-			"condition": {
-				"if": [
-					{"var": "field_53a.is_some"},
-					{"!=": [{"var": "field_53a.bic"}, {"var": "field_52a.bic"}]},
 					true
 				]
 			}

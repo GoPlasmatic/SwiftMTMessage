@@ -125,28 +125,28 @@ pub struct MT202 {
     #[field("72")]
     pub field_72: Option<Field72>,
 
-    #[field("50")]
+    #[field("50#b")]
     pub field_50_seq_b: Option<Field50OrderingCustomerAFK>,
 
-    #[field("52")]
+    #[field("52#b")]
     pub field_52_seq_b: Option<Field52OrderingInstitution>,
 
-    #[field("56")]
+    #[field("56#b")]
     pub field_56_seq_b: Option<Field56Intermediary>,
 
-    #[field("57")]
+    #[field("57#b")]
     pub field_57_seq_b: Option<Field57AccountWithInstitution>,
 
-    #[field("59")]
+    #[field("59#b")]
     pub field_59_seq_b: Option<Field59>,
 
-    #[field("70")]
+    #[field("70#b")]
     pub field_70_seq_b: Option<Field70>,
 
-    #[field("72")]
+    #[field("72#b")]
     pub field_72_seq_b: Option<Field72>,
 
-    #[field("33B")]
+    #[field("33B#b")]
     pub field_33b_seq_b: Option<Field33B>,
 }
 
@@ -212,25 +212,42 @@ const MT202_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "If 56a is present, 57a becomes mandatory",
+      "description": "If field 56a is present, then field 57a must also be present",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.56"}},
+          {"!!": {"var": "fields.57"}},
+          true
+        ]
+      }
+    },
+    {
+      "id": "C2",
+      "description": "If field 56a is present in Sequence B, then field 57a must also be present",
+      "condition": {
+        "if": [
+          {"!!": {"var": "fields.56#b"}},
+          {"!!": {"var": "fields.57#b"}},
+          true
+        ]
+      }
+    },
+    {
+      "id": "COV_FIELDS",
+      "description": "MT202 COV must include both field 50a (Ordering Customer) and 59a (Beneficiary)",
       "condition": {
         "if": [
           {"or": [
-            {"var": "field_56a.is_some"},
-            {"var": "field_56d.is_some"}
+            {"!!": {"var": "fields.50#b"}},
+            {"!!": {"var": "fields.59#b"}}
           ]},
-          {"or": [
-            {"var": "field_57a.is_some"},
-            {"var": "field_57b.is_some"},
-            {"var": "field_57d.is_some"}
+          {"and": [
+            {"!!": {"var": "fields.50#b"}},
+            {"!!": {"var": "fields.59#b"}}
           ]},
           true
         ]
       }
     }
-  ],
-  "constants": {
-    "VALID_TIME_CODES": ["CLS", "RNC", "SND"],
-    "VALID_INSTRUCTION_CODES": ["/INT/", "/COV/", "/REIMBURSEMENT/", "/SETTLEMENT/", "/SDVA/", "/RETN/", "/REJT/"]
-  }
+  ]
 }"#;

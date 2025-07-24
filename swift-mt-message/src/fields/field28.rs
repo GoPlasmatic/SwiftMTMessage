@@ -196,7 +196,7 @@ mod tests {
             total: 67890,
         };
         let serialized = field.to_swift_string();
-        println!("Serialized Field28D: '{}'", serialized);
+        println!("Serialized Field28D: '{serialized}'");
 
         // Now try to parse the serialized format
         let parsed = Field28D::parse(&serialized).unwrap();
@@ -208,13 +208,13 @@ mod tests {
     fn test_field28_parsing() {
         // Test without sequence number
         let input = "12345";
-        let parsed = Field28::parse(&input).unwrap();
+        let parsed = Field28::parse(input).unwrap();
         assert_eq!(parsed.statement_number, 12345);
         assert_eq!(parsed.sequence_number, None);
 
         // Test with sequence number
         let input = "12345/01";
-        let parsed = Field28::parse(&input).unwrap();
+        let parsed = Field28::parse(input).unwrap();
         assert_eq!(parsed.statement_number, 12345);
         assert_eq!(parsed.sequence_number, Some(1));
     }
@@ -223,13 +223,13 @@ mod tests {
     fn test_field28c_parsing() {
         // Test without sequence number
         let input = "98765";
-        let parsed = Field28C::parse(&input).unwrap();
+        let parsed = Field28C::parse(input).unwrap();
         assert_eq!(parsed.statement_number, 98765);
         assert_eq!(parsed.sequence_number, None);
 
         // Test with extended sequence number
         let input = "98765/00123";
-        let parsed = Field28C::parse(&input).unwrap();
+        let parsed = Field28C::parse(input).unwrap();
         assert_eq!(parsed.statement_number, 98765);
         assert_eq!(parsed.sequence_number, Some(123));
     }

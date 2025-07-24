@@ -117,42 +117,71 @@ pub struct MT941 {
     pub field_86: Option<Field86>,
 }
 
-/// Enhanced validation rules for MT941
+/// Validation rules for MT941 - Balance Report Message
 const MT941_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
-      "id": "CURRENCY_CONSISTENCY",
-      "description": "All balance fields must use the same currency",
+      "id": "C1",
+      "description": "The first two characters of the three-character currency code in fields 60F, 90D, 90C, 62F, 64, and 65 must be the same for all occurrences of these fields",
       "condition": {
         "and": [
+          {"!!": {"var": "fields.60F"}},
+          {"!!": {"var": "fields.62F"}},
           {"==": [
-            {"var": "field_60f.currency"},
-            {"var": "field_62f.currency"}
-          ]}
-        ]
-      }
-    },
-    {
-      "id": "REF_FORMAT",
-      "description": "Transaction reference must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_25.value"}, ""]},
-          {"var": "field_28d.is_valid"},
-          {"var": "field_60f.is_valid"},
-          {"var": "field_62f.is_valid"}
+            {"substr": [{"var": "fields.60F.currency"}, 0, 2]},
+            {"substr": [{"var": "fields.62F.currency"}, 0, 2]}
+          ]},
+          {
+            "if": [
+              {"!!": {"var": "fields.90D"}},
+              {"==": [
+                {"substr": [{"var": "fields.60F.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.90D.currency"}, 0, 2]}
+              ]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.90C"}},
+              {"==": [
+                {"substr": [{"var": "fields.60F.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.90C.currency"}, 0, 2]}
+              ]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"!!": {"var": "fields.64"}},
+              {"==": [
+                {"substr": [{"var": "fields.60F.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.64.currency"}, 0, 2]}
+              ]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {">=": [{"length": {"var": "fields.65"}}, 1]},
+              {
+                "reduce": [
+                  {"var": "fields.65"},
+                  {
+                    "and": [
+                      {"var": "accumulator"},
+                      {"==": [
+                        {"substr": [{"var": "fields.60F.currency"}, 0, 2]},
+                        {"substr": [{"var": "current.currency"}, 0, 2]}
+                      ]}
+                    ]
+                  },
+                  true
+                ]
+              },
+              true
+            ]
+          }
         ]
       }
     }

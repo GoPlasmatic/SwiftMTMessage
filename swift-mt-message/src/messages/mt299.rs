@@ -109,7 +109,6 @@ use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT299_VALIDATION_RULES)]
 pub struct MT299 {
     #[field("20")]
     pub field_20: Field20,
@@ -120,13 +119,3 @@ pub struct MT299 {
     #[field("79")]
     pub field_79: Field79,
 }
-
-const MT299_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "NARRATIVE_FORMAT",
-      "description": "If narrative starts with /REJT/ or /RETN/, it must follow Payments Reject/Return Guidelines",
-      "condition": true
-    }
-  ]
-}"#;

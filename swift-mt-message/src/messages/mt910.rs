@@ -128,48 +128,17 @@ pub struct MT910 {
     pub field_72: Option<Field72>,
 }
 
-/// Enhanced validation rules for MT910
+/// Validation rules for MT910 - Confirmation of Credit
 const MT910_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "Either Field 50a or Field 52a must be present (not both)",
+      "description": "Either field 50a or field 52a must be present",
       "condition": {
         "or": [
-          {
-            "and": [
-              {"var": "field_50a.is_some"},
-              {"var": "field_52a.is_none"}
-            ]
-          },
-          {
-            "and": [
-              {"var": "field_50a.is_none"},
-              {"var": "field_52a.is_some"}
-            ]
-          }
+          {"!!": {"var": "fields.50"}},
+          {"!!": {"var": "fields.52"}}
         ]
-      }
-    },
-    {
-      "id": "REF_FORMAT",
-      "description": "Transaction and related references must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}},
-          {"!": {"startsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_21.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "AMOUNT_POSITIVE",
-      "description": "Credit amount must be positive",
-      "condition": {
-        ">": [{"var": "field_32a.amount"}, 0]
       }
     }
   ]

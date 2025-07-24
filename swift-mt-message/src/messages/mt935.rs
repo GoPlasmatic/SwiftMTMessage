@@ -135,35 +135,32 @@ pub struct MT935RateChange {
     pub field_37h: Vec<Field37H>,
 }
 
-/// Enhanced validation rules for MT935
+/// Validation rules for MT935 - Rate Change Advice
 const MT935_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "Rate change sequences must occur 1-10 times",
+      "description": "The repetitive sequence (fields 23/25 to 37H) must appear at least once but no more than ten times",
       "condition": {
         "and": [
-          {">=": [{"length": {"var": "rate_changes"}}, 1]},
-          {"<=": [{"length": {"var": "rate_changes"}}, 10]}
+          {">=": [{"length": {"var": "fields.#"}}, 1]},
+          {"<=": [{"length": {"var": "fields.#"}}, 10]}
         ]
       }
     },
     {
-      "id": "REF_FORMAT", 
-      "description": "Transaction reference must not have invalid slash patterns",
+      "id": "C2",
+      "description": "In each repetitive sequence, either field 23 or field 25, but not both, must be present",
       "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
+        "none": [
+          {"var": "fields.#"},
+          {
+            "and": [
+              {"!!": {"var": "23"}},
+              {"!!": {"var": "25"}}
+            ]
+          }
         ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "!=": [{"var": "field_20.value"}, ""]
       }
     }
   ]

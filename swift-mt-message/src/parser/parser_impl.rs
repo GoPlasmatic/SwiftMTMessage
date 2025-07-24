@@ -533,18 +533,8 @@ impl SwiftParser {
                     let tag_end = field_start + 1 + tag_end;
                     let raw_field_tag = &content[field_start + 1..tag_end];
 
-                    // Debug: print raw field tag before normalization
-                    if raw_field_tag.contains('#') {
-                        eprintln!("DEBUG: Raw field tag before normalization: '{raw_field_tag}'");
-                    }
-
                     // Normalize field tag by removing option letters (A, F, K, etc.)
                     let field_tag = Self::normalize_field_tag(raw_field_tag);
-
-                    // Debug: print normalized field tag
-                    if raw_field_tag.contains('#') {
-                        eprintln!("DEBUG: Normalized field tag: '{field_tag}'");
-                    }
 
                     // Find the end of field value (next field marker or end of content)
                     let value_start = tag_end + 1;
@@ -614,15 +604,17 @@ impl SwiftParser {
 
         // For certain field numbers, preserve the option letter to avoid conflicts
         match numeric_part {
-            "11" | "13" | "21" | "23" | "26" | "28" | "32" | "33" | "50" | "52" | "53" | "54"
-            | "55" | "56" | "57" | "58" | "59" | "71" | "77" => {
+            "11" | "13" | "21" | "23" | "25" | "26" | "28" | "32" | "33" | "34" | "37" | "50" | "52" | "53"
+            | "54" | "55" | "56" | "57" | "58" | "59" | "60" | "62" | "71" | "77" => {
                 // Keep option letters for fields that have multiple variants or specific formats
                 // 11A (MT and Date - Option A), 11S (MT and Date - Option S)
                 // 13C (Time Indication)
                 // 23B (Bank Operation Code) vs 23E (Instruction Code)
+                // 25 (NoOption - Authorisation) vs 25A (Account) vs 25P (Account with BIC)
                 // 26T (Transaction Type Code)
                 // 32A (Value Date/Currency/Amount)
                 // 33B (Currency/Instructed Amount)
+                // 34F (Floor Limit)
                 // 50A/F/K (Ordering Customer)
                 // 59A/F (Beneficiary Customer)
                 // 52A (Ordering Institution)
@@ -631,6 +623,8 @@ impl SwiftParser {
                 // 55A (Third Reimbursement Institution)
                 // 56A (Intermediary Institution)
                 // 57A (Account With Institution)
+                // 60F (First Opening Balance) vs 60M (Intermediate Opening Balance)
+                // 62F (Final Closing Balance) vs 62M (Intermediate Closing Balance)
                 // 71A (Details of Charges) vs 71F (Sender's Charges) vs 71G (Receiver's Charges)
                 // 77B (Regulatory Reporting)
                 Cow::Borrowed(raw_tag)
@@ -738,7 +732,6 @@ where
         return parse_sequence_b_items::<T>(&parsed_sequences.sequence_b, tracker);
     }
 
-    // Default behavior for other message types
     // Get all fields sorted by position
     let mut all_fields: Vec<(String, String, usize)> = Vec::new();
     for (tag, values) in fields {
@@ -755,9 +748,16 @@ where
     }
     all_fields.sort_by_key(|(_, _, pos)| *pos);
 
-    // Determine the sequence start marker
-    // For most transaction sequences, this is field 21 (Transaction Reference)
-    let sequence_start_tag = "21";
+    // Determine the sequence start marker based on message type
+    let (primary_marker, secondary_marker) = if message_type.contains("MT920Sequence") {
+        ("12", None)
+    } else if message_type.contains("MT935RateChange") {
+        ("23", Some("25"))
+    } else if message_type.contains("MT940StatementLine") {
+        ("61", None)
+    } else {
+        ("21", None)
+    };
 
     let mut sequences = Vec::new();
     let mut current_sequence_fields: HashMap<String, Vec<(String, usize)>> = HashMap::new();
@@ -765,12 +765,14 @@ where
 
     for (tag, value, pos) in all_fields {
         // Check if this is the start of a new sequence
-        if tag == sequence_start_tag
+        let is_sequence_start = (tag == primary_marker
+            || secondary_marker.map_or(false, |m| tag == m))
             && !tag.ends_with("R")
             && !tag.ends_with("F")
             && !tag.ends_with("C")
-            && !tag.ends_with("D")
-        {
+            && !tag.ends_with("D");
+
+        if is_sequence_start {
             // If we were already in a sequence, parse the previous one
             if in_sequence && !current_sequence_fields.is_empty() {
                 if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
@@ -795,8 +797,14 @@ where
 
     // Parse the last sequence if there is one
     if in_sequence && !current_sequence_fields.is_empty() {
-        if let Ok(sequence_item) = T::from_fields(current_sequence_fields) {
-            sequences.push(sequence_item);
+        match T::from_fields(current_sequence_fields) {
+            Ok(sequence_item) => {
+                sequences.push(sequence_item);
+            }
+            Err(e) => {
+                #[cfg(debug_assertions)]
+                eprintln!("DEBUG: Failed to parse final sequence item: {e:?}");
+            }
         }
     }
 
@@ -858,8 +866,14 @@ where
 
     // Parse the last sequence if there is one
     if in_sequence && !current_sequence_fields.is_empty() {
-        if let Ok(sequence_item) = T::from_fields(current_sequence_fields) {
-            sequences.push(sequence_item);
+        match T::from_fields(current_sequence_fields) {
+            Ok(sequence_item) => {
+                sequences.push(sequence_item);
+            }
+            Err(e) => {
+                #[cfg(debug_assertions)]
+                eprintln!("DEBUG: Failed to parse final sequence item: {e:?}");
+            }
         }
     }
 

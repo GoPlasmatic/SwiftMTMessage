@@ -245,8 +245,10 @@ fn generate_sequence_field_parser(
                 let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
                 let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
 
-                if let Some((value, variant_tag, pos)) =
-                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice) {
+                // Try to find field with tracker first (normal parsing flow)
+                let field_result = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice);
+
+                if let Some((value, variant_tag, pos)) = field_result {
                     Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
                         .map_err(|e| {
                             let line_num = pos >> 16;
@@ -258,7 +260,46 @@ fn generate_sequence_field_parser(
                             }
                         })?)
                 } else {
-                    None
+                    // Fallback for sequence parsing where fields might have variant tags
+                    let mut found = None;
+
+                    // If we have valid variants, try each one
+                    if let Some(variants) = valid_variants_slice {
+                        for variant in variants {
+                            let variant_tag = format!("{}{}", base_tag, variant);
+
+                            if let Some(values) = #sequence_name.get(&variant_tag) {
+                                if let Some((value, pos)) = values.first() {
+                                    found = Some((value.clone(), Some(variant.to_string()), *pos));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // If no variants found, try the base tag directly
+                    if found.is_none() {
+                        if let Some(values) = #sequence_name.get(base_tag) {
+                            if let Some((value, pos)) = values.first() {
+                                found = Some((value.clone(), None, *pos));
+                            }
+                        }
+                    }
+
+                    if let Some((value, variant_tag, pos)) = found {
+                        Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                            .map_err(|e| {
+                                let line_num = pos >> 16;
+                                crate::errors::ParseError::FieldParsingFailed {
+                                    field_tag: #tag.to_string(),
+                                    field_type: stringify!(#inner_type).to_string(),
+                                    position: line_num,
+                                    original_error: e.to_string(),
+                                }
+                            })?)
+                    } else {
+                        None
+                    }
                 }
             };
         })
@@ -269,14 +310,45 @@ fn generate_sequence_field_parser(
                 let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
                 let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
 
-                let (value, variant_tag, pos) =
-                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
-                        .ok_or_else(|| crate::errors::ParseError::MissingRequiredField {
-                            field_tag: #tag.to_string(),
-                            field_name: stringify!(#field_name).to_string(),
-                            message_type: Self::message_type().to_string(),
-                            position_in_block4: None,
-                        })?;
+                // Try to find field with tracker first (normal parsing flow)
+                let field_result = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice);
+
+                let (value, variant_tag, pos) = if let Some(result) = field_result {
+                    result
+                } else {
+                    // Fallback for sequence parsing where fields might have variant tags
+                    let mut found = None;
+
+                    // If we have valid variants, try each one
+                    if let Some(variants) = valid_variants_slice {
+                        for variant in variants {
+                            let variant_tag = format!("{}{}", base_tag, variant);
+
+                            if let Some(values) = #sequence_name.get(&variant_tag) {
+                                if let Some((value, pos)) = values.first() {
+                                    found = Some((value.clone(), Some(variant.to_string()), *pos));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // If no variants found, try the base tag directly
+                    if found.is_none() {
+                        if let Some(values) = #sequence_name.get(base_tag) {
+                            if let Some((value, pos)) = values.first() {
+                                found = Some((value.clone(), None, *pos));
+                            }
+                        }
+                    }
+
+                    found.ok_or_else(|| crate::errors::ParseError::MissingRequiredField {
+                        field_tag: #tag.to_string(),
+                        field_name: stringify!(#field_name).to_string(),
+                        message_type: Self::message_type().to_string(),
+                        position_in_block4: None,
+                    })?
+                };
 
                 #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
                     .map_err(|e| {
@@ -357,8 +429,10 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                         let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
                         let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
 
-                        if let Some((value, variant_tag, pos)) =
-                            crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice) {
+                        // Try to find field with tracker first (normal parsing flow)
+                        let field_result = crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice);
+
+                        if let Some((value, variant_tag, pos)) = field_result {
                             Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
                                 .map_err(|e| {
                                     let line_num = pos >> 16;
@@ -370,7 +444,46 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                                     }
                                 })?)
                         } else {
-                            None
+                            // Fallback for sequence parsing where fields might have variant tags
+                            let mut found = None;
+
+                            // If we have valid variants, try each one
+                            if let Some(variants) = valid_variants_slice {
+                                for variant in variants {
+                                    let variant_tag = format!("{}{}", base_tag, variant);
+
+                                    if let Some(values) = fields.get(&variant_tag) {
+                                        if let Some((value, pos)) = values.first() {
+                                            found = Some((value.clone(), Some(variant.to_string()), *pos));
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // If no variants found, try the base tag directly
+                            if found.is_none() {
+                                if let Some(values) = fields.get(base_tag) {
+                                    if let Some((value, pos)) = values.first() {
+                                        found = Some((value.clone(), None, *pos));
+                                    }
+                                }
+                            }
+
+                            if let Some((value, variant_tag, pos)) = found {
+                                Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                                    .map_err(|e| {
+                                        let line_num = pos >> 16;
+                                        crate::errors::ParseError::FieldParsingFailed {
+                                            field_tag: #tag.to_string(),
+                                            field_type: stringify!(#inner_type).to_string(),
+                                            position: line_num,
+                                            original_error: e.to_string(),
+                                        }
+                                    })?)
+                            } else {
+                                None
+                            }
                         }
                     }
                 });
@@ -410,14 +523,45 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                     let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
                     let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
 
-                    let (value, variant_tag, pos) =
-                        crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
-                            .ok_or_else(|| crate::errors::ParseError::MissingRequiredField {
-                                field_tag: #tag.to_string(),
-                                field_name: stringify!(#field_name).to_string(),
-                                message_type: Self::message_type().to_string(),
-                                position_in_block4: None,
-                            })?;
+                    // Try to find field with tracker first (normal parsing flow)
+                    let field_result = crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice);
+
+                    let (value, variant_tag, pos) = if let Some(result) = field_result {
+                        result
+                    } else {
+                        // Fallback for sequence parsing where fields might have variant tags
+                        // This handles the case where we're parsing from pre-collected sequence fields
+                        let mut found = None;
+
+                        // If we have valid variants, try each one
+                        if let Some(variants) = valid_variants_slice {
+                            for variant in variants {
+                                let variant_tag = format!("{}{}", base_tag, variant);
+                                if let Some(values) = fields.get(&variant_tag) {
+                                    if let Some((value, pos)) = values.first() {
+                                        found = Some((value.clone(), Some(variant.to_string()), *pos));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // If no variants found, try the base tag directly
+                        if found.is_none() {
+                            if let Some(values) = fields.get(base_tag) {
+                                if let Some((value, pos)) = values.first() {
+                                    found = Some((value.clone(), None, *pos));
+                                }
+                            }
+                        }
+
+                        found.ok_or_else(|| crate::errors::ParseError::MissingRequiredField {
+                            field_tag: #tag.to_string(),
+                            field_name: stringify!(#field_name).to_string(),
+                            message_type: Self::message_type().to_string(),
+                            position_in_block4: None,
+                        })?
+                    };
 
                     #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
                         .map_err(|e| {
@@ -613,12 +757,17 @@ fn generate_to_ordered_fields_with_sequences_impl(
             "21", "23E", "21C", "21D", "21E", "32B", "33B", "50", "52", "56", "57", "59", "70",
             "72", "77B", "71A", "36",
         ],
+        "MT110" => vec!["21", "30", "32", "50", "52", "59"],
+        "MT210" => vec!["21", "32B", "50", "52", "56"],
+        "MT920" => vec!["12", "25", "34F"],
+        "MT935" => vec!["23", "25", "30", "37H"],
         _ => vec![],
     };
 
     // Sequence C fields that appear after all transactions
     let sequence_c_fields = match message_name.as_str() {
         "MT104" => vec!["32B", "19", "71F", "71G", "53"],
+        "MT935" => vec!["72"], // Field 72 appears after rate changes
         _ => vec![],
     };
 
@@ -995,22 +1144,25 @@ fn is_enum_field_type(field_type: &Type) -> bool {
                 && (
                     // Specific enum patterns
                     type_name.contains("Ordering") || 
-             type_name.contains("Creditor") || 
-             type_name.contains("Debtor") ||
-             type_name.contains("Beneficiary") ||
-             type_name.contains("Instructing") ||
-             type_name.contains("Party") ||
-             type_name.contains("SenderCorrespondent") ||
-             type_name.contains("ReceiverCorrespondent") ||
-             type_name.contains("Intermediary") ||
-             type_name.contains("AccountWithInstitution") ||
-             type_name.contains("DebtorBank") ||
-             type_name.ends_with("AFK") ||
-             type_name.ends_with("NCF") ||
-             type_name.ends_with("FGH") ||
-             // Simple field enum patterns like Field50, Field52, Field58, Field59, etc.
-             // These are just "Field" + number with no suffix
-             (type_name.len() <= 8 && type_name.chars().skip(5).all(|c| c.is_ascii_digit()))
+                    type_name.contains("Creditor") || 
+                    type_name.contains("Debtor") ||
+                    type_name.contains("Beneficiary") ||
+                    type_name.contains("Instructing") ||
+                    type_name.contains("Party") ||
+                    type_name.contains("SenderCorrespondent") ||
+                    type_name.contains("ReceiverCorrespondent") ||
+                    type_name.contains("Intermediary") ||
+                    type_name.contains("AccountWithInstitution") ||
+                    type_name.contains("DebtorBank") ||
+                    type_name.ends_with("AFK") ||
+                    type_name.ends_with("NCF") ||
+                    type_name.ends_with("FGH") ||
+                    // Explicit list of known enum fields (have A/F/K/D/etc variants)
+                    // This replaces the problematic digit-based check
+                    matches!(type_name.as_str(),
+                        "Field50" | "Field52" | "Field53" | "Field54" | 
+                        "Field55" | "Field56" | "Field57" | "Field58" | "Field59"
+                    )
                 )
         } else {
             false

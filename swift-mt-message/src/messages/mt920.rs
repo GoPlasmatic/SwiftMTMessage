@@ -126,89 +126,113 @@ pub struct MT920Sequence {
     pub field_34f_credit: Option<Field34F>,
 }
 
-/// Enhanced validation rules for MT920
+/// Validation rules for MT920 - Request Message
 const MT920_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "If message requested is 942, Field 34F for debit must be present",
+      "description": "If field 12 = 942, at least one occurrence of field 34F (Debit or Debit and Credit Floor Limit Indicator) must be present",
       "condition": {
-        "if": [
-          {"==": [{"var": "field_12.value"}, "942"]},
-          {"var": "field_34f_debit.is_some"},
-          true
+        "all": [
+          {"var": "fields.#"},
+          {
+            "if": [
+              {"==": [{"var": "12.value"}, "942"]},
+              {
+                "or": [
+                  {"!!": {"var": "34F"}},
+                  {"!!": {"var": "34F"}}
+                ]
+              },
+              true
+            ]
+          }
         ]
       }
     },
     {
       "id": "C2",
-      "description": "When both 34F fields present: first must be 'D', second must be 'C'",
+      "description": "When both 34F fields are present: subfield 2 of the first must be D, subfield 2 of the second must be C. If only one 34F is present, subfield 2 must be omitted",
       "condition": {
-        "if": [
+        "all": [
+          {"var": "fields.#"},
           {
-            "and": [
-              {"var": "field_34f_debit.is_some"},
-              {"var": "field_34f_credit.is_some"}
+            "if": [
+              {
+                "and": [
+                  {"!!": {"var": "34F"}},
+                  {"!!": {"var": "34F"}}
+                ]
+              },
+              {
+                "and": [
+                  {"==": [{"var": "34F.sign"}, "D"]},
+                  {"==": [{"var": "34F.sign"}, "C"]}
+                ]
+              },
+              {
+                "if": [
+                  {
+                    "or": [
+                      {
+                        "and": [
+                          {"!!": {"var": "34F"}},
+                          {"!": {"!!": {"var": "34F"}}}
+                        ]
+                      },
+                      {
+                        "and": [
+                          {"!": {"!!": {"var": "34F"}}},
+                          {"!!": {"var": "34F"}}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "or": [
+                      {
+                        "and": [
+                          {"!!": {"var": "34F"}},
+                          {"!": {"!!": {"var": "34F.sign"}}}
+                        ]
+                      },
+                      {
+                        "and": [
+                          {"!!": {"var": "34F"}},
+                          {"!": {"!!": {"var": "34F.sign"}}}
+                        ]
+                      }
+                    ]
+                  },
+                  true
+                ]
+              }
             ]
-          },
-          {
-            "and": [
-              {"==": [{"var": "field_34f_debit.sign"}, "D"]},
-              {"==": [{"var": "field_34f_credit.sign"}, "C"]}
-            ]
-          },
-          true
+          }
         ]
       }
     },
     {
       "id": "C3",
-      "description": "Currency code must be same across all 34F entries",
+      "description": "Currency code must be the same in each occurrence of field 34F within a sequence",
       "condition": {
-        "if": [
+        "all": [
+          {"var": "fields.#"},
           {
-            "and": [
-              {"var": "field_34f_debit.is_some"},
-              {"var": "field_34f_credit.is_some"}
+            "if": [
+              {
+                "and": [
+                  {"!!": {"var": "34F"}},
+                  {"!!": {"var": "34F"}}
+                ]
+              },
+              {"==": [
+                {"var": "34F.currency"},
+                {"var": "34F.currency"}
+              ]},
+              true
             ]
-          },
-          {"==": [
-            {"var": "field_34f_debit.currency"},
-            {"var": "field_34f_credit.currency"}
-          ]},
-          true
-        ]
-      }
-    },
-    {
-      "id": "REF_FORMAT",
-      "description": "Transaction reference must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "MESSAGE_TYPE_VALID",
-      "description": "Message requested must be valid SWIFT MT type",
-      "condition": {
-        "in": [
-          {"var": "field_12.value"},
-          ["940", "941", "942", "950"]
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_12.value"}, ""]},
-          {"!=": [{"var": "field_25.value"}, ""]}
+          }
         ]
       }
     }

@@ -134,71 +134,10 @@ pub struct MT296 {
 const MT296_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
-      "id": "CONDITIONAL_C1",
-      "description": "Field 79 or copy of original message fields may be present, but not both",
+      "id": "C1",
+      "description": "Only one of the following may be present: Field 79, or a copy of mandatory fields of the original message",
       "condition": {
-        "!": {
-          "and": [
-            {"!!": {"var": "field_79"}},
-            {
-              "or": [
-                {"!!": {"var": "field_32a"}},
-                {"!!": {"var": "field_58a"}},
-                {"!!": {"var": "field_52a"}},
-                {"!!": {"var": "field_53a"}},
-                {"!!": {"var": "field_56a"}},
-                {"!!": {"var": "field_57a"}}
-              ]
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": "REFERENCE_FORMAT",
-      "description": "Reference fields must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}},
-          {"!": {"startsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_21.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "FIELD_11A_FORMAT",
-      "description": "Field 11a must have proper format when present",
-      "condition": {
-        "if": [
-          {"!!": {"var": "field_11a"}},
-          {">": [{"strlen": {"var": "field_11a.reference"}}, 8]},
-          true
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_21.value"}, ""]},
-          {"!!": {"var": "field_76"}},
-          {">": [{"count": {"var": "field_76.answer_lines"}}, 0]}
-        ]
-      }
-    },
-    {
-      "id": "ANSWER_CODE_VALIDATION",
-      "description": "Field 76 must contain valid answer codes",
-      "condition": {
-        "all": [
-          {"var": "field_76.answer_lines"},
-          {"!=": [{"var": ""}, ""]}
-        ]
+        "!": {"!!": {"var": "fields.79"}}
       }
     }
   ]

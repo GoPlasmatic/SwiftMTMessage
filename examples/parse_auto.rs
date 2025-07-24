@@ -7,40 +7,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let raw_swift_message = if let Some(filename) = env::args().nth(1) {
         // Read from file
         fs::read_to_string(&filename)
-            .map_err(|e| format!("Failed to read file '{}': {}", filename, e))?
+            .map_err(|e| format!("Failed to read file '{filename}': {e}"))?
     } else {
-        // Use default MT104 sample message (23E=CHQB in seq A, so NO 23E in seq B, seq C mandatory)
-        r#"{1:F01SENDERBICXXXX0000000000}
-{2:I104RECEIVERBICXXXN}
-{3:{113:CBPR}{119:RFDD}{121:bca1d755-27f0-4986-96df-e0e4f7f53c10}}
-{4:
-:20:COLLECTREF002
-:23E:RFDD
-:21R:CUST/REF/002
-:30:250722
-:50K:/9999999999
-DIRECT DEBIT ORIGINATOR
-999 CORPORATE BLVD
-CHICAGO, IL 60601
-:21:TRANS003
-:23E:RFDD
-:32B:USD3000,00
-:59:/2000000004
-ALICE WILLIAMS
-789 PINE ROAD
-SEATTLE, WA 98101
-:70:SUBSCRIPTION FEE JULY
-:21:TRANS004
-:23E:RFDD
-:32B:USD2000,00
-:59:/2000000005
-CHARLIE BROWN
-321 MAPLE AVE
-BOSTON, MA 02101
-:70:MEMBERSHIP FEE Q3
--}
-{5:{CHK:ABCD1234567890}}"#
-            .to_string()
+        // Use default MT110 sample message
+        r#"{1:F01BANKUS33AXXX0000000000}{2:I210BANKDEFAXXXXN}{4:
+:20:REF210TEST001
+:25:USD12345678901234
+:30:241215
+:21:RELREF001
+:32B:USD1000000,00
+:50:ORDERING CUSTOMER NAME
+NEW YORK NY 10001
+:56A:DEUTDEFFXXX
+:21:RELREF002
+:32B:EUR2000000,00
+:52A:BANKDE55XXX
+:56A:DEUTDEFFXXX
+:21:RELREF003
+:32B:GBP3000000,00
+:50K:/GB1234567890
+ANOTHER CUSTOMER
+LONDON
+-}"#
+        .to_string()
     };
 
     println!("🔍 SWIFT Message Auto-Parser with JSON Conversion");
@@ -119,37 +108,7 @@ fn validate_message(parsed_message: &ParsedSwiftMessage) -> Result<(), Box<dyn s
     println!("\n✨ Validating SWIFT Message:");
     println!("{}", "-".repeat(50));
 
-    // Perform validation based on message type
-    let validation_errors = match parsed_message {
-        ParsedSwiftMessage::MT101(mt101) => {
-            println!("🔍 Validating MT101 message...");
-            mt101.validate_business_rules()
-        }
-        ParsedSwiftMessage::MT103(mt103) => {
-            println!("🔍 Validating MT103 message...");
-            mt103.validate_business_rules()
-        }
-        ParsedSwiftMessage::MT104(mt104) => {
-            println!("🔍 Validating MT104 message...");
-            mt104.validate_business_rules()
-        }
-        ParsedSwiftMessage::MT202(mt202) => {
-            println!("🔍 Validating MT202 message...");
-            mt202.validate_business_rules()
-        }
-        ParsedSwiftMessage::MT205(mt205) => {
-            println!("🔍 Validating MT205 message...");
-            mt205.validate_business_rules()
-        }
-        ParsedSwiftMessage::MT900(mt900) => {
-            println!("🔍 Validating MT900 message...");
-            mt900.validate_business_rules()
-        }
-        _ => {
-            println!("❌ Unsupported message type for validation.");
-            return Ok(());
-        }
-    };
+    let validation_errors = parsed_message.validate();
 
     // Display validation results
     if validation_errors.errors.is_empty() {

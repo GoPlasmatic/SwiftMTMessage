@@ -140,21 +140,27 @@ const MT110_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "Maximum 10 cheques per message",
+      "description": "The repetitive sequence (Cheque details) must not occur more than 10 times",
       "condition": {
-        "<=": [{"length": {"var": "cheques"}}, 10]
+        "<=": [{"length": {"var": "fields.#"}}, 10]
       }
     },
     {
       "id": "C2",
-      "description": "All cheques must have the same currency",
+      "description": "The currency code in field 32a must be the same in all occurrences of that field",
       "condition": {
         "if": [
-          {">": [{"length": {"var": "cheques"}}, 0]},
+          {">=": [{"length": {"var": "fields.#"}}, 2]},
           {
-            "allEqual": {
-              "map": ["cheques", "field_32a.currency"]
-            }
+            "all": [
+              {"var": "fields.#"},
+              {
+                "==": [
+                  {"var": "32.currency"},
+                  {"var": "fields.#.0.32.currency"}
+                ]
+              }
+            ]
           },
           true
         ]
@@ -164,7 +170,7 @@ const MT110_VALIDATION_RULES: &str = r#"{
       "id": "CHQ_MIN",
       "description": "At least one cheque required",
       "condition": {
-        ">=": [{"length": {"var": "cheques"}}, 1]
+        ">=": [{"length": {"var": "fields.#"}}, 1]
       }
     }
   ]

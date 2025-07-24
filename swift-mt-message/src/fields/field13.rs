@@ -179,7 +179,7 @@ pub struct Field13D {
 
     /// UTC offset amount
     ///
-    /// Format: 4!n - Typically HHMM format for hours and minutes
+    /// Format: 4!n - HHMM format for hours and minutes
     /// Specifies the numerical offset from UTC
     #[component("4!n")]
     pub offset_seconds: String,

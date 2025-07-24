@@ -6,6 +6,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get the raw message either from file or use default
     let raw_swift_message = if let Some(filename) = env::args().nth(1) {
         // Read from file
+        println!("📁 Reading file: {}", filename);
         fs::read_to_string(&filename)
             .map_err(|e| format!("Failed to read file '{filename}': {e}"))?
     } else {
@@ -82,6 +83,33 @@ LONDON
                     println!(
                         "💡 Missing required field: {field_tag} ({field_name}) in {message_type}"
                     );
+                }
+                swift_mt_message::ParseError::FieldParsingFailed {
+                    field_tag,
+                    field_type,
+                    position,
+                    original_error,
+                } => {
+                    println!("💡 Field parsing failed:");
+                    println!("   Field tag: {}", field_tag);
+                    println!("   Field type: {}", field_type);
+                    println!("   Position: {}", position);
+                    println!("   Error: {}", original_error);
+                    
+                    // Extract field content for debugging
+                    if let Some(field_start) = raw_swift_message.find(&format!(":{}", field_tag)) {
+                        let field_content = &raw_swift_message[field_start..];
+                        // Find next field or end of block
+                        let end_pos = field_content[1..].find(':').unwrap_or(field_content.len() - 1) + 1;
+                        let field_text = &field_content[..end_pos];
+                        println!("\n📋 Raw field content:");
+                        println!("{}", field_text);
+                        
+                        // Check variant
+                        if field_text.len() > 3 && field_text.chars().nth(3).unwrap_or(' ').is_ascii_alphabetic() {
+                            println!("   Detected variant: {}", field_text.chars().nth(3).unwrap());
+                        }
+                    }
                 }
                 _ => {
                     println!("💡 Check the message format and try again.");

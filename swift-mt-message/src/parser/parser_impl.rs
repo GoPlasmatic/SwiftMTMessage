@@ -753,7 +753,7 @@ where
         ("12", None)
     } else if message_type.contains("MT935RateChange") {
         ("23", Some("25"))
-    } else if message_type.contains("MT940StatementLine") {
+    } else if message_type.contains("MT940StatementLine") || message_type.contains("MT942StatementLine") {
         ("61", None)
     } else {
         ("21", None)

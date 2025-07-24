@@ -761,6 +761,7 @@ fn generate_to_ordered_fields_with_sequences_impl(
         "MT210" => vec!["21", "32B", "50", "52", "56"],
         "MT920" => vec!["12", "25", "34F"],
         "MT935" => vec!["23", "25", "30", "37H"],
+        "MT942" => vec!["61", "86"],
         _ => vec![],
     };
 

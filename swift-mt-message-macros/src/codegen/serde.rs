@@ -17,13 +17,13 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
             for field in &mut fields.named {
                 // Look for #[field("tag")] attributes
                 if let Some(field_tag) = extract_field_tag(&field.attrs) {
-                    // Skip serde rename for sequence fields marked with "#"
+                    // Handle sequence fields marked with "#"
                     if field_tag == "#" {
-                        // For sequence fields, just add skip_serializing_if for Vec types
+                        // For sequence fields, add rename to "#" and skip_serializing_if for Vec types
                         let type_category = categorize_type(&field.ty);
                         if matches!(type_category, TypeCategory::Vec | TypeCategory::VecString) {
                             let serde_attr = syn::parse_quote! {
-                                #[serde(skip_serializing_if = "Vec::is_empty")]
+                                #[serde(rename = "#", skip_serializing_if = "Vec::is_empty", default)]
                             };
                             field.attrs.push(serde_attr);
                         }

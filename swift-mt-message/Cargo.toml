@@ -51,21 +51,6 @@ name = "benchmark"
 path = "../examples/benchmark.rs"
 
 [[example]]
-name = "debug_mt935"
-path = "../examples/debug_mt935.rs"
+name = "test_mt942_sequences"
+path = "../examples/test_mt942_sequences.rs"
 
-[[example]]
-name = "test_field23"
-path = "../examples/test_field23.rs"
-
-[[example]]
-name = "test_mt935_roundtrip"
-path = "../examples/test_mt935_roundtrip.rs"
-
-[[example]]
-name = "test_mt940_debug"
-path = "../examples/test_mt940_debug.rs"
-
-[[example]]
-name = "debug_mt941_parsing"
-path = "../examples/debug_mt941_parsing.rs"

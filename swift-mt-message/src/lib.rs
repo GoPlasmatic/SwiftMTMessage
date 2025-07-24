@@ -139,6 +139,7 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
         let mut ordered_fields = Vec::new();
 
         // Create ascending field order by sorting field tags numerically
+        // Use stable sort and include the full tag as secondary sort key for deterministic ordering
         let mut field_tags: Vec<(&String, u32)> = field_map
             .keys()
             .map(|tag| {
@@ -149,7 +150,10 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
                 (tag, num)
             })
             .collect();
-        field_tags.sort_unstable_by_key(|(_, num)| *num);
+        // Sort by numeric value first, then by full tag string for stable ordering
+        field_tags.sort_by(|(tag_a, num_a), (tag_b, num_b)| {
+            num_a.cmp(num_b).then_with(|| tag_a.cmp(tag_b))
+        });
 
         // Output fields in ascending numerical order
         for (field_tag, _) in field_tags {
@@ -1041,7 +1045,10 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                 block4.push_str(&format!("\n{field_value}"));
             } else {
                 // Value doesn't have field tag prefix, add it
-                block4.push_str(&format!("\n:{field_tag}:{field_value}"));
+                block4.push_str(&format!(
+                    "\n:{}:{field_value}",
+                    extract_base_tag(&field_tag)
+                ));
             }
         }
 

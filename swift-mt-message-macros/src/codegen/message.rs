@@ -631,8 +631,8 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                             .map(|v| v.to_swift_string())
                             .collect();
                         if !serialized_values.is_empty() {
-                            let mt_tag = crate::get_field_tag_for_mt(#tag);
-                            fields.insert(mt_tag, serialized_values);
+                            // Keep the full tag to avoid overwriting
+                            fields.insert(#tag.to_string(), serialized_values);
                         }
                     }
                 });
@@ -659,8 +659,8 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                 } else {
                     field_serializers.push(quote! {
                         if let Some(ref value) = self.#field_name {
-                            let mt_tag = crate::get_field_tag_for_mt(#tag);
-                            fields.insert(mt_tag, vec![value.to_swift_string()]);
+                            // Keep the full tag (including #1, #2 suffixes) to avoid overwriting
+                            fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
                         }
                     });
                 }
@@ -671,8 +671,8 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                 let serialized_values: Vec<String> = self.#field_name.iter()
                     .map(|v| v.to_swift_string())
                     .collect();
-                let mt_tag = crate::get_field_tag_for_mt(#tag);
-                fields.insert(mt_tag, serialized_values);
+                // Keep the full tag to avoid overwriting
+                fields.insert(#tag.to_string(), serialized_values);
             });
         } else {
             // Required T - check if it's an enum field that needs variant handling
@@ -694,8 +694,8 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                     });
                 } else {
                     field_serializers.push(quote! {
-                        let mt_tag = crate::get_field_tag_for_mt(#tag);
-                        fields.insert(mt_tag, vec![self.#field_name.to_swift_string()]);
+                        // Keep the full tag to avoid overwriting
+                        fields.insert(#tag.to_string(), vec![self.#field_name.to_swift_string()]);
                     });
                 }
             }

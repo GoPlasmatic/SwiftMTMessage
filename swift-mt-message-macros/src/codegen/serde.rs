@@ -22,8 +22,9 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
                         // For sequence fields, add rename to "#" and skip_serializing_if for Vec types
                         let type_category = categorize_type(&field.ty);
                         if matches!(type_category, TypeCategory::Vec | TypeCategory::VecString) {
+                            let rename_value = "#";
                             let serde_attr = syn::parse_quote! {
-                                #[serde(rename = "#", skip_serializing_if = "Vec::is_empty", default)]
+                                #[serde(rename = #rename_value, skip_serializing_if = "Vec::is_empty", default)]
                             };
                             field.attrs.push(serde_attr);
                         }

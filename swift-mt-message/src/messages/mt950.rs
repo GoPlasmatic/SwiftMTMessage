@@ -113,7 +113,7 @@ pub struct MT950 {
     pub field_60: Field60,
 
     #[field("61")]
-    pub field_61: Vec<Field61>,
+    pub field_61: Option<Vec<Field61>>,
 
     #[field("62")]
     pub field_62: Field62,

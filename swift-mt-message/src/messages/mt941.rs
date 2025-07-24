@@ -111,7 +111,7 @@ pub struct MT941 {
     pub field_64: Option<Field64>,
 
     #[field("65")]
-    pub field_65: Vec<Field65>,
+    pub field_65: Option<Vec<Field65>>,
 
     #[field("86")]
     pub field_86: Option<Field86>,
@@ -163,20 +163,21 @@ const MT941_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {">=": [{"length": {"var": "fields.65"}}, 1]},
               {
-                "reduce": [
+                "and": [
+                  {"!!": {"var": "fields.65"}},
+                  {">=": [{"length": {"var": "fields.65"}}, 1]}
+                ]
+              },
+              {
+                "all": [
                   {"var": "fields.65"},
                   {
-                    "and": [
-                      {"var": "accumulator"},
-                      {"==": [
-                        {"substr": [{"var": "fields.60F.currency"}, 0, 2]},
-                        {"substr": [{"var": "current.currency"}, 0, 2]}
-                      ]}
+                    "==": [
+                      {"substr": [{"val": [[-3], "fields", "60F", "currency"]}, 0, 2]},
+                      {"substr": [{"var": "currency"}, 0, 2]}
                     ]
-                  },
-                  true
+                  }
                 ]
               },
               true

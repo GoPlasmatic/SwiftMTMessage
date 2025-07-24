@@ -141,7 +141,7 @@ pub struct MT940 {
     pub field_64: Option<Field64>,
 
     #[field("65")]
-    pub field_65: Vec<Field65>,
+    pub field_65: Option<Vec<Field65>>,
 
     #[field("86")]
     pub field_86: Option<Field86>,
@@ -165,8 +165,8 @@ const MT940_VALIDATION_RULES: &str = r#"{
       "description": "The repetitive sequence starting with field 61 must appear at least once and no more than 500 times",
       "condition": {
         "and": [
-          {">=": [{"length": {"var": "fields.statement_lines"}}, 1]},
-          {"<=": [{"length": {"var": "fields.statement_lines"}}, 500]}
+          {">=": [{"length": {"var": "fields.#"}}, 1]},
+          {"<=": [{"length": {"var": "fields.#"}}, 500]}
         ]
       }
     },

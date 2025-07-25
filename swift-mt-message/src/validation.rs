@@ -46,54 +46,8 @@
 //! Currency and country code lookups use HashSet for O(1) validation time.
 
 use crate::errors::{SwiftValidationError, SwiftValidationResult};
+use crate::shared_validation::{VALID_COUNTRY_CODES, VALID_CURRENCIES};
 use crate::swift_error_codes::{currencies, t_series};
-use once_cell::sync::Lazy;
-use std::collections::HashSet;
-
-/// Valid ISO 4217 currency codes (major currencies including commodity currencies)
-static VALID_CURRENCIES: Lazy<HashSet<&'static str>> = Lazy::new(|| {
-    [
-        "USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "NZD", "SEK", "NOK", "DKK", "PLN", "CZK",
-        "HUF", "RUB", "CNY", "HKD", "SGD", "KRW", "THB", "INR", "MYR", "PHP", "IDR", "VND", "BRL",
-        "MXN", "ARS", "CLP", "COP", "PEN", "UYU", "ZAR", "EGP", "NGN", "GHS", "KES", "TZS", "UGX",
-        "ZMW", "BWP", "MUR", "SCR", "SZL", "LSL", "NAD", "AOA", "XOF", "XAF", "MAD", "TND", "DZD",
-        "LYD", "ILS", "JOD", "LBP", "SYP", "IQD", "IRR", "SAR", "AED", "QAR", "BHD", "KWD", "OMR",
-        "YER", "AFN", "PKR", "LKR", "BDT", "BTN", "NPR", "MMK", "LAK", "KHR", "MNT", "KZT", "UZS",
-        "KGS", "TJS", "TMT", "AZN", "GEL", "AMD", "BGN", "RON", "HRK", "RSD", "BAM", "MKD", "ALL",
-        "MDL", "UAH", "BYN", "LTL", "LVL", "EEK", "ISK", "TRY",
-        // Commodity currencies (for validation purposes)
-        "XAU", "XAG", "XPD", "XPT",
-    ]
-    .iter()
-    .copied()
-    .collect()
-});
-
-/// Valid ISO 3166-1 alpha-2 country codes (subset for BIC validation)
-static VALID_COUNTRY_CODES: Lazy<HashSet<&'static str>> = Lazy::new(|| {
-    [
-        "AD", "AE", "AF", "AG", "AI", "AL", "AM", "AO", "AQ", "AR", "AS", "AT", "AU", "AW", "AX",
-        "AZ", "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ",
-        "BR", "BS", "BT", "BV", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CG", "CH", "CI", "CK",
-        "CL", "CM", "CN", "CO", "CR", "CU", "CV", "CW", "CX", "CY", "CZ", "DE", "DJ", "DK", "DM",
-        "DO", "DZ", "EC", "EE", "EG", "EH", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO", "FR",
-        "GA", "GB", "GD", "GE", "GF", "GG", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS",
-        "GT", "GU", "GW", "GY", "HK", "HM", "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IM", "IN",
-        "IO", "IQ", "IR", "IS", "IT", "JE", "JM", "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN",
-        "KP", "KR", "KW", "KY", "KZ", "LA", "LB", "LC", "LI", "LK", "LR", "LS", "LT", "LU", "LV",
-        "LY", "MA", "MC", "MD", "ME", "MF", "MG", "MH", "MK", "ML", "MM", "MN", "MO", "MP", "MQ",
-        "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA", "NC", "NE", "NF", "NG", "NI",
-        "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PA", "PE", "PF", "PG", "PH", "PK", "PL", "PM",
-        "PN", "PR", "PS", "PT", "PW", "PY", "QA", "RE", "RO", "RS", "RU", "RW", "SA", "SB", "SC",
-        "SD", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SO", "SR", "SS", "ST", "SV",
-        "SX", "SY", "SZ", "TC", "TD", "TF", "TG", "TH", "TJ", "TK", "TL", "TM", "TN", "TO", "TR",
-        "TT", "TV", "TW", "TZ", "UA", "UG", "UM", "US", "UY", "UZ", "VA", "VC", "VE", "VG", "VI",
-        "VN", "VU", "WF", "WS", "YE", "YT", "ZA", "ZM", "ZW",
-    ]
-    .iter()
-    .copied()
-    .collect()
-});
 
 /// Validate a BIC (Bank Identifier Code) according to SWIFT standards
 ///
@@ -105,46 +59,7 @@ static VALID_COUNTRY_CODES: Lazy<HashSet<&'static str>> = Lazy::new(|| {
 ///
 /// Length: 8 characters (no branch) or 11 characters (with branch)
 pub fn is_valid_bic(bic: &str) -> bool {
-    if bic.len() != 8 && bic.len() != 11 {
-        return false;
-    }
-
-    // Institution Code: 4 letters
-    let institution_code = &bic[0..4];
-    if !institution_code
-        .chars()
-        .all(|c| c.is_alphabetic() && c.is_uppercase())
-    {
-        return false;
-    }
-
-    // Country Code: 2 letters (must be valid ISO 3166-1 alpha-2)
-    let country_code = &bic[4..6];
-    if !VALID_COUNTRY_CODES.contains(country_code) {
-        return false;
-    }
-
-    // Location Code: 2 alphanumeric characters
-    let location_code = &bic[6..8];
-    if !location_code
-        .chars()
-        .all(|c| c.is_alphanumeric() && c.is_uppercase())
-    {
-        return false;
-    }
-
-    // Branch Code: 3 alphanumeric characters (if present)
-    if bic.len() == 11 {
-        let branch_code = &bic[8..11];
-        if !branch_code
-            .chars()
-            .all(|c| c.is_alphanumeric() && c.is_uppercase())
-        {
-            return false;
-        }
-    }
-
-    true
+    crate::shared_validation::is_valid_bic_structure(bic)
 }
 
 /// Validate a currency code according to ISO 4217 standards
@@ -161,7 +76,7 @@ pub fn is_valid_currency(currency: &str) -> bool {
         return false;
     }
 
-    VALID_CURRENCIES.contains(currency)
+    crate::shared_validation::is_valid_currency(currency)
 }
 
 /// Validate an account number according to SWIFT standards

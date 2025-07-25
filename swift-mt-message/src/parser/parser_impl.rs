@@ -42,7 +42,6 @@
 //! # }
 //! ```
 
-use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 
 use crate::errors::{ParseError, Result};
@@ -504,142 +503,8 @@ impl SwiftParser {
 
     /// Parse block 4 fields into a field map with enhanced position tracking
     fn parse_block4_fields(block4: &str) -> FieldParseResult {
-        // Pre-allocate HashMap with estimated capacity based on typical field count
-        // Most messages have between 10-60 fields
-        let estimated_fields = block4.matches("\n:").count().max(10);
-        let mut field_map: HashMap<String, Vec<(String, usize)>> =
-            HashMap::with_capacity(estimated_fields);
-
-        // Remove leading/trailing whitespace and newlines
-        let content = block4.trim();
-
-        // Split by field markers (:XX:)
-        let mut current_pos = 0;
-        let mut field_position = 0; // Track sequential position for consumption ordering
-        let mut line_number = 1;
-
-        while current_pos < content.len() {
-            // Track line numbers for better error reporting
-            if current_pos > 0 && content.chars().nth(current_pos - 1) == Some('\n') {
-                line_number += 1;
-            }
-
-            // Find next field marker
-            if let Some(field_start) = content[current_pos..].find(':') {
-                let field_start = current_pos + field_start;
-
-                // Extract field tag (characters after : until next :)
-                if let Some(tag_end) = content[field_start + 1..].find(':') {
-                    let tag_end = field_start + 1 + tag_end;
-                    let raw_field_tag = &content[field_start + 1..tag_end];
-
-                    // Normalize field tag by removing option letters (A, F, K, etc.)
-                    let field_tag = Self::normalize_field_tag(raw_field_tag);
-
-                    // Find the end of field value (next field marker or end of content)
-                    let value_start = tag_end + 1;
-                    let value_end = if let Some(next_field) = content[value_start..].find("\n:") {
-                        value_start + next_field
-                    } else {
-                        content.len()
-                    };
-
-                    // Avoid unnecessary string allocation - trim inline during push
-                    let field_value_slice = &content[value_start..value_end];
-                    let trimmed_value = field_value_slice.trim();
-
-                    // Store field value with enhanced position info (line number encoded with field position)
-                    // High 16 bits: line number, Low 16 bits: field position
-                    let position_info = (line_number << 16) | (field_position & 0xFFFF);
-
-                    // Add to existing Vec or create new Vec for this field tag
-                    field_map
-                        .entry(field_tag.into_owned())
-                        .or_default()
-                        .push((trimmed_value.to_string(), position_info));
-
-                    field_position += 1; // Increment position for next field
-                    current_pos = value_end;
-                } else {
-                    // Last field or malformed - provide detailed error
-                    return Err(ParseError::InvalidBlockStructure {
-                        block: "4".to_string(),
-                        message: format!(
-                            "Malformed field tag at line {line_number}, position {current_pos}"
-                        ),
-                    });
-                }
-            } else {
-                break;
-            }
-        }
-
-        Ok(field_map)
-    }
-
-    /// Normalize field tag by removing option letters (A, F, K, etc.)
-    /// Example: "50K" -> "50", "59A" -> "59", "20" -> "20"
-    /// But preserve option letters for fields that have multiple variants like 23B/23E, 71A/71F/71G
-    /// Also preserve numbered field tags like "50#1", "50#2"
-    fn normalize_field_tag(raw_tag: &str) -> Cow<'_, str> {
-        // Special handling for numbered field tags (e.g., "50#1", "50#2")
-        if raw_tag.contains('#') {
-            // For numbered fields, we need to keep the full tag including the # and number
-            // This is used in MT101 and other messages to distinguish multiple occurrences
-            return Cow::Borrowed(raw_tag);
-        }
-
-        // Find where the numeric part ends
-        let numeric_end = raw_tag
-            .find(|c: char| !c.is_ascii_digit())
-            .unwrap_or(raw_tag.len());
-
-        // If no suffix, return the tag as-is
-        if numeric_end == raw_tag.len() {
-            return Cow::Borrowed(raw_tag);
-        }
-
-        let numeric_part = &raw_tag[..numeric_end];
-        let suffix = &raw_tag[numeric_end..];
-
-        // For certain field numbers, preserve the option letter to avoid conflicts
-        match numeric_part {
-            "11" | "13" | "21" | "23" | "25" | "26" | "28" | "32" | "33" | "34" | "37" | "50"
-            | "52" | "53" | "54" | "55" | "56" | "57" | "58" | "59" | "60" | "62" | "71" | "77" => {
-                // Keep option letters for fields that have multiple variants or specific formats
-                // 11A (MT and Date - Option A), 11S (MT and Date - Option S)
-                // 13C (Time Indication)
-                // 23B (Bank Operation Code) vs 23E (Instruction Code)
-                // 25 (NoOption - Authorisation) vs 25A (Account) vs 25P (Account with BIC)
-                // 26T (Transaction Type Code)
-                // 32A (Value Date/Currency/Amount)
-                // 33B (Currency/Instructed Amount)
-                // 34F (Floor Limit)
-                // 50A/F/K (Ordering Customer)
-                // 59A/F (Beneficiary Customer)
-                // 52A (Ordering Institution)
-                // 53A (Sender's Correspondent)
-                // 54A (Receiver's Correspondent)
-                // 55A (Third Reimbursement Institution)
-                // 56A (Intermediary Institution)
-                // 57A (Account With Institution)
-                // 60F (First Opening Balance) vs 60M (Intermediate Opening Balance)
-                // 62F (Final Closing Balance) vs 62M (Intermediate Closing Balance)
-                // 71A (Details of Charges) vs 71F (Sender's Charges) vs 71G (Receiver's Charges)
-                // 77B (Regulatory Reporting)
-                Cow::Borrowed(raw_tag)
-            }
-            _ => {
-                // For other fields, check if suffix is just uppercase letters
-                if suffix.chars().all(|c| c.is_ascii_uppercase()) {
-                    // It's an option letter, return just the numeric part
-                    Cow::Owned(numeric_part.to_string())
-                } else {
-                    // Not a simple option letter, keep the full tag
-                    Cow::Borrowed(raw_tag)
-                }
-            }
-        }
+        // Use the generated parser function from the generated module
+        crate::parser::parse_block4_fields(block4)
     }
 
     /// Find the matching closing brace for a block that starts with an opening brace

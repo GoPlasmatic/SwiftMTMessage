@@ -1,7 +1,11 @@
 //! SWIFT MT Message Parser modules
 
+mod generated;
 mod parser_impl;
 pub mod sequence_parser;
+
+// Re-export generated parser functions
+pub use generated::{extract_base_tag, normalize_field_tag, parse_block4_fields};
 
 // Re-export main parser types
 pub use parser_impl::{

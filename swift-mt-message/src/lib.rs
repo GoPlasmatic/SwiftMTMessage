@@ -56,6 +56,7 @@ pub mod messages;
 pub use messages::*;
 pub mod parser;
 pub mod sample;
+pub mod shared_validation;
 pub mod swift_error_codes;
 pub mod validation;
 
@@ -66,7 +67,7 @@ pub use errors::{
     ValidationError,
 };
 pub use headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
-pub use parser::SwiftParser;
+pub use parser::{extract_base_tag, SwiftParser};
 pub use swift_error_codes as swift_codes;
 
 // Re-export derive macros
@@ -984,14 +985,6 @@ where
     }
 }
 
-/// Extract base field tag by removing index suffix (e.g., "50#1" -> "50")
-pub fn extract_base_tag(tag: &str) -> &str {
-    if let Some(index_pos) = tag.find('#') {
-        &tag[..index_pos]
-    } else {
-        tag
-    }
-}
 
 /// Get field tag for MT serialization by stripping index suffix
 pub fn get_field_tag_for_mt(tag: &str) -> String {

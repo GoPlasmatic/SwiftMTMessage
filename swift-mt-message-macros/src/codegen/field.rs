@@ -245,19 +245,19 @@ fn generate_multi_component_to_swift_string(
         // For /34x pattern, the slash is part of the content, not a delimiter
         return Ok(quote! {
             {
-                let capacity = self.#first_field.len() 
+                let capacity = self.#first_field.len()
                     + self.#second_field.iter().map(|s| s.len() + 1).sum::<usize>();
                 let mut result = String::with_capacity(capacity);
-                
+
                 // Add account (which already includes the slash)
                 result.push_str(&self.#first_field);
-                
+
                 // Add name and address lines
                 if !self.#second_field.is_empty() {
                     result.push('\n');
                     result.push_str(&self.#second_field.join("\n"));
                 }
-                
+
                 result
             }
         });
@@ -347,18 +347,21 @@ fn generate_multi_component_to_swift_string(
     }
 
     // Pattern: 35x + BIC (Field25P style - account/BIC on single line)
-    if patterns.len() == 2 &&
-       patterns[0] == "35x" &&
-       (patterns[1] == "4!a2!a2!c[3!c]" || patterns[1].contains("!a") && patterns[1].contains("!c"))
+    if patterns.len() == 2
+        && patterns[0] == "35x"
+        && (patterns[1] == "4!a2!a2!c[3!c]"
+            || patterns[1].contains("!a") && patterns[1].contains("!c"))
     {
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
         let first_field = &first_component.name;
         let second_field = &second_component.name;
-        
+
         // Check if this is Field25P by examining the struct name
-        let is_field25p = struct_field.components.iter()
-            .any(|c| c.name.to_string() == "account" || c.name.to_string() == "bic");
+        let is_field25p = struct_field
+            .components
+            .iter()
+            .any(|c| c.name == "account" || c.name == "bic");
 
         if is_field25p {
             // Field25P uses single-line format with account/BIC

@@ -310,7 +310,12 @@ fn extract_sequence_config(
             true,
             Some(SequenceConfig {
                 sequence_b_marker: "61".to_string(),
-                sequence_c_fields: vec!["62".to_string(), "64".to_string(), "65".to_string(), "86".to_string()],
+                sequence_c_fields: vec![
+                    "62".to_string(),
+                    "64".to_string(),
+                    "65".to_string(),
+                    "86".to_string(),
+                ],
                 has_sequence_c: true,
             }),
         )),

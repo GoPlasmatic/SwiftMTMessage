@@ -103,10 +103,12 @@ pub fn split_into_sequences(fields: &FieldMap, config: &SequenceConfig) -> Resul
         if config.sequence_b_marker == "61" {
             // For MT940/MT942, look for the first occurrence of a sequence C field
             // that is NOT field 86 (since 86 can appear in both sequences)
-            let seq_c_markers = config.sequence_c_fields.iter()
+            let seq_c_markers = config
+                .sequence_c_fields
+                .iter()
                 .filter(|f| *f != "86")
                 .collect::<Vec<_>>();
-            
+
             if let Some(seq_b_start) = sequence_b_start_idx {
                 for (i, (tag, _)) in all_fields.iter().enumerate().skip(seq_b_start) {
                     let base_tag = tag.trim_end_matches(char::is_alphabetic);

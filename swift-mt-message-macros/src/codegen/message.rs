@@ -245,10 +245,10 @@ fn generate_sequence_field_parser(
                 let base_tag = crate::extract_base_tag(#tag);
                 let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
                 let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
-                
+
                 // Find all matching fields
                 let mut results = Vec::new();
-                
+
                 // Try to find fields with tracker
                 while let Some((value, variant_tag, pos)) = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice) {
                     let parsed = #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
@@ -264,7 +264,7 @@ fn generate_sequence_field_parser(
                     results.push(parsed);
                     tracker.mark_consumed(base_tag, pos);
                 }
-                
+
                 if results.is_empty() {
                     None
                 } else {
@@ -344,10 +344,10 @@ fn generate_sequence_field_parser(
                 let base_tag = crate::extract_base_tag(#tag);
                 let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
                 let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
-                
+
                 // Find all matching fields
                 let mut results = Vec::new();
-                
+
                 // Try to find fields with tracker
                 while let Some((value, variant_tag, pos)) = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice) {
                     let parsed = #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
@@ -363,7 +363,7 @@ fn generate_sequence_field_parser(
                     results.push(parsed);
                     tracker.mark_consumed(base_tag, pos);
                 }
-                
+
                 if results.is_empty() {
                     return Err(crate::errors::ParseError::MissingRequiredField {
                         field_tag: #tag.to_string(),
@@ -372,7 +372,7 @@ fn generate_sequence_field_parser(
                         position_in_block4: None,
                     });
                 }
-                
+
                 results
             };
         })

@@ -23,6 +23,29 @@ pub fn generate_to_swift_string_for_component(component: &Component) -> TokenStr
                 format!("/{}/", self.#field_name)
             }
         }
+        // Handle [1!a] format for negative indicator (Field37H)
+        "[1!a]" if matches!(categorize_type(field_type), TypeCategory::OptionBool) => {
+            quote! {
+                self.#field_name.map(|b| if b { "N".to_string() } else { String::new() }).unwrap_or_default()
+            }
+        }
+        // Handle 2!n format for two-digit numbers with leading zeros
+        "2!n"
+            if matches!(
+                categorize_type(field_type),
+                TypeCategory::U8 | TypeCategory::OptionU8
+            ) =>
+        {
+            if matches!(categorize_type(field_type), TypeCategory::OptionU8) {
+                quote! {
+                    self.#field_name.map(|n| format!("{:02}", n)).unwrap_or_default()
+                }
+            } else {
+                quote! {
+                    format!("{:02}", self.#field_name)
+                }
+            }
+        }
         // Handle optional prefix patterns like [/34x], [/2n], [/5n]
         pattern if pattern.starts_with("[/") && pattern.ends_with("]") => {
             if matchers::option(matchers::string()).matches(field_type) {

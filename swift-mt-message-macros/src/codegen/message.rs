@@ -726,10 +726,12 @@ fn generate_to_ordered_fields_with_sequences_impl(
     // Identify which fields belong to sequence A (main sequence) vs sequence B (transactions)
     let mut seq_a_fields = Vec::new();
     let mut transaction_field_name = None;
+    let mut transaction_field_type = None;
 
     for field in &definition.fields {
         if field.tag == "#" {
             transaction_field_name = Some(&field.name);
+            transaction_field_type = Some(&field.inner_type);
         } else {
             seq_a_fields.push(&field.tag);
         }
@@ -739,6 +741,13 @@ fn generate_to_ordered_fields_with_sequences_impl(
         crate::error::MacroError::internal(
             proc_macro2::Span::call_site(),
             "Multi-sequence message must have a # field for transactions",
+        )
+    })?;
+
+    let transaction_type = transaction_field_type.ok_or_else(|| {
+        crate::error::MacroError::internal(
+            proc_macro2::Span::call_site(),
+            "Transaction field must have a type",
         )
     })?;
 
@@ -872,7 +881,7 @@ fn generate_to_ordered_fields_with_sequences_impl(
 
             // Serialize transaction fields
             for transaction in &self.#transaction_field {
-                let tx_fields = transaction.to_ordered_fields();
+                let tx_fields = <#transaction_type as crate::SwiftMessageBody>::to_ordered_fields(transaction);
                 ordered_fields.extend(tx_fields);
             }
 

@@ -105,7 +105,26 @@ impl FieldPatternGenerator for OptionalPatternGenerator {
 
         // Extract inner type from Option<T>
         let inner_type = extract_inner_type(&component.field_type, true, false);
-        let conversion_expr = generate_type_conversion_expr(&inner_type, quote! { raw_value })?;
+
+        // Special handling for is_negative field in Field37H
+        let conversion_expr = if *field_name == "is_negative" && pattern == "[1!a]" {
+            // For is_negative field, 'N' means true (the rate is negative)
+            quote! {
+                match raw_value {
+                    "N" => true,
+                    _ => return Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
+                        field_tag: stringify!(#name).to_string(),
+                        component_name: stringify!(#field_name).to_string(),
+                        value: raw_value.to_string(),
+                        format_spec: "N for negative rate".to_string(),
+                        position: None,
+                        inner_error: "Expected 'N' for negative rate indicator".to_string(),
+                    })))
+                }
+            }
+        } else {
+            generate_type_conversion_expr(&inner_type, quote! { raw_value })?
+        };
 
         Ok(quote! {
             use once_cell::sync::Lazy;
@@ -543,8 +562,29 @@ impl FieldParserGenerator {
                 });
             } else if component.is_optional {
                 let inner_type = extract_inner_type(&component.field_type, true, false);
-                let conversion_expr =
-                    generate_type_conversion_expr(&inner_type, quote! { raw_value })?;
+
+                // Special handling for is_negative field in Field37H
+                let conversion_expr = if *field_name == "is_negative"
+                    && component.format.pattern == "[1!a]"
+                {
+                    // For is_negative field, 'N' means true (the rate is negative)
+                    quote! {
+                        match raw_value {
+                            "N" => true,
+                            _ => return Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
+                                field_tag: stringify!(#name).to_string(),
+                                component_name: stringify!(#field_name).to_string(),
+                                value: raw_value.to_string(),
+                                format_spec: "N for negative rate".to_string(),
+                                position: None,
+                                inner_error: "Expected 'N' for negative rate indicator".to_string(),
+                            })))
+                        }
+                    }
+                } else {
+                    generate_type_conversion_expr(&inner_type, quote! { raw_value })?
+                };
+
                 field_assignments.push(quote! {
                     let #field_name = if let Some(captured) = captures.get(#capture_index) {
                         let raw_value = captured.as_str();

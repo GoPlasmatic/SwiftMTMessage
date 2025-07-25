@@ -604,8 +604,8 @@ impl SwiftParser {
 
         // For certain field numbers, preserve the option letter to avoid conflicts
         match numeric_part {
-            "11" | "13" | "21" | "23" | "25" | "26" | "28" | "32" | "33" | "34" | "37" | "50" | "52" | "53"
-            | "54" | "55" | "56" | "57" | "58" | "59" | "60" | "62" | "71" | "77" => {
+            "11" | "13" | "21" | "23" | "25" | "26" | "28" | "32" | "33" | "34" | "37" | "50"
+            | "52" | "53" | "54" | "55" | "56" | "57" | "58" | "59" | "60" | "62" | "71" | "77" => {
                 // Keep option letters for fields that have multiple variants or specific formats
                 // 11A (MT and Date - Option A), 11S (MT and Date - Option S)
                 // 13C (Time Indication)
@@ -753,7 +753,9 @@ where
         ("12", None)
     } else if message_type.contains("MT935RateChange") {
         ("23", Some("25"))
-    } else if message_type.contains("MT940StatementLine") || message_type.contains("MT942StatementLine") {
+    } else if message_type.contains("MT940StatementLine")
+        || message_type.contains("MT942StatementLine")
+    {
         ("61", None)
     } else {
         ("21", None)
@@ -766,7 +768,7 @@ where
     for (tag, value, pos) in all_fields {
         // Check if this is the start of a new sequence
         let is_sequence_start = (tag == primary_marker
-            || secondary_marker.map_or(false, |m| tag == m))
+            || secondary_marker.is_some_and(|m| tag == m))
             && !tag.ends_with("R")
             && !tag.ends_with("F")
             && !tag.ends_with("C")

@@ -26,7 +26,7 @@ impl TestResult {
         self.parse_status = "❌";
         self.validation_status = "❔";
         self.roundtrip_status = "❔";
-        self.error_stage = Some(format!("Parse: {}", error));
+        self.error_stage = Some(format!("Parse: {error}"));
     }
 
     fn mark_parse_success(&mut self) {
@@ -40,7 +40,7 @@ impl TestResult {
         if error_count == 1 {
             self.error_stage = Some(format!("Validation: {}", errors[0]));
         } else {
-            self.error_stage = Some(format!("Validation: {} errors", error_count));
+            self.error_stage = Some(format!("Validation: {error_count} errors"));
         }
     }
 
@@ -50,7 +50,7 @@ impl TestResult {
 
     fn mark_roundtrip_failed(&mut self, stage: &str) {
         self.roundtrip_status = "❌";
-        self.error_stage = Some(format!("Roundtrip: {}", stage));
+        self.error_stage = Some(format!("Roundtrip: {stage}"));
     }
 
     fn mark_roundtrip_success(&mut self) {
@@ -105,7 +105,7 @@ fn test_round_trip_all_files() {
         let original_content = match fs::read_to_string(&file_path) {
             Ok(content) => content,
             Err(e) => {
-                result.mark_parse_failed(format!("Read error: {}", e));
+                result.mark_parse_failed(format!("Read error: {e}"));
                 test_results.push(result);
                 continue;
             }
@@ -119,7 +119,7 @@ fn test_round_trip_all_files() {
             }
             Err(e) => {
                 result.mark_parse_failed(
-                    format!("{:?}", e)
+                    format!("{e:?}")
                         .split('\n')
                         .next()
                         .unwrap_or("Unknown")
@@ -136,7 +136,7 @@ fn test_round_trip_all_files() {
             let error_summaries: Vec<String> = validation_result
                 .errors
                 .iter()
-                .map(|e| format!("{}", e))
+                .map(|e| format!("{e}"))
                 .collect();
             result.mark_validation_failed(error_summaries);
         } else {
@@ -148,7 +148,7 @@ fn test_round_trip_all_files() {
         let json_representation = match serde_json::to_string_pretty(&parsed_message) {
             Ok(json) => json,
             Err(e) => {
-                result.mark_roundtrip_failed(&format!("JSON serialize: {}", e));
+                result.mark_roundtrip_failed(&format!("JSON serialize: {e}"));
                 test_results.push(result);
                 continue;
             }
@@ -159,7 +159,7 @@ fn test_round_trip_all_files() {
             match serde_json::from_str(&json_representation) {
                 Ok(msg) => msg,
                 Err(e) => {
-                    result.mark_roundtrip_failed(&format!("JSON deserialize: {}", e));
+                    result.mark_roundtrip_failed(&format!("JSON deserialize: {e}"));
                     test_results.push(result);
                     continue;
                 }
@@ -198,11 +198,10 @@ fn test_round_trip_all_files() {
             Ok(msg) => msg,
             Err(e) => {
                 result.mark_roundtrip_failed(
-                    &format!("Reparse: {:?}", e)
+                    format!("Reparse: {e:?}")
                         .split('\n')
                         .next()
-                        .unwrap_or("Unknown")
-                        .to_string(),
+                        .unwrap_or("Unknown"),
                 );
                 test_results.push(result);
                 continue;
@@ -213,7 +212,7 @@ fn test_round_trip_all_files() {
         let original_json = match serde_json::to_string_pretty(&parsed_message) {
             Ok(json) => json,
             Err(e) => {
-                result.mark_roundtrip_failed(&format!("Original JSON: {}", e));
+                result.mark_roundtrip_failed(&format!("Original JSON: {e}"));
                 test_results.push(result);
                 continue;
             }
@@ -222,7 +221,7 @@ fn test_round_trip_all_files() {
         let reparsed_json = match serde_json::to_string_pretty(&reparsed_message) {
             Ok(json) => json,
             Err(e) => {
-                result.mark_roundtrip_failed(&format!("Reparsed JSON: {}", e));
+                result.mark_roundtrip_failed(&format!("Reparsed JSON: {e}"));
                 test_results.push(result);
                 continue;
             }
@@ -240,12 +239,12 @@ fn test_round_trip_all_files() {
 
                 let base_name = file_path.file_stem().unwrap_or_default().to_string_lossy();
                 fs::write(
-                    debug_dir.join(format!("{}_original.json", base_name)),
+                    debug_dir.join(format!("{base_name}_original.json")),
                     &original_json,
                 )
                 .ok();
                 fs::write(
-                    debug_dir.join(format!("{}_reparsed.json", base_name)),
+                    debug_dir.join(format!("{base_name}_reparsed.json")),
                     &reparsed_json,
                 )
                 .ok();
@@ -352,7 +351,7 @@ fn print_results_table(results: &[TestResult]) {
         .count();
 
     println!("\n📊 Summary:");
-    println!("   Total files: {}", total);
+    println!("   Total files: {total}");
     println!(
         "   Parse successful: {} ({}%)",
         parse_success,

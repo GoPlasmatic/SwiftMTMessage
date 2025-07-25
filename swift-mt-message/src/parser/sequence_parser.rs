@@ -75,8 +75,9 @@ pub fn split_into_sequences(fields: &FieldMap, config: &SequenceConfig) -> Resul
     let sequence_a_fields = ["72", "77E", "79"];
 
     for (tag, (_, pos)) in &all_fields {
-        if is_sequence_b_marker(tag, &config.sequence_b_marker) 
-            || (secondary_marker.is_some() && *tag == secondary_marker.unwrap()) {
+        if is_sequence_b_marker(tag, &config.sequence_b_marker)
+            || (secondary_marker.is_some() && *tag == secondary_marker.unwrap())
+        {
             if first_b_marker_pos.is_none() {
                 first_b_marker_pos = Some(*pos);
             }
@@ -86,12 +87,10 @@ pub fn split_into_sequences(fields: &FieldMap, config: &SequenceConfig) -> Resul
 
     // Simpler approach: find all sequence B boundaries
     // Sequence B starts at first field 21 and includes all fields until sequence C
-    let sequence_b_start_idx = all_fields
-        .iter()
-        .position(|(tag, _)| {
-            is_sequence_b_marker(tag, &config.sequence_b_marker) 
-                || (secondary_marker.is_some() && *tag == secondary_marker.unwrap())
-        });
+    let sequence_b_start_idx = all_fields.iter().position(|(tag, _)| {
+        is_sequence_b_marker(tag, &config.sequence_b_marker)
+            || (secondary_marker.is_some() && *tag == secondary_marker.unwrap())
+    });
 
     // Find where sequence C would start (if it exists)
     // This is tricky: sequence C fields appear after ALL transactions
@@ -137,14 +136,14 @@ pub fn split_into_sequences(fields: &FieldMap, config: &SequenceConfig) -> Resul
     // Distribute fields to sequences based on boundaries
     for (i, (tag, (value, pos))) in all_fields.iter().enumerate() {
         // Check if this field should always be in sequence A
-        if sequence_a_fields.contains(&tag) {
+        if sequence_a_fields.contains(tag) {
             seq_a
                 .entry(tag.to_string())
                 .or_insert_with(Vec::new)
                 .push((value.clone(), *pos));
             continue;
         }
-        
+
         if let Some(seq_b_start) = sequence_b_start_idx {
             if i < seq_b_start {
                 // Before sequence B = Sequence A

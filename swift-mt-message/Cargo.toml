@@ -49,8 +49,3 @@ path = "../examples/sample_generation.rs"
 [[example]]
 name = "benchmark"
 path = "../examples/benchmark.rs"
-
-[[example]]
-name = "test_mt942_sequences"
-path = "../examples/test_mt942_sequences.rs"
-

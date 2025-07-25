@@ -30,7 +30,7 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
                         }
                         continue;
                     }
-                    
+
                     // Check if the field is an Option type
                     let type_category = categorize_type(&field.ty);
                     if matches!(

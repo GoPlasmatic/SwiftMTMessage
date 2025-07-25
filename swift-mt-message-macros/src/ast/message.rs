@@ -306,6 +306,14 @@ fn extract_sequence_config(
                 has_sequence_c: false,
             }),
         )),
+        "MT940" => Ok((
+            true,
+            Some(SequenceConfig {
+                sequence_b_marker: "61".to_string(),
+                sequence_c_fields: vec!["62".to_string(), "64".to_string(), "65".to_string(), "86".to_string()],
+                has_sequence_c: true,
+            }),
+        )),
         "MT942" => Ok((
             true,
             Some(SequenceConfig {
@@ -344,6 +352,11 @@ fn get_default_sequence_config(message_name: &str) -> SequenceConfig {
         },
         "MT935" => SequenceConfig {
             sequence_b_marker: "23".to_string(),
+            sequence_c_fields: vec![],
+            has_sequence_c: false,
+        },
+        "MT940" => SequenceConfig {
+            sequence_b_marker: "61".to_string(),
             sequence_c_fields: vec![],
             has_sequence_c: false,
         },

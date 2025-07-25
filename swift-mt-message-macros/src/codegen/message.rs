@@ -238,7 +238,41 @@ fn generate_sequence_field_parser(
     let inner_type = &field.inner_type;
     let tag = &field.tag;
 
-    if field.is_optional {
+    if field.is_optional && field.is_repetitive {
+        // Handle Option<Vec<T>>
+        Ok(quote! {
+            let #field_name = {
+                let base_tag = crate::extract_base_tag(#tag);
+                let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                
+                // Find all matching fields
+                let mut results = Vec::new();
+                
+                // Try to find fields with tracker
+                while let Some((value, variant_tag, pos)) = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice) {
+                    let parsed = #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                        .map_err(|e| {
+                            let line_num = pos >> 16;
+                            crate::errors::ParseError::FieldParsingFailed {
+                                field_tag: #tag.to_string(),
+                                field_type: stringify!(#inner_type).to_string(),
+                                position: line_num,
+                                original_error: e.to_string(),
+                            }
+                        })?;
+                    results.push(parsed);
+                    tracker.mark_consumed(base_tag, pos);
+                }
+                
+                if results.is_empty() {
+                    None
+                } else {
+                    Some(results)
+                }
+            };
+        })
+    } else if field.is_optional {
         Ok(quote! {
             let #field_name = {
                 let base_tag = crate::extract_base_tag(#tag);
@@ -301,6 +335,45 @@ fn generate_sequence_field_parser(
                         None
                     }
                 }
+            };
+        })
+    } else if field.is_repetitive {
+        // Handle Vec<T> (required repetitive)
+        Ok(quote! {
+            let #field_name = {
+                let base_tag = crate::extract_base_tag(#tag);
+                let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                
+                // Find all matching fields
+                let mut results = Vec::new();
+                
+                // Try to find fields with tracker
+                while let Some((value, variant_tag, pos)) = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice) {
+                    let parsed = #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                        .map_err(|e| {
+                            let line_num = pos >> 16;
+                            crate::errors::ParseError::FieldParsingFailed {
+                                field_tag: #tag.to_string(),
+                                field_type: stringify!(#inner_type).to_string(),
+                                position: line_num,
+                                original_error: e.to_string(),
+                            }
+                        })?;
+                    results.push(parsed);
+                    tracker.mark_consumed(base_tag, pos);
+                }
+                
+                if results.is_empty() {
+                    return Err(crate::errors::ParseError::MissingRequiredField {
+                        field_tag: #tag.to_string(),
+                        field_name: stringify!(#field_name).to_string(),
+                        message_type: Self::message_type().to_string(),
+                        position_in_block4: None,
+                    });
+                }
+                
+                results
             };
         })
     } else {
@@ -770,6 +843,7 @@ fn generate_to_ordered_fields_with_sequences_impl(
         "MT210" => vec!["21", "32B", "50", "52", "56"],
         "MT920" => vec!["12", "25", "34F"],
         "MT935" => vec!["23", "25", "30", "37H"],
+        "MT940" => vec!["61", "86"],
         "MT942" => vec!["61", "86"],
         _ => vec![],
     };
@@ -778,6 +852,8 @@ fn generate_to_ordered_fields_with_sequences_impl(
     let sequence_c_fields = match message_name.as_str() {
         "MT104" => vec!["32B", "19", "71F", "71G", "53"],
         "MT935" => vec!["72"], // Field 72 appears after rate changes
+        "MT940" => vec!["62", "64", "65", "86"], // Closing balance and final fields
+        "MT942" => vec!["62", "64", "65", "86"], // Closing balance and final fields
         _ => vec![],
     };
 
@@ -839,12 +915,32 @@ fn generate_to_ordered_fields_with_sequences_impl(
         } else {
             // Non-enum field - use base tag directly
             if field.is_optional {
+                if field.is_repetitive {
+                    // Optional Vec<T>
+                    seq_a_field_serializers.push(quote! {
+                        if let Some(ref values) = self.#field_name {
+                            for value in values {
+                                ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                            }
+                        }
+                    });
+                } else {
+                    // Optional T
+                    seq_a_field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                        }
+                    });
+                }
+            } else if field.is_repetitive {
+                // Required Vec<T>
                 seq_a_field_serializers.push(quote! {
-                    if let Some(ref value) = self.#field_name {
+                    for value in &self.#field_name {
                         ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
                     }
                 });
             } else {
+                // Required T
                 seq_a_field_serializers.push(quote! {
                     ordered_fields.push((#base_tag.to_string(), self.#field_name.to_swift_string()));
                 });
@@ -859,12 +955,32 @@ fn generate_to_ordered_fields_with_sequences_impl(
         let base_tag = extract_base_tag(tag);
 
         if field.is_optional {
+            if field.is_repetitive {
+                // Optional Vec<T>
+                seq_c_field_serializers.push(quote! {
+                    if let Some(ref values) = self.#field_name {
+                        for value in values {
+                            ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                        }
+                    }
+                });
+            } else {
+                // Optional T
+                seq_c_field_serializers.push(quote! {
+                    if let Some(ref value) = self.#field_name {
+                        ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                    }
+                });
+            }
+        } else if field.is_repetitive {
+            // Required Vec<T>
             seq_c_field_serializers.push(quote! {
-                if let Some(ref value) = self.#field_name {
+                for value in &self.#field_name {
                     ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
                 }
             });
         } else {
+            // Required T
             seq_c_field_serializers.push(quote! {
                 ordered_fields.push((#base_tag.to_string(), self.#field_name.to_swift_string()));
             });
@@ -1163,6 +1279,7 @@ fn is_enum_field_type(field_type: &Type) -> bool {
                     type_name.contains("ReceiverCorrespondent") ||
                     type_name.contains("Intermediary") ||
                     type_name.contains("AccountWithInstitution") ||
+                    type_name.contains("AccountIdentification") ||
                     type_name.contains("DebtorBank") ||
                     type_name.ends_with("AFK") ||
                     type_name.ends_with("NCF") ||
@@ -1170,7 +1287,7 @@ fn is_enum_field_type(field_type: &Type) -> bool {
                     // Explicit list of known enum fields (have A/F/K/D/etc variants)
                     // This replaces the problematic digit-based check
                     matches!(type_name.as_str(),
-                        "Field50" | "Field52" | "Field53" | "Field54" | 
+                        "Field25" | "Field50" | "Field52" | "Field53" | "Field54" | 
                         "Field55" | "Field56" | "Field57" | "Field58" | "Field59"
                     )
                 )

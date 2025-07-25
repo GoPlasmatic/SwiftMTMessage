@@ -370,6 +370,63 @@ impl FieldPatternGenerator for PartyAddressPatternGenerator {
     }
 }
 
+/// Generator for Field25P pattern (account/BIC on single line)
+#[derive(Debug)]
+pub struct Field25PPatternGenerator;
+
+impl FieldPatternGenerator for Field25PPatternGenerator {
+    fn can_handle(&self, name: &syn::Ident, field: &StructField) -> bool {
+        // Handle Field25P specifically
+        name.to_string() == "Field25P" &&
+        field.components.len() == 2 &&
+        field.components[0].format.pattern == "35x" &&
+        (field.components[1].format.pattern == "4!a2!a2!c[3!c]" ||
+         (field.components[1].format.pattern.contains("!a") && 
+          field.components[1].format.pattern.contains("!c")))
+    }
+
+    fn generate_parser(&self, name: &syn::Ident, field: &StructField) -> MacroResult<TokenStream> {
+        let account_field = &field.components[0].name;
+        let bic_field = &field.components[1].name;
+
+        Ok(quote! {
+            // Field25P has format: account/BIC on a single line
+            let parts: Vec<&str> = value.splitn(2, '/').collect();
+            
+            if parts.len() != 2 {
+                return Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
+                    field_tag: stringify!(#name).to_string(),
+                    component_name: "account_bic".to_string(),
+                    value: value.to_string(),
+                    format_spec: "account/BIC".to_string(),
+                    position: None,
+                    inner_error: "Expected format: account/BIC".to_string(),
+                })));
+            }
+            
+            let #account_field = format!("{}/", parts[0].trim());
+            let #bic_field = parts[1].trim().to_string();
+            
+            // Validate BIC format
+            if #bic_field.len() != 8 && #bic_field.len() != 11 {
+                return Err(crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
+                    field_tag: stringify!(#name).to_string(),
+                    component_name: "bic".to_string(),
+                    value: #bic_field.clone(),
+                    format_spec: "8 or 11 character BIC".to_string(),
+                    position: None,
+                    inner_error: format!("BIC must be 8 or 11 characters, got {}", #bic_field.len()),
+                })));
+            }
+            
+            Ok(Self {
+                #account_field,
+                #bic_field,
+            })
+        })
+    }
+}
+
 /// Generator for multiline fields with optional first component
 #[derive(Debug)]
 pub struct OptionalMultilinePatternGenerator;
@@ -467,6 +524,7 @@ impl FieldParserGenerator {
         Self {
             generators: vec![
                 Box::new(Field53B57BPatternGenerator),
+                Box::new(Field25PPatternGenerator),
                 Box::new(PartyAddressPatternGenerator),
                 Box::new(OptionalMultilinePatternGenerator),
                 Box::new(RepetitivePatternGenerator),
@@ -695,6 +753,9 @@ impl FieldParserGenerator {
                 return true;
             }
         }
+        
+        // Check for specific multi-component patterns that use newlines
+        // (Field25P is handled separately and uses single-line format)
 
         false
     }

@@ -98,35 +98,55 @@ pub fn split_into_sequences(fields: &FieldMap, config: &SequenceConfig) -> Resul
     let mut sequence_c_start_idx: Option<usize> = None;
 
     if config.has_sequence_c && sequence_b_start_idx.is_some() {
-        // Look for sequence C fields that appear after transaction patterns
-        // Transaction patterns typically end with fields like 59, 70, 71A
-        let transaction_end_fields = ["59", "70", "71A", "77B", "36"];
-
-        // Find the last occurrence of any transaction-ending field
-        let mut last_trans_end_idx: Option<usize> = None;
-        for (i, (tag, _)) in all_fields.iter().enumerate() {
-            let base_tag = tag.trim_end_matches(char::is_alphabetic);
-            if transaction_end_fields.contains(&base_tag) {
-                last_trans_end_idx = Some(i);
-            }
-        }
-
-        // Look for sequence C fields after the last transaction end
-        if let Some(last_end) = last_trans_end_idx {
-            for (i, (tag, _)) in all_fields.iter().enumerate().skip(last_end + 1) {
-                if config.sequence_c_fields.contains(&tag.to_string()) {
-                    sequence_c_start_idx = Some(i);
-                    break;
+        // Special handling for MT940/MT942 where sequence B contains statement lines
+        // and sequence C contains closing balance and summary fields
+        if config.sequence_b_marker == "61" {
+            // For MT940/MT942, look for the first occurrence of a sequence C field
+            // that is NOT field 86 (since 86 can appear in both sequences)
+            let seq_c_markers = config.sequence_c_fields.iter()
+                .filter(|f| *f != "86")
+                .collect::<Vec<_>>();
+            
+            if let Some(seq_b_start) = sequence_b_start_idx {
+                for (i, (tag, _)) in all_fields.iter().enumerate().skip(seq_b_start) {
+                    let base_tag = tag.trim_end_matches(char::is_alphabetic);
+                    if seq_c_markers.iter().any(|marker| base_tag == *marker) {
+                        sequence_c_start_idx = Some(i);
+                        break;
+                    }
                 }
             }
         } else {
-            // If no transaction-ending fields found, look for sequence C fields
-            // after the sequence B start
-            if let Some(seq_b_start) = sequence_b_start_idx {
-                for (i, (tag, _)) in all_fields.iter().enumerate().skip(seq_b_start) {
+            // Look for sequence C fields that appear after transaction patterns
+            // Transaction patterns typically end with fields like 59, 70, 71A
+            let transaction_end_fields = ["59", "70", "71A", "77B", "36"];
+
+            // Find the last occurrence of any transaction-ending field
+            let mut last_trans_end_idx: Option<usize> = None;
+            for (i, (tag, _)) in all_fields.iter().enumerate() {
+                let base_tag = tag.trim_end_matches(char::is_alphabetic);
+                if transaction_end_fields.contains(&base_tag) {
+                    last_trans_end_idx = Some(i);
+                }
+            }
+
+            // Look for sequence C fields after the last transaction end
+            if let Some(last_end) = last_trans_end_idx {
+                for (i, (tag, _)) in all_fields.iter().enumerate().skip(last_end + 1) {
                     if config.sequence_c_fields.contains(&tag.to_string()) {
                         sequence_c_start_idx = Some(i);
                         break;
+                    }
+                }
+            } else {
+                // If no transaction-ending fields found, look for sequence C fields
+                // after the sequence B start
+                if let Some(seq_b_start) = sequence_b_start_idx {
+                    for (i, (tag, _)) in all_fields.iter().enumerate().skip(seq_b_start) {
+                        if config.sequence_c_fields.contains(&tag.to_string()) {
+                            sequence_c_start_idx = Some(i);
+                            break;
+                        }
                     }
                 }
             }

@@ -231,6 +231,38 @@ fn generate_multi_component_to_swift_string(
         ));
     }
 
+    // Pattern: /34x + 4*35x (Field50H style - required string with slash + vec string)
+    if patterns.len() == 2 &&
+       patterns[0].starts_with("/") && !patterns[0].starts_with("[/") &&
+       patterns[0].contains("x") && // Ensure it's a text field
+       patterns[1].contains("*") && patterns[1].contains("x")
+    {
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        let first_field = &first_component.name;
+        let second_field = &second_component.name;
+
+        // For /34x pattern, the slash is part of the content, not a delimiter
+        return Ok(quote! {
+            {
+                let capacity = self.#first_field.len() 
+                    + self.#second_field.iter().map(|s| s.len() + 1).sum::<usize>();
+                let mut result = String::with_capacity(capacity);
+                
+                // Add account (which already includes the slash)
+                result.push_str(&self.#first_field);
+                
+                // Add name and address lines
+                if !self.#second_field.is_empty() {
+                    result.push('\n');
+                    result.push_str(&self.#second_field.join("\n"));
+                }
+                
+                result
+            }
+        });
+    }
+
     // Pattern: 4!c + [/30x] (Field23E style - string + optional string)
     if patterns.len() == 2
         && !patterns[0].starts_with("[")
@@ -312,6 +344,34 @@ fn generate_multi_component_to_swift_string(
         let second_field = &second_component.name;
 
         return Ok(generate_numbered_lines_field(first_field, second_field));
+    }
+
+    // Pattern: 35x + BIC (Field25P style - account/BIC on single line)
+    if patterns.len() == 2 &&
+       patterns[0] == "35x" &&
+       (patterns[1] == "4!a2!a2!c[3!c]" || patterns[1].contains("!a") && patterns[1].contains("!c"))
+    {
+        let first_component = &struct_field.components[0];
+        let second_component = &struct_field.components[1];
+        let first_field = &first_component.name;
+        let second_field = &second_component.name;
+        
+        // Check if this is Field25P by examining the struct name
+        let is_field25p = struct_field.components.iter()
+            .any(|c| c.name.to_string() == "account" || c.name.to_string() == "bic");
+
+        if is_field25p {
+            // Field25P uses single-line format with account/BIC
+            // Note: account field already includes the trailing slash
+            return Ok(quote! {
+                format!("{}{}", self.#first_field, self.#second_field)
+            });
+        } else {
+            // Other fields with 35x + BIC pattern use newline separator
+            return Ok(quote! {
+                format!("{}\n{}", self.#first_field, self.#second_field)
+            });
+        }
     }
 
     // Default: use original concatenation logic for multi-component fields

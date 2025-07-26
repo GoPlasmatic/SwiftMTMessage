@@ -44,7 +44,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::errors::{ParseError, Result, SwiftValidationError};
+use crate::errors::{ParseError, ParserConfig, Result, SwiftValidationError};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 use crate::messages::{
     MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT199, MT202, MT205, MT210,
@@ -285,11 +285,34 @@ pub fn find_field_with_variant_sequential_constrained(
 /// ## Thread Safety
 /// SwiftParser is stateless and thread-safe. All methods are static and can be called
 /// concurrently from multiple threads.
-pub struct SwiftParser;
+pub struct SwiftParser {
+    config: ParserConfig,
+}
+
+impl Default for SwiftParser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl SwiftParser {
-    /// Parse a raw SWIFT message string into a typed message
-    pub fn parse<T: SwiftMessageBody>(raw_message: &str) -> Result<SwiftMessage<T>> {
+    /// Create a new parser with default configuration
+    pub fn new() -> Self {
+        Self {
+            config: ParserConfig::default(),
+        }
+    }
+
+    /// Create a new parser with custom configuration
+    pub fn with_config(config: ParserConfig) -> Self {
+        Self { config }
+    }
+
+    /// Parse a message and return ParseResult with all errors collected
+    pub fn parse_with_errors<T: SwiftMessageBody>(
+        &self,
+        raw_message: &str,
+    ) -> Result<crate::errors::ParseResult<SwiftMessage<T>>> {
         let block1 = Self::extract_block(raw_message, 1)?;
         let block2 = Self::extract_block(raw_message, 2)?;
         let block3 = Self::extract_block(raw_message, 3)?;
@@ -325,21 +348,122 @@ impl SwiftParser {
         // Parse block 4 fields with position tracking
         let field_map_with_positions = Self::parse_block4_fields(&block4.unwrap_or_default())?;
 
-        // Use sequential parsing for all message types
-        let fields = T::from_fields(field_map_with_positions)?;
+        // Use configuration-aware parsing
+        let parse_result = T::from_fields_with_config(field_map_with_positions, &self.config)?;
 
-        Ok(SwiftMessage {
-            basic_header,
-            application_header,
-            user_header,
-            trailer,
-            message_type,
-            fields,
-        })
+        match parse_result {
+            crate::errors::ParseResult::Success(fields) => {
+                Ok(crate::errors::ParseResult::Success(SwiftMessage {
+                    basic_header,
+                    application_header,
+                    user_header,
+                    trailer,
+                    message_type,
+                    fields,
+                }))
+            }
+            crate::errors::ParseResult::PartialSuccess(fields, errors) => {
+                Ok(crate::errors::ParseResult::PartialSuccess(
+                    SwiftMessage {
+                        basic_header,
+                        application_header,
+                        user_header,
+                        trailer,
+                        message_type,
+                        fields,
+                    },
+                    errors,
+                ))
+            }
+            crate::errors::ParseResult::Failure(errors) => {
+                Ok(crate::errors::ParseResult::Failure(errors))
+            }
+        }
+    }
+    /// Parse a raw SWIFT message string into a typed message (static method for backward compatibility)
+    pub fn parse<T: SwiftMessageBody>(raw_message: &str) -> Result<SwiftMessage<T>> {
+        Self::new().parse_message(raw_message)
     }
 
-    /// Parse a raw SWIFT message string with automatic message type detection
+    /// Parse a raw SWIFT message string into a typed message with configuration support
+    pub fn parse_message<T: SwiftMessageBody>(&self, raw_message: &str) -> Result<SwiftMessage<T>> {
+        let block1 = Self::extract_block(raw_message, 1)?;
+        let block2 = Self::extract_block(raw_message, 2)?;
+        let block3 = Self::extract_block(raw_message, 3)?;
+        let block4 = Self::extract_block(raw_message, 4)?;
+        let block5 = Self::extract_block(raw_message, 5)?;
+
+        // Parse headers
+        let basic_header = BasicHeader::parse(&block1.unwrap_or_default())?;
+        let application_header = ApplicationHeader::parse(&block2.unwrap_or_default())?;
+        let user_header = block3.map(|b| UserHeader::parse(&b)).transpose()?;
+        let trailer = block5.map(|b| Trailer::parse(&b)).transpose()?;
+
+        // Extract message type from application header
+        let message_type = application_header.message_type.clone();
+
+        // Validate message type matches expected type using SWIFT error codes
+        if message_type != T::message_type() {
+            return Err(ParseError::SwiftValidation(Box::new(
+                SwiftValidationError::format_error(
+                    t_series::T03,
+                    "MESSAGE_TYPE",
+                    &message_type,
+                    T::message_type(),
+                    &format!(
+                        "Message type mismatch: expected {}, got {}",
+                        T::message_type(),
+                        message_type
+                    ),
+                ),
+            )));
+        }
+
+        // Parse block 4 fields with position tracking
+        let field_map_with_positions = Self::parse_block4_fields(&block4.unwrap_or_default())?;
+
+        // Use configuration-aware parsing
+        let parse_result = T::from_fields_with_config(field_map_with_positions, &self.config)?;
+
+        match parse_result {
+            crate::errors::ParseResult::Success(fields) => Ok(SwiftMessage {
+                basic_header,
+                application_header,
+                user_header,
+                trailer,
+                message_type,
+                fields,
+            }),
+            crate::errors::ParseResult::PartialSuccess(fields, errors) => {
+                // For partial success, we could log the errors but still return the message
+                // For now, we'll return the message but the errors are available in the ParseResult
+                eprintln!("Warning: Parsed with {} non-critical errors", errors.len());
+                for error in &errors {
+                    eprintln!("  - {error}");
+                }
+                Ok(SwiftMessage {
+                    basic_header,
+                    application_header,
+                    user_header,
+                    trailer,
+                    message_type,
+                    fields,
+                })
+            }
+            crate::errors::ParseResult::Failure(errors) => {
+                // Convert to MultipleErrors
+                Err(ParseError::MultipleErrors(errors))
+            }
+        }
+    }
+
+    /// Parse a raw SWIFT message string with automatic message type detection (static method for backward compatibility)
     pub fn parse_auto(raw_message: &str) -> Result<ParsedSwiftMessage> {
+        Self::new().parse_message_auto(raw_message)
+    }
+
+    /// Parse a raw SWIFT message string with automatic message type detection and configuration support
+    pub fn parse_message_auto(&self, raw_message: &str) -> Result<ParsedSwiftMessage> {
         // First, extract blocks to get the message type
         let block2 = Self::extract_block(raw_message, 2)?;
 
@@ -350,99 +474,99 @@ impl SwiftParser {
         // Route to appropriate parser based on message type
         match message_type.as_str() {
             "101" => {
-                let parsed = Self::parse::<MT101>(raw_message)?;
+                let parsed = self.parse_message::<MT101>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT101(Box::new(parsed)))
             }
             "103" => {
-                let parsed = Self::parse::<MT103>(raw_message)?;
+                let parsed = self.parse_message::<MT103>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT103(Box::new(parsed)))
             }
             "104" => {
-                let parsed = Self::parse::<MT104>(raw_message)?;
+                let parsed = self.parse_message::<MT104>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT104(Box::new(parsed)))
             }
             "107" => {
-                let parsed = Self::parse::<MT107>(raw_message)?;
+                let parsed = self.parse_message::<MT107>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT107(Box::new(parsed)))
             }
             "110" => {
-                let parsed = Self::parse::<MT110>(raw_message)?;
+                let parsed = self.parse_message::<MT110>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT110(Box::new(parsed)))
             }
             "111" => {
-                let parsed = Self::parse::<MT111>(raw_message)?;
+                let parsed = self.parse_message::<MT111>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT111(Box::new(parsed)))
             }
             "112" => {
-                let parsed = Self::parse::<MT112>(raw_message)?;
+                let parsed = self.parse_message::<MT112>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT112(Box::new(parsed)))
             }
             "202" => {
-                let parsed = Self::parse::<MT202>(raw_message)?;
+                let parsed = self.parse_message::<MT202>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT202(Box::new(parsed)))
             }
             "205" => {
-                let parsed = Self::parse::<MT205>(raw_message)?;
+                let parsed = self.parse_message::<MT205>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT205(Box::new(parsed)))
             }
             "210" => {
-                let parsed = Self::parse::<MT210>(raw_message)?;
+                let parsed = self.parse_message::<MT210>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT210(Box::new(parsed)))
             }
             "900" => {
-                let parsed = Self::parse::<MT900>(raw_message)?;
+                let parsed = self.parse_message::<MT900>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT900(Box::new(parsed)))
             }
             "910" => {
-                let parsed = Self::parse::<MT910>(raw_message)?;
+                let parsed = self.parse_message::<MT910>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT910(Box::new(parsed)))
             }
             "920" => {
-                let parsed = Self::parse::<MT920>(raw_message)?;
+                let parsed = self.parse_message::<MT920>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT920(Box::new(parsed)))
             }
             "935" => {
-                let parsed = Self::parse::<MT935>(raw_message)?;
+                let parsed = self.parse_message::<MT935>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT935(Box::new(parsed)))
             }
             "940" => {
-                let parsed = Self::parse::<MT940>(raw_message)?;
+                let parsed = self.parse_message::<MT940>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT940(Box::new(parsed)))
             }
             "941" => {
-                let parsed = Self::parse::<MT941>(raw_message)?;
+                let parsed = self.parse_message::<MT941>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT941(Box::new(parsed)))
             }
             "942" => {
-                let parsed = Self::parse::<MT942>(raw_message)?;
+                let parsed = self.parse_message::<MT942>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT942(Box::new(parsed)))
             }
             "950" => {
-                let parsed = Self::parse::<MT950>(raw_message)?;
+                let parsed = self.parse_message::<MT950>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT950(Box::new(parsed)))
             }
             "192" => {
-                let parsed = Self::parse::<MT192>(raw_message)?;
+                let parsed = self.parse_message::<MT192>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT192(Box::new(parsed)))
             }
             "196" => {
-                let parsed = Self::parse::<MT196>(raw_message)?;
+                let parsed = self.parse_message::<MT196>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT196(Box::new(parsed)))
             }
             "292" => {
-                let parsed = Self::parse::<MT292>(raw_message)?;
+                let parsed = self.parse_message::<MT292>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT292(Box::new(parsed)))
             }
             "296" => {
-                let parsed = Self::parse::<MT296>(raw_message)?;
+                let parsed = self.parse_message::<MT296>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT296(Box::new(parsed)))
             }
             "199" => {
-                let parsed = Self::parse::<MT199>(raw_message)?;
+                let parsed = self.parse_message::<MT199>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT199(Box::new(parsed)))
             }
             "299" => {
-                let parsed = Self::parse::<MT299>(raw_message)?;
+                let parsed = self.parse_message::<MT299>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT299(Box::new(parsed)))
             }
             _ => Err(ParseError::UnsupportedMessageType {

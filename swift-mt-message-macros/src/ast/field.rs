@@ -2,7 +2,6 @@
 
 use crate::error::{MacroError, MacroResult};
 use crate::format::FormatSpec;
-use crate::format_validation::{validate_format_spec, ValidatedFormatSpec};
 use crate::utils::attributes::extract_component_attribute;
 use crate::utils::types::{categorize_type, TypeCategory};
 use proc_macro2::Span;
@@ -83,16 +82,10 @@ pub struct Component {
     pub field_type: Type,
     /// SWIFT format specification (e.g., "6!n", "3!a", "15d")
     pub format: FormatSpec,
-    /// Compile-time validated format specification
-    #[allow(dead_code)]
-    pub validated_format: ValidatedFormatSpec,
     /// Whether the field is optional (Option<T>)
     pub is_optional: bool,
     /// Whether the field is repetitive (Vec<T>)
     pub is_repetitive: bool,
-    /// Span for error reporting
-    #[allow(dead_code)]
-    pub span: Span,
 }
 
 impl FieldDefinition {
@@ -231,23 +224,10 @@ impl Component {
             .ok_or_else(|| MacroError::internal(field.span(), "Field must have a name"))?;
 
         let field_type = field.ty.clone();
-        let span = field.span();
 
         // Extract format specification from #[component("format")] attribute
         let format_spec = extract_component_attribute(&field.attrs)?;
         let format = FormatSpec::parse(&format_spec)?;
-
-        // Validate format specification at compile time (with fallback for unknown patterns)
-        let validated_format = validate_format_spec(&format_spec, span).unwrap_or_else(|_e| {
-            // For now, create a fallback ValidatedFormatSpec for unknown patterns
-            // This allows the library to compile while we're adding format support
-            ValidatedFormatSpec {
-                pattern: format_spec.clone(),
-                spec_type: crate::format_validation::FormatSpecType::VariableAny {
-                    max_length: 255,
-                },
-            }
-        });
 
         // Type compatibility validation is disabled for now to maintain compatibility
 
@@ -275,37 +255,8 @@ impl Component {
             name,
             field_type,
             format,
-            validated_format,
             is_optional,
             is_repetitive,
-            span,
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use quote::quote;
-
-    #[test]
-    fn test_parse_simple_struct() {
-        let input: DeriveInput = syn::parse2(quote! {
-            struct Field20 {
-                #[component("16x")]
-                reference: String,
-            }
-        })
-        .unwrap();
-
-        let definition = FieldDefinition::parse(&input).unwrap();
-        assert_eq!(definition.name, "Field20");
-
-        if let FieldKind::Struct(struct_field) = definition.kind {
-            assert_eq!(struct_field.components.len(), 1);
-            assert_eq!(struct_field.components[0].name, "reference");
-        } else {
-            panic!("Expected struct field");
-        }
     }
 }

@@ -1,6 +1,6 @@
 //! Core traits for SWIFT field and message types
 
-use crate::{sample, Result, SwiftResult};
+use crate::{Result, SwiftResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -30,16 +30,6 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
 
     /// Get field format specification
     fn format_spec() -> &'static str;
-
-    /// Generate a random sample of this field
-    fn sample() -> Self
-    where
-        Self: Sized;
-
-    /// Generate a random sample with configuration
-    fn sample_with_config(config: &sample::FieldConfig) -> Self
-    where
-        Self: Sized;
 
     /// Get valid variant letters for enum fields
     /// Returns None for non-enum fields, Some(vec) for enum fields
@@ -102,24 +92,4 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
 
     /// Get optional field tags for this message type
     fn optional_fields() -> Vec<&'static str>;
-
-    /// Generate a sample message with only mandatory fields
-    fn sample() -> Self
-    where
-        Self: Sized;
-
-    /// Generate a minimal sample (only mandatory fields)
-    fn sample_minimal() -> Self
-    where
-        Self: Sized;
-
-    /// Generate a full sample (all fields populated)
-    fn sample_full() -> Self
-    where
-        Self: Sized;
-
-    /// Generate a sample with configuration
-    fn sample_with_config(config: &sample::MessageConfig) -> Self
-    where
-        Self: Sized;
 }

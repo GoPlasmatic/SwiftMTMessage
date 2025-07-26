@@ -9,7 +9,6 @@
 //! - **Type-Safe Structures**: Strongly-typed field definitions with validation
 //! - **Format Compliance**: SWIFT User Handbook format specification adherence
 //! - **Variant Support**: Complex enum fields with multiple format options (e.g., Field50: A/F/K)
-//! - **Sample Generation**: Realistic sample data generation for testing
 //! - **JSON Serialization**: Clean JSON output without enum wrapper layers
 //!
 //! ## Field Categories
@@ -43,9 +42,6 @@
 //!
 //! // Parse enum field with variant
 //! let field_50 = Field50OrderingCustomerAFK::parse_with_variant("JOHN DOE\n123 MAIN ST", Some("K"), Some("50"))?;
-//!
-//! // Generate samples
-//! let sample_field = Field59::sample();
 //! # Ok(())
 //! # }
 //! ```

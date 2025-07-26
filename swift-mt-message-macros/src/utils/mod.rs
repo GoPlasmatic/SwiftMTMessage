@@ -4,6 +4,5 @@
 //! and attribute parsing to avoid code duplication across the codebase.
 
 pub mod attributes;
-pub mod sample;
 pub mod serde_attributes;
 pub mod types;

@@ -10,8 +10,6 @@ mod ast;
 mod codegen;
 mod error;
 mod format;
-mod format_validation;
-mod sample_generation;
 mod utils;
 
 use error::MacroError;
@@ -75,7 +73,6 @@ use utils::serde_attributes::add_serde_attributes_to_optional_fields;
 /// - `parse(value: &str) -> Result<Self>` - Parse from SWIFT format string
 /// - `to_swift_string(&self) -> String` - Convert to SWIFT format string
 /// - `format_spec() -> &'static str` - Return format specification
-/// - `sample() -> Self` - Generate sample data for testing
 #[proc_macro_derive(SwiftField, attributes(component))]
 pub fn derive_swift_field(input: TokenStream) -> TokenStream {
     match derive_swift_field_impl(input) {
@@ -138,7 +135,6 @@ pub fn derive_swift_field(input: TokenStream) -> TokenStream {
 /// - `to_fields(&self) -> HashMap<String, Vec<String>>` - Convert to field map
 /// - `required_fields() -> Vec<&'static str>` - List required field tags
 /// - `optional_fields() -> Vec<&'static str>` - List optional field tags
-/// - `sample() -> Self` - Generate sample message for testing
 #[proc_macro_derive(SwiftMessage, attributes(field, sequence, validation_rules))]
 pub fn derive_swift_message(input: TokenStream) -> TokenStream {
     match derive_swift_message_impl(input) {

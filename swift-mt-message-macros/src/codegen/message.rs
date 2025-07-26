@@ -33,9 +33,6 @@ pub fn generate_swift_message_impl(definition: &MessageDefinition) -> MacroResul
     } else {
         quote! {} // Use default implementation
     };
-    let sample_impl = generate_sample_impl(&definition.fields)?;
-    let sample_minimal_impl = generate_sample_minimal_impl(&definition.fields)?;
-    let sample_full_impl = generate_sample_full_impl(&definition.fields)?;
     let validation_rules_impl = generate_validation_rules_impl(definition)?;
 
     // Generate SwiftField implementation only for nested message structures
@@ -71,44 +68,6 @@ pub fn generate_swift_message_impl(definition: &MessageDefinition) -> MacroResul
 
             fn optional_fields() -> Vec<&'static str> {
                 #optional_fields_impl
-            }
-
-            fn sample() -> Self {
-                use crate::SwiftField;
-                #sample_impl
-            }
-
-            fn sample_minimal() -> Self {
-                use crate::SwiftField;
-                #sample_minimal_impl
-            }
-
-            fn sample_full() -> Self {
-                use crate::SwiftField;
-                #sample_full_impl
-            }
-
-            fn sample_with_config(config: &crate::sample::MessageConfig) -> Self {
-                use crate::sample::MessageScenario;
-                use crate::SwiftField;
-
-                match config.scenario {
-                    Some(MessageScenario::Minimal) => Self::sample_minimal(),
-                    Some(MessageScenario::Full) => Self::sample_full(),
-                    Some(MessageScenario::StpCompliant) => {
-                        // Generate STP-compliant sample
-                        let mut sample = <Self as crate::SwiftMessageBody>::sample();
-                        // Add STP-specific field configurations
-                        sample
-                    }
-                    Some(MessageScenario::CoverPayment) => {
-                        // Generate cover payment sample
-                        let mut sample = Self::sample_full();
-                        // Add cover payment specific fields
-                        sample
-                    }
-                    _ => <Self as crate::SwiftMessageBody>::sample(),
-                }
             }
         }
 
@@ -1009,126 +968,6 @@ fn generate_to_ordered_fields_with_sequences_impl(
     })
 }
 
-/// Generate sample implementation
-fn generate_sample_impl(fields: &[MessageField]) -> MacroResult<TokenStream> {
-    let mut field_samples = Vec::new();
-
-    for field in fields {
-        let field_name = &field.name;
-        let inner_type = &field.inner_type;
-
-        if field.is_optional {
-            if field.is_repetitive {
-                // Optional Vec<T>
-                field_samples.push(quote! {
-                    #field_name: Some(vec![<#inner_type as crate::SwiftField>::sample()])
-                });
-            } else {
-                // Optional T
-                field_samples.push(quote! {
-                    #field_name: Some(<#inner_type as crate::SwiftField>::sample())
-                });
-            }
-        } else if field.is_repetitive {
-            // Required Vec<T>
-            field_samples.push(quote! {
-                #field_name: vec![<#inner_type as crate::SwiftField>::sample()]
-            });
-        } else {
-            // Required T
-            field_samples.push(quote! {
-                #field_name: <#inner_type as crate::SwiftField>::sample()
-            });
-        }
-    }
-
-    Ok(quote! {
-        Self {
-            #(#field_samples),*
-        }
-    })
-}
-
-/// Generate sample_minimal implementation (only required fields)
-fn generate_sample_minimal_impl(fields: &[MessageField]) -> MacroResult<TokenStream> {
-    let mut field_samples = Vec::new();
-
-    for field in fields {
-        let field_name = &field.name;
-        let inner_type = &field.inner_type;
-
-        if field.is_optional {
-            if field.is_repetitive {
-                // Optional Vec<T>
-                field_samples.push(quote! {
-                    #field_name: None
-                });
-            } else {
-                // Optional T
-                field_samples.push(quote! {
-                    #field_name: None
-                });
-            }
-        } else if field.is_repetitive {
-            // Required Vec<T>
-            field_samples.push(quote! {
-                #field_name: vec![<#inner_type as crate::SwiftField>::sample()]
-            });
-        } else {
-            // Required T
-            field_samples.push(quote! {
-                #field_name: <#inner_type as crate::SwiftField>::sample()
-            });
-        }
-    }
-
-    Ok(quote! {
-        Self {
-            #(#field_samples),*
-        }
-    })
-}
-
-/// Generate sample_full implementation (all fields)
-fn generate_sample_full_impl(fields: &[MessageField]) -> MacroResult<TokenStream> {
-    let mut field_samples = Vec::new();
-
-    for field in fields {
-        let field_name = &field.name;
-        let inner_type = &field.inner_type;
-
-        if field.is_optional {
-            if field.is_repetitive {
-                // Optional Vec<T>
-                field_samples.push(quote! {
-                    #field_name: Some(vec![<#inner_type as crate::SwiftField>::sample(), <#inner_type as crate::SwiftField>::sample()])
-                });
-            } else {
-                // Optional T
-                field_samples.push(quote! {
-                    #field_name: Some(<#inner_type as crate::SwiftField>::sample())
-                });
-            }
-        } else if field.is_repetitive {
-            // Required Vec<T>
-            field_samples.push(quote! {
-                #field_name: vec![<#inner_type as crate::SwiftField>::sample(), <#inner_type as crate::SwiftField>::sample()]
-            });
-        } else {
-            // Required T
-            field_samples.push(quote! {
-                #field_name: <#inner_type as crate::SwiftField>::sample()
-            });
-        }
-    }
-
-    Ok(quote! {
-        Self {
-            #(#field_samples),*
-        }
-    })
-}
-
 /// Extract message type from struct name (e.g., MT103 -> "103")
 fn extract_message_type_from_name(name: &str) -> &str {
     name.strip_prefix("MT").unwrap_or(name)
@@ -1196,16 +1035,6 @@ fn generate_swift_field_impl_for_message(
             fn format_spec() -> &'static str {
                 #message_format_spec_impl
             }
-
-            fn sample() -> Self {
-                // Delegate to SwiftMessageBody's sample method to avoid conflicts
-                <Self as crate::SwiftMessageBody>::sample()
-            }
-
-            fn sample_with_config(_config: &crate::sample::FieldConfig) -> Self {
-                // For messages, use the message body sample
-                <Self as crate::SwiftMessageBody>::sample()
-            }
         }
     })
 }
@@ -1220,12 +1049,10 @@ fn generate_message_parse_impl(_fields: &[MessageField]) -> MacroResult<TokenStr
         use serde_json;
 
         // Try to parse as JSON first
-        if let Ok(parsed) = serde_json::from_str::<Self>(value) {
-            return Ok(parsed);
-        }
-
-        // Fallback: create a sample instance
-        Ok(<Self as crate::SwiftMessageBody>::sample())
+        serde_json::from_str::<Self>(value)
+            .map_err(|e| crate::errors::ParseError::SerializationError {
+                message: format!("Failed to parse message from JSON: {}", e),
+            })
     })
 }
 

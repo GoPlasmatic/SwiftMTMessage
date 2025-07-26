@@ -50,7 +50,6 @@ pub mod headers;
 pub mod messages;
 pub mod parsed_message;
 pub mod parser;
-pub mod sample;
 pub mod swift_error_codes;
 pub mod swift_message;
 pub mod traits;

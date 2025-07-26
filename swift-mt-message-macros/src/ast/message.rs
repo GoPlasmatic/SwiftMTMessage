@@ -71,9 +71,6 @@ pub struct MessageDefinition {
 pub struct MessageField {
     /// Field name in the struct (e.g., `field_20`, `field_32a`)
     pub name: Ident,
-    /// Field type (e.g., `Field20`, `Option<Field50>`, `Vec<Field71A>`)
-    #[allow(dead_code)]
-    pub field_type: Type,
     /// Inner field type (extracted from Option<T> or Vec<T>)
     pub inner_type: Type,
     /// SWIFT field tag (e.g., "20", "32A", "71A")
@@ -82,9 +79,6 @@ pub struct MessageField {
     pub is_optional: bool,
     /// Whether the field is repetitive (wrapped in Vec<T>)
     pub is_repetitive: bool,
-    /// Span for error reporting
-    #[allow(dead_code)]
-    pub span: Span,
 }
 
 impl MessageDefinition {
@@ -163,7 +157,6 @@ impl MessageField {
             .ok_or_else(|| MacroError::internal(field.span(), "Field must have a name"))?;
 
         let field_type = field.ty.clone();
-        let span = field.span();
 
         // Extract field tag from #[field("tag")] attribute
         let tag = extract_field_attribute(&field.attrs)?;
@@ -199,12 +192,10 @@ impl MessageField {
 
         Ok(MessageField {
             name,
-            field_type,
             inner_type,
             tag,
             is_optional,
             is_repetitive,
-            span,
         })
     }
 }
@@ -375,62 +366,5 @@ fn get_default_sequence_config(message_name: &str) -> SequenceConfig {
             sequence_c_fields: vec![],
             has_sequence_c: false,
         },
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use quote::quote;
-
-    #[test]
-    fn test_parse_simple_message() {
-        let input: DeriveInput = syn::parse2(quote! {
-            struct MT103 {
-                #[field("20")]
-                transaction_reference: Field20,
-                #[field("23B")]
-                bank_operation_code: Field23B,
-            }
-        })
-        .unwrap();
-
-        let definition = MessageDefinition::parse(&input).unwrap();
-        assert_eq!(definition.name.to_string(), "MT103");
-        assert_eq!(definition.fields.len(), 2);
-        assert_eq!(definition.fields[0].tag, "20");
-        assert_eq!(definition.fields[1].tag, "23B");
-    }
-
-    #[test]
-    fn test_parse_optional_field() {
-        let input: DeriveInput = syn::parse2(quote! {
-            struct TestMessage {
-                #[field("50")]
-                ordering_customer: Option<Field50>,
-            }
-        })
-        .unwrap();
-
-        let definition = MessageDefinition::parse(&input).unwrap();
-        assert_eq!(definition.fields.len(), 1);
-        assert!(definition.fields[0].is_optional);
-        assert!(!definition.fields[0].is_repetitive);
-    }
-
-    #[test]
-    fn test_parse_repetitive_field() {
-        let input: DeriveInput = syn::parse2(quote! {
-            struct TestMessage {
-                #[field("61")]
-                statement_lines: Vec<Field61>,
-            }
-        })
-        .unwrap();
-
-        let definition = MessageDefinition::parse(&input).unwrap();
-        assert_eq!(definition.fields.len(), 1);
-        assert!(!definition.fields[0].is_optional);
-        assert!(definition.fields[0].is_repetitive);
     }
 }

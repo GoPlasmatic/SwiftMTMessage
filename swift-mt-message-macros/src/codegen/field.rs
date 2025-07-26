@@ -4,9 +4,7 @@ use crate::ast::{EnumField, FieldDefinition, FieldKind, StructField};
 use crate::codegen::helpers::{
     generate_account_bic_field, generate_numbered_lines_field, generate_optional_prefix_field,
 };
-use crate::codegen::type_generators::{
-    generate_sample_for_component, generate_to_swift_string_for_component,
-};
+use crate::codegen::type_generators::generate_to_swift_string_for_component;
 use crate::error::MacroResult;
 use crate::format::generate_regex_parse_impl;
 use proc_macro2::TokenStream;
@@ -30,7 +28,6 @@ fn generate_struct_field_impl(
     let parse_impl = generate_struct_parse_impl(name, struct_field)?;
     let to_swift_string_impl = generate_struct_to_swift_string_impl(struct_field)?;
     let format_spec_impl = generate_struct_format_spec_impl(struct_field)?;
-    let sample_impl = generate_struct_sample_impl(struct_field)?;
 
     Ok(quote! {
         impl crate::SwiftField for #name {
@@ -47,15 +44,6 @@ fn generate_struct_field_impl(
             fn format_spec() -> &'static str {
                 #format_spec_impl
             }
-
-            fn sample() -> Self {
-                #sample_impl
-            }
-
-            fn sample_with_config(config: &crate::sample::FieldConfig) -> Self {
-                // Use config for more sophisticated sample generation
-                Self::sample()
-            }
         }
     })
 }
@@ -65,7 +53,6 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
     let parse_impl = generate_enum_parse_impl(name, enum_field)?;
     let to_swift_string_impl = generate_enum_to_swift_string_impl(enum_field)?;
     let format_spec_impl = generate_enum_format_spec_impl(enum_field)?;
-    let sample_impl = generate_enum_sample_impl(enum_field)?;
 
     // Extract variant information for parse_with_variant
     let variant_idents: Vec<_> = enum_field.variants.iter().map(|v| &v.ident).collect();
@@ -145,15 +132,6 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
 
             fn format_spec() -> &'static str {
                 #format_spec_impl
-            }
-
-            fn sample() -> Self {
-                #sample_impl
-            }
-
-            fn sample_with_config(config: &crate::sample::FieldConfig) -> Self {
-                // Try each variant and return the first successful one
-                #sample_impl
             }
 
             fn valid_variants() -> Option<Vec<&'static str>> {
@@ -403,21 +381,6 @@ fn generate_struct_format_spec_impl(struct_field: &StructField) -> MacroResult<T
     }
 }
 
-/// Generate sample implementation for struct fields
-fn generate_struct_sample_impl(struct_field: &StructField) -> MacroResult<TokenStream> {
-    let field_samples: Vec<_> = struct_field
-        .components
-        .iter()
-        .map(generate_sample_for_component)
-        .collect();
-
-    Ok(quote! {
-        Self {
-            #(#field_samples),*
-        }
-    })
-}
-
 /// Generate parse implementation for enum fields
 fn generate_enum_parse_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroResult<TokenStream> {
     let mut variant_attempts = Vec::new();
@@ -476,21 +439,4 @@ fn generate_enum_to_swift_string_impl(enum_field: &EnumField) -> MacroResult<Tok
 fn generate_enum_format_spec_impl(_enum_field: &EnumField) -> MacroResult<TokenStream> {
     // For enum fields, we return a generic format spec
     Ok(quote! { "variant" })
-}
-
-/// Generate sample implementation for enum fields
-fn generate_enum_sample_impl(enum_field: &EnumField) -> MacroResult<TokenStream> {
-    if let Some(first_variant) = enum_field.variants.first() {
-        let variant_ident = &first_variant.ident;
-        let type_name = &first_variant.type_name;
-
-        Ok(quote! {
-            Self::#variant_ident(<#type_name as crate::SwiftField>::sample())
-        })
-    } else {
-        Err(crate::error::MacroError::internal(
-            proc_macro2::Span::call_site(),
-            "Enum must have at least one variant",
-        ))
-    }
 }

@@ -668,9 +668,9 @@ where
             Ok(sequence_item) => {
                 sequences.push(sequence_item);
             }
-            Err(e) => {
+            Err(_e) => {
                 #[cfg(debug_assertions)]
-                eprintln!("DEBUG: Failed to parse final sequence item: {e:?}");
+                eprintln!("DEBUG: Failed to parse final sequence item: {_e:?}");
             }
         }
     }
@@ -737,9 +737,9 @@ where
             Ok(sequence_item) => {
                 sequences.push(sequence_item);
             }
-            Err(e) => {
+            Err(_e) => {
                 #[cfg(debug_assertions)]
-                eprintln!("DEBUG: Failed to parse final sequence item: {e:?}");
+                eprintln!("DEBUG: Failed to parse final sequence item: {_e:?}");
             }
         }
     }

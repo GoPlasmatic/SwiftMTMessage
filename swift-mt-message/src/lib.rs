@@ -985,7 +985,6 @@ where
     }
 }
 
-
 /// Get field tag for MT serialization by stripping index suffix
 pub fn get_field_tag_for_mt(tag: &str) -> String {
     extract_base_tag(tag).to_string()

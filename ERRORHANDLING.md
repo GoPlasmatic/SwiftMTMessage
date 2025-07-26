@@ -2,6 +2,8 @@
 
 This document provides comprehensive guidance on error handling in the SwiftMTMessage library, based on official SWIFT Standards Release Guide 2025. The library implements strict validation according to SWIFT network validation rules to ensure financial message compliance.
 
+**Version 3.0 Update**: The library now supports error collection mode, allowing parsers to collect all field errors instead of failing on the first error. This enables developers to see all parsing issues at once, improving debugging efficiency.
+
 ## Overview
 
 The SwiftMTMessage library implements SWIFT standard error codes to provide precise feedback when message parsing or validation fails. These error codes match those used by the SWIFT network, ensuring consistency across financial messaging systems.
@@ -149,9 +151,44 @@ The largest category covering general field validation across all MT categories,
 
 ### Error Handling Architecture
 
+### Error Collection Mode (v3.0)
+
+The library now supports two parsing modes:
+
+1. **Fail-Fast Mode (Default)**: Parser stops at the first error for backward compatibility
+2. **Error Collection Mode**: Parser collects all field errors and returns them together
+
+```rust
+use swift_mt_message::{ParseResult, ParserConfig, SwiftParser};
+
+// Configure parser for error collection
+let parser = SwiftParser::with_config(ParserConfig {
+    fail_fast: false,              // Continue parsing after errors
+    validate_optional_fields: true, // Validate optional fields too
+    collect_all_errors: true,      // Collect all possible errors
+});
+
+// Parse returns a ParseResult enum
+match parser.parse_with_errors::<MT103>(message) {
+    Ok(ParseResult::Success(msg)) => {
+        // All fields parsed successfully
+    }
+    Ok(ParseResult::PartialSuccess(msg, errors)) => {
+        // Some fields had errors but message structure is valid
+        // Can still access successfully parsed fields
+    }
+    Ok(ParseResult::Failure(errors)) => {
+        // Too many critical errors, no valid message structure
+    }
+    Err(e) => {
+        // Catastrophic error (e.g., invalid message structure)
+    }
+}
+```
+
 ### Enhanced Error Types
 
-The library now uses enhanced error types that provide rich contextual information:
+The library uses enhanced error types that provide rich contextual information:
 
 ```rust
 // Main parse error enum with enhanced variants
@@ -202,6 +239,26 @@ pub enum ParseError {
         block: String,           // Block number (1-5)
         message: String,         // Detailed error message
     },
+
+    // Multiple errors collected (v3.0)
+    #[error("Multiple parsing errors: {0} errors collected")]
+    MultipleErrors(ParseErrorCollection),
+}
+
+// Error collection container (v3.0)
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ParseErrorCollection {
+    pub errors: Vec<ParseError>,
+    #[serde(skip)]
+    pub partial_result: Option<Box<dyn Any>>,
+}
+
+// Parse result for error collection mode (v3.0)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ParseResult<T> {
+    Success(T),                          // All fields parsed successfully
+    PartialSuccess(T, Vec<ParseError>),  // Some errors but valid structure
+    Failure(Vec<ParseError>),            // Too many errors to continue
 }
 
 // SWIFT validation errors remain structured by series
@@ -286,10 +343,11 @@ ParseError::FieldParsingFailed {
 
 ### Error Recovery Strategies
 
-1. **Immediate Failure**: Critical format errors that prevent parsing
-2. **Collect and Report**: Non-critical errors for batch validation
+1. **Immediate Failure**: Critical format errors that prevent parsing (fail-fast mode)
+2. **Collect and Report**: Non-critical errors for batch validation (error collection mode)
 3. **Contextual Guidance**: Suggest corrections based on error type
 4. **Progressive Validation**: Validate in stages (format → content → business rules)
+5. **Partial Success**: Extract valid fields even with some errors (v3.0)
 
 ## Regional Validation Rules
 
@@ -422,7 +480,44 @@ match SwiftParser::parse::<MT103>(&message) {
 
 ## Migration and Compatibility
 
+### Version 3.0 Migration Guide
+
+Version 3.0 introduces error collection mode while maintaining full backward compatibility:
+
+#### Backward Compatibility
+```rust
+// Existing code continues to work unchanged
+let message = SwiftParser::parse::<MT103>(&raw_message)?;
+// Still fails fast on first error (default behavior)
+```
+
+#### Adopting Error Collection Mode
+```rust
+// New v3.0 approach for error collection
+let parser = SwiftParser::with_config(ParserConfig {
+    fail_fast: false,
+    validate_optional_fields: true,
+    collect_all_errors: true,
+});
+
+// Use parse_with_errors for detailed error information
+match parser.parse_with_errors::<MT103>(&raw_message) {
+    Ok(ParseResult::Success(msg)) => { /* All good */ }
+    Ok(ParseResult::PartialSuccess(msg, errors)) => { 
+        // New: Can still use partially parsed message
+    }
+    Ok(ParseResult::Failure(errors)) => { /* Too many errors */ }
+    Err(e) => { /* Catastrophic failure */ }
+}
+
+// Or use parse_message for automatic handling
+let msg = parser.parse_message::<MT103>(&raw_message)?;
+// Logs non-critical errors to stderr, returns message if possible
+```
+
 ### Version Compatibility
+- **v3.0**: Error collection mode with backward compatibility
+- **v2.x**: Fail-fast behavior only
 - **2025 Standards**: Current implementation
 - **Future Standards**: Extensible error code system
 - **Backward Compatibility**: Support for older message versions
@@ -475,6 +570,52 @@ match SwiftParser::parse::<MT103>(&raw_message) {
         if let Some(context) = get_original_message() {
             eprintln!("\n{}", e.format_with_context(&context));
         }
+    }
+}
+```
+
+### Error Collection Usage (v3.0)
+
+```rust
+use swift_mt_message::{SwiftParser, ParseResult, ParserConfig, messages::MT103};
+
+// Configure error collection parser
+let parser = SwiftParser::with_config(ParserConfig {
+    fail_fast: false,
+    validate_optional_fields: true,
+    collect_all_errors: true,
+});
+
+// Parse message that may have multiple errors
+match parser.parse_with_errors::<MT103>(&raw_message) {
+    Ok(ParseResult::Success(msg)) => {
+        println!("✓ All fields parsed successfully");
+        process_message(msg);
+    }
+    Ok(ParseResult::PartialSuccess(msg, errors)) => {
+        println!("⚠ Parsed with {} errors", errors.len());
+        
+        // Log all errors for debugging
+        for (i, error) in errors.iter().enumerate() {
+            eprintln!("Error {}: {}", i + 1, error.brief_message());
+            eprintln!("{}", error.debug_report());
+        }
+        
+        // Still process valid fields
+        if let Some(ref_field) = msg.fields.get("20") {
+            println!("Transaction reference: {}", ref_field);
+        }
+    }
+    Ok(ParseResult::Failure(errors)) => {
+        println!("✗ Parsing failed with {} errors", errors.len());
+        
+        // Show all errors
+        for error in errors {
+            eprintln!("{}", error.format_with_context(&raw_message));
+        }
+    }
+    Err(e) => {
+        eprintln!("Catastrophic error: {}", e);
     }
 }
 ```
@@ -633,9 +774,12 @@ fn parse_with_fallback(message: &str) -> ParseResult {
 
 ## Conclusion
 
-The enhanced error handling system in SwiftMTMessage provides both SWIFT standards compliance (1,335 error codes) and rich contextual information for effective debugging. The dual approach of enhanced parse errors for immediate feedback and SWIFT validation errors for compliance ensures developers have all the tools needed for robust financial message processing.
+The enhanced error handling system in SwiftMTMessage provides both SWIFT standards compliance (1,335 error codes) and rich contextual information for effective debugging. Version 3.0 introduces error collection mode, enabling developers to see all parsing issues at once instead of stopping at the first error.
 
 Key benefits:
+- **Error Collection Mode (v3.0)**: Collect all field errors in a single parse operation
+- **Partial Success Support (v3.0)**: Extract valid fields even with some errors
+- **Flexible Parser Configuration (v3.0)**: Choose between fail-fast and error collection modes
 - **Precise Error Location**: Line numbers and field positions
 - **Component Identification**: Exact component that failed within complex fields
 - **Actionable Messages**: Clear format specifications and hints

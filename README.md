@@ -318,7 +318,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-swift-mt-message = "2.0.0"
+swift-mt-message = "3.0.0"
 ```
 
 ## 📖 Usage Examples
@@ -356,6 +356,42 @@ match SwiftParser::parse::<MT103>(raw_mt103) {
         eprintln!("\nDetails:\n{}", e.debug_report());
         eprintln!("\n{}", e.format_with_context(raw_mt103));
     }
+}
+```
+
+### Error Collection Mode (NEW in v3.0)
+
+```rust
+use swift_mt_message::{SwiftParser, ParseResult, ParserConfig, messages::MT103};
+
+// Configure parser to collect all errors instead of failing fast
+let parser = SwiftParser::with_config(ParserConfig {
+    fail_fast: false,
+    validate_optional_fields: true,
+    collect_all_errors: true,
+});
+
+// Parse message with multiple errors
+match parser.parse_with_errors::<MT103>(raw_message_with_errors) {
+    Ok(ParseResult::Success(msg)) => {
+        println!("✓ Message parsed successfully");
+    }
+    Ok(ParseResult::PartialSuccess(msg, errors)) => {
+        println!("⚠ Parsed with {} non-critical errors", errors.len());
+        // Process valid fields despite errors
+        println!("Transaction: {}", msg.fields.field_20.reference);
+        // Log errors for review
+        for error in errors {
+            eprintln!("- {}", error.brief_message());
+        }
+    }
+    Ok(ParseResult::Failure(errors)) => {
+        println!("✗ Failed with {} errors:", errors.len());
+        for error in errors {
+            eprintln!("- {}", error.brief_message());
+        }
+    }
+    Err(e) => eprintln!("Unexpected error: {}", e),
 }
 ```
 
@@ -454,7 +490,10 @@ Complete MT Message:
 - **Efficient Serialization**: Custom serialization for financial data structures
 - **Memory Safety**: Rust's ownership system prevents financial data corruption
 
-### Enhanced Error Handling
+### Enhanced Error Handling (v3.0)
+- **Error Collection Mode**: Collect all field parsing errors instead of failing fast (NEW in v3)
+- **Flexible Parsing Modes**: Configure fail-fast or error collection behavior
+- **Partial Success Support**: Parse valid fields even with some errors
 - **Contextual Errors**: Rich error information with field tags, components, and positions
 - **Debug-Friendly**: Tree-formatted error reports with hints and suggestions
 - **Position Tracking**: Line numbers and field positions preserved throughout parsing

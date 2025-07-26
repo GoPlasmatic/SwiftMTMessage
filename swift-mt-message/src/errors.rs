@@ -66,6 +66,8 @@
 //! - Business rule errors include rule names for selective validation
 
 use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::fmt::{self, Display, Formatter};
 use thiserror::Error;
 
 /// Result type alias for the library
@@ -76,6 +78,69 @@ pub type Result<T> = std::result::Result<T, ParseError>;
 
 /// Enhanced result type for SWIFT validation operations
 pub type SwiftValidationResult<T> = std::result::Result<T, SwiftValidationError>;
+
+/// Collection of parsing errors for comprehensive error reporting
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ParseErrorCollection {
+    /// All parsing errors encountered
+    pub errors: Vec<ParseError>,
+    /// Partial parse result if available (not cloneable due to dyn Any)
+    #[serde(skip)]
+    pub partial_result: Option<Box<dyn Any>>,
+}
+
+/// Result of parsing a field with potential error
+#[derive(Debug, Clone)]
+pub struct FieldParseResult<T> {
+    /// Successfully parsed value (if any)
+    pub value: Option<T>,
+    /// Error encountered during parsing (if any)
+    pub error: Option<ParseError>,
+}
+
+/// Result type for parse operations with error collection
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ParseResult<T> {
+    /// Parsing succeeded without errors
+    Success(T),
+    /// Parsing succeeded with non-critical errors
+    PartialSuccess(T, Vec<ParseError>),
+    /// Parsing failed with critical errors
+    Failure(Vec<ParseError>),
+}
+
+/// Parser configuration options
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParserConfig {
+    /// If true, stop at first error (default: false)
+    pub fail_fast: bool,
+    /// If true, validate optional fields (default: true)
+    pub validate_optional_fields: bool,
+    /// If true, collect all errors even for non-critical issues (default: true)
+    pub collect_all_errors: bool,
+}
+
+impl Default for ParserConfig {
+    fn default() -> Self {
+        Self {
+            fail_fast: false,
+            validate_optional_fields: true,
+            collect_all_errors: true,
+        }
+    }
+}
+
+impl Display for ParseErrorCollection {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Found {} parsing errors:", self.errors.len())?;
+        for (idx, error) in self.errors.iter().enumerate() {
+            writeln!(f, "\n{}. {}", idx + 1, error)?;
+        }
+        Ok(())
+    }
+}
+
+impl std::error::Error for ParseErrorCollection {}
 
 /// Details for invalid field format errors
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -174,6 +239,10 @@ pub enum ParseError {
         /// Detailed error message
         message: String,
     },
+
+    /// Multiple parsing errors collected during message parsing
+    #[error("Multiple parsing errors found ({} errors)", .0.len())]
+    MultipleErrors(Vec<ParseError>),
 }
 
 /// Validation error for field-level validation
@@ -422,6 +491,13 @@ impl ParseError {
                      └─ Hint: Ensure block {block} follows SWIFT message structure"
                 )
             }
+            ParseError::MultipleErrors(errors) => {
+                let mut output = format!("Multiple Parsing Errors ({} total):\n", errors.len());
+                for (idx, error) in errors.iter().enumerate() {
+                    output.push_str(&format!("\n{}. {}\n", idx + 1, error.debug_report()));
+                }
+                output
+            }
             // Fallback for other variants
             _ => format!("{self}"),
         }
@@ -465,6 +541,9 @@ impl ParseError {
             }
             ParseError::InvalidBlockStructure { block, .. } => {
                 format!("Block {block} structure invalid")
+            }
+            ParseError::MultipleErrors(errors) => {
+                format!("{} parsing errors found", errors.len())
             }
             _ => self.to_string(),
         }

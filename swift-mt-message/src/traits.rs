@@ -48,6 +48,30 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
     where
         Self: Sized;
 
+    /// Create from field map with configuration for error collection
+    fn from_fields_with_config(
+        fields: HashMap<String, Vec<(String, usize)>>,
+        config: &crate::errors::ParserConfig,
+    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError>
+    where
+        Self: Sized,
+    {
+        // Default implementation: use fail-fast mode if config.fail_fast is true
+        if config.fail_fast {
+            match Self::from_fields(fields) {
+                Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+                Err(e) => Err(e),
+            }
+        } else {
+            // For non-fail-fast mode, derived types should override this method
+            // Default behavior falls back to fail-fast
+            match Self::from_fields(fields) {
+                Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+                Err(e) => Err(e),
+            }
+        }
+    }
+
     /// Convert to field map
     fn to_fields(&self) -> HashMap<String, Vec<String>>;
 

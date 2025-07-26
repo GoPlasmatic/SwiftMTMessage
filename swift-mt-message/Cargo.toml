@@ -45,3 +45,7 @@ path = "../examples/parse_auto.rs"
 [[example]]
 name = "benchmark"
 path = "../examples/benchmark.rs"
+
+[[example]]
+name = "error_collection"
+path = "../examples/error_collection.rs"

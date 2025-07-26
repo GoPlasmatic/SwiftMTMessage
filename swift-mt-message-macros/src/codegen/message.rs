@@ -27,6 +27,11 @@ pub fn generate_swift_message_impl(definition: &MessageDefinition) -> MacroResul
     } else {
         generate_from_fields_impl(&definition.fields)?
     };
+    let from_fields_with_config_impl = if definition.has_sequences {
+        generate_from_fields_with_sequences_and_config_impl(definition)?
+    } else {
+        generate_from_fields_with_config_impl(&definition.fields)?
+    };
     let to_fields_impl = generate_to_fields_impl(&definition.fields)?;
     let to_ordered_fields_impl = if definition.has_sequences {
         generate_to_ordered_fields_with_sequences_impl(definition)?
@@ -53,6 +58,16 @@ pub fn generate_swift_message_impl(definition: &MessageDefinition) -> MacroResul
                 use crate::parser::FieldConsumptionTracker;
 
                 #from_fields_impl
+            }
+
+            fn from_fields_with_config(
+                fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+                config: &crate::errors::ParserConfig
+            ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
+                use crate::SwiftField;
+                use crate::parser::FieldConsumptionTracker;
+
+                #from_fields_with_config_impl
             }
 
             fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
@@ -616,6 +631,334 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
         Ok(Self {
             #(#field_parsers),*
         })
+    })
+}
+
+/// Generate from_fields implementation with error collection
+fn generate_from_fields_with_config_impl(fields: &[MessageField]) -> MacroResult<TokenStream> {
+    let mut field_parsers = Vec::new();
+    let mut field_names = Vec::new();
+    let mut field_errors = Vec::new();
+
+    for field in fields {
+        let field_name = &field.name;
+        let inner_type = &field.inner_type;
+        let tag = &field.tag;
+        field_names.push(field_name);
+
+        // Special handling for sequence fields marked with "#"
+        if tag == "#" {
+            if field.is_repetitive {
+                // This is a sequence field (like transactions in MT101)
+                field_parsers.push(quote! {
+                    let #field_name = if config.fail_fast {
+                        // Fail-fast mode: use ? operator
+                        Some(crate::parser::parse_sequences::<#inner_type>(&fields, &mut tracker)?)
+                    } else {
+                        // Error collection mode
+                        match crate::parser::parse_sequences::<#inner_type>(&fields, &mut tracker) {
+                            Ok(val) => Some(val),
+                            Err(e) => {
+                                errors.push(e);
+                                None
+                            }
+                        }
+                    };
+                });
+                field_errors.push(quote! {
+                    if #field_name.is_none() && !field_is_optional(stringify!(#field_name)) {
+                        has_critical_errors = true;
+                    }
+                });
+            } else {
+                return Err(crate::error::MacroError::internal(
+                    proc_macro2::Span::call_site(),
+                    "Field with tag '#' must be repetitive (Vec<T>)",
+                ));
+            }
+            continue;
+        }
+
+        if field.is_optional {
+            if field.is_repetitive {
+                // Optional Vec<T>
+                field_parsers.push(quote! {
+                    let #field_name = {
+                        let base_tag = crate::extract_base_tag(#tag);
+                        fields.get(base_tag)
+                            .map(|values| {
+                                let mut results = Vec::new();
+                                let mut has_error = false;
+
+                                for (idx, (v, pos)) in values.iter().enumerate() {
+                                    match #inner_type::parse(v) {
+                                        Ok(parsed) => results.push(parsed),
+                                        Err(e) => {
+                                            let line_num = *pos >> 16;
+                                            let error = crate::errors::ParseError::FieldParsingFailed {
+                                                field_tag: #tag.to_string(),
+                                                field_type: stringify!(#inner_type).to_string(),
+                                                position: line_num,
+                                                original_error: format!("Item {}: {}", idx, e),
+                                            };
+                                            if config.fail_fast {
+                                                return Err(error);
+                                            } else {
+                                                errors.push(error);
+                                                has_error = true;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if has_error && results.is_empty() {
+                                    Ok(Vec::new())  // Return empty vec instead of error for optional fields
+                                } else {
+                                    Ok(results)
+                                }
+                            })
+                            .transpose()
+                            .ok()
+                            .flatten()
+                    };
+                });
+            } else {
+                // Optional T
+                field_parsers.push(quote! {
+                    let #field_name = {
+                        let base_tag = crate::extract_base_tag(#tag);
+                        let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                        let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+
+                        let field_result = crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice);
+
+                        if let Some((value, variant_tag, pos)) = field_result {
+                            match #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag)) {
+                                Ok(parsed) => Some(parsed),
+                                Err(e) => {
+                                    let line_num = pos >> 16;
+                                    let error = crate::errors::ParseError::FieldParsingFailed {
+                                        field_tag: #tag.to_string(),
+                                        field_type: stringify!(#inner_type).to_string(),
+                                        position: line_num,
+                                        original_error: e.to_string(),
+                                    };
+                                    if config.fail_fast {
+                                        return Err(error);
+                                    } else {
+                                        errors.push(error);
+                                        None
+                                    }
+                                }
+                            }
+                        } else {
+                            None
+                        }
+                    };
+                });
+            }
+        } else if field.is_repetitive {
+            // Required Vec<T>
+            field_parsers.push(quote! {
+                let #field_name = {
+                    let base_tag = crate::extract_base_tag(#tag);
+                    let field_values = fields.get(base_tag);
+
+                    if let Some(values) = field_values {
+                        let mut results = Vec::new();
+                        let mut has_error = false;
+
+                        for (idx, (v, pos)) in values.iter().enumerate() {
+                            match #inner_type::parse(v) {
+                                Ok(parsed) => results.push(parsed),
+                                Err(e) => {
+                                    let line_num = *pos >> 16;
+                                    let error = crate::errors::ParseError::FieldParsingFailed {
+                                        field_tag: #tag.to_string(),
+                                        field_type: stringify!(#inner_type).to_string(),
+                                        position: line_num,
+                                        original_error: format!("Item {}: {}", idx, e),
+                                    };
+                                    if config.fail_fast {
+                                        return Err(error);
+                                    } else {
+                                        errors.push(error);
+                                        has_error = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        if has_error && results.is_empty() {
+                            None
+                        } else {
+                            Some(results)
+                        }
+                    } else {
+                        None
+                    }
+                };
+            });
+            field_errors.push(quote! {
+                if #field_name.is_none() {
+                    let error = crate::errors::ParseError::MissingRequiredField {
+                        field_tag: #tag.to_string(),
+                        field_name: stringify!(#field_name).to_string(),
+                        message_type: Self::message_type().to_string(),
+                        position_in_block4: None,
+                    };
+                    errors.push(error);
+                    has_critical_errors = true;
+                }
+            });
+        } else {
+            // Required T
+            field_parsers.push(quote! {
+                let #field_name = {
+                    let base_tag = crate::extract_base_tag(#tag);
+                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+
+                    let field_result = crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice);
+
+                    if let Some((value, variant_tag, pos)) = field_result {
+                        match #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag)) {
+                            Ok(parsed) => Some(parsed),
+                            Err(e) => {
+                                let line_num = pos >> 16;
+                                let error = crate::errors::ParseError::FieldParsingFailed {
+                                    field_tag: #tag.to_string(),
+                                    field_type: stringify!(#inner_type).to_string(),
+                                    position: line_num,
+                                    original_error: e.to_string(),
+                                };
+                                if config.fail_fast {
+                                    return Err(error);
+                                } else {
+                                    errors.push(error);
+                                    None
+                                }
+                            }
+                        }
+                    } else {
+                        None
+                    }
+                };
+            });
+            field_errors.push(quote! {
+                if #field_name.is_none() {
+                    let error = crate::errors::ParseError::MissingRequiredField {
+                        field_tag: #tag.to_string(),
+                        field_name: stringify!(#field_name).to_string(),
+                        message_type: Self::message_type().to_string(),
+                        position_in_block4: None,
+                    };
+                    errors.push(error);
+                    has_critical_errors = true;
+                }
+            });
+        }
+    }
+
+    // Generate struct construction with proper unwrapping
+    let mut struct_fields = Vec::new();
+    for field in fields {
+        let field_name = &field.name;
+        if field.is_optional {
+            struct_fields.push(quote! { #field_name });
+        } else if field.is_repetitive {
+            struct_fields.push(quote! { #field_name: #field_name.unwrap_or_default() });
+        } else {
+            // For required fields, we need to check if we can provide a default
+            struct_fields.push(quote! {
+                #field_name: #field_name.ok_or_else(|| {
+                    crate::errors::ParseError::MissingRequiredField {
+                        field_tag: stringify!(#field_name).to_string(),
+                        field_name: stringify!(#field_name).to_string(),
+                        message_type: Self::message_type().to_string(),
+                        position_in_block4: None,
+                    }
+                })?
+            });
+        }
+    }
+
+    Ok(quote! {
+        let mut tracker = FieldConsumptionTracker::new();
+        let mut errors = Vec::new();
+        let mut has_critical_errors = false;
+
+        // Helper function to check if a field is optional
+        let optional_fields = <Self as crate::SwiftMessageBody>::optional_fields();
+        let field_is_optional = |field_name: &str| -> bool {
+            optional_fields.contains(&field_name)
+        };
+
+        #(#field_parsers)*
+
+        // Check for missing required fields
+        #(#field_errors)*
+
+        // Return result based on errors collected
+        if !errors.is_empty() {
+            if config.fail_fast {
+                // In fail-fast mode, return the first error
+                Err(errors.into_iter().next().unwrap())
+            } else if has_critical_errors {
+                // Critical errors mean we can't construct the message
+                Ok(crate::errors::ParseResult::Failure(errors))
+            } else {
+                // Try to construct with what we have
+                match (|| -> crate::SwiftResult<Self> {
+                    Ok(Self {
+                        #(#struct_fields),*
+                    })
+                })() {
+                    Ok(msg) => Ok(crate::errors::ParseResult::PartialSuccess(msg, errors)),
+                    Err(_) => Ok(crate::errors::ParseResult::Failure(errors))
+                }
+            }
+        } else {
+            // Try to construct the message
+            match (|| -> crate::SwiftResult<Self> {
+                Ok(Self {
+                    #(#struct_fields),*
+                })
+            })() {
+                Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+                Err(e) => {
+                    if config.fail_fast {
+                        Err(e)
+                    } else {
+                        Ok(crate::errors::ParseResult::Failure(vec![e]))
+                    }
+                }
+            }
+        }
+    })
+}
+
+/// Generate from_fields implementation with sequences and error collection
+fn generate_from_fields_with_sequences_and_config_impl(
+    _definition: &MessageDefinition,
+) -> MacroResult<TokenStream> {
+    // For now, use the default implementation that delegates to from_fields
+    // A proper implementation would handle sequences with error collection
+    Ok(quote! {
+        // Use default implementation for sequences
+        if config.fail_fast {
+            match Self::from_fields(fields) {
+                Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+                Err(e) => Err(e),
+            }
+        } else {
+            // For non-fail-fast mode with sequences, fall back to fail-fast for now
+            // TODO: Implement proper error collection for sequences
+            match Self::from_fields(fields) {
+                Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+                Err(e) => Err(e),
+            }
+        }
     })
 }
 

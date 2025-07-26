@@ -44,12 +44,13 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::errors::{ParseError, Result};
+use crate::errors::{ParseError, Result, SwiftValidationError};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 use crate::messages::{
     MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT199, MT202, MT205, MT210,
     MT292, MT296, MT299, MT900, MT910, MT920, MT935, MT940, MT941, MT942, MT950,
 };
+use crate::swift_error_codes::t_series;
 use crate::{ParsedSwiftMessage, SwiftMessage, SwiftMessageBody};
 
 /// Type alias for the field parsing result with position tracking
@@ -306,7 +307,19 @@ impl SwiftParser {
 
         // Validate message type matches expected type using SWIFT error codes
         if message_type != T::message_type() {
-            crate::validation::validate_message_type(&message_type, T::message_type())?;
+            return Err(ParseError::SwiftValidation(Box::new(
+                SwiftValidationError::format_error(
+                    t_series::T03,
+                    "MESSAGE_TYPE",
+                    &message_type,
+                    T::message_type(),
+                    &format!(
+                        "Message type mismatch: expected {}, got {}",
+                        T::message_type(),
+                        message_type
+                    ),
+                ),
+            )));
         }
 
         // Parse block 4 fields with position tracking

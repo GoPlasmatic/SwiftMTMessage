@@ -16,8 +16,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            1000000000,
+            9999999999
           ]
         }
       ]
@@ -102,30 +102,9 @@
           "var": "transaction_ref"
         }
       },
-      "23E": {
-        "instruction_code": "AUTH"
-      },
       "30": {
         "execution_date": {
           "var": "execution_date"
-        }
-      },
-      "50": {
-        "K": {
-          "account": "/TAX-AUTHORITY-001",
-          "name_and_address": [
-            "NATIONAL TAX AUTHORITY",
-            {
-              "cat": [
-                "GOV ENTITY/",
-                {
-                  "var": "sender_lei"
-                }
-              ]
-            },
-            "GOVERNMENT DISTRICT",
-            "CAPITAL CITY, GB"
-          ]
         }
       },
       "52": {
@@ -136,10 +115,10 @@
         }
       },
       "26T": {
-        "transaction_type_code": "K021"
+        "type_code": "TAX"
       },
       "77B": {
-        "regulatory_reporting": [
+        "narrative": [
           "/ORDERRES/GB//TAX COLLECTION",
           "/BENEFRES/GB//GOVERNMENT"
         ]
@@ -148,13 +127,6 @@
         "code": {
           "var": "charges"
         }
-      },
-      "72": {
-        "information": [
-          "/INS/AUTHORIZED TAX COLLECTION",
-          "/CBPR/ENHANCED",
-          "/AUTH/MANDATE VERIFIED"
-        ]
       },
       "#": [
         {
@@ -174,6 +146,24 @@
           },
           "23E": {
             "instruction_code": "AUTH"
+          },
+          "50": {
+            "K": {
+              "account": "/TAX-AUTHORITY-001",
+              "name_and_address": [
+                "NATIONAL TAX AUTHORITY",
+                {
+                  "cat": [
+                    "GOV ENTITY/",
+                    {
+                      "var": "sender_lei"
+                    }
+                  ]
+                },
+                "GOVERNMENT DISTRICT",
+                "CAPITAL CITY, GB"
+              ]
+            }
           },
           "32B": {
             "currency": {
@@ -258,8 +248,7 @@
                 ]
               },
               "/PURP/TAXS",
-              "/PERIOD/Q4 2024",
-              "/AUTH/PRE-AUTHORIZED"
+              "/PERIOD/Q4 2024"
             ]
           }
         },
@@ -280,6 +269,24 @@
           },
           "23E": {
             "instruction_code": "AUTH"
+          },
+          "50": {
+            "K": {
+              "account": "/TAX-AUTHORITY-001",
+              "name_and_address": [
+                "NATIONAL TAX AUTHORITY",
+                {
+                  "cat": [
+                    "GOV ENTITY/",
+                    {
+                      "var": "sender_lei"
+                    }
+                  ]
+                },
+                "GOVERNMENT DISTRICT",
+                "CAPITAL CITY, GB"
+              ]
+            }
           },
           "32B": {
             "currency": {
@@ -364,25 +371,11 @@
                 ]
               },
               "/PURP/TAXS",
-              "/PERIOD/DEC 2024",
-              "/AUTH/STANDING ORDER"
+              "/PERIOD/DEC 2024"
             ]
           }
         }
-      ],
-      "32B": {
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "total_amount"
-        }
-      },
-      "19": {
-        "amount": {
-          "var": "total_amount"
-        }
-      }
+      ]
     }
   }
 }

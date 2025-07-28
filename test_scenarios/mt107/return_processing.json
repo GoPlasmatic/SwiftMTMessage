@@ -16,8 +16,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            10000000000,
+            99999999999
           ]
         }
       ]
@@ -28,8 +28,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            10000000000,
+            99999999999
           ]
         }
       ]
@@ -114,6 +114,17 @@
           "var": "execution_date"
         }
       },
+      "50#2": {
+        "K": {
+          "account": "/RETURN-PROCESSOR",
+          "name_and_address": [
+            "RETURNS DEPARTMENT",
+            "FINANCIAL INSTITUTION",
+            "OPERATIONS CENTER",
+            "LONDON, GB"
+          ]
+        }
+      },
       "51A": {
         "bic": {
           "var": "sender_bic"
@@ -135,14 +146,7 @@
               }
             ]
           },
-          {
-            "cat": [
-              "/UETR/",
-              {
-                "var": "original_uetr"
-              }
-            ]
-          },
+          "/RSNCD/AC04",
           "/DATE/2024-12-25"
         ]
       },
@@ -161,9 +165,6 @@
                 }
               ]
             }
-          },
-          "23E": {
-            "instruction_code": "RTND"
           },
           "32B": {
             "currency": {
@@ -225,7 +226,6 @@
             "narrative": [
               "/RFB/DD RETURN",
               "/RETN/AC04",
-              "/CD/ACCOUNT CLOSED",
               {
                 "cat": [
                   "/ORGNL/TXN",
@@ -237,7 +237,8 @@
                     ]
                   }
                 ]
-              }
+              },
+              "/CD/ACCOUNT CLOSED"
             ]
           }
         },
@@ -255,9 +256,6 @@
                 }
               ]
             }
-          },
-          "23E": {
-            "instruction_code": "RTND"
           },
           "32B": {
             "currency": {
@@ -319,7 +317,6 @@
             "narrative": [
               "/RFB/DD RETURN",
               "/RETN/AM04",
-              "/CD/INSUFFICIENT FUNDS",
               {
                 "cat": [
                   "/ORGNL/TXN",
@@ -331,7 +328,8 @@
                     ]
                   }
                 ]
-              }
+              },
+              "/CD/INSUFFICIENT FUNDS"
             ]
           }
         },
@@ -349,9 +347,6 @@
                 }
               ]
             }
-          },
-          "23E": {
-            "instruction_code": "RTND"
           },
           "32B": {
             "currency": {

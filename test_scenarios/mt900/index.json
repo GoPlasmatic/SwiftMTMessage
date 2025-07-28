@@ -1,0 +1,9 @@
+{
+  "scenarios": [
+    "basic_debit_confirmation",
+    "fee_debit_confirmation", 
+    "fx_transaction_debit",
+    "direct_debit_confirmation",
+    "standing_order_debit"
+  ]
+}

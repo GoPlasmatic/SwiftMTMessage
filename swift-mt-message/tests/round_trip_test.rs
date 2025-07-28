@@ -1,10 +1,18 @@
+use serde::{Deserialize, Serialize};
+use std::env;
 use std::fs;
 use std::path::Path;
-use swift_mt_message::{ParsedSwiftMessage, SwiftParser};
+use swift_mt_message::{generate_sample, ParsedSwiftMessage, SwiftParser};
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ScenarioIndex {
+    scenarios: Vec<String>,
+}
 
 #[derive(Debug)]
 struct TestResult {
-    filename: String,
+    message_type: String,
+    scenario: String,
     parse_status: &'static str,
     validation_status: &'static str,
     roundtrip_status: &'static str,
@@ -12,9 +20,10 @@ struct TestResult {
 }
 
 impl TestResult {
-    fn new(filename: String) -> Self {
+    fn new(message_type: String, scenario: String) -> Self {
         Self {
-            filename,
+            message_type,
+            scenario,
             parse_status: "⏳",
             validation_status: "⏳",
             roundtrip_status: "⏳",
@@ -58,313 +67,725 @@ impl TestResult {
     }
 }
 
-#[test]
-fn test_round_trip_all_files() {
-    let test_data_dir = Path::new("../test_data");
-    if !test_data_dir.exists() {
-        panic!(
-            "test_data directory not found at: {:?}",
-            test_data_dir.canonicalize()
-        );
+fn test_single_scenario(
+    message_type: &str,
+    scenario_name: &str,
+    test_index: usize,
+    debug_mode: bool,
+) -> TestResult {
+    let mut result = TestResult::new(message_type.to_string(), scenario_name.to_string());
+
+    // Generate sample message
+    let generated_message = match message_type {
+        "MT101" => generate_sample::<swift_mt_message::messages::mt101::MT101>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT101(Box::new(msg))),
+        "MT103" => generate_sample::<swift_mt_message::messages::mt103::MT103>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT103(Box::new(msg))),
+        "MT104" => generate_sample::<swift_mt_message::messages::mt104::MT104>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT104(Box::new(msg))),
+        "MT107" => generate_sample::<swift_mt_message::messages::mt107::MT107>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT107(Box::new(msg))),
+        "MT110" => generate_sample::<swift_mt_message::messages::mt110::MT110>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT110(Box::new(msg))),
+        "MT202" => generate_sample::<swift_mt_message::messages::mt202::MT202>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT202(Box::new(msg))),
+        "MT205" => generate_sample::<swift_mt_message::messages::mt205::MT205>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT205(Box::new(msg))),
+        "MT210" => generate_sample::<swift_mt_message::messages::mt210::MT210>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT210(Box::new(msg))),
+        "MT192" => generate_sample::<swift_mt_message::messages::mt192::MT192>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT192(Box::new(msg))),
+        "MT196" => generate_sample::<swift_mt_message::messages::mt196::MT196>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT196(Box::new(msg))),
+        "MT199" => generate_sample::<swift_mt_message::messages::mt199::MT199>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT199(Box::new(msg))),
+        "MT292" => generate_sample::<swift_mt_message::messages::mt292::MT292>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT292(Box::new(msg))),
+        "MT296" => generate_sample::<swift_mt_message::messages::mt296::MT296>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT296(Box::new(msg))),
+        "MT299" => generate_sample::<swift_mt_message::messages::mt299::MT299>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT299(Box::new(msg))),
+        "MT111" => generate_sample::<swift_mt_message::messages::mt111::MT111>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT111(Box::new(msg))),
+        "MT112" => generate_sample::<swift_mt_message::messages::mt112::MT112>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT112(Box::new(msg))),
+        "MT900" => generate_sample::<swift_mt_message::messages::mt900::MT900>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT900(Box::new(msg))),
+        "MT910" => generate_sample::<swift_mt_message::messages::mt910::MT910>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT910(Box::new(msg))),
+        "MT920" => generate_sample::<swift_mt_message::messages::mt920::MT920>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT920(Box::new(msg))),
+        "MT935" => generate_sample::<swift_mt_message::messages::mt935::MT935>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT935(Box::new(msg))),
+        "MT940" => generate_sample::<swift_mt_message::messages::mt940::MT940>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT940(Box::new(msg))),
+        "MT941" => generate_sample::<swift_mt_message::messages::mt941::MT941>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT941(Box::new(msg))),
+        "MT942" => generate_sample::<swift_mt_message::messages::mt942::MT942>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT942(Box::new(msg))),
+        "MT950" => generate_sample::<swift_mt_message::messages::mt950::MT950>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT950(Box::new(msg))),
+        // Add more message types as needed
+        _ => {
+            result.mark_parse_failed(format!("Unsupported message type: {}", message_type));
+            return result;
+        }
+    };
+
+    let parsed_message = match generated_message {
+        Ok(msg) => msg,
+        Err(e) => {
+            result.mark_parse_failed(format!("Generation error: {e}"));
+            if debug_mode {
+                eprintln!("\n[Test {}] Generation failed: {}", test_index, e);
+                eprintln!("Message type: {}", message_type);
+                eprintln!("Scenario: {}", scenario_name);
+                
+                // Try to read the scenario file for debugging
+                let scenario_file = format!("../test_scenarios/{}/{}.json", 
+                    message_type.to_lowercase(), scenario_name);
+                if let Ok(content) = std::fs::read_to_string(&scenario_file) {
+                    eprintln!("Scenario file content (first 500 chars):");
+                    eprintln!("{}", &content[..content.len().min(500)]);
+                }
+            }
+            return result;
+        }
+    };
+
+    // Convert to MT format
+    let mt_format = match &parsed_message {
+        ParsedSwiftMessage::MT101(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT103(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT104(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT107(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT110(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT111(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT112(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT202(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT205(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT210(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT900(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT910(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT920(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT935(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT940(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT941(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT942(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT950(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT192(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT196(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT292(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT296(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT199(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT299(msg) => msg.to_mt_message(),
+    };
+
+    // Parse the MT format back
+    let reparsed_message = match SwiftParser::parse_auto(&mt_format) {
+        Ok(msg) => {
+            result.mark_parse_success();
+            msg
+        }
+        Err(e) => {
+            let error_str = format!("{e:?}")
+                .split('\n')
+                .next()
+                .unwrap_or("Unknown")
+                .to_string();
+            result.mark_parse_failed(error_str.clone());
+
+            if debug_mode {
+                eprintln!("\n[Test {}] Parse failed: {}", test_index, error_str);
+                eprintln!("MT message preview (first 500 chars):");
+                eprintln!("{}", &mt_format[..mt_format.len().min(500)]);
+
+                // If it's a field parsing error, show more context
+                if error_str.contains("FieldParsingFailed") {
+                    if let Some(field_tag_start) = error_str.find("field_tag: \"") {
+                        if let Some(field_tag) = error_str[field_tag_start + 12..].split('"').next()
+                        {
+                            // Find and display the problematic field in the MT message
+                            if let Some(field_pos) = mt_format.find(&format!(":{field_tag}:")) {
+                                let field_end = mt_format[field_pos..]
+                                    .find("\n:")
+                                    .unwrap_or(mt_format.len() - field_pos);
+                                let field_content = &mt_format[field_pos..field_pos + field_end];
+                                eprintln!("\nProblematic field content:");
+                                eprintln!("{}", field_content);
+                            }
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+    };
+
+    // Validate message
+    let validation_result = reparsed_message.validate();
+    if !validation_result.errors.is_empty() {
+        let error_summaries: Vec<String> = validation_result
+            .errors
+            .iter()
+            .map(|e| format!("{e}"))
+            .collect();
+        result.mark_validation_failed(error_summaries.clone());
+
+        if debug_mode {
+            eprintln!("\n[Test {}] Validation failed:", test_index);
+            for (idx, error) in error_summaries.iter().enumerate() {
+                eprintln!("  Error {}: {}", idx + 1, error);
+            }
+
+            // Print relevant fields for debugging
+            match &reparsed_message {
+                ParsedSwiftMessage::MT101(msg) => {
+                    eprintln!("\nMessage details:");
+                    eprintln!("  Field 20: {:?}", msg.fields.field_20);
+                    eprintln!("  Field 21R: {:?}", msg.fields.field_21r);
+                    eprintln!("  Field 28D: {:?}", msg.fields.field_28d);
+                    eprintln!("  Transactions: {}", msg.fields.transactions.len());
+                }
+                ParsedSwiftMessage::MT103(msg) => {
+                    eprintln!("\nMessage details:");
+                    eprintln!("  Field 20: {:?}", msg.fields.field_20);
+                    eprintln!("  Field 32A: {:?}", msg.fields.field_32a);
+                }
+                _ => {}
+            }
+        }
+    } else {
+        result.mark_validation_success();
     }
+
+    // Perform round-trip test
+    // Step 1: Serialize to JSON
+    let json_representation = match serde_json::to_string_pretty(&parsed_message) {
+        Ok(json) => json,
+        Err(e) => {
+            result.mark_roundtrip_failed(&format!("JSON serialize: {e}"));
+            if debug_mode {
+                eprintln!("\n[Test {}] JSON serialization failed: {}", test_index, e);
+            }
+            return result;
+        }
+    };
+
+    // Step 2: Deserialize from JSON
+    let deserialized_message: ParsedSwiftMessage = match serde_json::from_str(&json_representation)
+    {
+        Ok(msg) => msg,
+        Err(e) => {
+            result.mark_roundtrip_failed(&format!("JSON deserialize: {e}"));
+            if debug_mode {
+                eprintln!("\n[Test {}] JSON deserialization failed: {}", test_index, e);
+                eprintln!("JSON that failed to deserialize:");
+                eprintln!(
+                    "{}",
+                    &json_representation[..json_representation.len().min(1000)]
+                );
+            }
+            return result;
+        }
+    };
+
+    // Step 3: Compare JSON representations
+    let original_json = match serde_json::to_string_pretty(&parsed_message) {
+        Ok(json) => json,
+        Err(e) => {
+            result.mark_roundtrip_failed(&format!("Original JSON: {e}"));
+            return result;
+        }
+    };
+
+    let deserialized_json = match serde_json::to_string_pretty(&deserialized_message) {
+        Ok(json) => json,
+        Err(e) => {
+            result.mark_roundtrip_failed(&format!("Deserialized JSON: {e}"));
+            return result;
+        }
+    };
+
+    if original_json == deserialized_json {
+        result.mark_roundtrip_success();
+    } else {
+        result.mark_roundtrip_failed("JSON mismatch after deserialization");
+        if debug_mode {
+            eprintln!("\n[Test {}] JSON roundtrip mismatch", test_index);
+            eprintln!("Original JSON length: {}", original_json.len());
+            eprintln!("Deserialized JSON length: {}", deserialized_json.len());
+
+            // Find first difference
+            let chars1: Vec<_> = original_json.chars().collect();
+            let chars2: Vec<_> = deserialized_json.chars().collect();
+            for (i, (c1, c2)) in chars1.iter().zip(chars2.iter()).enumerate() {
+                if c1 != c2 {
+                    let start = i.saturating_sub(50);
+                    let end = (i + 50).min(chars1.len()).min(chars2.len());
+                    eprintln!("First difference at position {}:", i);
+                    eprintln!(
+                        "Original: ...{}...",
+                        chars1[start..end].iter().collect::<String>()
+                    );
+                    eprintln!(
+                        "Deserialized: ...{}...",
+                        chars2[start..end].iter().collect::<String>()
+                    );
+                    break;
+                }
+            }
+        }
+    }
+
+    result
+}
+
+fn get_message_types() -> Vec<String> {
+    let scenarios_dir = Path::new("../test_scenarios");
+    let mut message_types = Vec::new();
+
+    if let Ok(entries) = fs::read_dir(scenarios_dir) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                let path = entry.path();
+                if path.is_dir() {
+                    if let Some(name) = path.file_name().and_then(|s| s.to_str()) {
+                        if name.starts_with("mt") {
+                            message_types.push(name.to_uppercase());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    message_types.sort();
+    message_types
+}
+
+fn get_scenarios_for_message_type(message_type: &str) -> Vec<String> {
+    let index_path = format!(
+        "../test_scenarios/{}/index.json",
+        message_type.to_lowercase()
+    );
+
+    match fs::read_to_string(&index_path) {
+        Ok(content) => match serde_json::from_str::<ScenarioIndex>(&content) {
+            Ok(index) => index.scenarios,
+            Err(e) => {
+                eprintln!("Failed to parse index.json for {}: {}", message_type, e);
+                Vec::new()
+            }
+        },
+        Err(e) => {
+            eprintln!("Failed to read index.json for {}: {}", message_type, e);
+            Vec::new()
+        }
+    }
+}
+
+/// Round-trip test for SWIFT MT message scenarios
+///
+/// Environment variables:
+/// - `TEST_MESSAGE_TYPE`: Test specific message type (e.g., "MT101")
+/// - `TEST_SCENARIO`: Test specific scenario (e.g., "urgent_payment")
+/// - `TEST_DEBUG`: Enable debug output for failures
+/// - `TEST_STOP_ON_FAILURE`: Stop testing on first failure (useful with TEST_DEBUG)
+/// - `TEST_SAMPLE_COUNT`: Number of samples per scenario (default: 100)
+///
+/// Examples:
+/// ```bash
+/// # Test all scenarios
+/// cargo test round_trip_scenarios
+///
+/// # Test specific message type
+/// TEST_MESSAGE_TYPE=MT101 cargo test round_trip_scenarios
+///
+/// # Debug specific scenario with single sample
+/// TEST_MESSAGE_TYPE=MT101 TEST_SCENARIO=urgent_payment TEST_DEBUG=1 TEST_SAMPLE_COUNT=1 cargo test round_trip_scenarios -- --nocapture
+///
+/// # Debug with stop on first failure
+/// TEST_MESSAGE_TYPE=MT101 TEST_DEBUG=1 TEST_STOP_ON_FAILURE=1 cargo test round_trip_scenarios -- --nocapture
+/// ```
+#[test]
+fn test_round_trip_scenarios() {
+    // Get test parameters from environment variables
+    let message_type = env::var("TEST_MESSAGE_TYPE").ok();
+    let scenario_name = env::var("TEST_SCENARIO").ok();
+    let debug_mode = env::var("TEST_DEBUG").is_ok();
+    let stop_on_failure = env::var("TEST_STOP_ON_FAILURE").is_ok();
+    let samples_str = env::var("TEST_SAMPLE_COUNT").unwrap_or_else(|_| "100".to_string());
+    let samples_per_scenario = samples_str.parse::<usize>().unwrap_or(100);
 
     let mut test_results = Vec::new();
 
-    // Collect all test files
-    let entries = fs::read_dir(test_data_dir).expect("Failed to read test_data directory");
-    let mut test_files: Vec<_> = entries
-        .filter_map(|entry| {
-            let entry = entry.ok()?;
-            let path = entry.path();
-            if path.is_file() && path.extension() == Some(std::ffi::OsStr::new("txt")) {
-                Some(path)
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    // Sort files for consistent output
-    test_files.sort();
-
-    if test_files.is_empty() {
-        panic!("No test files found in test_data directory");
+    if debug_mode {
+        eprintln!("🔍 Debug mode enabled");
+        eprintln!("   Samples per scenario: {}", samples_per_scenario);
+        if stop_on_failure {
+            eprintln!("   Stop on first failure: enabled");
+        }
+        if let Some(ref mt) = message_type {
+            eprintln!("   Message type: {}", mt);
+        }
+        if let Some(ref sc) = scenario_name {
+            eprintln!("   Scenario: {}", sc);
+        }
+        eprintln!();
     }
 
-    // Process each file
-    for file_path in test_files {
-        let filename = file_path
-            .file_name()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_string();
+    match (message_type, scenario_name) {
+        (None, None) => {
+            // No parameters: test all message types and all scenarios
+            let message_types = get_message_types();
+            println!("Testing all message types: {:?}", message_types);
 
-        let mut result = TestResult::new(filename);
+            for message_type in message_types {
+                let scenarios = get_scenarios_for_message_type(&message_type);
+                println!("\n{}: Testing {} scenarios", message_type, scenarios.len());
 
-        // Read file
-        let original_content = match fs::read_to_string(&file_path) {
-            Ok(content) => content,
-            Err(e) => {
-                result.mark_parse_failed(format!("Read error: {e}"));
-                test_results.push(result);
-                continue;
-            }
-        };
+                for scenario in scenarios {
+                    println!(
+                        "  Testing {}/{} ({} samples)...",
+                        message_type, scenario, samples_per_scenario
+                    );
+                    for i in 0..samples_per_scenario {
+                        let result =
+                            test_single_scenario(&message_type, &scenario, i + 1, debug_mode);
+                        let is_failure = result.parse_status == "❌"
+                            || result.validation_status == "❌"
+                            || result.roundtrip_status == "❌";
+                        test_results.push(result);
 
-        // Parse message
-        let parsed_message = match SwiftParser::parse_auto(&original_content) {
-            Ok(msg) => {
-                result.mark_parse_success();
-                msg
-            }
-            Err(e) => {
-                result.mark_parse_failed(
-                    format!("{e:?}")
-                        .split('\n')
-                        .next()
-                        .unwrap_or("Unknown")
-                        .to_string(),
-                );
-                test_results.push(result);
-                continue;
-            }
-        };
-
-        // Validate message
-        let validation_result = parsed_message.validate();
-        if !validation_result.errors.is_empty() {
-            let error_summaries: Vec<String> = validation_result
-                .errors
-                .iter()
-                .map(|e| format!("{e}"))
-                .collect();
-            result.mark_validation_failed(error_summaries);
-        } else {
-            result.mark_validation_success();
-        }
-
-        // Perform round-trip test
-        // Step 1: Serialize to JSON
-        let json_representation = match serde_json::to_string_pretty(&parsed_message) {
-            Ok(json) => json,
-            Err(e) => {
-                result.mark_roundtrip_failed(&format!("JSON serialize: {e}"));
-                test_results.push(result);
-                continue;
-            }
-        };
-
-        // Step 2: Deserialize from JSON
-        let deserialized_message: ParsedSwiftMessage =
-            match serde_json::from_str(&json_representation) {
-                Ok(msg) => msg,
-                Err(e) => {
-                    result.mark_roundtrip_failed(&format!("JSON deserialize: {e}"));
-                    test_results.push(result);
-                    continue;
+                        if is_failure && stop_on_failure {
+                            eprintln!("\n⛔ Stopping on first failure (TEST_STOP_ON_FAILURE=1)");
+                            break;
+                        }
+                    }
                 }
-            };
-
-        // Step 3: Regenerate MT message
-        let regenerated_mt = match &deserialized_message {
-            ParsedSwiftMessage::MT101(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT103(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT104(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT107(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT110(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT111(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT112(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT202(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT205(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT210(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT900(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT910(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT920(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT935(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT940(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT941(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT942(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT950(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT192(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT196(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT292(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT296(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT199(msg) => msg.to_mt_message(),
-            ParsedSwiftMessage::MT299(msg) => msg.to_mt_message(),
-        };
-
-        // Step 4: Reparse regenerated MT
-        let reparsed_message = match SwiftParser::parse_auto(&regenerated_mt) {
-            Ok(msg) => msg,
-            Err(e) => {
-                result.mark_roundtrip_failed(
-                    format!("Reparse: {e:?}")
-                        .split('\n')
-                        .next()
-                        .unwrap_or("Unknown"),
-                );
-                test_results.push(result);
-                continue;
-            }
-        };
-
-        // Step 5: Compare JSON representations
-        let original_json = match serde_json::to_string_pretty(&parsed_message) {
-            Ok(json) => json,
-            Err(e) => {
-                result.mark_roundtrip_failed(&format!("Original JSON: {e}"));
-                test_results.push(result);
-                continue;
-            }
-        };
-
-        let reparsed_json = match serde_json::to_string_pretty(&reparsed_message) {
-            Ok(json) => json,
-            Err(e) => {
-                result.mark_roundtrip_failed(&format!("Reparsed JSON: {e}"));
-                test_results.push(result);
-                continue;
-            }
-        };
-
-        if original_json == reparsed_json {
-            result.mark_roundtrip_success();
-        } else {
-            result.mark_roundtrip_failed("JSON mismatch");
-
-            // If DEBUG_ROUNDTRIP is set, save the diff for inspection
-            if std::env::var("DEBUG_ROUNDTRIP").is_ok() {
-                let debug_dir = Path::new("target/roundtrip_debug");
-                fs::create_dir_all(debug_dir).ok();
-
-                let base_name = file_path.file_stem().unwrap_or_default().to_string_lossy();
-                fs::write(
-                    debug_dir.join(format!("{base_name}_original.json")),
-                    &original_json,
-                )
-                .ok();
-                fs::write(
-                    debug_dir.join(format!("{base_name}_reparsed.json")),
-                    &reparsed_json,
-                )
-                .ok();
             }
         }
+        (Some(message_type), None) => {
+            // One parameter: test all scenarios for given message type
+            let message_type = message_type.to_uppercase();
+            let scenarios = get_scenarios_for_message_type(&message_type);
 
-        test_results.push(result);
+            if scenarios.is_empty() {
+                panic!("No scenarios found for message type: {}", message_type);
+            }
+
+            println!("Testing {}: {} scenarios", message_type, scenarios.len());
+
+            for scenario in scenarios {
+                println!(
+                    "  Testing {}/{} ({} samples)...",
+                    message_type, scenario, samples_per_scenario
+                );
+                for i in 0..samples_per_scenario {
+                    let result = test_single_scenario(&message_type, &scenario, i + 1, debug_mode);
+                    test_results.push(result);
+                }
+            }
+        }
+        (Some(message_type), Some(scenario)) => {
+            // Two parameters: test specific scenario for given message type
+            let message_type = message_type.to_uppercase();
+
+            println!(
+                "Testing {}/{} ({} samples)...",
+                message_type, scenario, samples_per_scenario
+            );
+
+            for i in 0..samples_per_scenario {
+                let result = test_single_scenario(&message_type, &scenario, i + 1, debug_mode);
+                test_results.push(result);
+            }
+        }
+        _ => {
+            // Invalid combination
+            panic!("Invalid test parameters. Use TEST_MESSAGE_TYPE and TEST_SCENARIO environment variables.");
+        }
     }
 
-    // Print results table
-    print_results_table(&test_results);
+    // Print results summary
+    print_results_summary(&test_results);
 
     // Determine if test should fail
-    let total_files = test_results.len();
-    let failed_files: Vec<_> = test_results
+    let failed_results: Vec<_> = test_results
         .iter()
-        .filter(|r| {
+        .enumerate()
+        .filter(|(_, r)| {
             r.parse_status == "❌" || r.validation_status == "❌" || r.roundtrip_status == "❌"
         })
         .collect();
 
-    if !failed_files.is_empty() {
-        println!("\n❌ Failed files ({}):", failed_files.len());
-        for result in &failed_files {
-            if let Some(ref error) = result.error_stage {
-                println!("   {} - {}", result.filename, error);
+    if !failed_results.is_empty() {
+        println!("\n❌ Failed tests: {}", failed_results.len());
+
+        // Group failures by message type and scenario
+        let mut failure_summary: std::collections::HashMap<String, Vec<(usize, &TestResult)>> =
+            std::collections::HashMap::new();
+
+        for (idx, result) in &failed_results {
+            let key = format!("{}/{}", result.message_type, result.scenario);
+            failure_summary
+                .entry(key)
+                .or_insert_with(Vec::new)
+                .push((*idx, *result));
+        }
+
+        println!("\nFailure summary:");
+        for (key, failures) in &failure_summary {
+            println!("  {} - {} failures", key, failures.len());
+
+            if debug_mode && failures.len() <= 5 {
+                // Show details for first few failures
+                for (test_idx, result) in failures.iter().take(3) {
+                    println!(
+                        "    Test #{}: {}",
+                        test_idx + 1,
+                        result
+                            .error_stage
+                            .as_ref()
+                            .unwrap_or(&"Unknown error".to_string())
+                    );
+                }
+                if failures.len() > 3 {
+                    println!("    ... and {} more", failures.len() - 3);
+                }
             }
         }
-        println!("\n💡 To debug a specific file, run:");
-        println!("   cargo run --example parse_auto test_data/<filename>");
+
+        if debug_mode && failed_results.len() <= 10 {
+            println!("\n💡 Tip: To debug a specific failure, run:");
+            let (_, first_failure) = &failed_results[0];
+            println!("   TEST_MESSAGE_TYPE={} TEST_SCENARIO={} TEST_DEBUG=1 TEST_SAMPLE_COUNT=1 cargo test round_trip_scenarios -- --nocapture",
+                first_failure.message_type, first_failure.scenario);
+        }
 
         panic!(
-            "Round-trip test failed: {} out of {} files failed",
-            failed_files.len(),
-            total_files
+            "Round-trip test failed: {} out of {} tests failed",
+            failed_results.len(),
+            test_results.len()
         );
     }
+
+    println!("\n✅ All {} tests passed!", test_results.len());
 }
 
-fn print_results_table(results: &[TestResult]) {
-    // Calculate column widths
-    let filename_width = results
-        .iter()
-        .map(|r| r.filename.len())
-        .max()
-        .unwrap_or(8)
-        .max(8);
+fn print_results_summary(results: &[TestResult]) {
+    // Group results by scenario for aggregate view
+    let mut scenario_results: std::collections::HashMap<String, Vec<&TestResult>> =
+        std::collections::HashMap::new();
 
-    // Print header
+    for result in results {
+        let key = format!("{}/{}", result.message_type, result.scenario);
+        scenario_results
+            .entry(key)
+            .or_insert_with(Vec::new)
+            .push(result);
+    }
+
+    // Sort scenarios by name
+    let mut scenarios: Vec<_> = scenario_results.into_iter().collect();
+    scenarios.sort_by_key(|k| k.0.clone());
+
+    // Calculate column widths
+    let scenario_width = scenarios
+        .iter()
+        .map(|(name, _)| name.len())
+        .max()
+        .unwrap_or(20)
+        .max(20);
+
+    // Print table header
     println!(
-        "\n╔{}╤{}╤{}╤{}╗",
-        "═".repeat(filename_width + 2),
-        "═".repeat(10),
-        "═".repeat(13),
-        "═".repeat(11)
+        "\n╔═{}═╤═{}═╤═{}═╤═{}═╗",
+        "═".repeat(scenario_width),
+        "═".repeat(12),
+        "═".repeat(12),
+        "═".repeat(12)
     );
     println!(
-        "║ {:<width$} │ {:^8} │ {:^11} │ {:^9} ║",
-        "Filename",
+        "║ {:<width$} │  {:^10}  │ {:^12} │ {:^12} ║",
+        "Scenario",
         "Parser",
         "Validation",
         "Roundtrip",
-        width = filename_width
+        width = scenario_width
     );
     println!(
-        "╟{}┼{}┼{}┼{}╢",
-        "─".repeat(filename_width + 2),
-        "─".repeat(10),
-        "─".repeat(13),
-        "─".repeat(11)
+        "╟─{}─┼─{}─┼─{}─┼─{}─╢",
+        "─".repeat(scenario_width),
+        "─".repeat(12),
+        "─".repeat(12),
+        "─".repeat(12)
     );
 
-    // Print rows
-    for result in results {
+    // Print each scenario's aggregate results
+    for (scenario_name, results_group) in scenarios {
+        let total = results_group.len();
+        let parse_success = results_group
+            .iter()
+            .filter(|r| r.parse_status == "✅")
+            .count();
+        let validation_success = results_group
+            .iter()
+            .filter(|r| r.validation_status == "✅")
+            .count();
+        let roundtrip_success = results_group
+            .iter()
+            .filter(|r| r.roundtrip_status == "✅")
+            .count();
+
+        // Determine status symbols based on success rates
+        let parse_symbol = get_status_symbol(parse_success, total);
+        let validation_symbol = get_status_symbol(validation_success, total);
+        let roundtrip_symbol = get_status_symbol(roundtrip_success, total);
+
         println!(
-            "║ {:<width$} │ {:^7} │ {:^10} │ {:^8} ║",
-            result.filename,
-            result.parse_status,
-            result.validation_status,
-            result.roundtrip_status,
-            width = filename_width
+            "║ {:<width$} │      {:^2}     │      {:^2}     │      {:^2}     ║",
+            scenario_name,
+            parse_symbol,
+            validation_symbol,
+            roundtrip_symbol,
+            width = scenario_width
         );
     }
 
-    // Print footer
+    // Print table footer
     println!(
-        "╚{}╧{}╧{}╧{}╝",
-        "═".repeat(filename_width + 2),
-        "═".repeat(10),
-        "═".repeat(13),
-        "═".repeat(11)
+        "╚═{}═╧═{}═╧═{}═╧═{}═╝",
+        "═".repeat(scenario_width),
+        "═".repeat(12),
+        "═".repeat(12),
+        "═".repeat(12)
     );
 
-    // Print summary
-    let total = results.len();
-    let parse_success = results.iter().filter(|r| r.parse_status == "✅").count();
-    let validation_success = results
+    // Print summary statistics
+    let total_tests = results.len();
+    let parse_success_total = results.iter().filter(|r| r.parse_status == "✅").count();
+    let validation_success_total = results
         .iter()
         .filter(|r| r.validation_status == "✅")
         .count();
-    let roundtrip_success = results
+    let roundtrip_success_total = results
         .iter()
         .filter(|r| r.roundtrip_status == "✅")
         .count();
 
     println!("\n📊 Summary:");
-    println!("   Total files: {total}");
+    println!("   Total tests: {}", total_tests);
     println!(
         "   Parse successful: {} ({}%)",
-        parse_success,
-        (parse_success * 100) / total
+        parse_success_total,
+        if total_tests > 0 {
+            (parse_success_total * 100) / total_tests
+        } else {
+            0
+        }
     );
     println!(
         "   Validation successful: {} ({}%)",
-        validation_success,
-        (validation_success * 100) / total
+        validation_success_total,
+        if total_tests > 0 {
+            (validation_success_total * 100) / total_tests
+        } else {
+            0
+        }
     );
     println!(
         "   Roundtrip successful: {} ({}%)",
-        roundtrip_success,
-        (roundtrip_success * 100) / total
+        roundtrip_success_total,
+        if total_tests > 0 {
+            (roundtrip_success_total * 100) / total_tests
+        } else {
+            0
+        }
     );
+}
+
+fn get_status_symbol(success_count: usize, total_count: usize) -> &'static str {
+    if total_count == 0 {
+        "❔"
+    } else if success_count == total_count {
+        "✅"
+    } else if success_count == 0 {
+        "❌"
+    } else {
+        "⚠️"
+    }
 }

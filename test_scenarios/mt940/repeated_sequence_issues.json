@@ -1,0 +1,319 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "account_id": {
+      "cat": [
+        "GB82WEST",
+        {
+          "fake": [
+            "i64",
+            10000000000000,
+            99999999999999
+          ]
+        }
+      ]
+    },
+    "statement_num": {
+      "fake": [
+        "i64",
+        1000,
+        9999
+      ]
+    },
+    "opening_balance": {
+      "fake": [
+        "f64",
+        100000.0,
+        500000.0
+      ]
+    },
+    "currency": "USD",
+    "value_date": "241220",
+    "entry_date": "1220",
+    "amount1": {
+      "fake": [
+        "f64",
+        1000.0,
+        10000.0
+      ]
+    },
+    "amount2": {
+      "fake": [
+        "f64",
+        2000.0,
+        20000.0
+      ]
+    },
+    "ref1": {
+      "cat": [
+        "REF",
+        {
+          "fake": [
+            "i64",
+            100000,
+            999999
+          ]
+        }
+      ]
+    },
+    "ref2": {
+      "cat": [
+        "REF",
+        {
+          "fake": [
+            "i64",
+            100000,
+            999999
+          ]
+        }
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "940",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "message_type": "940",
+    "fields": {
+      "20": {
+        "reference": {
+          "cat": [
+            "STMT",
+            {
+              "var": "statement_num"
+            }
+          ]
+        }
+      },
+      "21": {
+        "reference": {
+          "cat": [
+            "DAILY",
+            {
+              "var": "statement_num"
+            }
+          ]
+        }
+      },
+      "25": {
+        "account": {
+          "var": "account_id"
+        }
+      },
+      "28C": {
+        "statement_sequence": {
+          "cat": [
+            {
+              "var": "statement_num"
+            },
+            "/1"
+          ]
+        }
+      },
+      "60F": {
+        "status": "C",
+        "value_date": {
+          "var": "value_date"
+        },
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "opening_balance"
+        }
+      },
+      "statement_lines": [
+        {
+          "61": {
+            "value_date": {
+              "var": "value_date"
+            },
+            "entry_date": {
+              "var": "entry_date"
+            },
+            "mark": "C",
+            "amount": {
+              "var": "amount1"
+            },
+            "transaction_type": "NMSC",
+            "customer_reference": {
+              "var": "ref1"
+            },
+            "bank_reference": "//BANK001",
+            "supplementary": "DUPLICATE-SEQ-1"
+          },
+          "86": {
+            "information": [
+              "/ORIGINATOR/ACME CORPORATION",
+              "/BENEF/CUSTOMER ACCOUNT",
+              "/REMI/PAYMENT FOR INVOICE 12345",
+              "/DUPLICATE/FIELD 61 REPEATED"
+            ]
+          }
+        },
+        {
+          "61": {
+            "value_date": {
+              "var": "value_date"
+            },
+            "entry_date": {
+              "var": "entry_date"
+            },
+            "mark": "C",
+            "amount": {
+              "var": "amount1"
+            },
+            "transaction_type": "NMSC",
+            "customer_reference": {
+              "var": "ref1"
+            },
+            "bank_reference": "//BANK001",
+            "supplementary": "DUPLICATE-SEQ-2"
+          },
+          "86": {
+            "information": [
+              "/ORIGINATOR/ACME CORPORATION",
+              "/BENEF/CUSTOMER ACCOUNT",
+              "/REMI/PAYMENT FOR INVOICE 12345",
+              "/ERROR/DUPLICATE TRANSACTION ENTRY"
+            ]
+          }
+        },
+        {
+          "61": {
+            "value_date": {
+              "var": "value_date"
+            },
+            "entry_date": {
+              "var": "entry_date"
+            },
+            "mark": "D",
+            "amount": {
+              "var": "amount2"
+            },
+            "transaction_type": "NCHG",
+            "customer_reference": {
+              "var": "ref2"
+            },
+            "bank_reference": "//BANK002",
+            "supplementary": "NORMAL-TXN"
+          },
+          "86": {
+            "information": [
+              "/CHARGES/ACCOUNT MAINTENANCE FEE",
+              "/PERIOD/DECEMBER 2024",
+              "/TYPE/MONTHLY CHARGE"
+            ]
+          }
+        },
+        {
+          "61": {
+            "value_date": {
+              "var": "value_date"
+            },
+            "entry_date": {
+              "var": "entry_date"
+            },
+            "mark": "C",
+            "amount": {
+              "var": "amount1"
+            },
+            "transaction_type": "NMSC",
+            "customer_reference": {
+              "var": "ref1"
+            },
+            "bank_reference": "//BANK001",
+            "supplementary": "DUPLICATE-SEQ-3"
+          },
+          "86": {
+            "information": [
+              "/ORIGINATOR/ACME CORPORATION",
+              "/BENEF/CUSTOMER ACCOUNT",
+              "/REMI/PAYMENT FOR INVOICE 12345",
+              "/ERROR/TRIPLE DUPLICATE DETECTED"
+            ]
+          }
+        }
+      ],
+      "62F": {
+        "status": "C",
+        "value_date": {
+          "var": "value_date"
+        },
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "expr": [
+            "+",
+            {
+              "var": "opening_balance"
+            },
+            {
+              "expr": [
+                "-",
+                {
+                  "expr": [
+                    "*",
+                    {
+                      "var": "amount1"
+                    },
+                    3
+                  ]
+                },
+                {
+                  "var": "amount2"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

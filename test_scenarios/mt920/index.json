@@ -1,0 +1,7 @@
+{
+  "scenarios": [
+    "statement_request_basic",
+    "multi_account_request",
+    "interim_report_request"
+  ]
+}

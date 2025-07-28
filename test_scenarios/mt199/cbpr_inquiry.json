@@ -1,0 +1,132 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "message_ref": {
+      "cat": [
+        "INQ",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "related_ref": {
+      "cat": [
+        "REF",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "003456"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "199",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "message_type": "199",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "message_ref"
+        }
+      },
+      "21": {
+        "reference": {
+          "cat": [
+            "",
+            {
+              "var": "related_ref"
+            }
+          ]
+        }
+      },
+      "79": {
+        "information": [
+          "CBPR+ PAYMENT STATUS INQUIRY",
+          {
+            "cat": [
+              "RELATED PAYMENT REFERENCE: ",
+              {
+                "var": "related_ref"
+              }
+            ]
+          },
+          "",
+          "REQUEST TYPE: TRANSPARENCY DATA",
+          "",
+          "PLEASE PROVIDE THE FOLLOWING INFORMATION:",
+          "1. CURRENT PAYMENT STATUS AND LOCATION",
+          "2. COMPLETE FEE TRANSPARENCY BREAKDOWN",
+          "3. ACTUAL VS ESTIMATED PROCESSING TIME",
+          "4. ANY COMPLIANCE HOLDS OR ISSUES",
+          "5. BENEFICIARY CREDIT CONFIRMATION",
+          "6. FULL TRANSACTION TRAIL WITH TIMESTAMPS",
+          "",
+          "SPECIFIC CBPR+ DATA REQUESTED:",
+          "- PURPOSE CODE VALIDATION STATUS",
+          "- LEI VERIFICATION RESULTS",
+          "- STRUCTURED REMITTANCE PROCESSING",
+          "- REGULATORY COMPLIANCE STATUS",
+          "- TRANSPARENCY REQUIREMENTS MET (Y/N)",
+          "",
+          "URGENCY: CUSTOMER INQUIRY",
+          "RESPONSE REQUIRED WITHIN 2 HOURS",
+          "",
+          "CONTACT: OPS TEAM +44 20 1234 5678"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "message_type": "MT199",
+  "description": "Free Format Message (Customer Payments)",
+  "scenarios": [
+    {
+      "id": "cbpr_inquiry",
+      "name": "CBPR+ Payment Inquiry",
+      "description": "MT199 inquiry requesting CBPR+ payment status and transparency data",
+      "file": "cbpr_inquiry.json",
+      "tags": ["cbpr+", "inquiry", "status", "transparency"],
+      "features": {
+        "payment_tracking": true,
+        "transparency_request": true,
+        "compliance_check": true,
+        "urgency_indicator": true
+      }
+    },
+    {
+      "id": "cbpr_cancellation",
+      "name": "CBPR+ Payment Cancellation",
+      "description": "MT199 cancellation request for failed CBPR+ transaction with /REJT/ format",
+      "file": "cbpr_cancellation.json",
+      "tags": ["cbpr+", "cancellation", "reject", "return"],
+      "features": {
+        "reject_format": true,
+        "reason_codes": true,
+        "legal_basis": true,
+        "time_critical": true,
+        "uetr_reference": true
+      }
+    }
+  ]
+}

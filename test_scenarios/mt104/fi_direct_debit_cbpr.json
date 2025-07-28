@@ -1,0 +1,385 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "DDCBPR",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "currency": "USD",
+    "loan_payment": {
+      "fake": [
+        "f64",
+        1000.0,
+        10000.0
+      ]
+    },
+    "execution_date": "2024-12-15",
+    "charges": "SHA",
+    "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+    "debtor_lei": "LEIXG9JKLMNOPQRSTU2V3W",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    },
+    "loan_account": {
+      "cat": [
+        "LN",
+        {
+          "fake": [
+            "i64",
+            1000000000,
+            9999999999
+          ]
+        }
+      ]
+    },
+    "batch_ref": {
+      "cat": [
+        "LOANPMT",
+        {
+          "fake": [
+            "i64",
+            100000,
+            999999
+          ]
+        }
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "104",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "user_header": {
+      "service_type_id": "gpi",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "monetary_amount": {
+        "cat": [
+          {
+            "var": "currency"
+          },
+          {
+            "var": "loan_payment"
+          }
+        ]
+      }
+    },
+    "message_type": "104",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
+        }
+      },
+      "21R": {
+        "reference": {
+          "var": "batch_ref"
+        }
+      },
+      "28D": {
+        "message_index": 1,
+        "total_messages": 1
+      },
+      "30": {
+        "execution_date": {
+          "var": "execution_date"
+        }
+      },
+      "50": {
+        "K": {
+          "account": "/LENDING-DEPT-DD",
+          "name_and_address": [
+            "INTERNATIONAL LENDING CORP",
+            {
+              "cat": [
+                "LEI/",
+                {
+                  "var": "sender_lei"
+                }
+              ]
+            },
+            "FINANCIAL DISTRICT",
+            "LONDON, GB"
+          ]
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {
+            "var": "sender_bic"
+          }
+        }
+      },
+      "71A": {
+        "code": {
+          "var": "charges"
+        }
+      },
+      "72": {
+        "information": [
+          "/INS/LOAN REPAYMENT COLLECTION",
+          "/CBPR/ENHANCED",
+          "/TRPT/LEI MANDATORY"
+        ]
+      },
+      "#": [
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "LNPMT",
+                {
+                  "fake": [
+                    "i64",
+                    10000000,
+                    99999999
+                  ]
+                }
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "var": "loan_payment"
+            }
+          },
+          "50": {
+            "K": {
+              "account": {
+                "cat": [
+                  "/",
+                  {
+                    "var": "loan_account"
+                  }
+                ]
+              },
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "cat": [
+                    "LEI/",
+                    {
+                      "var": "debtor_lei"
+                    }
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "cat": [
+                    {
+                      "fake": [
+                        "city_name"
+                      ]
+                    },
+                    ", ",
+                    {
+                      "fake": [
+                        "country_code"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "52": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
+                ]
+              }
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "var": "receiver_bic"
+              }
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": {
+                "cat": [
+                  "/",
+                  {
+                    "fake": [
+                      "i64",
+                      1000000000000000,
+                      9999999999999999
+                    ]
+                  }
+                ]
+              },
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "cat": [
+                    "BORROWER LEI/",
+                    {
+                      "var": "debtor_lei"
+                    }
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "cat": [
+                    {
+                      "fake": [
+                        "city_name"
+                      ]
+                    },
+                    ", ",
+                    {
+                      "fake": [
+                        "country_code"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "70": {
+            "narrative": [
+              "/RFB/LOAN REPAYMENT",
+              {
+                "cat": [
+                  "/MREF/LOAN-DD-",
+                  {
+                    "var": "loan_account"
+                  }
+                ]
+              },
+              "/PURP/LOAN",
+              {
+                "cat": [
+                  "/LOAN/",
+                  {
+                    "var": "loan_account"
+                  }
+                ]
+              },
+              "/INST/MONTHLY INSTALLMENT",
+              "/CBPR/COMPLIANT"
+            ]
+          },
+          "71A": {
+            "code": {
+              "var": "charges"
+            }
+          },
+          "77B": {
+            "regulatory_reporting": [
+              {
+                "cat": [
+                  "/ORDERRES/",
+                  {
+                    "fake": [
+                      "country_code"
+                    ]
+                  },
+                  "//",
+                  {
+                    "var": "debtor_lei"
+                  }
+                ]
+              },
+              {
+                "cat": [
+                  "/BENEFRES/",
+                  {
+                    "fake": [
+                      "country_code"
+                    ]
+                  },
+                  "//",
+                  {
+                    "var": "sender_lei"
+                  }
+                ]
+              },
+              "/PURP/LOAN REPAYMENT"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

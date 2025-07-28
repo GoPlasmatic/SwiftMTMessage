@@ -1,0 +1,266 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "answer_ref": {
+      "cat": [
+        "ANS",
+        {
+          "fake": [
+            "i64",
+            100000,
+            999999
+          ]
+        }
+      ]
+    },
+    "cancel_ref": {
+      "cat": [
+        "CANCEL",
+        {
+          "fake": [
+            "i64",
+            100000,
+            999999
+          ]
+        }
+      ]
+    },
+    "original_mt": "192",
+    "date": {
+      "fake": [
+        "date_format",
+        "%y%m%d"
+      ]
+    },
+    "session": {
+      "fake": [
+        "i64",
+        1000,
+        9999
+      ]
+    },
+    "sequence": {
+      "fake": [
+        "i64",
+        100000,
+        999999
+      ]
+    },
+    "response_code": "ACCEPTED",
+    "reason_code": "CUST",
+    "amount": {
+      "fake": [
+        "f64",
+        10000.0,
+        100000.0
+      ]
+    },
+    "currency": "USD",
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "196",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "U"
+    },
+    "message_type": "196",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "answer_ref"
+        }
+      },
+      "21": {
+        "reference": {
+          "cat": [
+            "",
+            {
+              "var": "cancel_ref"
+            }
+          ]
+        }
+      },
+      "76": {
+        "answers": [
+          {
+            "cat": [
+              "/",
+              {
+                "var": "reason_code"
+              },
+              "/",
+              {
+                "var": "response_code"
+              }
+            ]
+          },
+          {
+            "switch": {
+              "var": "response_code"
+            },
+            "cases": {
+              "ACCEPTED": "CANCELLATION ACCEPTED",
+              "REJECTED": "CANCELLATION REJECTED",
+              "TOOLATE": "TOO LATE TO CANCEL",
+              "EXECUTED": "ALREADY EXECUTED"
+            }
+          },
+          {
+            "cat": [
+              "AMOUNT: ",
+              {
+                "var": "currency"
+              },
+              " ",
+              {
+                "var": "amount"
+              }
+            ]
+          },
+          {
+            "fake": [
+              "date_format",
+              "DATE: %Y-%m-%d"
+            ]
+          },
+          {
+            "fake": [
+              "time_format",
+              "TIME: %H:%M:%S UTC"
+            ]
+          },
+          {
+            "switch": {
+              "var": "response_code"
+            },
+            "cases": {
+              "ACCEPTED": "FUNDS WILL BE RETURNED",
+              "REJECTED": "UNABLE TO PROCESS",
+              "TOOLATE": "PAYMENT SETTLED",
+              "EXECUTED": "BENEFICIARY CREDITED"
+            }
+          }
+        ]
+      },
+      "11": {
+        "mt_and_date": {
+          "cat": [
+            {
+              "var": "original_mt"
+            },
+            {
+              "var": "date"
+            },
+            {
+              "var": "session"
+            },
+            {
+              "var": "sequence"
+            }
+          ]
+        }
+      },
+      "79": {
+        "narrative": [
+          "RESPONSE TO CANCELLATION REQUEST",
+          "",
+          {
+            "cat": [
+              "ORIGINAL MT",
+              {
+                "var": "original_mt"
+              },
+              " REFERENCE: ",
+              {
+                "var": "cancel_ref"
+              }
+            ]
+          },
+          "",
+          {
+            "switch": {
+              "var": "response_code"
+            },
+            "cases": {
+              "ACCEPTED": [
+                "THE CANCELLATION REQUEST HAS BEEN PROCESSED SUCCESSFULLY.",
+                "THE PAYMENT HAS BEEN STOPPED BEFORE EXECUTION.",
+                "FUNDS WILL BE RETURNED TO YOUR NOSTRO ACCOUNT.",
+                "EXPECTED CREDIT DATE: VALUE TODAY.",
+                "A CONFIRMATION MESSAGE WILL FOLLOW."
+              ],
+              "REJECTED": [
+                "THE CANCELLATION REQUEST CANNOT BE PROCESSED.",
+                "REASON: PAYMENT ALREADY IN PROCESSING QUEUE.",
+                "UNABLE TO HALT EXECUTION AT THIS STAGE.",
+                "PLEASE CONTACT OUR OPERATIONS TEAM.",
+                "ALTERNATIVE: REQUEST RETURN AFTER SETTLEMENT."
+              ],
+              "TOOLATE": [
+                "THE CANCELLATION REQUEST WAS RECEIVED TOO LATE.",
+                "PAYMENT HAS ALREADY BEEN PROCESSED.",
+                "SETTLEMENT COMPLETED AT CUT-OFF TIME.",
+                "BENEFICIARY BANK HAS CONFIRMED RECEIPT.",
+                "RECOMMEND: INITIATE RETURN REQUEST MT103/RETN."
+              ],
+              "EXECUTED": [
+                "THE PAYMENT HAS ALREADY BEEN EXECUTED.",
+                "BENEFICIARY ACCOUNT HAS BEEN CREDITED.",
+                "EXECUTION TIMESTAMP RECORDED IN SYSTEM.",
+                "CANCELLATION NO LONGER POSSIBLE.",
+                "FOR REVERSAL, USE SEPARATE RETURN PROCESS."
+              ]
+            }
+          },
+          "",
+          "FOR FURTHER ASSISTANCE:",
+          "OPERATIONS DESK: +44 20 1234 5678",
+          "EMAIL: PAYMENTS@EXAMPLE.COM"
+        ]
+      }
+    }
+  }
+}

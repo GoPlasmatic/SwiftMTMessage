@@ -1,0 +1,7 @@
+{
+  "scenarios": [
+    "daily_balance_report",
+    "multi_currency_balance",
+    "negative_balance_report"
+  ]
+}

@@ -1,0 +1,280 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "message_ref": {
+      "cat": [
+        "CAN",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "original_ref": {
+      "cat": [
+        "PAY",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "005678",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    },
+    "cancel_reason": "CUST",
+    "amount": {
+      "fake": [
+        "f64",
+        10000.0,
+        100000.0
+      ]
+    },
+    "currency": "EUR",
+    "value_date": "2024-12-20",
+    "ordering_customer": {
+      "fake": [
+        "company_name"
+      ]
+    },
+    "beneficiary_name": {
+      "fake": [
+        "company_name"
+      ]
+    },
+    "purpose_code": "GDDS"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "199",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "U"
+    },
+    "message_type": "199",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "message_ref"
+        }
+      },
+      "21": {
+        "reference": {
+          "cat": [
+            "",
+            {
+              "var": "original_ref"
+            }
+          ]
+        }
+      },
+      "79": {
+        "information": [
+          "/REJT/CBPR+ PAYMENT CANCELLATION REQUEST",
+          "",
+          {
+            "cat": [
+              "ORIGINAL PAYMENT REFERENCE: ",
+              {
+                "var": "original_ref"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "UETR: ",
+              {
+                "var": "uetr"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "AMOUNT: ",
+              {
+                "var": "currency"
+              },
+              " ",
+              {
+                "var": "amount"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "VALUE DATE: ",
+              {
+                "var": "value_date"
+              }
+            ]
+          },
+          "",
+          {
+            "cat": [
+              "CANCELLATION REASON CODE: ",
+              {
+                "var": "cancel_reason"
+              }
+            ]
+          },
+          "DETAILED REASON:",
+          {
+            "if": [
+              {
+                "eq": [
+                  {
+                    "var": "cancel_reason"
+                  },
+                  "CUST"
+                ]
+              },
+              "CUSTOMER REQUEST - CUSTOMER HAS REQUESTED CANCELLATION",
+              {
+                "if": [
+                  {
+                    "eq": [
+                      {
+                        "var": "cancel_reason"
+                      },
+                      "DUPL"
+                    ]
+                  },
+                  "DUPLICATE PAYMENT - PAYMENT SENT IN ERROR",
+                  {
+                    "if": [
+                      {
+                        "eq": [
+                          {
+                            "var": "cancel_reason"
+                          },
+                          "FRAD"
+                        ]
+                      },
+                      "SUSPECTED FRAUD - PAYMENT FLAGGED AS POTENTIALLY FRAUDULENT",
+                      {
+                        "if": [
+                          {
+                            "eq": [
+                              {
+                                "var": "cancel_reason"
+                              },
+                              "TECH"
+                            ]
+                          },
+                          "TECHNICAL ERROR - SYSTEM ERROR DURING PROCESSING",
+                          "AGENT ERROR - INCORRECT ROUTING OR PROCESSING"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "",
+          "PAYMENT DETAILS:",
+          {
+            "cat": [
+              "ORDERING CUSTOMER: ",
+              {
+                "var": "ordering_customer"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "BENEFICIARY: ",
+              {
+                "var": "beneficiary_name"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "PURPOSE CODE: ",
+              {
+                "var": "purpose_code"
+              }
+            ]
+          },
+          "",
+          "CURRENT STATUS: PENDING AT YOUR INSTITUTION",
+          "LAST KNOWN LOCATION: CORRESPONDENT BANK",
+          "",
+          "REQUESTED ACTION:",
+          "1. STOP PAYMENT PROCESSING IMMEDIATELY",
+          "2. IF ALREADY PROCESSED, INITIATE RETURN",
+          "3. CONFIRM CANCELLATION VIA MT192/MT292",
+          "4. PROVIDE FULL TRANSACTION TRAIL",
+          "",
+          "CBPR+ COMPLIANCE NOTES:",
+          "- TRANSPARENCY DATA MUST BE PRESERVED",
+          "- ALL FEES MUST BE REVERSED/REFUNDED",
+          "- REGULATORY REPORTING REQUIRED",
+          "- CUSTOMER NOTIFICATION MANDATORY",
+          "",
+          "TIME CRITICAL - RESPONSE REQUIRED WITHIN 1 HOUR",
+          "",
+          "LEGAL BASIS: PAYMENT SERVICES DIRECTIVE",
+          "CUSTOMER PROTECTION REGULATIONS APPLY",
+          "",
+          "CONTACT: OPERATIONS MANAGER",
+          "PHONE: +44 20 7123 4567",
+          "EMAIL: ops@bank.example",
+          "",
+          "END OF CANCELLATION REQUEST"
+        ]
+      }
+    }
+  }
+}

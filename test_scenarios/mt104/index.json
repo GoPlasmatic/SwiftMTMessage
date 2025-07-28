@@ -1,0 +1,9 @@
+{
+  "scenarios": [
+    "fi_direct_debit_basic",
+    "fi_direct_debit_multiple",
+    "fi_direct_debit_recurring",
+    "fi_direct_debit_cbpr",
+    "fi_direct_debit_return"
+  ]
+}

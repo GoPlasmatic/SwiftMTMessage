@@ -1,0 +1,287 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "DDREC",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "currency": "USD",
+    "subscription_amount": {
+      "fake": [
+        "f64",
+        9.99,
+        199.99
+      ]
+    },
+    "execution_date": "2024-12-01",
+    "charges": "SHA",
+    "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    },
+    "service_name": "STREAMING PLUS",
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "104",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "user_header": {
+      "service_type_id": "gpi",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "monetary_amount": {
+        "cat": [
+          {
+            "var": "currency"
+          },
+          {
+            "var": "subscription_amount"
+          }
+        ]
+      }
+    },
+    "message_type": "104",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
+        }
+      },
+      "23E": {
+        "instruction_code": "SDVA"
+      },
+      "28D": {
+        "message_index": 1,
+        "total_messages": 1
+      },
+      "30": {
+        "execution_date": {
+          "var": "execution_date"
+        }
+      },
+      "50": {
+        "K": {
+          "account": "/MERCHANT-SUB-001",
+          "name_and_address": [
+            "DIGITAL SERVICES CORP",
+            {
+              "cat": [
+                "SUBSCRIPTION MERCHANT/",
+                {
+                  "var": "sender_lei"
+                }
+              ]
+            },
+            "500 TECH PARK DRIVE",
+            "SAN FRANCISCO, CA US"
+          ]
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {
+            "var": "sender_bic"
+          }
+        }
+      },
+      "71A": {
+        "code": {
+          "var": "charges"
+        }
+      },
+      "72": {
+        "information": [
+          "/INS/RECURRING SUBSCRIPTION",
+          "/FREQ/MONTHLY",
+          "/CBPR/COMPLIANT"
+        ]
+      },
+      "#": [
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "SUB",
+                {
+                  "fake": [
+                    "i64",
+                    10000000,
+                    99999999
+                  ]
+                }
+              ]
+            }
+          },
+          "23E": {
+            "instruction_code": "SDVA"
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "var": "subscription_amount"
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": {
+                "cat": [
+                  "/",
+                  {
+                    "fake": [
+                      "i64",
+                      1000000000000000,
+                      9999999999999999
+                    ]
+                  }
+                ]
+              },
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "cat": [
+                    "SUBSCRIBER ID ",
+                    {
+                      "fake": [
+                        "i64",
+                        1000000,
+                        9999999
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "cat": [
+                    {
+                      "fake": [
+                        "city_name"
+                      ]
+                    },
+                    ", ",
+                    {
+                      "fake": [
+                        "country_code"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "var": "receiver_bic"
+              }
+            }
+          },
+          "70": {
+            "narrative": [
+              "/RFB/SUBSCRIPTION PAYMENT",
+              {
+                "cat": [
+                  "/MREF/SUB-MND-",
+                  {
+                    "fake": [
+                      "i64",
+                      1000000,
+                      9999999
+                    ]
+                  }
+                ]
+              },
+              "/PURP/COMM",
+              {
+                "cat": [
+                  "/SERV/",
+                  {
+                    "var": "service_name"
+                  }
+                ]
+              },
+              "/CD/RECURRING MONTHLY",
+              "/START/2023-01-01"
+            ]
+          },
+          "71A": {
+            "code": {
+              "var": "charges"
+            }
+          },
+          "77B": {
+            "regulatory_reporting": [
+              "/ORDERRES/BE//SUBSCRIPTION SERVICE",
+              "/BENEFRES/US//DIGITAL CONTENT"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

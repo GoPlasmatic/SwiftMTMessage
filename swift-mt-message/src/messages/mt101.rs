@@ -225,26 +225,25 @@ const MT101_VALIDATION_RULES: &str = r#"{
         "all": [
           {"var": "fields.#"},
           {
-            "if": [
-              {"!!": {"var": "33B"}},
+            "or": [
               {
-                "if": [
-                  {"==": [{"var": "32B.amount"}, 0]},
-                  {"!": {"var": "36"}},
-                  {
-                    "if": [
-                      {"!=": [{"var": "32B.amount"}, 0]},
-                      {"!!": {"var": "36"}},
-                      true
-                    ]
-                  }
+                "and": [
+                  {"!!": {"var": "33B.currency"}},
+                  {"!=": [{"var": "32B.amount"}, 0]},
+                  {"!!": {"var": "36.rate"}}
                 ]
               },
               {
-                "if": [
-                  {"!": {"var": "33B"}},
-                  {"!": {"var": "36"}},
-                  true
+                "and": [
+                  {"!!": {"var": "33B.currency"}},
+                  {"==": [{"var": "32B.amount"}, 0]},
+                  {"!": {"var": "36.rate"}}
+                ]
+              },
+              {
+                "and": [
+                  {"!": {"var": "33B.currency"}},
+                  {"!": {"var": "36.rate"}}
                 ]
               }
             ]
@@ -353,18 +352,12 @@ const MT101_VALIDATION_RULES: &str = r#"{
         "if": [
           {"!!": {"var": "fields.21R"}},
           {
-            "and": [
-              {">": [{"var": "fields.#.length"}, 1]},
+            "or": [
+              {"<=": [{"var": "fields.#.length"}, 1]},
               {
-                "reduce": [
+                "all": [
                   {"var": "fields.#"},
-                  {
-                    "and": [
-                      {"var": "accumulator"},
-                      {"==": [{"var": "current.32B.currency"}, {"var": "fields.#.0.32B.currency"}]}
-                    ]
-                  },
-                  true
+                  {"==": [{"var": "32B.currency"}, {"var": "fields.#.0.32B.currency"}]}
                 ]
               }
             ]

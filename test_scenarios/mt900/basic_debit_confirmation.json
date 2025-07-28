@@ -1,0 +1,153 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "DBT",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "related_ref": {
+      "cat": [
+        "PMT",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "currency": "USD",
+    "debit_amount": {
+      "fake": [
+        "f64",
+        100.0,
+        50000.0
+      ]
+    },
+    "value_date": "2024-12-20",
+    "account_number": {
+      "cat": [
+        "/",
+        {
+          "fake": [
+            "i64",
+            1000000000000000,
+            9999999999999999
+          ]
+        }
+      ]
+    },
+    "ordering_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "900",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "message_type": "900",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
+        }
+      },
+      "21": {
+        "reference": {
+          "cat": [
+            "",
+            {
+              "var": "related_ref"
+            }
+          ]
+        }
+      },
+      "25": {
+        "account": {
+          "var": "account_number"
+        }
+      },
+      "32A": {
+        "value_date": {
+          "var": "value_date"
+        },
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "debit_amount"
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {
+            "var": "ordering_bic"
+          }
+        }
+      },
+      "72": {
+        "information": [
+          "/INS/DEBIT CONFIRMATION",
+          "/RFB/PAYMENT TRANSFER",
+          "/BENACCT/DE89370400440532013000"
+        ]
+      }
+    }
+  }
+}

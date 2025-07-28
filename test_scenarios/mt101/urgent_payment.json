@@ -1,0 +1,310 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "message_ref": {
+      "cat": [
+        "PAY",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "execution_date": "2024-12-20",
+    "session_num": "0001",
+    "sequence_num": "000789",
+    "currency": {
+      "fake": [
+        "currency_code"
+      ]
+    },
+    "urgent_ref": "URGENT24120001"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "101",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "U"
+    },
+    "message_type": "101",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "message_ref"
+        }
+      },
+      "21R": {
+        "reference": {
+          "var": "urgent_ref"
+        }
+      },
+      "28D": {
+        "index": 1,
+        "total": 1
+      },
+      "50#2": {
+        "H": {
+          "account": "/TREASURY-URGENT",
+          "name_and_address": [
+            {
+              "fake": [
+                "company_name"
+              ]
+            },
+            {
+              "fake": [
+                "street_address"
+              ]
+            },
+            {
+              "fake": [
+                "city_name"
+              ]
+            },
+            {
+              "fake": [
+                "city_name"
+              ]
+            }
+          ]
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {
+            "var": "receiver_bic"
+          }
+        }
+      },
+      "30": {
+        "execution_date": {
+          "var": "execution_date"
+        }
+      },
+      "#": [
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "PAY",
+                {
+                  "fake": [
+                    "i64",
+                    100000000000,
+                    999999999999
+                  ]
+                }
+              ]
+            }
+          },
+          "23E": [
+            {
+              "instruction_code": "URGP"
+            },
+            {
+              "instruction_code": "RTGS"
+            }
+          ],
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                500000.0,
+                2000000.0
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
+                ]
+              }
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": "/FR1420041010050500013M02606",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "substr": [
+                    {
+                      "fake": [
+                        "country_name"
+                      ]
+                    },
+                    0,
+                    34
+                  ]
+                }
+              ]
+            }
+          },
+          "70": {
+            "narrative": [
+              "URGENT PAYMENT REQUIRED",
+              "TIME CRITICAL SETTLEMENT",
+              "DEADLINE: TODAY 17:00",
+              "CONTACT: +1-555-123-4567"
+            ]
+          },
+          "71A": {
+            "code": "OUR"
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "PAY",
+                {
+                  "fake": [
+                    "i64",
+                    100000000000,
+                    999999999999
+                  ]
+                }
+              ]
+            }
+          },
+          "23E": [
+            {
+              "instruction_code": "URGP"
+            },
+            {
+              "instruction_code": "URGP",
+              "additional_info": "/+44-20-1234-5678"
+            }
+          ],
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                250000.0,
+                1000000.0
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
+                ]
+              }
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": "/FR1420041010050500013M02606",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "substr": [
+                    {
+                      "fake": [
+                        "country_name"
+                      ]
+                    },
+                    0,
+                    34
+                  ]
+                }
+              ]
+            }
+          },
+          "70": {
+            "narrative": [
+              "URGENT MARGIN CALL",
+              "IMMEDIATE EXECUTION",
+              "TRADING DESK REQUIREMENT"
+            ]
+          },
+          "71A": {
+            "code": "OUR"
+          }
+        }
+      ]
+    }
+  }
+}

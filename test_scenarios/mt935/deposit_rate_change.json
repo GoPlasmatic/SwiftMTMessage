@@ -1,0 +1,90 @@
+{
+  "variables": {
+    "sender_bic": {"fake": ["bic"]},
+    "receiver_bic": {"fake": ["bic"]},
+    "transaction_ref": {"cat": ["RATE", {"fake": ["i64", 100000, 999999]}]},
+    "account_1": {"cat": ["ACC", {"fake": ["i64", 1000000000, 9999999999]}]},
+    "effective_date_1": "2025-01-01",
+    "old_rate_1": {"fake": ["f64", 1.0, 3.0]},
+    "new_rate_1": {"fake": ["f64", 2.0, 4.0]},
+    "account_2": {"cat": ["ACC", {"fake": ["i64", 1000000000, 9999999999]}]},
+    "effective_date_2": "2025-01-15",
+    "old_rate_2": {"fake": ["f64", 1.5, 3.5]},
+    "new_rate_2": {"fake": ["f64", 2.5, 4.5]},
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+      "sender_bic": {"var": "sender_bic"},
+      "session_number": {"var": "session_num"},
+      "sequence_number": {"var": "sequence_num"}
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "935",
+      "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+      "receiver_bic": {"var": "receiver_bic"},
+      "priority": "N"
+    },
+    "message_type": "935",
+    "fields": {
+      "20": {
+        "reference": {"var": "transaction_ref"}
+      },
+      "#": [
+        {
+          "25": {
+            "NoOption": {
+              "account": {"var": "account_1"}
+            }
+          },
+          "30": {
+            "date": {"var": "effective_date_1"}
+          },
+          "37H": [
+            {
+              "rate_narrative": [
+                "DEPOSIT RATE CHANGE",
+                {"cat": ["OLD RATE: ", {"var": "old_rate_1"}, "%"]},
+                {"cat": ["NEW RATE: ", {"var": "new_rate_1"}, "%"]},
+                "TERM: 12 MONTHS"
+              ]
+            }
+          ]
+        },
+        {
+          "25": {
+            "NoOption": {
+              "account": {"var": "account_2"}
+            }
+          },
+          "30": {
+            "date": {"var": "effective_date_2"}
+          },
+          "37H": [
+            {
+              "rate_narrative": [
+                "SAVINGS RATE CHANGE",
+                {"cat": ["OLD RATE: ", {"var": "old_rate_2"}, "%"]},
+                {"cat": ["NEW RATE: ", {"var": "new_rate_2"}, "%"]},
+                "MINIMUM BALANCE: USD 10,000"
+              ]
+            }
+          ]
+        }
+      ],
+      "72": {
+        "information": [
+          "RATE ADJUSTMENT DUE TO CENTRAL BANK",
+          "POLICY CHANGES EFFECTIVE JANUARY 2025",
+          "FOR QUESTIONS CONTACT YOUR",
+          "RELATIONSHIP MANAGER"
+        ]
+      }
+    }
+  }
+}

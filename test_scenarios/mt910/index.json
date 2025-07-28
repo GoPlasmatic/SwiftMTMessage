@@ -1,0 +1,9 @@
+{
+  "scenarios": [
+    "basic_credit_confirmation",
+    "incoming_wire_transfer",
+    "interest_credit",
+    "dividend_payment",
+    "refund_credit"
+  ]
+}

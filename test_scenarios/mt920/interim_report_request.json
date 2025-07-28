@@ -1,0 +1,122 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "INTREQ",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "account_number": {
+      "cat": [
+        "/",
+        {
+          "fake": [
+            "i64",
+            1000000000000000,
+            9999999999999999
+          ]
+        }
+      ]
+    },
+    "currency": "USD",
+    "debit_floor": "0001",
+    "credit_floor": "0001",
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "920",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "message_type": "920",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
+        }
+      },
+      "#": [
+        {
+          "12": {
+            "message_type": "942"
+          },
+          "25": {
+            "account": {
+              "var": "account_number"
+            }
+          },
+          "34F": [
+            {
+              "currency": {
+                "var": "currency"
+              },
+              "debit_credit_indicator": "D",
+              "amount": {
+                "var": "debit_floor"
+              }
+            },
+            {
+              "currency": {
+                "var": "currency"
+              },
+              "debit_credit_indicator": "C",
+              "amount": {
+                "var": "credit_floor"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

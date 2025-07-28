@@ -1,0 +1,548 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "DDMULTI",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "currency": "USD",
+    "execution_date": "2024-12-26",
+    "charges": "SHA",
+    "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    },
+    "batch_ref": {
+      "cat": [
+        "BATCH",
+        {
+          "fake": [
+            "i64",
+            100000,
+            999999
+          ]
+        }
+      ]
+    },
+    "total_amount": {
+      "fake": [
+        "f64",
+        10000.0,
+        100000.0
+      ]
+    },
+    "num_transactions": 5,
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "104",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "user_header": {
+      "service_type_id": "gpi",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "monetary_amount": {
+        "cat": [
+          {
+            "var": "currency"
+          },
+          {
+            "var": "total_amount"
+          }
+        ]
+      }
+    },
+    "message_type": "104",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
+        }
+      },
+      "21R": {
+        "reference": {
+          "var": "batch_ref"
+        }
+      },
+      "28D": {
+        "message_index": 1,
+        "total_messages": 1
+      },
+      "30": {
+        "execution_date": {
+          "var": "execution_date"
+        }
+      },
+      "50": {
+        "K": {
+          "account": "/UTILITY-COMPANY-001",
+          "name_and_address": [
+            "GLOBAL UTILITIES INC",
+            {
+              "cat": [
+                "UTILITY PROVIDER/",
+                {
+                  "var": "sender_lei"
+                }
+              ]
+            },
+            "100 ENERGY BOULEVARD",
+            "NEW YORK, NY US"
+          ]
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {
+            "var": "sender_bic"
+          }
+        }
+      },
+      "71A": {
+        "code": {
+          "var": "charges"
+        }
+      },
+      "72": {
+        "information": [
+          "/INS/MONTHLY UTILITY COLLECTIONS",
+          "/CBPR/COMPLIANT",
+          {
+            "cat": [
+              "/BATCH/",
+              {
+                "var": "num_transactions"
+              },
+              " TRANSACTIONS"
+            ]
+          }
+        ]
+      },
+      "#": [
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "UTIL",
+                {
+                  "fake": [
+                    "i64",
+                    1000000,
+                    9999999
+                  ]
+                }
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                100.0,
+                500.0
+              ]
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": {
+                "cat": [
+                  "/",
+                  {
+                    "fake": [
+                      "i64",
+                      1000000000000000,
+                      9999999999999999
+                    ]
+                  }
+                ]
+              },
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "cat": [
+                    "CUSTOMER ID ",
+                    {
+                      "fake": [
+                        "i64",
+                        100000,
+                        999999
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "cat": [
+                    {
+                      "fake": [
+                        "city_name"
+                      ]
+                    },
+                    ", ",
+                    {
+                      "fake": [
+                        "country_code"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "var": "receiver_bic"
+              }
+            }
+          },
+          "70": {
+            "narrative": [
+              "/RFB/UTILITY BILL",
+              {
+                "cat": [
+                  "/MREF/UTIL-MND-",
+                  {
+                    "fake": [
+                      "i64",
+                      100000,
+                      999999
+                    ]
+                  }
+                ]
+              },
+              "/PURP/UTIL",
+              {
+                "cat": [
+                  "/BILL/DEC 2024"
+                ]
+              }
+            ]
+          },
+          "71A": {
+            "code": {
+              "var": "charges"
+            }
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "UTIL",
+                {
+                  "fake": [
+                    "i64",
+                    1000000,
+                    9999999
+                  ]
+                }
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                150.0,
+                600.0
+              ]
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": {
+                "cat": [
+                  "/",
+                  {
+                    "fake": [
+                      "i64",
+                      1000000000000000,
+                      9999999999999999
+                    ]
+                  }
+                ]
+              },
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "cat": [
+                    "CUSTOMER ID ",
+                    {
+                      "fake": [
+                        "i64",
+                        100000,
+                        999999
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "cat": [
+                    {
+                      "fake": [
+                        "city_name"
+                      ]
+                    },
+                    ", ",
+                    {
+                      "fake": [
+                        "country_code"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "var": "receiver_bic"
+              }
+            }
+          },
+          "70": {
+            "narrative": [
+              "/RFB/UTILITY BILL",
+              {
+                "cat": [
+                  "/MREF/UTIL-MND-",
+                  {
+                    "fake": [
+                      "i64",
+                      100000,
+                      999999
+                    ]
+                  }
+                ]
+              },
+              "/PURP/UTIL",
+              {
+                "cat": [
+                  "/BILL/DEC 2024"
+                ]
+              }
+            ]
+          },
+          "71A": {
+            "code": {
+              "var": "charges"
+            }
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "UTIL",
+                {
+                  "fake": [
+                    "i64",
+                    1000000,
+                    9999999
+                  ]
+                }
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                200.0,
+                800.0
+              ]
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": {
+                "cat": [
+                  "/",
+                  {
+                    "fake": [
+                      "i64",
+                      1000000000000000,
+                      9999999999999999
+                    ]
+                  }
+                ]
+              },
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "cat": [
+                    "BUSINESS CUSTOMER ",
+                    {
+                      "fake": [
+                        "i64",
+                        100000,
+                        999999
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "cat": [
+                    {
+                      "fake": [
+                        "city_name"
+                      ]
+                    },
+                    ", ",
+                    {
+                      "fake": [
+                        "country_code"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "var": "receiver_bic"
+              }
+            }
+          },
+          "70": {
+            "narrative": [
+              "/RFB/UTILITY BILL COMMERCIAL",
+              {
+                "cat": [
+                  "/MREF/UTIL-MND-",
+                  {
+                    "fake": [
+                      "i64",
+                      100000,
+                      999999
+                    ]
+                  }
+                ]
+              },
+              "/PURP/UTIL",
+              {
+                "cat": [
+                  "/BILL/DEC 2024"
+                ]
+              }
+            ]
+          },
+          "71A": {
+            "code": {
+              "var": "charges"
+            }
+          }
+        }
+      ],
+      "32B": {
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "total_amount"
+        }
+      },
+      "19": {
+        "amount": {
+          "var": "total_amount"
+        }
+      }
+    }
+  }
+}

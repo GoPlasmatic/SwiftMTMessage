@@ -16,6 +16,8 @@ categories = ["data-structures", "development-tools", "parsing"]
 # Macro crate
 swift-mt-message-macros = { version = "3.0", path = "../swift-mt-message-macros" }
 
+datafake-rs = { version = "0.1", path = "../../datafake-rs" }
+
 # Core serialization and parsing
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -49,3 +51,8 @@ path = "../examples/benchmark.rs"
 [[example]]
 name = "error_collection"
 path = "../examples/error_collection.rs"
+
+[[example]]
+name = "generate_sample"
+path = "../examples/generate_sample.rs"
+

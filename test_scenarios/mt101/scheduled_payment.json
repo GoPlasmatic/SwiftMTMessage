@@ -1,0 +1,180 @@
+{
+  "variables": {
+    "sender_bic": {"fake": ["bic"]},
+    "receiver_bic": {"fake": ["bic"]},
+    "message_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+    "future_date": "2024-12-31",
+    "session_num": "0001",
+    "sequence_num": "000456",
+    "currency": {"fake": ["currency_code"]},
+    "standing_order_ref": "SO-2024-Q4-001"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+      "sender_bic": {"var": "sender_bic"},
+      "session_number": {"var": "session_num"},
+      "sequence_number": {"var": "sequence_num"}
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "101",
+      "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+      "receiver_bic": {"var": "receiver_bic"},
+      "priority": "N"
+    },
+    "message_type": "101",
+    "fields": {
+      "20": {
+        "reference": {"var": "message_ref"}
+      },
+      "21R": {
+        "reference": {"var": "standing_order_ref"}
+      },
+      "28D": {
+        "index": 1,
+        "total": 1
+      },
+      "50#1": {
+        "C": {
+          "bic": {"fake": ["bic"]}
+        }
+      },
+      "50#2": {
+        "F": {
+          "account": "/CORP/12345",
+          "bic": {"fake": ["bic"]}
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {"var": "receiver_bic"}
+        }
+      },
+      "51A": {
+        "bic": {"var": "sender_bic"}
+      },
+      "30": {
+        "execution_date": {"var": "future_date"}
+      },
+      "25": {
+        "authorisation": "SO-AUTH-Q4-2024"
+      },
+      "#": [
+          {
+            "21": {
+              "reference": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]}
+            },
+            "23E": [
+              {
+                "instruction_code": "INTC",
+                "additional_info": "/CONFIRM BEFORE EXECUTION"
+              }
+            ],
+            "32B": {
+              "currency": {"var": "currency"},
+              "amount": {"fake": ["f64", 100000.0, 500000.0]}
+            },
+            "57": {
+              "A": {
+                "bic": {"fake": ["bic"]}
+              }
+            },
+            "59": {
+              "NoOption": {
+                "account": "/NL91ABNA0417164300",
+                "name_and_address": [
+                  {"fake": ["company_name"]},
+                  {"fake": ["street_address"]},
+                  {"fake": ["city_name"]},
+                  "NETHERLANDS"
+                ]
+              }
+            },
+            "70": {
+              "narrative": [
+                "SCHEDULED PAYMENT",
+                "QUARTERLY RENT PAYMENT",
+                "DUE DATE: END OF MONTH"
+              ]
+            },
+            "71A": {
+              "code": "OUR"
+            }
+          },
+          {
+            "21": {
+              "reference": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]}
+            },
+            "32B": {
+              "currency": {"var": "currency"},
+              "amount": {"fake": ["f64", 50000.0, 150000.0]}
+            },
+            "57": {
+              "A": {
+                "bic": {"fake": ["bic"]}
+              }
+            },
+            "59": {
+              "NoOption": {
+                "account": "/BE68539007547034",
+                "name_and_address": [
+                  {"fake": ["company_name"]},
+                  {"fake": ["street_address"]},
+                  {"fake": ["city_name"]},
+                  "BELGIUM"
+                ]
+              }
+            },
+            "70": {
+              "narrative": [
+                "SCHEDULED PAYMENT",
+                "LEASE PAYMENT",
+                "CONTRACT REF: LS-2024"
+              ]
+            },
+            "71A": {
+              "code": "SHA"
+            }
+          },
+          {
+            "21": {
+              "reference": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]}
+            },
+            "32B": {
+              "currency": {"var": "currency"},
+              "amount": {"fake": ["f64", 25000.0, 75000.0]}
+            },
+            "57": {
+              "A": {
+                "bic": {"fake": ["bic"]}
+              }
+            },
+            "59": {
+              "NoOption": {
+                "account": "/AT611904300234573201",
+                "name_and_address": [
+                  {"fake": ["company_name"]},
+                  {"fake": ["street_address"]},
+                  {"fake": ["city_name"]},
+                  "AUSTRIA"
+                ]
+              }
+            },
+            "70": {
+              "narrative": [
+                "SCHEDULED PAYMENT",
+                "INSURANCE PREMIUM",
+                "POLICY: INS-2024-789"
+              ]
+            },
+            "71A": {
+              "code": "SHA"
+            }
+          }
+        ]
+    }
+  }
+}

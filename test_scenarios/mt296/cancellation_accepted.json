@@ -1,0 +1,154 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "ANS",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "related_ref": {
+      "cat": [
+        "CANC",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "original_amount": {
+      "fake": [
+        "f64",
+        1000.0,
+        100000.0
+      ]
+    },
+    "currency": "USD",
+    "cancellation_time": {
+      "fake": [
+        "time_24h"
+      ]
+    },
+    "original_value_date": "2024-12-20",
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "296",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "message_type": "296",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
+        }
+      },
+      "21": {
+        "reference": {
+          "cat": [
+            "",
+            {
+              "var": "related_ref"
+            }
+          ]
+        }
+      },
+      "76": {
+        "answer": [
+          "CANC",
+          "CANCELLATION ACCEPTED",
+          {
+            "cat": [
+              "AMOUNT ",
+              {
+                "var": "currency"
+              },
+              " ",
+              {
+                "var": "original_amount"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "VALUE DATE ",
+              {
+                "var": "original_value_date"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "PROCESSED AT ",
+              {
+                "var": "cancellation_time"
+              }
+            ]
+          }
+        ]
+      },
+      "79": {
+        "narrative": [
+          "THE REQUESTED CANCELLATION HAS BEEN ACCEPTED.",
+          "THE ORIGINAL TRANSFER HAS BEEN REVERSED.",
+          "FUNDS WILL BE CREDITED BACK TO THE ORDERING",
+          "PARTY'S ACCOUNT BY END OF BUSINESS DAY.",
+          "NO CANCELLATION FEES APPLY."
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,304 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "message_ref": {
+      "cat": [
+        "RSP",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "inquiry_ref": {
+      "cat": [
+        "INQ",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "004567",
+    "payment_ref": {
+      "cat": [
+        "REF",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    },
+    "processing_time": {
+      "fake": [
+        "i32",
+        1,
+        24
+      ]
+    },
+    "fee_amount": {
+      "fake": [
+        "f64",
+        10.0,
+        50.0
+      ]
+    },
+    "exchange_rate": {
+      "fake": [
+        "f64",
+        1.05,
+        1.15
+      ]
+    },
+    "credit_datetime": {
+      "cat": [
+        "2024-12-20 ",
+        {
+          "fake": [
+            "i32",
+            10,
+            16
+          ]
+        },
+        ":",
+        {
+          "fake": [
+            "i32",
+            10,
+            59
+          ]
+        },
+        ":00"
+      ]
+    },
+    "purpose_code": "GDDS",
+    "ordering_lei": "LEIXG8HWVXGGR1B2V5K893",
+    "beneficiary_lei": "LEIZBQR12345HKLMNOP678"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "299",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "message_type": "299",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "message_ref"
+        }
+      },
+      "21": {
+        "reference": {
+          "cat": [
+            "",
+            {
+              "var": "inquiry_ref"
+            }
+          ]
+        }
+      },
+      "79": {
+        "information": [
+          "CBPR+ PAYMENT STATUS RESPONSE",
+          {
+            "cat": [
+              "INQUIRY REFERENCE: ",
+              {
+                "var": "inquiry_ref"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "PAYMENT REFERENCE: ",
+              {
+                "var": "payment_ref"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "UETR: ",
+              {
+                "var": "uetr"
+              }
+            ]
+          },
+          "",
+          "CURRENT STATUS: COMPLETED",
+          {
+            "cat": [
+              "BENEFICIARY CREDITED: ",
+              {
+                "var": "credit_datetime"
+              },
+              " CET"
+            ]
+          },
+          "",
+          "TRANSPARENCY PATH:",
+          "1. SENDER -> SENDER'S BANK",
+          "   TIME: T+0 09:00:00",
+          "   STATUS: PROCESSED",
+          "   FEE: 15.00 EUR",
+          "",
+          "2. SENDER'S BANK -> CORRESPONDENT",
+          "   TIME: T+0 09:30:00",
+          "   STATUS: FORWARDED",
+          {
+            "cat": [
+              "   FEE: ",
+              {
+                "var": "fee_amount"
+              },
+              " EUR"
+            ]
+          },
+          "",
+          "3. CORRESPONDENT -> BENEFICIARY BANK",
+          "   TIME: T+0 14:00:00",
+          "   STATUS: PROCESSED",
+          "   FEE: 10.00 EUR",
+          "",
+          "4. BENEFICIARY BANK -> BENEFICIARY",
+          {
+            "cat": [
+              "   TIME: ",
+              {
+                "var": "credit_datetime"
+              }
+            ]
+          },
+          "   STATUS: CREDITED",
+          "   FEE: 5.00 EUR",
+          "",
+          "CBPR+ COMPLIANCE SUMMARY:",
+          {
+            "cat": [
+              "- PURPOSE CODE: ",
+              {
+                "var": "purpose_code"
+              },
+              " (VALIDATED)"
+            ]
+          },
+          {
+            "cat": [
+              "- ORDERING LEI: ",
+              {
+                "var": "ordering_lei"
+              },
+              " (VERIFIED)"
+            ]
+          },
+          {
+            "cat": [
+              "- BENEFICIARY LEI: ",
+              {
+                "var": "beneficiary_lei"
+              },
+              " (VERIFIED)"
+            ]
+          },
+          "- STRUCTURED REMITTANCE: PROCESSED",
+          "- REGULATORY SCREENING: PASSED",
+          "- TRANSPARENCY REQUIREMENTS: MET",
+          "",
+          "FEE SUMMARY:",
+          {
+            "cat": [
+              "- TOTAL FEES: ",
+              {
+                "var": "fee_amount"
+              },
+              " EUR"
+            ]
+          },
+          "- FEE TRANSPARENCY: FULL DISCLOSURE",
+          {
+            "cat": [
+              "- EXCHANGE RATE APPLIED: ",
+              {
+                "var": "exchange_rate"
+              }
+            ]
+          },
+          "",
+          {
+            "cat": [
+              "PROCESSING TIME: ",
+              {
+                "var": "processing_time"
+              },
+              " HOURS"
+            ]
+          },
+          "ESTIMATED TIME: 24 HOURS",
+          "PERFORMANCE: WITHIN SLA",
+          "",
+          "NO COMPLIANCE HOLDS OR ISSUES ENCOUNTERED",
+          "ALL CBPR+ REQUIREMENTS SATISFIED",
+          "",
+          "END OF RESPONSE"
+        ]
+      }
+    }
+  }
+}

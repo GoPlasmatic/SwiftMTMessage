@@ -1,0 +1,13 @@
+{
+  "scenarios": [
+    "standard",
+    "bulk_payment",
+    "multi_currency",
+    "scheduled_payment",
+    "salary_payment",
+    "vendor_payment",
+    "urgent_payment",
+    "direct_debit",
+    "minimal"
+  ]
+}

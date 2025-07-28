@@ -1,0 +1,274 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "NAUTDD",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "currency": "USD",
+    "execution_date": "2024-12-30",
+    "charges": "OUR",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "107",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "U"
+    },
+    "user_header": {
+      "service_type_id": "gpi",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      }
+    },
+    "message_type": "107",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
+        }
+      },
+      "23E": {
+        "instruction_code": "NAUT"
+      },
+      "21E": {
+        "reference": {
+          "cat": [
+            "ORIG",
+            {
+              "fake": [
+                "i64",
+                100000000000,
+                999999999999
+              ]
+            }
+          ]
+        }
+      },
+      "30": {
+        "execution_date": {
+          "var": "execution_date"
+        }
+      },
+      "50": {
+        "F": {
+          "party_identifier": {
+            "cat": [
+              "/",
+              {
+                "fake": [
+                  "i64",
+                  1000000000,
+                  9999999999
+                ]
+              }
+            ]
+          },
+          "name_and_address": [
+            "DEBT COLLECTION AGENCY",
+            "RECOVERY DEPARTMENT",
+            {
+              "fake": [
+                "street_address"
+              ]
+            },
+            {
+              "cat": [
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                ", ",
+                {
+                  "fake": [
+                    "country_code"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {
+            "var": "sender_bic"
+          }
+        }
+      },
+      "71A": {
+        "code": {
+          "var": "charges"
+        }
+      },
+      "72": {
+        "information": [
+          "/INS/COLLECTION ATTEMPT",
+          "/NAUT/NO PRE-AUTHORIZATION",
+          "/LEGAL/COURT ORDER REF 2024-12345"
+        ]
+      },
+      "#": [
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "DEBT",
+                {
+                  "fake": [
+                    "i64",
+                    10000000,
+                    99999999
+                  ]
+                }
+              ]
+            }
+          },
+          "23E": {
+            "instruction_code": "NAUT"
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                1000.0,
+                10000.0
+              ]
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": {
+                "cat": [
+                  "/",
+                  {
+                    "fake": [
+                      "i64",
+                      1000000000000000,
+                      9999999999999999
+                    ]
+                  }
+                ]
+              },
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                "DEFAULTED BORROWER",
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "cat": [
+                    {
+                      "fake": [
+                        "city_name"
+                      ]
+                    },
+                    ", ",
+                    {
+                      "fake": [
+                        "country_code"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "var": "receiver_bic"
+              }
+            }
+          },
+          "70": {
+            "narrative": [
+              "/RFB/DEBT RECOVERY",
+              {
+                "cat": [
+                  "/ORIG/LOAN-",
+                  {
+                    "fake": [
+                      "i64",
+                      100000,
+                      999999
+                    ]
+                  }
+                ]
+              },
+              "/PURP/LOAN",
+              "/NAUT/COURT AUTHORIZED",
+              "/LEGAL/ENFORCEMENT ACTION"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

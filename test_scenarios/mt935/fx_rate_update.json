@@ -1,0 +1,83 @@
+{
+  "variables": {
+    "sender_bic": {"fake": ["bic"]},
+    "receiver_bic": {"fake": ["bic"]},
+    "transaction_ref": {"cat": ["FXRATE", {"fake": ["i64", 100000, 999999]}]},
+    "effective_date_1": "2024-12-29",
+    "usd_eur_rate": {"fake": ["f64", 0.89, 0.95]},
+    "eur_usd_rate": {"fake": ["f64", 1.05, 1.12]},
+    "effective_date_2": "2024-12-29",
+    "gbp_usd_rate": {"fake": ["f64", 1.25, 1.35]},
+    "usd_gbp_rate": {"fake": ["f64", 0.74, 0.80]},
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+      "sender_bic": {"var": "sender_bic"},
+      "session_number": {"var": "session_num"},
+      "sequence_number": {"var": "sequence_num"}
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "935",
+      "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+      "receiver_bic": {"var": "receiver_bic"},
+      "priority": "N"
+    },
+    "message_type": "935",
+    "fields": {
+      "20": {
+        "reference": {"var": "transaction_ref"}
+      },
+      "#": [
+        {
+          "23": {
+            "function": "FX"
+          },
+          "30": {
+            "date": {"var": "effective_date_1"}
+          },
+          "37H": [
+            {
+              "rate_narrative": [
+                "FX RATE UPDATE USD/EUR",
+                {"cat": ["BUY RATE: ", {"var": "usd_eur_rate"}]},
+                {"cat": ["SELL RATE: ", {"var": "eur_usd_rate"}]},
+                "MID RATE: 0.9200"
+              ]
+            }
+          ]
+        },
+        {
+          "23": {
+            "function": "FX"
+          },
+          "30": {
+            "date": {"var": "effective_date_2"}
+          },
+          "37H": [
+            {
+              "rate_narrative": [
+                "FX RATE UPDATE GBP/USD",
+                {"cat": ["BUY RATE: ", {"var": "gbp_usd_rate"}]},
+                {"cat": ["SELL RATE: ", {"var": "usd_gbp_rate"}]},
+                "MID RATE: 1.3000"
+              ]
+            }
+          ]
+        }
+      ],
+      "72": {
+        "information": [
+          "DAILY FX RATE UPDATE",
+          "EFFECTIVE FROM START OF BUSINESS",
+          "RATES SUBJECT TO MARKET VOLATILITY"
+        ]
+      }
+    }
+  }
+}

@@ -11,6 +11,10 @@ name = "generate_json"
 path = "src/generate_json.rs"
 
 [[bin]]
+name = "generate_json_scenarios"
+path = "src/generate_json_scenarios.rs"
+
+[[bin]]
 name = "compare_compatibility"
 path = "src/compare_compatibility.rs"
 

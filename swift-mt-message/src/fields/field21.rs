@@ -203,3 +203,46 @@ pub struct Field21R {
     #[component("16x")]
     pub reference: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::SwiftField;
+    
+    #[test]
+    fn test_field21r_parsing() {
+        // First test serialization to understand the format
+        let field = Field21R {
+            reference: "REFBATCH001".to_string(),
+        };
+        let serialized = field.to_swift_string();
+        println!("Serialized Field21R: '{}'", serialized);
+        
+        // Test parsing
+        let test_cases = vec![
+            ("REFBATCH001", "REFBATCH001"),
+            ("ABC123", "ABC123"),
+            ("TEST/REF/001", "TEST/REF/001"),
+            ("1234567890123456", "1234567890123456"), // Max 16 chars
+        ];
+        
+        for (input, expected) in test_cases {
+            let result = Field21R::parse(input);
+            assert!(result.is_ok(), "Failed to parse: {}", input);
+            assert_eq!(result.unwrap().reference, expected);
+        }
+        
+        // Test invalid cases
+        let invalid_cases = vec![
+            "12345678901234567", // Too long (17 chars)
+            "//INVALID", // Starts with consecutive slashes  
+            "INVALID//", // Ends with consecutive slashes
+            "INV//ALID", // Contains consecutive slashes
+        ];
+        
+        for input in invalid_cases {
+            let result = Field21R::parse(input);
+            assert!(result.is_err(), "Should have failed to parse: {}", input);
+        }
+    }
+}

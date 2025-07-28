@@ -1,0 +1,213 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "cancel_ref": {
+      "cat": [
+        "CANCEL",
+        {
+          "fake": [
+            "i64",
+            100000,
+            999999
+          ]
+        }
+      ]
+    },
+    "original_ref": {
+      "cat": [
+        "PAY",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "message_type": "103",
+    "date": {
+      "fake": [
+        "date_format",
+        "%y%m%d"
+      ]
+    },
+    "session": {
+      "fake": [
+        "i64",
+        1000,
+        9999
+      ]
+    },
+    "sequence": {
+      "fake": [
+        "i64",
+        100000,
+        999999
+      ]
+    },
+    "reason_code": "CUST",
+    "amount": {
+      "fake": [
+        "f64",
+        10000.0,
+        100000.0
+      ]
+    },
+    "currency": "USD",
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "192",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "U"
+    },
+    "user_header": {
+      "service_type_id": "fin",
+      "banking_priority": "9999"
+    },
+    "message_type": "192",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "cancel_ref"
+        }
+      },
+      "21": {
+        "reference": {
+          "cat": [
+            "",
+            {
+              "var": "original_ref"
+            }
+          ]
+        }
+      },
+      "11S": {
+        "mt_and_date": {
+          "cat": [
+            {
+              "var": "message_type"
+            },
+            {
+              "var": "date"
+            },
+            {
+              "var": "session"
+            },
+            {
+              "var": "sequence"
+            }
+          ]
+        }
+      },
+      "79": {
+        "narrative": [
+          {
+            "cat": [
+              "/",
+              {
+                "var": "reason_code"
+              },
+              "/"
+            ]
+          },
+          "REQUEST FOR CANCELLATION",
+          "",
+          {
+            "cat": [
+              "ORIGINAL MESSAGE TYPE: MT",
+              {
+                "var": "message_type"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "ORIGINAL REFERENCE: ",
+              {
+                "var": "original_ref"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "AMOUNT: ",
+              {
+                "var": "currency"
+              },
+              " ",
+              {
+                "var": "amount"
+              }
+            ]
+          },
+          "",
+          {
+            "switch": {
+              "var": "reason_code"
+            },
+            "cases": {
+              "CUST": "Customer requested cancellation before execution",
+              "DUPL": "Duplicate payment sent in error",
+              "FRAD": "Suspected fraudulent transaction",
+              "TECH": "Technical error in payment processing",
+              "AM09": "Wrong amount entered in original message",
+              "CURR": "Wrong currency specified",
+              "UPAY": "Undue payment - incorrect beneficiary"
+            }
+          },
+          "",
+          "URGENT PROCESSING REQUESTED",
+          "PLEASE CONFIRM CANCELLATION VIA MT196",
+          "",
+          "IF ALREADY EXECUTED, PLEASE RETURN FUNDS",
+          "CONTACT TREASURY OPERATIONS IF NEEDED"
+        ]
+      }
+    }
+  }
+}

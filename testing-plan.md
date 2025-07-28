@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the scenario-based testing approach for SWIFT MT messages, replacing static test data files with dynamic, configurable test scenarios. Each scenario configuration is self-contained and generates realistic test data using a combination of pre-generated variables, the `fake` crate, and static values.
+This document describes the scenario-based testing approach for SWIFT MT messages, replacing static test data files with dynamic, configurable test scenarios. Each scenario configuration is self-contained and generates realistic test data using a combination of pre-generated variables, the `datafake-rs` library, and static values.
 
 ## Table of Contents
 
@@ -38,37 +38,28 @@ test_scenarios/
 
 1. **Self-Contained Scenarios**: Each JSON configuration contains everything needed to generate a complete test message
 2. **Local Variables**: Variables are generated once per sample and shared between fields within that sample
-3. **Realistic Data**: Uses the `fake` crate to generate realistic names, addresses, and other data
+3. **Realistic Data**: Uses the `datafake-rs` library to generate realistic names, addresses, BIC codes, and other financial data
 4. **Field-Specific Logic**: Each field type can have its own generation logic and validation
 
 ## Configuration Schema
 
 ### Basic Structure
 
-Each scenario configuration is a self-contained JSON file with the following structure:
+Each scenario configuration is a self-contained JSON file with the following structure supported by datafake-rs:
 
 ```json
 {
-  "scenario": {
-    "id": "unique_scenario_id",
-    "name": "Human-readable scenario name",
-    "description": "What this scenario tests",
-    "message_type": "MT103"
-  },
-  
   "variables": {
     // Variables generated once per sample, shared across fields
   },
   
-  "message": {
-    // Message headers and fields configuration
-  },
-  
-  "validation": {
-    // Expected validation results for testing
+  "schema": {
+    // Message structure including headers and fields
   }
 }
 ```
+
+Note: The scenario metadata (id, name, description, message_type) should be encoded in the filename or directory structure rather than within the JSON configuration itself.
 
 ## Variable System
 
@@ -102,7 +93,7 @@ Variables are referenced using the `${variable_name}` syntax:
 
 ```json
 {
-  "message": {
+  "schema": {
     "fields": {
       "32A": {
         "value": "${value_date}${currency}${amount}"
@@ -130,7 +121,7 @@ Reference pre-generated variables for data that needs to be consistent across fi
     "amount": 25000.50,
     "sender_bic": "DEUTDEFFXXX"
   },
-  "message": {
+  "schema": {
     "fields": {
       "32A": {
         "value": "241215${currency}${amount}"
@@ -143,30 +134,25 @@ Reference pre-generated variables for data that needs to be consistent across fi
 }
 ```
 
-### 2. Using the Fake Crate
+### 2. Using the datafake-rs Library
 
-Generate realistic data directly in field configurations using the `fake` crate:
+Generate realistic data directly in field configurations using the `datafake-rs` library with JSONLogic syntax:
 
 ```json
 {
-  "message": {
+  "schema": {
     "fields": {
       "50K": {
         "account": "1234567890",
         "name_address": [
-          {
-            "fake": "name",
-            "locale": "en_US"
-          },
-          {
-            "fake": "street_address",
-            "locale": "en_US"
-          },
-          {
-            "fake": "city_with_state",
-            "locale": "en_US"
-          }
+          {"fake": ["name"]},
+          {"fake": ["street_address"]},
+          {"fake": ["city_name"]},
+          {"fake": ["country_name"]}
         ]
+      },
+      "52A": {
+        "value": {"fake": ["bic"]}
       }
     }
   }
@@ -179,7 +165,7 @@ Provide fixed values for fields that don't need variation:
 
 ```json
 {
-  "message": {
+  "schema": {
     "fields": {
       "23B": "CRED",
       "71A": "SHA",
@@ -220,10 +206,10 @@ Each field can have additional configuration options:
   "50K": {
     "account": "/1234567890",
     "name_address": [
-      {"fake": "company", "locale": "en_US"},
-      {"fake": "street_address", "locale": "en_US"},
-      {"fake": "city", "locale": "en_US"},
-      "UNITED STATES"
+      {"fake": ["company_name"]},
+      {"fake": ["street_address"]},
+      {"fake": ["city_name"]},
+      {"fake": ["country_name"]}
     ]
   }
 }
@@ -236,8 +222,8 @@ Each field can have additional configuration options:
     "variant": "K",  // Specify which variant to use: A, F, or K
     "account": "/1234567890",
     "name_address": [
-      {"fake": "name", "locale": "en_US"},
-      {"fake": "street_address", "locale": "en_US"}
+      {"fake": ["name"]},
+      {"fake": ["street_address"]}
     ]
   }
 }
@@ -247,27 +233,22 @@ Each field can have additional configuration options:
 
 ### Example 1: Standard MT103 Cross-Border Payment
 
+File: `test_scenarios/mt103/standard_payment.json`
+
 This example demonstrates a typical corporate payment scenario using all three field generation methods:
 
 ```json
 {
-  "scenario": {
-    "id": "mt103_standard_payment",
-    "name": "Standard Corporate Payment",
-    "description": "Cross-border payment from US company to European supplier",
-    "message_type": "MT103"
-  },
-  
   "variables": {
     "currency": "EUR",
     "amount": 125000.50,
     "value_date": "241220",
     "reference": "FT2024120612345",
-    "sender_bic": "CHASUS33XXX",
-    "receiver_bic": "DEUTDEFFXXX"
+    "sender_bic": {"fake": ["bic"]},
+    "receiver_bic": {"fake": ["bic"]}
   },
   
-  "message": {
+  "schema": {
     "headers": {
       "basic": {
         "sender": "${sender_bic}",
@@ -293,9 +274,9 @@ This example demonstrates a typical corporate payment scenario using all three f
       "50K": {
         "account": "/1234567890",
         "name_address": [
-          {"fake": "company", "locale": "en_US"},
-          {"fake": "street_address", "locale": "en_US"},
-          {"fake": "city_with_state", "locale": "en_US"},
+          {"fake": ["company_name"]},
+          {"fake": ["street_address"]},
+          {"fake": ["city_name"]},
           "UNITED STATES"
         ]
       },
@@ -310,8 +291,8 @@ This example demonstrates a typical corporate payment scenario using all three f
       "59": {
         "account": "/DE89370400440532013000",
         "name_address": [
-          {"fake": "company", "locale": "de_DE"},
-          {"fake": "street_address", "locale": "de_DE"},
+          {"fake": ["company_name"]},
+          {"fake": ["street_address"]},
           "60311 FRANKFURT",
           "GERMANY"
         ]
@@ -323,28 +304,103 @@ This example demonstrates a typical corporate payment scenario using all three f
         "value": "SHA"
       }
     }
-  },
-  
-  "validation": {
-    "expected_result": "pass",
-    "compliance_checks": ["sanctions", "aml"]
   }
 }
 ```
 
-### Example 2: MT202 Interbank Transfer
+### Example 2: MT202 COV with Mismatches
+
+File: `test_scenarios/mt202/cov_mismatch.json`
+
+This example demonstrates an MT202 COV message with intentional mismatches to test error collection:
+
+```json
+{
+  "name": "MT202 COV with Mismatches",
+  "description": "MT202 COV message with intentional mismatches to demonstrate error collection",
+  "variables": {
+    "sender_bic": "BANKUS33",
+    "receiver_bic": "BANKDE55",
+    "transaction_ref": "FT220315002",
+    "related_ref": "FT220315001",
+    "currency": "USD",
+    "amount": 1050000.00,
+    "value_date": "220315"
+  },
+  "schema": {
+    "fields": {
+      "20": {
+        "value": "${transaction_ref}"
+      },
+      "21": {
+        "value": "${related_ref}"
+      },
+      "32A": {
+        "value": "${value_date}${currency}${amount}"
+      },
+      "58A": {
+        "value": "HSBCSGSG"
+      },
+      "50#b": {
+        "K": {
+          "account": "/US9876543210987654",
+          "name_and_address": [
+            "ACME INDUSTRIES",
+            "456 INDUSTRIAL PARK",
+            "CHICAGO IL 60601"
+          ]
+        }
+      },
+      "59#b": {
+        "NoOption": {
+          "account": "/SG56HSBC000098765432",
+          "name_and_address": [
+            "SINGAPORE TECH PTE LTD",
+            "RAFFLES PLACE TOWER",
+            "SINGAPORE 048623"
+          ]
+        }
+      },
+      "70#b": {
+        "narrative": [
+          "/INV/INV-2022-0316",
+          "/RFB/QUARTERLY PAYMENT"
+        ]
+      },
+      "33B#b": {
+        "currency": "${currency}",
+        "amount": "${amount}"
+      }
+    }
+  },
+  "mismatches": {
+    "ordering_customer": {
+      "mt103_account": "/US1234567890123456",
+      "mt202_account": "/US9876543210987654",
+      "mt103_name": "ACME CORPORATION",
+      "mt202_name": "ACME INDUSTRIES"
+    },
+    "beneficiary": {
+      "mt103_account": "/SG56HSBC000012345678",
+      "mt202_account": "/SG56HSBC000098765432"
+    },
+    "amount": {
+      "mt103": 1000000.00,
+      "mt202": 1050000.00,
+      "difference": 50000.00
+    }
+  }
+}
+```
+
+### Example 3: MT202 Interbank Transfer
+
+File: `test_scenarios/mt202/liquidity_transfer.json`
 
 This example shows a bank-to-bank liquidity transfer:
 
 ```json
 {
-  "scenario": {
-    "id": "mt202_liquidity_transfer",
-    "name": "USD Liquidity Transfer",
-    "description": "Large value interbank transfer for liquidity management",
-    "message_type": "MT202"
-  },
-  
   "variables": {
     "currency": "USD",
     "amount": 50000000.00,
@@ -352,7 +408,7 @@ This example shows a bank-to-bank liquidity transfer:
     "reference": "LIQ202412150001"
   },
   
-  "message": {
+  "schema": {
     "fields": {
       "20": {
         "value": "${reference}"
@@ -364,7 +420,7 @@ This example shows a bank-to-bank liquidity transfer:
         "value": "${value_date}${currency}${amount}"
       },
       "52A": {
-        "value": "CHASUS33XXX"
+        "value": {"fake": ["bic"]}
       },
       "53B": {
         "account": "/12345678901234567890",
@@ -372,15 +428,15 @@ This example shows a bank-to-bank liquidity transfer:
         "probability": 0.3
       },
       "56A": {
-        "value": "BARCGB22XXX",
+        "value": {"fake": ["bic"]},
         "optional": true,
         "probability": 0.5
       },
       "57A": {
-        "value": "DEUTDEFFXXX"
+        "value": {"fake": ["bic"]}
       },
       "58A": {
-        "value": "BNPAFRPPXXX"
+        "value": {"fake": ["bic"]}
       },
       "72": {
         "value": "/BNF/LIQUIDITY MANAGEMENT",
@@ -392,19 +448,14 @@ This example shows a bank-to-bank liquidity transfer:
 }
 ```
 
-### Example 3: MT103 with Multiple Currencies (Testing Edge Cases)
+### Example 4: MT103 with Multiple Currencies (Testing Edge Cases)
+
+File: `test_scenarios/mt103/currency_conversion.json`
 
 This example demonstrates fee handling with currency conversion:
 
 ```json
 {
-  "scenario": {
-    "id": "mt103_currency_conversion",
-    "name": "Payment with Currency Conversion",
-    "description": "USD payment to EUR account with fee details",
-    "message_type": "MT103"
-  },
-  
   "variables": {
     "send_currency": "USD",
     "receive_currency": "EUR",
@@ -415,7 +466,7 @@ This example demonstrates fee handling with currency conversion:
     "reference": "FX20241218001"
   },
   
-  "message": {
+  "schema": {
     "fields": {
       "20": {
         "value": "${reference}"
@@ -438,8 +489,8 @@ This example demonstrates fee handling with currency conversion:
       "50K": {
         "account": "/9876543210",
         "name_address": [
-          {"fake": "name", "locale": "en_US"},
-          {"fake": "street_address", "locale": "en_US"},
+          {"fake": ["name"]},
+          {"fake": ["street_address"]},
           "NEW YORK NY 10001",
           "UNITED STATES"
         ]
@@ -447,8 +498,8 @@ This example demonstrates fee handling with currency conversion:
       "59": {
         "account": "/FR1420041010050500013M02606",
         "name_address": [
-          {"fake": "name", "locale": "fr_FR"},
-          {"fake": "street_address", "locale": "fr_FR"},
+          {"fake": ["name"]},
+          {"fake": ["street_address"]},
           "75008 PARIS",
           "FRANCE"
         ]
@@ -467,6 +518,64 @@ This example demonstrates fee handling with currency conversion:
 }
 ```
 
+## MT202 COV Mismatch Detection
+
+### Overview
+
+MT202 COV (Cover Payment) messages are used to facilitate the settlement of underlying MT103 customer payments. A critical aspect of processing these messages is ensuring data consistency between the MT103 and its corresponding MT202 COV. The error collection feature in permissive parsing mode enables detection and tracking of these mismatches.
+
+### Common Mismatch Types
+
+1. **Ordering Customer Mismatches**
+   - Different account numbers between MT103 Field 50 and MT202 Field 50 (Sequence B)
+   - Name variations (e.g., "ACME CORPORATION" vs "ACME INDUSTRIES")
+   - Address discrepancies
+
+2. **Beneficiary Mismatches**
+   - Different account numbers between MT103 Field 59 and MT202 Field 59 (Sequence B)
+   - Address or location differences
+   - Name formatting variations
+
+3. **Amount Mismatches**
+   - Different settlement amounts (Field 32A)
+   - Instructed amount vs settlement amount discrepancies (Field 33B)
+   - Currency conversion issues
+
+4. **Remittance Information Mismatches**
+   - Different invoice numbers or references (Field 70)
+   - Payment purpose variations
+   - Missing or additional information
+
+5. **Correspondent Bank Mismatches**
+   - Missing correspondent banks in MT202 Sequence B
+   - Different routing paths
+   - BIC code discrepancies
+
+### Testing Mismatch Detection
+
+Create test scenarios that intentionally introduce mismatches:
+
+```rust
+// Example: Testing ordering customer mismatch
+let mt103 = parse_mt103_with_customer("ACME CORPORATION", "/US1234567890");
+let mt202_cov = parse_mt202_cov_with_customer("ACME INDUSTRIES", "/US9876543210");
+
+// In permissive mode, both messages parse successfully
+// but errors are collected for the mismatches
+assert!(mt202_cov.errors.contains(&SwiftError::ValidationError {
+    field: "50#b",
+    message: "Ordering customer mismatch with related MT103"
+}));
+```
+
+### Best Practices for COV Testing
+
+1. **Always Test Both Messages**: Parse both MT103 and MT202 COV to verify consistency
+2. **Use Permissive Mode**: Enable error collection to capture all mismatches
+3. **Verify COV Flag**: Check that MT202 is properly identified as a cover message
+4. **Test Edge Cases**: Include scenarios with partial matches and formatting differences
+5. **Document Expected Mismatches**: Clearly indicate which mismatches are intentional in test scenarios
+
 ## Best Practices
 
 ### 1. Self-Contained Scenarios
@@ -474,8 +583,8 @@ This example demonstrates fee handling with currency conversion:
 Each scenario configuration should be complete and independent:
 
 - Define all required variables at the root level
-- Include all necessary fields for a valid message
-- Specify validation expectations
+- Include all necessary fields for a valid message in the schema
+- Encode scenario metadata in the filename or directory structure
 
 ### 2. Variable Usage Guidelines
 
@@ -493,16 +602,20 @@ Use variables when data needs to be consistent across fields:
 
 ### 3. Realistic Data Generation
 
-Leverage the `fake` crate for realistic data:
+Leverage the `datafake-rs` library for realistic data:
 
 ```json
 {
   "50K": {
     "name_address": [
-      {"fake": "company", "locale": "en_US"},      // Realistic company names
-      {"fake": "street_address", "locale": "en_US"}, // Real-looking addresses
-      {"fake": "city_with_state", "locale": "en_US"}
+      {"fake": ["company_name"]},      // Realistic company names
+      {"fake": ["street_address"]},    // Real-looking addresses
+      {"fake": ["city_name"]},
+      {"fake": ["country_name"]}
     ]
+  },
+  "52A": {
+    "value": {"fake": ["bic"]}        // Generates valid BIC codes
   }
 }
 ```
@@ -527,15 +640,23 @@ test_scenarios/
 
 Create specific scenarios for boundary conditions:
 
+File: `test_scenarios/mt103/max_length_fields.json`
+
 ```json
 {
-  "scenario": {
-    "id": "mt103_max_length_fields",
-    "description": "Test maximum field lengths"
-  },
   "variables": {
     "long_reference": "ABCDEFGHIJKLMNOP",  // 16 chars - max for field 20
     "max_amount": 999999999999999.99      // Maximum decimal value
+  },
+  "schema": {
+    "fields": {
+      "20": {
+        "value": "${long_reference}"
+      },
+      "32A": {
+        "value": "241215USD${max_amount}"
+      }
+    }
   }
 }
 ```
@@ -546,30 +667,25 @@ Create specific scenarios for boundary conditions:
 
 ```json
 {
-  "scenario": {
-    "id": "string",              // Unique identifier
-    "name": "string",            // Human-readable name
-    "description": "string",     // Test purpose
-    "message_type": "string"     // MT message type (e.g., "MT103")
-  },
   "variables": {
     // Pre-generated values shared across fields
     "variable_name": "value"
   },
-  "message": {
+  "schema": {
     "headers": {
       // Optional SWIFT headers configuration
     },
     "fields": {
       // Field configurations
     }
-  },
-  "validation": {
-    "expected_result": "pass|fail",
-    "compliance_checks": ["array of checks"]
   }
 }
 ```
+
+**Note**: Scenario metadata (id, name, description, message_type) and validation expectations should be encoded in the filename and directory structure:
+- Filename: `mt103_standard_payment.json` (indicates message type and scenario)
+- Directory: `test_scenarios/mt103/compliance/` (indicates category)
+- Validation can be handled by the test runner based on directory/filename conventions
 
 ### Field Configuration Options
 
@@ -584,34 +700,128 @@ Create specific scenarios for boundary conditions:
 
 ### Fake Data Types
 
-The `fake` crate can generate the following types of data:
+The `datafake-rs` library can generate the following types of data:
 
-| Type | Description | Locales |
-|------|-------------|---------|
-| `name` | Person's full name | All |
-| `first_name` | First name only | All |
-| `last_name` | Last name only | All |
-| `company` | Company name | All |
-| `street_address` | Street address | All |
-| `city` | City name | All |
-| `state` | State/province | US, CA |
-| `city_with_state` | City, State format | US |
-| `zip` | Postal code | All |
-| `country` | Country name | All |
-| `phone` | Phone number | All |
-| `iban` | IBAN account number | EU |
+| Type | Description | Example |
+|------|-------------|----------|
+| `name` | Person's full name | "John Smith" |
+| `first_name` | First name only | "Alice" |
+| `last_name` | Last name only | "Johnson" |
+| `name_with_title` | Name with title | "Dr. Jane Doe" |
+| `title` | Professional title | "Dr." |
+| `suffix` | Name suffix | "Jr." |
+| `company_name` | Company name | "Acme Corp" |
+| `company_suffix` | Company suffix | "LLC" |
+| `street_address` | Street address | "123 Main St" |
+| `street_name` | Street name only | "Oak Avenue" |
+| `street_suffix` | Street suffix | "Blvd" |
+| `city_name` | City name | "New York" |
+| `state_name` | Full state name | "California" |
+| `state_abbreviation` | State code | "CA" |
+| `country_name` | Country name | "United States" |
+| `country_code` | Country code | "US" |
+| `zip_code` | US ZIP code | "10001" |
+| `postal_code` | Generic postal code | "SW1A 1AA" |
+| `phone_number` | Phone number | "+1 555-123-4567" |
+| `cell_phone` | Mobile number | "555-0123" |
+| `email` | Email address | "user@example.com" |
+| `safe_email` | Safe email | "user@example.net" |
+| `free_email` | Free email provider | "user@gmail.com" |
+| `username` | Username | "johndoe123" |
+| `password` | Password (configurable) | "Xy#9mK2$pL" |
+| `bic` | Bank Identifier Code | "CHASUS33XXX" |
+| `credit_card_number` | Credit card | "4532123456789012" |
+| `currency_code` | ISO currency code | "USD" |
+| `currency_name` | Currency name | "US Dollar" |
+| `currency_symbol` | Currency symbol | "$" |
+| `uuid` | UUID v4 | "550e8400-e29b..." |
+| `ipv4` | IPv4 address | "192.168.1.1" |
+| `ipv6` | IPv6 address | "2001:db8::1" |
+| `mac_address` | MAC address | "00:1B:44:11:3A:B7" |
+| `user_agent` | Browser user agent | "Mozilla/5.0..." |
+| `latitude` | Latitude coordinate | "40.7128" |
+| `longitude` | Longitude coordinate | "-74.0060" |
+| `word` | Random word | "innovation" |
+| `sentence` | Random sentence | "Lorem ipsum dolor..." |
+| `paragraph` | Random paragraph | "Lorem ipsum..." |
+| `u8`, `u16`, `u32`, `u64` | Unsigned integers | 42 |
+| `i8`, `i16`, `i32`, `i64` | Signed integers | -42 |
+| `f32`, `f64` | Floating point | 3.14159 |
+| `bool` | Boolean value | true |
 
-### Common Locales
+### Numeric Types with Ranges
 
-- `en_US` - United States
-- `en_GB` - United Kingdom  
-- `de_DE` - Germany
-- `fr_FR` - France
-- `es_ES` - Spain
-- `it_IT` - Italy
-- `nl_NL` - Netherlands
-- `ch_DE` - Switzerland (German)
-- `jp_JP` - Japan
+Numeric types support optional min/max ranges:
+
+```json
+{
+  "age": {"fake": ["u8", 18, 65]},       // Random age between 18-65
+  "balance": {"fake": ["f64", 0.0, 10000.0]}, // Random balance 0-10000
+  "quantity": {"fake": ["i32", -100, 100]}   // Random integer -100 to 100
+}
+```
+
+### Advanced datafake-rs Features
+
+#### JSONLogic Support
+
+datafake-rs supports JSONLogic for conditional field generation:
+
+```json
+{
+  "variables": {
+    "amount": {"fake": ["f64", 1000.0, 100000.0]},
+    "is_high_value": {">=": [{"var": "amount"}, 50000]}
+  },
+  "schema": {
+    "fields": {
+      "72": {
+        "value": {
+          "if": [
+            {"var": "is_high_value"},
+            "/COMPLY/HIGH VALUE PAYMENT - EDD REQUIRED",
+            "/REC/STANDARD PROCESSING"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### Batch Generation
+
+Generate multiple test messages with a single configuration:
+
+```json
+{
+  "batch": {
+    "count": 10,
+    "seed": 12345  // Optional: for reproducible results
+  },
+  "variables": {
+    // ... variable definitions
+  },
+  "schema": {
+    // ... schema configuration
+  }
+}
+```
+
+#### Complex Relationships
+
+Use JSONLogic to create related field values:
+
+```json
+{
+  "variables": {
+    "base_amount": {"fake": ["f64", 10000.0, 50000.0]},
+    "fee_percentage": 0.002,
+    "fee_amount": {"*": [{"var": "base_amount"}, {"var": "fee_percentage"}]},
+    "total_amount": {"+": [{"var": "base_amount"}, {"var": "fee_amount"}]}
+  }
+}
+```
 
 ### Variable Syntax
 
@@ -623,7 +833,7 @@ Variables are referenced using `${variable_name}` syntax and can be concatenated
     "currency": "USD",
     "amount": "50000.00"
   },
-  "message": {
+  "schema": {
     "fields": {
       "32A": {
         "value": "241215${currency}${amount}"  // Results in: "241215USD50000.00"
@@ -646,6 +856,13 @@ Each message type has specific field requirements and validation rules that shou
 
 ## Conclusion
 
-This scenario-based testing approach provides a clean, maintainable way to generate realistic SWIFT MT message test data. By combining pre-generated variables, the `fake` crate for realistic data, and static values, you can create comprehensive test suites that accurately simulate real-world financial messaging scenarios.
+This scenario-based testing approach provides a clean, maintainable way to generate realistic SWIFT MT message test data. By combining pre-generated variables, the `datafake-rs` library for realistic data generation, and static values, you can create comprehensive test suites that accurately simulate real-world financial messaging scenarios.
+
+The `datafake-rs` library brings several advantages over basic fake data generation:
+- **Financial-specific data types**: Built-in support for BIC codes, currency codes, and credit card numbers
+- **JSONLogic integration**: Conditional logic and complex relationships between fields
+- **Batch generation**: Create multiple test messages from a single configuration
+- **Configuration-driven**: JSON-based approach that aligns with SWIFT message structure
+- **Reproducible results**: Optional seed values for consistent test data
 
 The self-contained nature of each scenario configuration ensures that tests are reproducible and easy to understand, while the flexibility of the system allows for testing edge cases and compliance requirements.

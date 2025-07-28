@@ -1,0 +1,72 @@
+{
+  "variables": {
+    "sender_bic": {"fake": ["bic"]},
+    "receiver_bic": {"fake": ["bic"]},
+    "transaction_ref": {"cat": ["CBRATE", {"fake": ["i64", 100000, 999999]}]},
+    "effective_date": "2024-12-30",
+    "policy_rate": {"fake": ["f64", 4.0, 6.0]},
+    "deposit_rate": {"fake": ["f64", 3.0, 5.0]},
+    "lending_rate": {"fake": ["f64", 5.0, 7.0]},
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+      "sender_bic": {"var": "sender_bic"},
+      "session_number": {"var": "session_num"},
+      "sequence_number": {"var": "sequence_num"}
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "935",
+      "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+      "receiver_bic": {"var": "receiver_bic"},
+      "priority": "U"
+    },
+    "message_type": "935",
+    "fields": {
+      "20": {
+        "reference": {"var": "transaction_ref"}
+      },
+      "#": [
+        {
+          "23": {
+            "function": "POLICY"
+          },
+          "30": {
+            "date": {"var": "effective_date"}
+          },
+          "37H": [
+            {
+              "rate_narrative": [
+                "CENTRAL BANK POLICY RATES",
+                {"cat": ["POLICY RATE: ", {"var": "policy_rate"}, "%"]},
+                {"cat": ["DEPOSIT FACILITY: ", {"var": "deposit_rate"}, "%"]},
+                {"cat": ["LENDING FACILITY: ", {"var": "lending_rate"}, "%"]}
+              ]
+            },
+            {
+              "rate_narrative": [
+                "MONETARY POLICY DECISION",
+                "RATE INCREASE OF 25 BASIS POINTS",
+                "INFLATION TARGETING MEASURE",
+                "NEXT REVIEW: 2025-02-15"
+              ]
+            }
+          ]
+        }
+      ],
+      "72": {
+        "information": [
+          "CENTRAL BANK MONETARY POLICY UPDATE",
+          "EFFECTIVE IMMEDIATELY",
+          "ALL FINANCIAL INSTITUTIONS MUST",
+          "ADJUST RATES ACCORDINGLY"
+        ]
+      }
+    }
+  }
+}

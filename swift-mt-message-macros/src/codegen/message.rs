@@ -1336,7 +1336,7 @@ fn generate_validation_rules_impl(definition: &MessageDefinition) -> MacroResult
         Ok(quote! {
             impl #name {
                 /// Get validation rules for this message type
-                pub fn validation_rules() -> &'static str {
+                pub fn validate() -> &'static str {
                     #const_ident
                 }
             }
@@ -1348,7 +1348,7 @@ fn generate_validation_rules_impl(definition: &MessageDefinition) -> MacroResult
         Ok(quote! {
             impl #name {
                 /// Get validation rules for this message type
-                pub fn validation_rules() -> &'static str {
+                pub fn validate() -> &'static str {
                     #default_rules
                 }
             }

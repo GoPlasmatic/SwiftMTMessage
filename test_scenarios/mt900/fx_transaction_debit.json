@@ -1,0 +1,202 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "FX",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "related_ref": {
+      "cat": [
+        "SPOT",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "debit_currency": "USD",
+    "debit_amount": {
+      "fake": [
+        "f64",
+        1000.0,
+        100000.0
+      ]
+    },
+    "value_date": "2024-12-22",
+    "account_number": {
+      "cat": [
+        "/",
+        {
+          "fake": [
+            "i64",
+            1000000000000000,
+            9999999999999999
+          ]
+        }
+      ]
+    },
+    "dealing_desk_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "exchange_rate": {
+      "fake": [
+        "f64",
+        1.08,
+        1.25
+      ]
+    },
+    "contra_currency": "EUR",
+    "contra_amount": {
+      "fake": [
+        "f64",
+        1000.0,
+        120000.0
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "900",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "message_type": "900",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
+        }
+      },
+      "21": {
+        "reference": {
+          "cat": [
+            "",
+            {
+              "var": "related_ref"
+            }
+          ]
+        }
+      },
+      "25": {
+        "account": {
+          "var": "account_number"
+        }
+      },
+      "13D": {
+        "date_time_indication": "2412201425+0100"
+      },
+      "32A": {
+        "value_date": {
+          "var": "value_date"
+        },
+        "currency": {
+          "var": "debit_currency"
+        },
+        "amount": {
+          "var": "debit_amount"
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {
+            "var": "dealing_desk_bic"
+          }
+        }
+      },
+      "72": {
+        "information": [
+          "/INS/FX SPOT TRANSACTION",
+          {
+            "cat": [
+              "/EXCH/",
+              {
+                "var": "debit_currency"
+              },
+              "/",
+              {
+                "var": "contra_currency"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "/RATE/",
+              {
+                "var": "exchange_rate"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "/CTPY/",
+              {
+                "var": "contra_currency"
+              },
+              " ",
+              {
+                "var": "contra_amount"
+              }
+            ]
+          },
+          "/DEAL/TREASURY DESK"
+        ]
+      }
+    }
+  }
+}

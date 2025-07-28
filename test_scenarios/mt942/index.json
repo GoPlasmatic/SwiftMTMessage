@@ -1,0 +1,7 @@
+{
+  "scenarios": [
+    "intraday_liquidity_report",
+    "real_time_position_update",
+    "treasury_cash_sweep"
+  ]
+}

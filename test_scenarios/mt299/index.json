@@ -1,0 +1,20 @@
+{
+  "message_type": "MT299",
+  "description": "Free Format Message (Financial Institution Transfers)",
+  "scenarios": [
+    {
+      "id": "cbpr_payment_response",
+      "name": "CBPR+ Payment Response",
+      "description": "MT299 response with full transparency path for CBPR+ payment inquiry",
+      "file": "cbpr_payment_response.json",
+      "tags": ["cbpr+", "transparency", "response", "inquiry"],
+      "features": {
+        "transparency_path": true,
+        "fee_breakdown": true,
+        "processing_timeline": true,
+        "compliance_summary": true,
+        "uetr_tracking": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,245 @@
+{
+  "variables": {
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "intermediary_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "beneficiary_bank_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "STP",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "currency": {
+      "fake": [
+        "currency_code"
+      ]
+    },
+    "amount": {
+      "fake": [
+        "f64",
+        10000.0,
+        500000.0
+      ]
+    },
+    "value_date": "2024-12-20",
+    "bank_op_code": "CRED",
+    "charges": "SHA",
+    "session_num": "0001",
+    "sequence_num": "015678",
+    "ordering_customer_lei": "LEIXG8HWVXGGR1B2V3V903",
+    "beneficiary_lei": "LEIXG8HWVXGGR1B2V4W904",
+    "creditor_ref": "RF18539007547034",
+    "purpose_code": "GDDS"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "103",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "message_type": "103",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
+        }
+      },
+      "13C": [
+        {
+          "code": "SNDTIME",
+          "time": "1200",
+          "sign": "+",
+          "offset": "0100"
+        }
+      ],
+      "23B": {
+        "instruction_code": {
+          "var": "bank_op_code"
+        }
+      },
+      "32A": {
+        "value_date": {
+          "var": "value_date"
+        },
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "amount"
+        }
+      },
+      "50": {
+        "K": {
+          "account": "/1234567890123456789012",
+          "name_and_address": [
+            {
+              "fake": [
+                "company_name"
+              ]
+            },
+            {
+              "cat": [
+                "/LEI/",
+                {
+                  "var": "ordering_customer_lei"
+                }
+              ]
+            },
+            {
+              "fake": [
+                "city_name"
+              ]
+            },
+            {
+              "fake": [
+                "country_code"
+              ]
+            }
+          ]
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {
+            "var": "sender_bic"
+          }
+        }
+      },
+      "57": {
+        "A": {
+          "bic": {
+            "var": "beneficiary_bank_bic"
+          }
+        }
+      },
+      "59": {
+        "NoOption": {
+          "account": "/9876543210987654321098",
+          "name_and_address": [
+            {
+              "fake": [
+                "company_name"
+              ]
+            },
+            {
+              "cat": [
+                "/LEI/",
+                {
+                  "var": "beneficiary_lei"
+                }
+              ]
+            },
+            {
+              "fake": [
+                "city_name"
+              ]
+            },
+            {
+              "fake": [
+                "country_code"
+              ]
+            }
+          ]
+        }
+      },
+      "70": {
+        "narrative": [
+          {
+            "var": "creditor_ref"
+          },
+          {
+            "cat": [
+              "/PURP/",
+              {
+                "var": "purpose_code"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "/ULTD/",
+              {
+                "var": "ordering_customer_lei"
+              }
+            ]
+          },
+          {
+            "cat": [
+              "/ULTB/",
+              {
+                "var": "beneficiary_lei"
+              }
+            ]
+          }
+        ]
+      },
+      "71A": {
+        "code": {
+          "var": "charges"
+        }
+      },
+      "72": {
+        "information": [
+          "/ACC/CBPR+ COMPLIANT",
+          "/INS/STP PROCESSING",
+          "/REC/AUTOMATED"
+        ]
+      }
+    }
+  }
+}

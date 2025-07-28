@@ -34,27 +34,6 @@
         }
       ]
     },
-    "message_type": "103",
-    "date": {
-      "fake": [
-        "date_format",
-        "%y%m%d"
-      ]
-    },
-    "session": {
-      "fake": [
-        "i64",
-        1000,
-        9999
-      ]
-    },
-    "sequence": {
-      "fake": [
-        "i64",
-        100000,
-        999999
-      ]
-    },
     "reason_code": "CUST",
     "amount": {
       "fake": [
@@ -64,6 +43,8 @@
       ]
     },
     "currency": "USD",
+    "session": "0001",
+    "sequence": "123456",
     "session_num": "0001",
     "sequence_num": "000123"
   },
@@ -118,88 +99,25 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "original_ref"
-            }
-          ]
+          "var": "original_ref"
         }
       },
       "11S": {
-        "mt_and_date": {
-          "cat": [
-            {
-              "var": "message_type"
-            },
-            {
-              "var": "date"
-            },
-            {
-              "var": "session"
-            },
-            {
-              "var": "sequence"
-            }
-          ]
-        }
+        "message_type": "103",
+        "date": "2024-12-20",
+        "session_number": "0001",
+        "input_sequence_number": "123456"
       },
       "79": {
-        "narrative": [
-          {
-            "cat": [
-              "/",
-              {
-                "var": "reason_code"
-              },
-              "/"
-            ]
-          },
+        "information": [
+          "/CUST/",
           "REQUEST FOR CANCELLATION",
           "",
-          {
-            "cat": [
-              "ORIGINAL MESSAGE TYPE: MT",
-              {
-                "var": "message_type"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "ORIGINAL REFERENCE: ",
-              {
-                "var": "original_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "AMOUNT: ",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "amount"
-              }
-            ]
-          },
+          "ORIGINAL MESSAGE TYPE: MT103",
+          "ORIGINAL REFERENCE: PAY123456789012",
+          "AMOUNT: USD 50000.00",
           "",
-          {
-            "switch": {
-              "var": "reason_code"
-            },
-            "cases": {
-              "CUST": "Customer requested cancellation before execution",
-              "DUPL": "Duplicate payment sent in error",
-              "FRAD": "Suspected fraudulent transaction",
-              "TECH": "Technical error in payment processing",
-              "AM09": "Wrong amount entered in original message",
-              "CURR": "Wrong currency specified",
-              "UPAY": "Undue payment - incorrect beneficiary"
-            }
-          },
+          "Customer requested cancellation before execution",
           "",
           "URGENT PROCESSING REQUESTED",
           "PLEASE CONFIRM CANCELLATION VIA MT196",

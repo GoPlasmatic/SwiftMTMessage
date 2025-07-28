@@ -42,12 +42,7 @@
         10000.0
       ]
     },
-    "cheque1_date": {
-      "fake": [
-        "date_format",
-        "%y%m%d"
-      ]
-    },
+    "cheque1_date": "2024-12-20",
     "cheque2_ref": {
       "cat": [
         "CHQ",
@@ -67,12 +62,7 @@
         20000.0
       ]
     },
-    "cheque2_date": {
-      "fake": [
-        "date_format",
-        "%y%m%d"
-      ]
-    },
+    "cheque2_date": "2024-12-19",
     "cheque3_ref": {
       "cat": [
         "CHQ",
@@ -92,12 +82,7 @@
         50000.0
       ]
     },
-    "cheque3_date": {
-      "fake": [
-        "date_format",
-        "%y%m%d"
-      ]
-    },
+    "cheque3_date": "2024-12-18",
     "drawer_bic": {
       "fake": [
         "bic"
@@ -174,7 +159,7 @@
           "/NOTE/SUBJECT TO VERIFICATION"
         ]
       },
-      "cheques": [
+      "#": [
         {
           "21": {
             "reference": {
@@ -182,16 +167,18 @@
             }
           },
           "30": {
-            "date_of_issue": {
+            "execution_date": {
               "var": "cheque1_date"
             }
           },
           "32": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "cheque1_amount"
+            "B": {
+              "currency": {
+                "var": "currency"
+              },
+              "amount": {
+                "var": "cheque1_amount"
+              }
             }
           },
           "50": {
@@ -258,20 +245,22 @@
             }
           },
           "30": {
-            "date_of_issue": {
+            "execution_date": {
               "var": "cheque2_date"
             }
           },
           "32": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "cheque2_amount"
+            "B": {
+              "currency": {
+                "var": "currency"
+              },
+              "amount": {
+                "var": "cheque2_amount"
+              }
             }
           },
           "50": {
-            "F": {
+            "A": {
               "party_identifier": "/US/123456789",
               "name_and_address": [
                 {
@@ -346,24 +335,45 @@
             }
           },
           "30": {
-            "date_of_issue": {
+            "execution_date": {
               "var": "cheque3_date"
             }
           },
           "32": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "cheque3_amount"
+            "B": {
+              "currency": {
+                "var": "currency"
+              },
+              "amount": {
+                "var": "cheque3_amount"
+              }
             }
           },
           "50": {
-            "A": {
+            "K": {
               "account": "/2222333344",
-              "bic": {
-                "var": "drawer_bic"
-              }
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "country_name"
+                  ]
+                }
+              ]
             }
           },
           "52": {

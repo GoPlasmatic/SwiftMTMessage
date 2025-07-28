@@ -16,8 +16,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            10000000000,
+            99999999999
           ]
         }
       ]
@@ -103,9 +103,6 @@
           "var": "transaction_ref"
         }
       },
-      "23E": {
-        "instruction_code": "SDVA"
-      },
       "28D": {
         "message_index": 1,
         "total_messages": 1
@@ -114,43 +111,6 @@
         "execution_date": {
           "var": "execution_date"
         }
-      },
-      "50": {
-        "K": {
-          "account": "/MERCHANT-SUB-001",
-          "name_and_address": [
-            "DIGITAL SERVICES CORP",
-            {
-              "cat": [
-                "SUBSCRIPTION MERCHANT/",
-                {
-                  "var": "sender_lei"
-                }
-              ]
-            },
-            "500 TECH PARK DRIVE",
-            "SAN FRANCISCO, CA US"
-          ]
-        }
-      },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "sender_bic"
-          }
-        }
-      },
-      "71A": {
-        "code": {
-          "var": "charges"
-        }
-      },
-      "72": {
-        "information": [
-          "/INS/RECURRING SUBSCRIPTION",
-          "/FREQ/MONTHLY",
-          "/CBPR/COMPLIANT"
-        ]
       },
       "#": [
         {
@@ -169,7 +129,8 @@
             }
           },
           "23E": {
-            "instruction_code": "SDVA"
+            "instruction_code": "SDVA",
+            "additional_info": "RECURRING DEBIT"
           },
           "32B": {
             "currency": {
@@ -177,6 +138,24 @@
             },
             "amount": {
               "var": "subscription_amount"
+            }
+          },
+          "50#2": {
+            "K": {
+              "account": "/MERCHANT-SUB-001",
+              "name_and_address": [
+                "DIGITAL SERVICES CORP",
+                {
+                  "cat": [
+                    "SUBSCRIPTION MERCHANT/",
+                    {
+                      "var": "sender_lei"
+                    }
+                  ]
+                },
+                "500 TECH PARK DRIVE",
+                "SAN FRANCISCO, CA US"
+              ]
             }
           },
           "59": {
@@ -264,9 +243,7 @@
                     "var": "service_name"
                   }
                 ]
-              },
-              "/CD/RECURRING MONTHLY",
-              "/START/2023-01-01"
+              }
             ]
           },
           "71A": {
@@ -275,13 +252,21 @@
             }
           },
           "77B": {
-            "regulatory_reporting": [
+            "narrative": [
               "/ORDERRES/BE//SUBSCRIPTION SERVICE",
               "/BENEFRES/US//DIGITAL CONTENT"
             ]
           }
         }
-      ]
+      ],
+      "32B": {
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "subscription_amount"
+        }
+      }
     }
   }
 }

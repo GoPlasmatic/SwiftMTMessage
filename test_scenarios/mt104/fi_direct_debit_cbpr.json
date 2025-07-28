@@ -16,8 +16,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            1000000000,
+            9999999999
           ]
         }
       ]
@@ -127,11 +127,6 @@
           "var": "transaction_ref"
         }
       },
-      "21R": {
-        "reference": {
-          "var": "batch_ref"
-        }
-      },
       "28D": {
         "message_index": 1,
         "total_messages": 1
@@ -140,43 +135,6 @@
         "execution_date": {
           "var": "execution_date"
         }
-      },
-      "50": {
-        "K": {
-          "account": "/LENDING-DEPT-DD",
-          "name_and_address": [
-            "INTERNATIONAL LENDING CORP",
-            {
-              "cat": [
-                "LEI/",
-                {
-                  "var": "sender_lei"
-                }
-              ]
-            },
-            "FINANCIAL DISTRICT",
-            "LONDON, GB"
-          ]
-        }
-      },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "sender_bic"
-          }
-        }
-      },
-      "71A": {
-        "code": {
-          "var": "charges"
-        }
-      },
-      "72": {
-        "information": [
-          "/INS/LOAN REPAYMENT COLLECTION",
-          "/CBPR/ENHANCED",
-          "/TRPT/LEI MANDATORY"
-        ]
       },
       "#": [
         {
@@ -194,6 +152,10 @@
               ]
             }
           },
+          "23E": {
+            "instruction_code": "CORT",
+            "additional_info": "DIRECT DEBIT"
+          },
           "32B": {
             "currency": {
               "var": "currency"
@@ -202,7 +164,7 @@
               "var": "loan_payment"
             }
           },
-          "50": {
+          "50#2": {
             "K": {
               "account": {
                 "cat": [
@@ -247,15 +209,6 @@
                   ]
                 }
               ]
-            }
-          },
-          "52": {
-            "A": {
-              "bic": {
-                "fake": [
-                  "bic"
-                ]
-              }
             }
           },
           "57": {
@@ -328,16 +281,7 @@
                 ]
               },
               "/PURP/LOAN",
-              {
-                "cat": [
-                  "/LOAN/",
-                  {
-                    "var": "loan_account"
-                  }
-                ]
-              },
-              "/INST/MONTHLY INSTALLMENT",
-              "/CBPR/COMPLIANT"
+              "/INST/MONTHLY INSTALLMENT"
             ]
           },
           "71A": {
@@ -346,40 +290,22 @@
             }
           },
           "77B": {
-            "regulatory_reporting": [
-              {
-                "cat": [
-                  "/ORDERRES/",
-                  {
-                    "fake": [
-                      "country_code"
-                    ]
-                  },
-                  "//",
-                  {
-                    "var": "debtor_lei"
-                  }
-                ]
-              },
-              {
-                "cat": [
-                  "/BENEFRES/",
-                  {
-                    "fake": [
-                      "country_code"
-                    ]
-                  },
-                  "//",
-                  {
-                    "var": "sender_lei"
-                  }
-                ]
-              },
+            "narrative": [
+              "/ORDERRES/FR//LEI123",
+              "/BENEFRES/US//LEI456",
               "/PURP/LOAN REPAYMENT"
             ]
           }
         }
-      ]
+      ],
+      "32B": {
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "loan_payment"
+        }
+      }
     }
   }
 }

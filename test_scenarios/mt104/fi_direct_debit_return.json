@@ -16,8 +16,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            10000000000,
+            99999999999
           ]
         }
       ]
@@ -28,8 +28,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            1000000000000,
+            9999999999999
           ]
         }
       ]
@@ -119,9 +119,6 @@
           "var": "transaction_ref"
         }
       },
-      "23E": {
-        "instruction_code": "RTND"
-      },
       "28D": {
         "message_index": 1,
         "total_messages": 1
@@ -130,80 +127,6 @@
         "execution_date": {
           "var": "execution_date"
         }
-      },
-      "50": {
-        "K": {
-          "account": "/RETURN-PROCESSING",
-          "name_and_address": [
-            {
-              "fake": [
-                "company_name"
-              ]
-            },
-            "RETURNS DEPARTMENT",
-            {
-              "fake": [
-                "street_address"
-              ]
-            },
-            {
-              "cat": [
-                {
-                  "fake": [
-                    "city_name"
-                  ]
-                },
-                ", ",
-                {
-                  "fake": [
-                    "country_code"
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "sender_bic"
-          }
-        }
-      },
-      "71A": {
-        "code": {
-          "var": "charges"
-        }
-      },
-      "72": {
-        "information": [
-          "/RETN/DIRECT DEBIT RETURN",
-          {
-            "cat": [
-              "/ORGNL/",
-              {
-                "var": "original_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/RSNCD/",
-              {
-                "var": "return_reason"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/UETR/",
-              {
-                "var": "original_uetr"
-              }
-            ]
-          }
-        ]
       },
       "#": [
         {
@@ -222,7 +145,8 @@
             }
           },
           "23E": {
-            "instruction_code": "RTND"
+            "instruction_code": "RTND",
+            "additional_info": "RETURN"
           },
           "21C": {
             "reference": {
@@ -235,6 +159,39 @@
             },
             "amount": {
               "var": "return_amount"
+            }
+          },
+          "50#2": {
+            "K": {
+              "account": "/RETURN-PROCESSING",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                "RETURNS DEPARTMENT",
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "cat": [
+                    {
+                      "fake": [
+                        "city_name"
+                      ]
+                    },
+                    ", ",
+                    {
+                      "fake": [
+                        "country_code"
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
           },
           "59": {
@@ -316,7 +273,22 @@
             }
           }
         }
-      ]
+      ],
+      "32B": {
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "return_amount"
+        }
+      },
+      "77B": {
+        "narrative": [
+          "/RETN/DIRECT DEBIT RETURN",
+          "/RSNCD/ACCOUNT CLOSED",
+          "/PROC/AUTOMATED RETURN"
+        ]
+      }
     }
   }
 }

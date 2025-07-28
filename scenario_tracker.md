@@ -9,11 +9,6 @@
 
 | Message Type | Scenario | Parser | Validation | Round Trip | Notes |
 |--------------|----------|--------|------------|------------|-------|
-| MT104 | fi_direct_debit_basic | ❌ | ❌ | ❌ | |
-| MT104 | fi_direct_debit_cbpr | ❌ | ❌ | ❌ | |
-| MT104 | fi_direct_debit_multiple | ❌ | ❌ | ❌ | |
-| MT104 | fi_direct_debit_recurring | ❌ | ❌ | ❌ | |
-| MT104 | fi_direct_debit_return | ❌ | ❌ | ❌ | |
 | MT107 | authorized_bulk_collection | ❌ | ❌ | ❌ | |
 | MT107 | general_direct_debit_basic | ❌ | ❌ | ❌ | |
 | MT107 | return_processing | ❌ | ❌ | ❌ | |

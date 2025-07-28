@@ -138,11 +138,6 @@
           "var": "transaction_ref"
         }
       },
-      "21R": {
-        "reference": {
-          "var": "batch_ref"
-        }
-      },
       "28D": {
         "message_index": 1,
         "total_messages": 1
@@ -150,46 +145,6 @@
       "30": {
         "execution_date": {
           "var": "execution_date"
-        }
-      },
-      "50": {
-        "K": {
-          "account": "/CREDITOR-001",
-          "name_and_address": [
-            {
-              "fake": [
-                "company_name"
-              ]
-            },
-            {
-              "cat": [
-                "CREDITOR INSTITUTION/",
-                {
-                  "var": "sender_lei"
-                }
-              ]
-            },
-            {
-              "fake": [
-                "street_address"
-              ]
-            },
-            {
-              "cat": [
-                {
-                  "fake": [
-                    "city_name"
-                  ]
-                },
-                ", ",
-                {
-                  "fake": [
-                    "country_code"
-                  ]
-                }
-              ]
-            }
-          ]
         }
       },
       "52": {
@@ -211,12 +166,56 @@
               "var": "debtor_ref"
             }
           },
+          "23E": {
+            "instruction_code": "CORT",
+            "additional_info": "DIRECT DEBIT"
+          },
           "32B": {
             "currency": {
               "var": "currency"
             },
             "amount": {
               "var": "debit_amount"
+            }
+          },
+          "50#2": {
+            "K": {
+              "account": "/CREDITOR-001",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "cat": [
+                    "CREDITOR INSTITUTION/",
+                    {
+                      "var": "sender_lei"
+                    }
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "cat": [
+                    {
+                      "fake": [
+                        "city_name"
+                      ]
+                    },
+                    ", ",
+                    {
+                      "fake": [
+                        "country_code"
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
           },
           "59": {
@@ -291,7 +290,15 @@
             }
           }
         }
-      ]
+      ],
+      "32B": {
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "debit_amount"
+        }
+      }
     }
   }
 }

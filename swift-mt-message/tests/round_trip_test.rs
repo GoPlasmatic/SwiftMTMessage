@@ -220,6 +220,25 @@ fn test_single_scenario(
                     eprintln!("Scenario file content (first 500 chars):");
                     eprintln!("{}", &content[..content.len().min(500)]);
                 }
+                
+                // Additional debug: try to see what datafake generates
+                if let Ok(scenario_json) = swift_mt_message::scenario_config::find_scenario_by_name(message_type, scenario_name) {
+                    if let Ok(generator) = datafake_rs::DataGenerator::from_value(scenario_json) {
+                        if let Ok(generated_data) = generator.generate() {
+                            if let Ok(json_str) = serde_json::to_string_pretty(&generated_data) {
+                                let lines: Vec<&str> = json_str.lines().collect();
+                                if lines.len() > 82 {
+                                    eprintln!("\nGenerated JSON around line 82:");
+                                    for i in 70..90 {
+                                        if i < lines.len() {
+                                            eprintln!("{}: {}", i+1, lines[i]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             return result;
         }

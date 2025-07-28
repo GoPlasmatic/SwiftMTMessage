@@ -201,20 +201,6 @@ match parser.parse_with_errors::<MT103>(raw_message_with_errors) {
 
 ## 🧪 Testing Strategy
 
-### Running Tests
-
-Run the full test suite:
-
-```bash
-cargo test
-```
-
-Run tests that include financial message examples:
-
-```bash
-cargo test --features financial-examples -- --nocapture
-```
-
 ### Scenario-Based Testing
 
 The library includes comprehensive scenario-based tests for each message type. These tests validate parsing, validation, and round-trip conversion.
@@ -230,49 +216,6 @@ Debug a specific failing scenario:
 ```bash
 # Set environment variables for detailed debugging
 TEST_MESSAGE_TYPE=MT103 TEST_SCENARIO=cbpr_social_security TEST_DEBUG=1 cargo test round_trip_scenarios -- --nocapture
-```
-
-### Test Data Generation
-
-The library can automatically generate valid SWIFT test data using the `datafake-rs` library:
-
-```bash
-# Generate sample messages
-cargo run --example sample_generation
-
-# Generate from JSON configuration
-cargo run --example json_config_sample_generation
-```
-
-### Tracking Test Progress
-
-We maintain a scenario tracker (`scenario_tracker.md`) that monitors the status of all test scenarios. When fixing scenarios:
-
-1. Run tests to identify failures
-2. Use debug mode to understand the issue
-3. Refer to message structures in `swift-mt-message/src/messages/`
-4. Fix the scenario JSON files
-5. Update the tracker with your progress
-
-Example workflow for fixing scenarios:
-
-```bash
-# 1. Run all scenarios to see failures
-cargo test round_trip_scenarios -- --nocapture
-
-# 2. Debug a specific failure
-TEST_MESSAGE_TYPE=MT192 TEST_SCENARIO=request_cancellation TEST_DEBUG=1 cargo test round_trip_scenarios -- --nocapture
-
-# 3. Fix the scenario file (e.g., test_scenarios/mt192/request_cancellation.json)
-# Common fixes include:
-# - Replacing unsupported datafake methods with static values
-# - Correcting field names to match struct definitions
-# - Simplifying complex JSON expressions
-
-# 4. Verify the fix
-cargo test round_trip_scenarios::mt192_request_cancellation -- --nocapture
-
-# 5. Update scenario_tracker.md with status and notes
 ```
 
 ## 🤝 Contributing

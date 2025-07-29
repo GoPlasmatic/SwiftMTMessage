@@ -233,23 +233,8 @@
       "70": {
         "narrative": [
           "/PURP/EDUC",
-          {
-            "cat": [
-              "/STUDENT/",
-              {
-                "var": "student_id"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/SEMESTER/",
-              {
-                "var": "semester"
-              }
-            ]
-          },
-          "/TYPE/TUITION FEES",
+          "/STUDENT/{student}",
+          "/SEMESTER/SPRING-25 /TYPE/FEES",
           "/RFB/EDUCATION PAYMENT"
         ]
       },

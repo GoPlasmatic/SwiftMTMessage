@@ -183,39 +183,10 @@
       "72": {
         "information": [
           "/INS/STANDING ORDER EXECUTION",
-          {
-            "cat": [
-              "/BEN/",
-              {
-                "var": "beneficiary_name"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/BENACCT",
-              {
-                "var": "beneficiary_account"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/OREF/",
-              {
-                "var": "order_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PMT/",
-              {
-                "var": "payment_number"
-              },
-              " OF 60"
-            ]
-          },
+          "/BEN/ABC COMPANY LTD",
+          "/BENACCT/1234567890",
+          "/OREF/STO-123456",
+          "/PMT/12 OF 60",
           "/FREQ/MONTHLY"
         ]
       }

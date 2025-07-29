@@ -268,50 +268,10 @@
       },
       "70": {
         "narrative": [
-          {
-            "cat": [
-              "/INV/",
-              {
-                "var": "invoice1_date"
-              },
-              "/",
-              {
-                "var": "invoice1_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/INV/",
-              {
-                "var": "invoice2_date"
-              },
-              "/",
-              {
-                "var": "invoice2_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/INV/",
-              {
-                "var": "invoice3_date"
-              },
-              "/",
-              {
-                "var": "invoice3_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PO/",
-              {
-                "var": "po_number"
-              }
-            ]
-          }
+          "/INV/20241201/INV-12345",
+          "/INV/20241215/INV-12346", 
+          "/INV/20241220/INV-12347",
+          "/PO/PO-2024-789456"
         ]
       },
       "71A": {
@@ -327,108 +287,7 @@
         ]
       },
       "77T": {
-        "envelope_content": {
-          "cat": [
-            "STRUCTURED REMITTANCE INFORMATION\n",
-            "PURCHASE ORDER: ",
-            {
-              "var": "po_number"
-            },
-            "\n",
-            "INVOICE DETAILS:\n",
-            "1. INVOICE: ",
-            {
-              "var": "invoice1_ref"
-            },
-            "\n",
-            "   DATE: ",
-            {
-              "var": "invoice1_date"
-            },
-            "\n",
-            "   AMOUNT: ",
-            {
-              "var": "currency"
-            },
-            " ",
-            {
-              "var": "invoice1_amount"
-            },
-            "\n",
-            "   STATUS: PAID IN FULL\n",
-            "2. INVOICE: ",
-            {
-              "var": "invoice2_ref"
-            },
-            "\n",
-            "   DATE: ",
-            {
-              "var": "invoice2_date"
-            },
-            "\n",
-            "   AMOUNT: ",
-            {
-              "var": "currency"
-            },
-            " ",
-            {
-              "var": "invoice2_amount"
-            },
-            "\n",
-            "   STATUS: PAID IN FULL\n",
-            "3. INVOICE: ",
-            {
-              "var": "invoice3_ref"
-            },
-            "\n",
-            "   DATE: ",
-            {
-              "var": "invoice3_date"
-            },
-            "\n",
-            "   AMOUNT: ",
-            {
-              "var": "currency"
-            },
-            " ",
-            {
-              "var": "invoice3_amount"
-            },
-            "\n",
-            "   STATUS: PAID IN FULL\n",
-            "PAYMENT SUMMARY:\n",
-            "SUBTOTAL: ",
-            {
-              "var": "currency"
-            },
-            " ",
-            {
-              "var": "amount"
-            },
-            "\n",
-            "EARLY PAYMENT DISCOUNT: ",
-            {
-              "var": "currency"
-            },
-            " ",
-            {
-              "var": "discount_amount"
-            },
-            "\n",
-            "NET AMOUNT PAID: ",
-            {
-              "var": "currency"
-            },
-            " ",
-            {
-              "var": "amount"
-            },
-            "\n",
-            "PAYMENT TERMS: 2/10 NET 30\n",
-            "TAX TREATMENT: AS PER AGREEMENT\n",
-            "END STRUCTURED REMITTANCE INFORMATION"
-          ]
-        }
+        "envelope_content": "EXTENDED REMITTANCE INFORMATION"
       }
     }
   }

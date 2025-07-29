@@ -247,27 +247,7 @@
         ]
       },
       "77T": {
-        "envelope_content": {
-          "cat": [
-            "HLT/",
-            {
-              "var": "claim_number"
-            },
-            "/PROVIDER/",
-            {
-              "var": "hospital_lei"
-            },
-            "/PATIENT/",
-            {
-              "var": "patient_ref"
-            },
-            "/SERVICE/",
-            {
-              "var": "treatment_type"
-            },
-            "/APPROVED"
-          ]
-        }
+        "envelope_content": "EXTENDED REMITTANCE INFORMATION"
       }
     }
   }

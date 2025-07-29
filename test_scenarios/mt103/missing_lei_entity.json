@@ -206,22 +206,7 @@
         ]
       },
       "77T": {
-        "envelope_content": {
-          "cat": [
-            "/NARR/CBPR+ COMPLIANCE FAILURE/",
-            "ORDERING PARTY TYPE CORPORATION/",
-            "ORDERING PARTY LEI NOT PROVIDED/",
-            "BENEFICIARY TYPE BUSINESS ENTITY/",
-            "BENEFICIARY LEI NOT PROVIDED/",
-            "TRANSACTION TYPE B2B PAYMENT/",
-            "AMOUNT THRESHOLD EXCEEDED/",
-            "PURPOSE CODE GDDS COMMERCIAL/",
-            "CBPR+ REQUIREMENT LEI MANDATORY/",
-            "COMPLIANCE STATUS FAILED/",
-            "REMEDIATION OBTAIN LEI CODES/",
-            "ALTERNATIVE USE MT199 TO REQUEST/"
-          ]
-        }
+        "envelope_content": "EXTENDED REMITTANCE INFORMATION"
       }
     }
   }

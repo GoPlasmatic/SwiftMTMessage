@@ -238,39 +238,9 @@
       "70": {
         "narrative": [
           "/PURP/EDUC",
-          {
-            "cat": [
-              "/STUDENT/",
-              {
-                "var": "student_id"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/YEAR/",
-              {
-                "var": "academic_year"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/TERM/",
-              {
-                "var": "semester"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PROG/",
-              {
-                "var": "program"
-              }
-            ]
-          },
-          "/RFB/TUITION PAYMENT"
+          "/STUDENT/{student}",
+          "/YEAR/2024-25 /TERM/FALL-2024",
+          "/PROG/UNDERGRAD /RFB/TUITION"
         ]
       },
       "71A": {

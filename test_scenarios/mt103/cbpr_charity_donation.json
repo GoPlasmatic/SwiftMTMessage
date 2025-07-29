@@ -246,23 +246,7 @@
         ]
       },
       "77T": {
-        "envelope_content": {
-          "cat": [
-            "DON/",
-            {
-              "var": "campaign_ref"
-            },
-            "/PURPOSE/HUMANITARIAN RELIEF",
-            "/TAXEXEMPT/",
-            {
-              "var": "charity_registration"
-            },
-            "/RECEIPT/",
-            {
-              "var": "tax_receipt_num"
-            }
-          ]
-        }
+        "envelope_content": "EXTENDED REMITTANCE INFORMATION"
       }
     }
   }

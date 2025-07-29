@@ -233,23 +233,8 @@
       "70": {
         "narrative": [
           "/PURP/COMM",
-          {
-            "cat": [
-              "/CUSTOMER/",
-              {
-                "var": "customer_id"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PERIOD/",
-              {
-                "var": "subscription_period"
-              }
-            ]
-          },
-          "/SERVICE/CLOUD SOFTWARE",
+          "/CUSTOMER/{customer}",
+          "/PERIOD/MONTHLY /SERVICE/CLOUD",
           "/RFB/SUBSCRIPTION PAYMENT"
         ]
       },

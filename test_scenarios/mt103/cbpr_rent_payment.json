@@ -233,23 +233,8 @@
       "70": {
         "narrative": [
           "/PURP/RENT",
-          {
-            "cat": [
-              "/PROPERTY/",
-              {
-                "var": "property_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PERIOD/",
-              {
-                "var": "rental_period"
-              }
-            ]
-          },
-          "/TYPE/COMMERCIAL LEASE",
+          "/PROPERTY/{property}",
+          "/PERIOD/JAN-2025 /TYPE/COMM",
           "/RFB/MONTHLY RENT"
         ]
       },

@@ -233,23 +233,8 @@
       "70": {
         "narrative": [
           "/PURP/INSU",
-          {
-            "cat": [
-              "/POLICY/",
-              {
-                "var": "policy_number"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PERIOD/",
-              {
-                "var": "coverage_period"
-              }
-            ]
-          },
-          "/TYPE/COMMERCIAL LIABILITY",
+          "/POLICY/{policy}",
+          "/PERIOD/2025 /TYPE/COMM LIAB",
           "/RFB/INSURANCE PREMIUM"
         ]
       },

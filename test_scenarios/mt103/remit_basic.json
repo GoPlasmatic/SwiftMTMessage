@@ -72,7 +72,8 @@
     },
     "payment_purpose": {
       "fake": [
-        "sentence"
+        "words",
+        5
       ]
     }
   },
@@ -213,33 +214,10 @@
       },
       "70": {
         "narrative": [
-          {
-            "cat": [
-              "PROJECT: ",
-              {
-                "var": "project_name"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "CONTRACT REF: ",
-              {
-                "var": "contract_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "MILESTONE: ",
-              {
-                "var": "milestone_desc"
-              }
-            ]
-          },
-          {
-            "var": "payment_purpose"
-          }
+          "PROJECT: INFRASTRUCTURE DEV",
+          "CONTRACT REF: CONT-2024-12345",
+          "MILESTONE: PHASE 2 COMPLETE",
+          "PAYMENT FOR SERVICES RENDERED"
         ]
       },
       "71A": {
@@ -255,37 +233,7 @@
         ]
       },
       "77T": {
-        "envelope_content": {
-          "cat": [
-            "BEGIN EXTENDED REMITTANCE INFORMATION\n",
-            "PROJECT NAME: ",
-            {
-              "var": "project_name"
-            },
-            "\n",
-            "CONTRACT REFERENCE: ",
-            {
-              "var": "contract_ref"
-            },
-            "\n",
-            "PAYMENT MILESTONE: ",
-            {
-              "var": "milestone_desc"
-            },
-            "\n",
-            "DETAILED DESCRIPTION:\n",
-            {
-              "var": "payment_purpose"
-            },
-            "\n",
-            "ADDITIONAL NOTES:\n",
-            "THIS PAYMENT REPRESENTS PARTIAL SETTLEMENT FOR THE ABOVE-MENTIONED CONTRACT.\n",
-            "ALL TERMS AND CONDITIONS AS PER THE ORIGINAL AGREEMENT DATED 2024-01-15.\n",
-            "PLEASE CREDIT THE BENEFICIARY ACCOUNT WITH THE FULL AMOUNT.\n",
-            "FOR QUERIES CONTACT: ACCOUNTS@EXAMPLE.COM\n",
-            "END EXTENDED REMITTANCE INFORMATION"
-          ]
-        }
+        "envelope_content": "EXTENDED REMITTANCE INFORMATION"
       }
     }
   }

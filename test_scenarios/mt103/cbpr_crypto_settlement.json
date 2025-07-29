@@ -41,15 +41,12 @@
     },
     "transaction_hash": {
       "cat": [
-        "0x",
+        "TX",
         {
           "fake": [
-            "uuid"
-          ]
-        },
-        {
-          "fake": [
-            "uuid"
+            "i64",
+            100000,
+            999999
           ]
         }
       ]
@@ -236,24 +233,9 @@
       "70": {
         "narrative": [
           "/PURP/INVS",
-          {
-            "cat": [
-              "/CRYPTO/",
-              {
-                "var": "crypto_type"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/TXHASH/",
-              {
-                "var": "transaction_hash"
-              }
-            ]
-          },
-          "/TYPE/CRYPTO SETTLEMENT",
-          "/RFB/DIGITAL ASSET PURCHASE"
+          "/CRYPTO/BTC",
+          "/TXHASH/{txhash}",
+          "/TYPE/CRYPTO /RFB/DIGITAL ASSET"
         ]
       },
       "71A": {

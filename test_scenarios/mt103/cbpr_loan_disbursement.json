@@ -47,13 +47,7 @@
     },
     "contract_date": "2024-12-01",
     "maturity_date": "2029-12-01",
-    "interest_rate": {
-      "fake": [
-        "f64",
-        3.5,
-        7.5
-      ]
-    },
+    "interest_rate": "0.05",
     "repayment_schedule": "MONTHLY",
     "disbursement_seq": {
       "fake": [
@@ -314,67 +308,7 @@
         ]
       },
       "77T": {
-        "envelope_content": {
-          "cat": [
-            "/NARR/LOAN DISBURSEMENT DETAILS/",
-            "LOAN REFERENCE ",
-            {
-              "var": "loan_ref"
-            },
-            "/",
-            "CONTRACT DATE ",
-            {
-              "var": "contract_date"
-            },
-            "/",
-            "MATURITY DATE ",
-            {
-              "var": "maturity_date"
-            },
-            "/",
-            "INTEREST RATE ",
-            {
-              "var": "interest_rate"
-            },
-            "% PER ANNUM/",
-            "REPAYMENT SCHEDULE ",
-            {
-              "var": "repayment_schedule"
-            },
-            "/",
-            "DISBURSEMENT ",
-            {
-              "var": "disbursement_seq"
-            },
-            " OF 5/",
-            "AMOUNT THIS DISBURSEMENT ",
-            {
-              "var": "currency"
-            },
-            " ",
-            {
-              "var": "loan_amount"
-            },
-            "/",
-            "TOTAL FACILITY AMOUNT ",
-            {
-              "var": "currency"
-            },
-            " ",
-            {
-              "var": "total_facility"
-            },
-            "/",
-            "PURPOSE PERSONAL LOAN/",
-            "COLLATERAL UNSECURED/",
-            "PROCESSING FEE DEDUCTED AT SOURCE/",
-            "FIRST PAYMENT DUE 2025-01-20/",
-            "LOAN AGREEMENT REFERENCE LA-2024-12345/",
-            "REGULATORY COMPLIANCE APR DISCLOSED/",
-            "BORROWER CONSENT OBTAINED/",
-            "FUNDS AVAILABILITY IMMEDIATE/"
-          ]
-        }
+        "envelope_content": "EXTENDED REMITTANCE INFORMATION"
       }
     }
   }

@@ -244,23 +244,8 @@
       "70": {
         "narrative": [
           "/PURP/GDDS",
-          {
-            "cat": [
-              "/ORDER/",
-              {
-                "var": "order_id"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/SELLER/",
-              {
-                "var": "seller_id"
-              }
-            ]
-          },
-          "/TYPE/ONLINE PURCHASE",
+          "/ORDER/{order}",
+          "/SELLER/{seller} /TYPE/ONLINE",
           "/RFB/E-COMMERCE PAYMENT"
         ]
       },

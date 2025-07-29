@@ -276,20 +276,7 @@
         ]
       },
       "77T": {
-        "envelope_content": {
-          "cat": [
-            "RFB/",
-            {
-              "var": "invoice_number"
-            },
-            "/PO/",
-            {
-              "var": "po_number"
-            },
-            "/TERM/NET30",
-            "/DISC/2-10"
-          ]
-        }
+        "envelope_content": "EXTENDED REMITTANCE INFORMATION"
       }
     }
   }

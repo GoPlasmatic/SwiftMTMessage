@@ -206,23 +206,8 @@
       "70": {
         "narrative": [
           "/PURP/FEES",
-          {
-            "cat": [
-              "/INVOICE/",
-              {
-                "var": "invoice_number"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PERIOD/",
-              {
-                "var": "service_period"
-              }
-            ]
-          },
-          "/TYPE/MANAGEMENT FEES",
+          "/INVOICE/{invoice}",
+          "/PERIOD/JAN-2024 /TYPE/MGMT",
           "/RFB/SERVICE FEES"
         ]
       },

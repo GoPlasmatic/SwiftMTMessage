@@ -233,23 +233,8 @@
       "70": {
         "narrative": [
           "/PURP/UTIL",
-          {
-            "cat": [
-              "/ACCOUNT/",
-              {
-                "var": "account_number"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PERIOD/",
-              {
-                "var": "billing_period"
-              }
-            ]
-          },
-          "/SERVICE/ELECTRICITY",
+          "/ACCOUNT/{account}",
+          "/PERIOD/DEC-2024 /SERVICE/ELEC",
           "/RFB/UTILITY PAYMENT"
         ]
       },

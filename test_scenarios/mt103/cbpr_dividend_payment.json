@@ -46,13 +46,7 @@
         10000
       ]
     },
-    "dividend_rate": {
-      "fake": [
-        "f64",
-        0.01,
-        0.1
-      ]
-    },
+    "dividend_rate": "0.05",
     "isin": {
       "cat": [
         {
@@ -263,40 +257,9 @@
       "70": {
         "narrative": [
           "/PURP/DIVD",
-          {
-            "cat": [
-              "/ISIN/",
-              {
-                "var": "isin"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/SHARES/",
-              {
-                "var": "share_quantity"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/RATE/",
-              {
-                "var": "dividend_rate"
-              },
-              " PER SHARE"
-            ]
-          },
-          {
-            "cat": [
-              "/RECORD/",
-              {
-                "var": "record_date"
-              }
-            ]
-          },
-          "/RFB/QUARTERLY DIVIDEND"
+          "/ISIN/{isin}",
+          "/SHARES/{shares}",
+          "/RATE/{rate} /RFB/QUARTERLY DIV"
         ]
       },
       "71A": {

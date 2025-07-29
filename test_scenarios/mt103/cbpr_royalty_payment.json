@@ -233,23 +233,8 @@
       "70": {
         "narrative": [
           "/PURP/ROYH",
-          {
-            "cat": [
-              "/LICENSE/",
-              {
-                "var": "license_number"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PERIOD/",
-              {
-                "var": "royalty_period"
-              }
-            ]
-          },
-          "/TYPE/SOFTWARE LICENSE",
+          "/LICENSE/{license}",
+          "/PERIOD/Q4-2024 /TYPE/SOFTWARE",
           "/RFB/ROYALTY PAYMENT"
         ]
       },

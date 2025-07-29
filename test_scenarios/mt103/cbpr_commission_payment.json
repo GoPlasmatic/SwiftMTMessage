@@ -46,13 +46,7 @@
         500000.0
       ]
     },
-    "commission_rate": {
-      "fake": [
-        "f64",
-        0.02,
-        0.1
-      ]
-    },
+    "commission_rate": "0.05",
     "period": "Q4-2024",
     "session_num": "0001",
     "sequence_num": "000123"
@@ -235,36 +229,9 @@
       "70": {
         "narrative": [
           "/PURP/COMM",
-          {
-            "cat": [
-              "/PERIOD/",
-              {
-                "var": "period"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/SALES/",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "sales_amount"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/RATE/",
-              {
-                "var": "commission_rate"
-              },
-              "%"
-            ]
-          },
-          "/RFB/SALES COMMISSION"
+          "/PERIOD/Q4-2024",
+          "/SALES/{amount}",
+          "/RATE/{rate}% /RFB/COMMISSION"
         ]
       },
       "71A": {

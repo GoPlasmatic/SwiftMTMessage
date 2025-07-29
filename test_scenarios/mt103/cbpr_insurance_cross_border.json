@@ -233,23 +233,8 @@
       "70": {
         "narrative": [
           "/PURP/INSU",
-          {
-            "cat": [
-              "/POLICY/",
-              {
-                "var": "policy_number"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/TYPE/",
-              {
-                "var": "coverage_type"
-              }
-            ]
-          },
-          "/COVERAGE/INTERNATIONAL",
+          "/POLICY/{policy}",
+          "/TYPE/MARINE /COVERAGE/INTL",
           "/RFB/INSURANCE PREMIUM"
         ]
       },

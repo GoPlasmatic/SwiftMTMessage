@@ -46,13 +46,7 @@
         100000
       ]
     },
-    "dividend_rate": {
-      "fake": [
-        "f64",
-        0.01,
-        0.1
-      ]
-    },
+    "dividend_rate": "USD 0.05",
     "record_date": "2024-12-15",
     "session_num": "0001",
     "sequence_num": "000123"
@@ -235,35 +229,8 @@
       "70": {
         "narrative": [
           "/PURP/DIVD",
-          {
-            "cat": [
-              "/SHARES/",
-              {
-                "var": "shares_held"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/RATE/",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "dividend_rate"
-              },
-              " PER SHARE"
-            ]
-          },
-          {
-            "cat": [
-              "/RECORD/",
-              {
-                "var": "record_date"
-              }
-            ]
-          },
+          "/SHARES/{shares}",
+          "/RATE/{rate} /RECORD/{date}",
           "/RFB/QUARTERLY DIVIDEND"
         ]
       },

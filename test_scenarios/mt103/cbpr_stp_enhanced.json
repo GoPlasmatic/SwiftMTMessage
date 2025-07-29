@@ -51,13 +51,7 @@
         499000.0
       ]
     },
-    "exchange_rate": {
-      "fake": [
-        "f64",
-        0.95,
-        1.05
-      ]
-    },
+    "exchange_rate": "0.05",
     "value_date": "2024-12-20",
     "bank_op_code": "CRED",
     "charges": "SHA",
@@ -302,24 +296,7 @@
         ]
       },
       "77T": {
-        "envelope_content": {
-          "cat": [
-            "TRD/",
-            {
-              "var": "lc_ref"
-            },
-            "/INV/",
-            {
-              "var": "invoice_ref"
-            },
-            "/GOODS/MACHINERY",
-            "/TERMS/SIGHT",
-            "/AMOUNT/",
-            {
-              "var": "instructed_amount"
-            }
-          ]
-        }
+        "envelope_content": "EXTENDED REMITTANCE INFORMATION"
       }
     }
   }

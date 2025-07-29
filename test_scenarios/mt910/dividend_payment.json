@@ -146,19 +146,10 @@
       "72": {
         "information": [
           "/INS/DIVIDEND PAYMENT",
-          "/RFB/DIVIDEND DISTRIBUTION",
+          "/RFB/DIVIDEND DISTRIBUTION", 
           "/DIV/QUARTERLY DIVIDEND",
           "/ISIN/US0378331005",
-          "/SHARES/1000",
-          "/RATE/0.50 PER SHARE",
-          {
-            "cat": [
-              "/ORDP/",
-              {
-                "var": "ordering_name"
-              }
-            ]
-          },
+          "/SHARES/1000 /RATE/0.50 PER SHARE",
           "/PURP/DIVIDEND"
         ]
       }

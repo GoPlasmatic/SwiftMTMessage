@@ -290,52 +290,7 @@
         ]
       },
       "77T": {
-        "envelope_content": {
-          "cat": [
-            "/NARR/CBPR+ ENHANCED REMITTANCE/",
-            "INVOICE ",
-            {
-              "var": "invoice_number"
-            },
-            "/",
-            "PURCHASE ORDER ",
-            {
-              "var": "po_number"
-            },
-            "/",
-            "CONTRACT ",
-            {
-              "var": "contract_ref"
-            },
-            "/",
-            "DELIVERY DATE 2024-12-15/",
-            "PAYMENT TERMS NET30/",
-            "SUBTOTAL ",
-            {
-              "var": "amount"
-            },
-            "/",
-            "VAT ",
-            {
-              "var": "vat_amount"
-            },
-            "/",
-            "DISCOUNT ",
-            {
-              "var": "discount_pct"
-            },
-            "%/",
-            "GOODS DESCRIPTION Industrial Equipment Parts/",
-            "QUANTITY 100 UNITS/",
-            "UNIT PRICE VARIES/",
-            "ORIGIN COUNTRY GB/",
-            "DESTINATION COUNTRY DE/",
-            "INCOTERMS DDP/",
-            "TRANSPARENCY FEE 25.00 USD/",
-            "EXCHANGE RATE 1.0823/",
-            "PROCESSING TIME 2 BUSINESS DAYS/"
-          ]
-        }
+        "envelope_content": "EXTENDED REMITTANCE INFORMATION"
       }
     }
   }

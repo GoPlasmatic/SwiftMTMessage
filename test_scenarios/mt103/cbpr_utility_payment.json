@@ -252,39 +252,9 @@
       "70": {
         "narrative": [
           "/PURP/UTIL",
-          {
-            "cat": [
-              "/CUSTID/",
-              {
-                "var": "customer_id"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/METER/",
-              {
-                "var": "meter_number"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/PERIOD/",
-              {
-                "var": "billing_period"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/SERVICE/",
-              {
-                "var": "service_type"
-              }
-            ]
-          },
-          "/RFB/UTILITY PAYMENT"
+          "/CUSTID/{custid}",
+          "/METER/{meter} /PERIOD/DEC-2024",
+          "/SERVICE/ELEC /RFB/UTIL PAY"
         ]
       },
       "71A": {

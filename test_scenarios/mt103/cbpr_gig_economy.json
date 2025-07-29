@@ -265,38 +265,8 @@
       "70": {
         "narrative": [
           "/PURP/SALA",
-          {
-            "cat": [
-              "/JOB/",
-              {
-                "var": "job_id"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/GROSS/",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "payment_amount"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/FEE/",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "platform_fee"
-              }
-            ]
-          },
+          "/JOB/{job}",
+          "/GROSS/{gross} /FEE/{fee}",
           "/RFB/GIG WORK PAYMENT"
         ]
       },

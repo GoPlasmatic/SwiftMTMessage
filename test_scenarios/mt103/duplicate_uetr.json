@@ -217,23 +217,9 @@
       "72": {
         "information": [
           "/ERR/DUPLICATE UETR DETECTED",
-          {
-            "cat": [
-              "/UETR/",
-              {
-                "var": "duplicate_uetr"
-              }
-            ]
-          },
+          "/UETR/550e8400-e29b-41d4",
           "/CONFLICT/ALREADY USED IN MT103",
-          {
-            "cat": [
-              "/OTHER/TRN ",
-              {
-                "var": "transaction_ref2"
-              }
-            ]
-          },
+          "/OTHER/TRN PAY123456789",
           "/RISK/GPI TRACKING FAILURE",
           "/ACTION/GENERATE NEW UETR"
         ]

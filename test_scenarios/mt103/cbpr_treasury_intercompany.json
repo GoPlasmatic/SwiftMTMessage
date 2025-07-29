@@ -240,16 +240,8 @@
       "70": {
         "narrative": [
           "/PURP/TREA",
-          {
-            "cat": [
-              "/POOL/",
-              {
-                "var": "cash_pool_ref"
-              }
-            ]
-          },
-          "/TYPE/CASH CONCENTRATION",
-          "/REASON/LIQUIDITY MGMT",
+          "/POOL/{pool}",
+          "/TYPE/CASH CONC /REASON/LIQ",
           "/RFB/INTERCOMPANY TRANSFER"
         ]
       },

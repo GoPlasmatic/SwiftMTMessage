@@ -195,23 +195,8 @@
       "70": {
         "narrative": [
           "/HOLD/SANCTIONS SCREENING",
-          {
-            "cat": [
-              "/REF/",
-              {
-                "var": "screening_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/ALERT/",
-              {
-                "var": "alert_level"
-              }
-            ]
-          },
-          "/STATUS/BLOCKED",
+          "/REF/{ref}",
+          "/ALERT/HIGH /STATUS/BLOCKED",
           "/RFB/COMPLIANCE BLOCK"
         ]
       },

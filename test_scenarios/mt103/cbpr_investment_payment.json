@@ -239,23 +239,8 @@
       "70": {
         "narrative": [
           "/PURP/INVS",
-          {
-            "cat": [
-              "/ISIN/",
-              {
-                "var": "fund_isin"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/UNITS/",
-              {
-                "var": "units"
-              }
-            ]
-          },
-          "/TYPE/FUND SUBSCRIPTION",
+          "/ISIN/{isin}",
+          "/UNITS/{units} /TYPE/FUND SUB",
           "/RFB/INVESTMENT PURCHASE"
         ]
       },

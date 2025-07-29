@@ -236,6 +236,40 @@ fn test_single_scenario(
                                     }
                                 }
                                 
+                                // Try to deserialize just to see the exact error
+                                eprintln!("\nAttempting to deserialize generated JSON...");
+                                if message_type == "MT935" {
+                                    // First try to extract the fields from the JSON
+                                    if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                                        if let Some(fields) = value.get("fields") {
+                                            eprintln!("\nFound fields object. Attempting to deserialize just the fields...");
+                                            match serde_json::from_value::<swift_mt_message::messages::mt935::MT935>(fields.clone()) {
+                                                Ok(_) => eprintln!("Fields deserialization succeeded!"),
+                                                Err(e) => {
+                                                    eprintln!("Fields deserialization error: {}", e);
+                                                    
+                                                    // Print the fields JSON for debugging
+                                                    if let Ok(fields_str) = serde_json::to_string_pretty(fields) {
+                                                        eprintln!("\nFields JSON:");
+                                                        let lines: Vec<&str> = fields_str.lines().collect();
+                                                        for i in 0..10.min(lines.len()) {
+                                                            eprintln!("{}: {}", i+1, lines[i]);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    match serde_json::from_str::<swift_mt_message::messages::mt935::MT935>(&json_str) {
+                                        Ok(_) => eprintln!("Direct deserialization succeeded (shouldn't happen)"),
+                                        Err(e) => {
+                                            eprintln!("\nDirect deserialization error: {}", e);
+                                            eprintln!("Error location: line {}, column {}", e.line(), e.column());
+                                        }
+                                    }
+                                }
+                                
                                 // Show around line 35 where new error occurs
                                 eprintln!("\nGenerated JSON around line 35:");
                                 for i in 25..45 {
@@ -296,6 +330,11 @@ fn test_single_scenario(
         ParsedSwiftMessage::MT199(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT299(msg) => msg.to_mt_message(),
     };
+    
+    if debug_mode && (message_type == "MT935" || message_type == "MT940") {
+        eprintln!("\n[Test {}] Generated MT message:", test_index);
+        eprintln!("{}", &mt_format);
+    }
 
     // Parse the MT format back
     let reparsed_message = match SwiftParser::parse_auto(&mt_format) {
@@ -315,6 +354,12 @@ fn test_single_scenario(
                 eprintln!("\n[Test {}] Parse failed: {}", test_index, error_str);
                 eprintln!("MT message preview (first 500 chars):");
                 eprintln!("{}", &mt_format[..mt_format.len().min(500)]);
+                
+                // For MT935 and MT940, show the entire message
+                if message_type == "MT935" || message_type == "MT940" {
+                    eprintln!("\nFull {} message:", message_type);
+                    eprintln!("{}", &mt_format);
+                }
 
                 // If it's a field parsing error, show more context
                 if error_str.contains("FieldParsingFailed") {
@@ -367,6 +412,37 @@ fn test_single_scenario(
                     eprintln!("\nMessage details:");
                     eprintln!("  Field 20: {:?}", msg.fields.field_20);
                     eprintln!("  Field 32A: {:?}", msg.fields.field_32a);
+                }
+                ParsedSwiftMessage::MT935(msg) => {
+                    eprintln!("\nMT935 Message details:");
+                    eprintln!("  Field 20: {:?}", msg.fields.field_20);
+                    eprintln!("  Rate changes count: {}", msg.fields.rate_changes.len());
+                    for (idx, rc) in msg.fields.rate_changes.iter().enumerate() {
+                        eprintln!("  Rate change {}:", idx + 1);
+                        eprintln!("    Field 23: {:?}", rc.field_23);
+                        eprintln!("    Field 25: {:?}", rc.field_25);
+                        eprintln!("    Field 30: {:?}", rc.field_30);
+                        eprintln!("    Field 37H count: {}", rc.field_37h.len());
+                    }
+                    eprintln!("  Field 72: {:?}", msg.fields.field_72);
+                }
+                ParsedSwiftMessage::MT940(msg) => {
+                    eprintln!("\nMT940 Message details:");
+                    eprintln!("  Field 20: {:?}", msg.fields.field_20);
+                    eprintln!("  Field 21: {:?}", msg.fields.field_21);
+                    eprintln!("  Field 25: {:?}", msg.fields.field_25);
+                    eprintln!("  Field 28C: {:?}", msg.fields.field_28c);
+                    eprintln!("  Field 60: {:?}", msg.fields.field_60);
+                    eprintln!("  Statement lines count: {}", msg.fields.statement_lines.len());
+                    for (idx, line) in msg.fields.statement_lines.iter().enumerate() {
+                        eprintln!("  Statement line {}:", idx + 1);
+                        eprintln!("    Field 61: {:?}", line.field_61);
+                        eprintln!("    Field 86: {:?}", line.field_86);
+                    }
+                    eprintln!("  Field 62: {:?}", msg.fields.field_62);
+                    eprintln!("  Field 64: {:?}", msg.fields.field_64);
+                    eprintln!("  Field 65: {:?}", msg.fields.field_65);
+                    eprintln!("  Field 86: {:?}", msg.fields.field_86);
                 }
                 _ => {}
             }

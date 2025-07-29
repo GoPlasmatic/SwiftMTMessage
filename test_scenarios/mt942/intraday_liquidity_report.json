@@ -12,12 +12,12 @@
     },
     "transaction_ref": {
       "cat": [
-        "INTRA",
+        "INT",
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            100000000,
+            999999999
           ]
         }
       ]
@@ -182,19 +182,17 @@
         }
       },
       "25": {
-        "account": {
-          "var": "account_number"
+        "NoOption": {
+          "authorisation": {
+            "var": "account_number"
+          }
         }
       },
       "28C": {
-        "statement_sequence": {
-          "cat": [
-            {
-              "var": "statement_num"
-            },
-            "/1"
-          ]
-        }
+        "statement_number": {
+          "var": "statement_num"
+        },
+        "sequence_number": 1
       },
       "34F#1": {
         "currency": {
@@ -216,16 +214,16 @@
       },
       "13D": {
         "date": "2024-12-20",
-        "time": "14:30:00",
+        "time": "14:30",
         "offset_sign": "+",
         "offset_seconds": "0100"
       },
       "#": [
         {
           "61": {
-            "value_date": "241220",
+            "value_date": "2024-12-20",
             "entry_date": "1220",
-            "mark": "D",
+            "debit_credit_mark": "D",
             "currency": {
               "var": "currency"
             },
@@ -237,10 +235,10 @@
               "var": "ref1"
             },
             "bank_reference": "//INTRA001",
-            "supplementary": "REALTIME"
+            "supplementary_details": "REALTIME"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/ORIGINATOR/CORPORATE TREASURY",
               "/BENEF/SUPPLIER ACCOUNT",
               "/REMI/URGENT PAYMENT FOR SUPPLIES",
@@ -250,9 +248,9 @@
         },
         {
           "61": {
-            "value_date": "241220",
+            "value_date": "2024-12-20",
             "entry_date": "1220",
-            "mark": "D",
+            "debit_credit_mark": "D",
             "currency": {
               "var": "currency"
             },
@@ -264,10 +262,10 @@
               "var": "ref2"
             },
             "bank_reference": "//INTRA002",
-            "supplementary": "FEE"
+            "supplementary_details": "FEE"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/CHARGES/INTRADAY LIQUIDITY FEE",
               "/TYPE/OVERDRAFT CHARGE",
               "/RATE/0.05% DAILY"
@@ -276,9 +274,9 @@
         },
         {
           "61": {
-            "value_date": "241220",
+            "value_date": "2024-12-20",
             "entry_date": "1220",
-            "mark": "C",
+            "debit_credit_mark": "C",
             "currency": {
               "var": "currency"
             },
@@ -290,10 +288,10 @@
               "var": "ref3"
             },
             "bank_reference": "//INTRA003",
-            "supplementary": "INCOMING"
+            "supplementary_details": "INCOMING"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/ORIGINATOR/CUSTOMER PAYMENT",
               "/BENEF/OPERATING ACCOUNT",
               "/REMI/INVOICE SETTLEMENT",
@@ -303,24 +301,14 @@
         }
       ],
       "90D": {
-        "number_of_entries": "2",
+        "number": 2,
         "currency": {
           "var": "currency"
         },
-        "amount": {
-          "expr": [
-            "+",
-            {
-              "var": "amount1"
-            },
-            {
-              "var": "amount2"
-            }
-          ]
-        }
+        "amount": 100000.00
       },
       "90C": {
-        "number_of_entries": "1",
+        "number": 1,
         "currency": {
           "var": "currency"
         },
@@ -329,7 +317,7 @@
         }
       },
       "86": {
-        "information": [
+        "narrative": [
           "/LIQUIDITY/INTRADAY MONITORING REPORT",
           "/LIMIT/DEBIT USD 1,000,000.00",
           "/LIMIT/CREDIT USD 5,000,000.00",

@@ -36,37 +36,39 @@
       "#": [
         {
           "23": {
-            "function": "FX"
+            "function_code": "DEPOSIT",
+            "reference": "FX2024RATE1"
           },
           "30": {
-            "date": {"var": "effective_date_1"}
+            "execution_date": {"var": "effective_date_1"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "FX RATE UPDATE USD/EUR",
-                {"cat": ["BUY RATE: ", {"var": "usd_eur_rate"}]},
-                {"cat": ["SELL RATE: ", {"var": "eur_usd_rate"}]},
-                "MID RATE: 0.9200"
-              ]
+              "rate_indicator": "C",
+              "rate": {"var": "usd_eur_rate"}
+            },
+            {
+              "rate_indicator": "D",
+              "rate": {"var": "eur_usd_rate"}
             }
           ]
         },
         {
           "23": {
-            "function": "FX"
+            "function_code": "DEPOSIT",
+            "reference": "FX2024RATE2"
           },
           "30": {
-            "date": {"var": "effective_date_2"}
+            "execution_date": {"var": "effective_date_2"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "FX RATE UPDATE GBP/USD",
-                {"cat": ["BUY RATE: ", {"var": "gbp_usd_rate"}]},
-                {"cat": ["SELL RATE: ", {"var": "usd_gbp_rate"}]},
-                "MID RATE: 1.3000"
-              ]
+              "rate_indicator": "C",
+              "rate": {"var": "gbp_usd_rate"}
+            },
+            {
+              "rate_indicator": "D",
+              "rate": {"var": "usd_gbp_rate"}
             }
           ]
         }

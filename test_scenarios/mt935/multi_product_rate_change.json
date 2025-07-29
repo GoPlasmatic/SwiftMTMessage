@@ -35,73 +35,61 @@
       "#": [
         {
           "23": {
-            "function": "DEPOSIT"
+            "function_code": "DEPOSIT",
+            "reference": "DEPRATE2025"
           },
           "30": {
-            "date": {"var": "effective_date"}
+            "execution_date": {"var": "effective_date"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "TERM DEPOSIT RATES",
-                {"cat": ["3 MONTHS: ", {"var": "deposit_rate"}, "%"]},
-                {"cat": ["6 MONTHS: ", {"var": "deposit_rate"}, "% + 0.25%"]},
-                {"cat": ["12 MONTHS: ", {"var": "deposit_rate"}, "% + 0.50%"]}
-              ]
+              "rate_indicator": "C",
+              "rate": {"var": "deposit_rate"}
             }
           ]
         },
         {
           "23": {
-            "function": "SAVINGS"
+            "function_code": "CURRENT",
+            "reference": "SAVRATE2025"
           },
           "30": {
-            "date": {"var": "effective_date"}
+            "execution_date": {"var": "effective_date"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "SAVINGS ACCOUNT RATES",
-                {"cat": ["STANDARD: ", {"var": "savings_rate"}, "%"]},
-                {"cat": ["PREMIUM: ", {"var": "savings_rate"}, "% + 0.50%"]},
-                "MINIMUM BALANCE APPLIES"
-              ]
+              "rate_indicator": "C",
+              "rate": {"var": "savings_rate"}
             }
           ]
         },
         {
           "23": {
-            "function": "CREDIT"
+            "function_code": "PRIME",
+            "reference": "CRDRATE2025"
           },
           "30": {
-            "date": {"var": "effective_date"}
+            "execution_date": {"var": "effective_date"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "CREDIT FACILITY RATES",
-                {"cat": ["OVERDRAFT: ", {"var": "credit_rate"}, "%"]},
-                {"cat": ["LINE OF CREDIT: ", {"var": "credit_rate"}, "% - 0.50%"]},
-                "SUBJECT TO CREDIT APPROVAL"
-              ]
+              "rate_indicator": "D",
+              "rate": {"var": "credit_rate"}
             }
           ]
         },
         {
           "23": {
-            "function": "MONEY"
+            "function_code": "CALL",
+            "reference": "MMRATE2025"
           },
           "30": {
-            "date": {"var": "effective_date"}
+            "execution_date": {"var": "effective_date"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "MONEY MARKET RATES",
-                {"cat": ["OVERNIGHT: ", {"var": "money_market_rate"}, "%"]},
-                {"cat": ["7 DAYS: ", {"var": "money_market_rate"}, "% + 0.10%"]},
-                {"cat": ["30 DAYS: ", {"var": "money_market_rate"}, "% + 0.25%"]}
-              ]
+              "rate_indicator": "C",
+              "rate": {"var": "money_market_rate"}
             }
           ]
         }

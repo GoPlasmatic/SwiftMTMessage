@@ -37,7 +37,7 @@
       ]
     },
     "currency": "USD",
-    "value_date": "241220",
+    "value_date": "2024-12-20",
     "entry_date": "1220",
     "amount1": {
       "fake": [
@@ -141,42 +141,40 @@
         }
       },
       "25": {
-        "account": {
-          "var": "account_id"
+        "NoOption": {
+          "authorisation": {
+            "var": "account_id"
+          }
         }
       },
       "28C": {
-        "statement_sequence": {
-          "cat": [
-            {
-              "var": "statement_num"
-            },
-            "/1"
-          ]
+        "statement_number": {
+          "var": "statement_num"
+        },
+        "sequence_number": 1
+      },
+      "60": {
+        "F": {
+          "debit_credit_mark": "C",
+          "value_date": {
+            "var": "value_date"
+          },
+          "currency": {
+            "var": "currency"
+          },
+          "amount": {
+            "var": "opening_balance"
+          }
         }
       },
-      "60F": {
-        "status": "C",
-        "value_date": {
-          "var": "value_date"
-        },
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "opening_balance"
-        }
-      },
-      "statement_lines": [
+      "#": [
         {
           "61": {
-            "value_date": {
-              "var": "value_date"
-            },
+            "value_date": "2024-12-20",
             "entry_date": {
               "var": "entry_date"
             },
-            "mark": "C",
+            "debit_credit_mark": "C",
             "amount": {
               "var": "amount1"
             },
@@ -185,10 +183,10 @@
               "var": "ref1"
             },
             "bank_reference": "//BANK001",
-            "supplementary": "DUPLICATE-SEQ-1"
+            "supplementary_details": "DUPLICATE-SEQ-1"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/ORIGINATOR/ACME CORPORATION",
               "/BENEF/CUSTOMER ACCOUNT",
               "/REMI/PAYMENT FOR INVOICE 12345",
@@ -198,13 +196,11 @@
         },
         {
           "61": {
-            "value_date": {
-              "var": "value_date"
-            },
+            "value_date": "2024-12-20",
             "entry_date": {
               "var": "entry_date"
             },
-            "mark": "C",
+            "debit_credit_mark": "C",
             "amount": {
               "var": "amount1"
             },
@@ -213,10 +209,10 @@
               "var": "ref1"
             },
             "bank_reference": "//BANK001",
-            "supplementary": "DUPLICATE-SEQ-2"
+            "supplementary_details": "DUPLICATE-SEQ-2"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/ORIGINATOR/ACME CORPORATION",
               "/BENEF/CUSTOMER ACCOUNT",
               "/REMI/PAYMENT FOR INVOICE 12345",
@@ -226,13 +222,11 @@
         },
         {
           "61": {
-            "value_date": {
-              "var": "value_date"
-            },
+            "value_date": "2024-12-20",
             "entry_date": {
               "var": "entry_date"
             },
-            "mark": "D",
+            "debit_credit_mark": "D",
             "amount": {
               "var": "amount2"
             },
@@ -241,10 +235,10 @@
               "var": "ref2"
             },
             "bank_reference": "//BANK002",
-            "supplementary": "NORMAL-TXN"
+            "supplementary_details": "NORMAL-TXN"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/CHARGES/ACCOUNT MAINTENANCE FEE",
               "/PERIOD/DECEMBER 2024",
               "/TYPE/MONTHLY CHARGE"
@@ -253,13 +247,11 @@
         },
         {
           "61": {
-            "value_date": {
-              "var": "value_date"
-            },
+            "value_date": "2024-12-20",
             "entry_date": {
               "var": "entry_date"
             },
-            "mark": "C",
+            "debit_credit_mark": "C",
             "amount": {
               "var": "amount1"
             },
@@ -268,10 +260,10 @@
               "var": "ref1"
             },
             "bank_reference": "//BANK001",
-            "supplementary": "DUPLICATE-SEQ-3"
+            "supplementary_details": "DUPLICATE-SEQ-3"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/ORIGINATOR/ACME CORPORATION",
               "/BENEF/CUSTOMER ACCOUNT",
               "/REMI/PAYMENT FOR INVOICE 12345",
@@ -280,38 +272,16 @@
           }
         }
       ],
-      "62F": {
-        "status": "C",
-        "value_date": {
-          "var": "value_date"
-        },
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "expr": [
-            "+",
-            {
-              "var": "opening_balance"
-            },
-            {
-              "expr": [
-                "-",
-                {
-                  "expr": [
-                    "*",
-                    {
-                      "var": "amount1"
-                    },
-                    3
-                  ]
-                },
-                {
-                  "var": "amount2"
-                }
-              ]
-            }
-          ]
+      "62": {
+        "F": {
+          "debit_credit_mark": "C",
+          "value_date": "2024-12-20",
+          "currency": {
+            "var": "currency"
+          },
+          "amount": {
+            "var": "opening_balance"
+          }
         }
       }
     }

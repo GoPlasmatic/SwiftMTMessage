@@ -134,19 +134,17 @@
         }
       },
       "25": {
-        "account": {
-          "var": "account_number"
+        "NoOption": {
+          "authorisation": {
+            "var": "account_number"
+          }
         }
       },
       "28C": {
-        "statement_sequence": {
-          "cat": [
-            {
-              "var": "statement_num"
-            },
-            "/1"
-          ]
-        }
+        "statement_number": {
+          "var": "statement_num"
+        },
+        "sequence_number": 1
       },
       "34F#1": {
         "currency": {
@@ -158,14 +156,17 @@
         "indicator": "D"
       },
       "13D": {
-        "date_time_indication": "2412200945+0100"
+        "date": "2024-12-20",
+        "time": "09:45",
+        "offset_sign": "+",
+        "offset_seconds": "0100"
       },
       "#": [
         {
           "61": {
-            "value_date": "241220",
+            "value_date": "2024-12-20",
             "entry_date": "1220",
-            "mark": "C",
+            "debit_credit_mark": "C",
             "currency": {
               "var": "currency"
             },
@@ -179,7 +180,7 @@
             "bank_reference": "//TARGET2/001"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/TYPE/SEPA INSTANT PAYMENT",
               "/ORIGINATOR/EU CORPORATE CLIENT",
               "/PROCESSING/REAL-TIME SETTLEMENT",
@@ -189,9 +190,9 @@
         },
         {
           "61": {
-            "value_date": "241220",
+            "value_date": "2024-12-20",
             "entry_date": "1220",
-            "mark": "D",
+            "debit_credit_mark": "D",
             "currency": {
               "var": "currency"
             },
@@ -205,7 +206,7 @@
             "bank_reference": "//TARGET2/002"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/TYPE/TARGET2 PAYMENT",
               "/BENEF/CORRESPONDENT BANK",
               "/REMI/LIQUIDITY TRANSFER",
@@ -215,7 +216,7 @@
         }
       ],
       "86": {
-        "information": [
+        "narrative": [
           "/POSITION/REAL-TIME UPDATE",
           "/SYSTEM/TARGET2 CONNECTED",
           "/STATUS/NORMAL OPERATIONS"

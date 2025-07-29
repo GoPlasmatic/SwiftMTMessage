@@ -12,12 +12,12 @@
     },
     "transaction_ref": {
       "cat": [
-        "BAL",
+        "NEG",
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            100000000,
+            999999999
           ]
         }
       ]
@@ -38,21 +38,26 @@
     "opening_balance": {
       "fake": [
         "f64",
-        10000.0,
-        1000000.0
+        100.0,
+        9999.99
       ]
     },
     "closing_balance": {
       "fake": [
         "f64",
         10000.0,
-        1000000.0
+        99999.99
       ]
     },
-    "statement_date": "2024-12-20",
+    "available_balance": {
+      "fake": [
+        "f64",
+        50000.0,
+        150000.0
+      ]
+    },
     "previous_date": "2024-12-19",
-    "session_num": "0001",
-    "sequence_num": "000123"
+    "statement_date": "2024-12-20"
   },
   "schema": {
     "basic_header": {
@@ -69,12 +74,8 @@
       "sender_bic": {
         "var": "sender_bic"
       },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
+      "session_number": "0001",
+      "sequence_number": "000123"
     },
     "application_header": {
       "direction": "I",
@@ -111,7 +112,7 @@
         "sequence_number": 1
       },
       "60F": {
-        "debit_credit_mark": "C",
+        "debit_credit_mark": "D",
         "value_date": {
           "var": "previous_date"
         },
@@ -123,7 +124,7 @@
         }
       },
       "62F": {
-        "debit_credit_mark": "C",
+        "debit_credit_mark": "D",
         "value_date": {
           "var": "statement_date"
         },
@@ -143,8 +144,16 @@
           "var": "currency"
         },
         "amount": {
-          "var": "closing_balance"
+          "var": "available_balance"
         }
+      },
+      "86": {
+        "narrative": [
+          "NEGATIVE BALANCE REPORT",
+          "OVERDRAFT UTILIZATION",
+          "AVAILABLE CREDIT LINE",
+          "INTEREST CHARGES APPLY"
+        ]
       }
     }
   }

@@ -35,29 +35,16 @@
       "#": [
         {
           "25": {
-            "NoOption": {
-              "account": {"var": "loan_account"}
-            }
+            "authorisation": {"var": "loan_account"}
           },
           "30": {
-            "date": {"var": "effective_date"}
+            "execution_date": {"var": "effective_date"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "FLOATING RATE ADJUSTMENT",
-                {"cat": ["BASE RATE (LIBOR): ", {"var": "base_rate"}, "%"]},
-                {"cat": ["SPREAD: +", {"var": "spread"}, "%"]},
-                {"cat": ["TOTAL RATE: ", {"var": "total_rate"}, "%"]}
-              ]
-            },
-            {
-              "rate_narrative": [
-                "LOAN TYPE: COMMERCIAL TERM LOAN",
-                "REPAYMENT: QUARTERLY",
-                "NEXT REVIEW DATE: 2025-05-01",
-                "RATE FLOOR: 3.50%"
-              ]
+              "rate_indicator": "D",
+              "is_negative": false,
+              "rate": {"var": "total_rate"}
             }
           ]
         }
@@ -65,7 +52,8 @@
       "72": {
         "information": [
           "QUARTERLY RATE ADJUSTMENT",
-          "AS PER LOAN AGREEMENT DATED 2023-02-01",
+          "AS PER LOAN AGREEMENT",
+          "DATED 2023-02-01",
           "REFERENCE: LA-2023-12345"
         ]
       }

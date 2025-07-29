@@ -63,17 +63,17 @@
 | MT920 | interim_report_request | ✅ | ✅ | ✅ | Fixed: Changed Field12 from message_type to type_code, shortened Field20 reference, changed Field25NoOption to Field25A in message definition |
 | MT920 | multi_account_request | ✅ | ✅ | ✅ | Fixed: Changed Field12 from message_type to type_code, shortened Field20 reference, changed Field25NoOption to Field25A in message definition |
 | MT920 | statement_request_basic | ✅ | ✅ | ✅ | Fixed: Changed Field12 from message_type to type_code, changed Field25NoOption to Field25A in message definition |
-| MT935 | central_bank_rate_notification | ❌ | ❌ | ❌ | |
-| MT935 | deposit_rate_change | ❌ | ❌ | ❌ | |
-| MT935 | fx_rate_update | ❌ | ❌ | ❌ | |
-| MT935 | loan_rate_adjustment | ❌ | ❌ | ❌ | |
-| MT935 | multi_product_rate_change | ❌ | ❌ | ❌ | |
-| MT940 | repeated_sequence_issues | ❌ | ❌ | ❌ | |
-| MT941 | daily_balance_report | ❌ | ❌ | ❌ | |
-| MT941 | multi_currency_balance | ❌ | ❌ | ❌ | |
-| MT941 | negative_balance_report | ❌ | ❌ | ❌ | |
-| MT942 | intraday_liquidity_report | ❌ | ❌ | ❌ | |
-| MT942 | real_time_position_update | ❌ | ❌ | ❌ | |
+| MT935 | central_bank_rate_notification | ✅ | ❌ | ✅ | Validation fails - repetitive sequence parsing issue, rate_changes array empty |
+| MT935 | deposit_rate_change | ✅ | ✅ | ✅ | Fixed: Removed NoOption wrapper, shortened Field72 lines, set is_negative to false |
+| MT935 | fx_rate_update | ✅ | ❌ | ✅ | Validation fails - same repetitive sequence parsing issue |
+| MT935 | loan_rate_adjustment | ✅ | ✅ | ✅ | Fixed: Removed NoOption wrapper, added is_negative field, shortened Field72 line |
+| MT935 | multi_product_rate_change | ✅ | ❌ | ✅ | Validation fails - same repetitive sequence parsing issue |
+| MT940 | repeated_sequence_issues | ✅ | ✅ | ✅ | Fixed: Changed statement_lines to #, mark to debit_credit_mark, supplementary to supplementary_details, information to narrative |
+| MT941 | daily_balance_report | ✅ | ✅ | ✅ | Fixed: Changed Field25 to NoOption/authorisation, 28C to 28, field names: debit_credit_indicator to debit_credit_mark, date to value_date |
+| MT941 | multi_currency_balance | ✅ | ✅ | ✅ | Created file, fixed items to number, shortened transaction_ref |
+| MT941 | negative_balance_report | ✅ | ✅ | ✅ | Created file, shortened transaction_ref |
+| MT942 | intraday_liquidity_report | ✅ | ✅ | ✅ | Fixed: Field25 to NoOption/authorisation, Field28C, Field13D structure, shortened transaction_ref, field names (mark→debit_credit_mark, information→narrative, number_of_entries→number), date format, static amount for Field90D |
+| MT942 | real_time_position_update | ✅ | ✅ | ✅ | Fixed: Field25 to NoOption/authorisation, Field28C, Field13D structure, field names (mark→debit_credit_mark, information→narrative), date format |
 | MT942 | treasury_cash_sweep | ❌ | ❌ | ❌ | |
 | MT950 | correspondent_banking | ❌ | ❌ | ❌ | |
 | MT950 | high_volume_batch | ❌ | ❌ | ❌ | |

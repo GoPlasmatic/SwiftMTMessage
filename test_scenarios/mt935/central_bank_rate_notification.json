@@ -34,37 +34,37 @@
       "#": [
         {
           "23": {
-            "function": "POLICY"
+            "function_code": "DEP",
+            "reference": "CBRATE20241"
           },
           "30": {
-            "date": {"var": "effective_date"}
+            "execution_date": {"var": "effective_date"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "CENTRAL BANK POLICY RATES",
-                {"cat": ["POLICY RATE: ", {"var": "policy_rate"}, "%"]},
-                {"cat": ["DEPOSIT FACILITY: ", {"var": "deposit_rate"}, "%"]},
-                {"cat": ["LENDING FACILITY: ", {"var": "lending_rate"}, "%"]}
-              ]
+              "rate_indicator": "C",
+              "is_negative": false,
+              "rate": {"var": "policy_rate"}
             },
             {
-              "rate_narrative": [
-                "MONETARY POLICY DECISION",
-                "RATE INCREASE OF 25 BASIS POINTS",
-                "INFLATION TARGETING MEASURE",
-                "NEXT REVIEW: 2025-02-15"
-              ]
+              "rate_indicator": "D",
+              "is_negative": false,
+              "rate": {"var": "deposit_rate"}
+            },
+            {
+              "rate_indicator": "C",
+              "is_negative": false,
+              "rate": {"var": "lending_rate"}
             }
           ]
         }
       ],
       "72": {
         "information": [
-          "CENTRAL BANK MONETARY POLICY UPDATE",
+          "CENTRAL BANK POLICY UPDATE",
           "EFFECTIVE IMMEDIATELY",
-          "ALL FINANCIAL INSTITUTIONS MUST",
-          "ADJUST RATES ACCORDINGLY"
+          "ALL FINANCIAL INSTITUTIONS",
+          "MUST ADJUST RATES ACCORDINGLY"
         ]
       }
     }

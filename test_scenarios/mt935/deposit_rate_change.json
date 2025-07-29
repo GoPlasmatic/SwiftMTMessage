@@ -38,49 +38,40 @@
       "#": [
         {
           "25": {
-            "NoOption": {
-              "account": {"var": "account_1"}
-            }
+            "authorisation": {"var": "account_1"}
           },
           "30": {
-            "date": {"var": "effective_date_1"}
+            "execution_date": {"var": "effective_date_1"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "DEPOSIT RATE CHANGE",
-                {"cat": ["OLD RATE: ", {"var": "old_rate_1"}, "%"]},
-                {"cat": ["NEW RATE: ", {"var": "new_rate_1"}, "%"]},
-                "TERM: 12 MONTHS"
-              ]
+              "rate_indicator": "C",
+              "is_negative": false,
+              "rate": {"var": "new_rate_1"}
             }
           ]
         },
         {
           "25": {
-            "NoOption": {
-              "account": {"var": "account_2"}
-            }
+            "authorisation": {"var": "account_2"}
           },
           "30": {
-            "date": {"var": "effective_date_2"}
+            "execution_date": {"var": "effective_date_2"}
           },
           "37H": [
             {
-              "rate_narrative": [
-                "SAVINGS RATE CHANGE",
-                {"cat": ["OLD RATE: ", {"var": "old_rate_2"}, "%"]},
-                {"cat": ["NEW RATE: ", {"var": "new_rate_2"}, "%"]},
-                "MINIMUM BALANCE: USD 10,000"
-              ]
+              "rate_indicator": "C",
+              "is_negative": false,
+              "rate": {"var": "new_rate_2"}
             }
           ]
         }
       ],
       "72": {
         "information": [
-          "RATE ADJUSTMENT DUE TO CENTRAL BANK",
-          "POLICY CHANGES EFFECTIVE JANUARY 2025",
+          "RATE ADJUSTMENT DUE TO CENTRAL",
+          "BANK POLICY CHANGES EFFECTIVE",
+          "JANUARY 2025",
           "FOR QUESTIONS CONTACT YOUR",
           "RELATIONSHIP MANAGER"
         ]

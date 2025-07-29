@@ -52,7 +52,4 @@ path = "../examples/benchmark.rs"
 name = "error_collection"
 path = "../examples/error_collection.rs"
 
-[[example]]
-name = "generate_sample"
-path = "../examples/generate_sample.rs"
 

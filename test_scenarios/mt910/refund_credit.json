@@ -12,7 +12,7 @@
     },
     "transaction_ref": {
       "cat": [
-        "REQ",
+        "RFD",
         {
           "fake": [
             "i64",
@@ -22,6 +22,27 @@
         }
       ]
     },
+    "related_ref": {
+      "cat": [
+        "RFD",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
+    "currency": "USD",
+    "credit_amount": {
+      "fake": [
+        "f64",
+        50.0,
+        10000.0
+      ]
+    },
+    "value_date": "2024-12-20",
     "account_number": {
       "cat": [
         "/",
@@ -34,7 +55,16 @@
         }
       ]
     },
-    "currency": "USD",
+    "ordering_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "ordering_name": {
+      "fake": [
+        "company_name"
+      ]
+    },
     "session_num": "0001",
     "sequence_num": "000123"
   },
@@ -62,7 +92,7 @@
     },
     "application_header": {
       "direction": "I",
-      "message_type": "920",
+      "message_type": "910",
       "destination_address": {
         "cat": [
           {
@@ -76,25 +106,59 @@
       },
       "priority": "N"
     },
-    "message_type": "920",
+    "message_type": "910",
     "fields": {
       "20": {
         "reference": {
           "var": "transaction_ref"
         }
       },
-      "#": [
-        {
-          "12": {
-            "type_code": "940"
-          },
-          "25": {
-            "account": {
-              "var": "account_number"
-            }
+      "21": {
+        "reference": {
+          "var": "related_ref"
+        }
+      },
+      "25": {
+        "NoOption": {
+          "authorisation": {
+            "var": "account_number"
           }
         }
-      ]
+      },
+      "32A": {
+        "value_date": {
+          "var": "value_date"
+        },
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "credit_amount"
+        }
+      },
+      "52": {
+        "A": {
+          "bic": {
+            "var": "ordering_bic"
+          }
+        }
+      },
+      "72": {
+        "information": [
+          "/INS/REFUND CREDIT",
+          "/RFB/TRANSACTION REFUND",
+          "/REF/REVERSAL OF CHARGES",
+          {
+            "cat": [
+              "/ORDP/",
+              {
+                "var": "ordering_name"
+              }
+            ]
+          },
+          "/PURP/REFUND"
+        ]
+      }
     }
   }
 }

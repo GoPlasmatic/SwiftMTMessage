@@ -125,21 +125,21 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "25": {
-        "account": {
-          "var": "account_number"
+        "NoOption": {
+          "authorisation": {
+            "var": "account_number"
+          }
         }
       },
       "13D": {
-        "date_time_indication": "2412201425+0100"
+        "date": "2024-12-20",
+        "time": "14:25:00",
+        "offset_sign": "+",
+        "offset_seconds": "0100"
       },
       "32A": {
         "value_date": {

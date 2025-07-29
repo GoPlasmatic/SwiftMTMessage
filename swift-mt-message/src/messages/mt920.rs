@@ -117,7 +117,7 @@ pub struct MT920Sequence {
     pub field_12: Field12,
 
     #[field("25")]
-    pub field_25: Field25NoOption,
+    pub field_25: Field25A,
 
     #[field("34F#1")]
     pub field_34f_debit: Option<Field34F>,

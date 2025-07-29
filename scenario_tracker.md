@@ -48,21 +48,21 @@
 | MT296 | cancellation_accepted | ✅ | ✅ | ✅ | Fixed: Changed time_24h to static time, removed empty string concatenation from Field21, changed Field76 from answer to information, removed Field79 to comply with validation rule C1 |
 | MT296 | cancellation_rejected | ✅ | ✅ | ✅ | Fixed: Removed empty string concatenation from Field21, changed Field76 from answer to information, removed Field11 and Field79 to comply with validation rule C1 |
 | MT296 | inquiry_response | ✅ | ✅ | ✅ | Fixed: Removed empty string concatenation from Field21, changed Field76 from answer to information, removed Field79 to comply with validation rule C1 |
-| MT296 | no_payment_found | ❌ | ❌ | ❌ | |
-| MT296 | partial_cancellation | ❌ | ❌ | ❌ | |
-| MT900 | basic_debit_confirmation | ❌ | ❌ | ❌ | |
-| MT900 | direct_debit_confirmation | ❌ | ❌ | ❌ | |
-| MT900 | fee_debit_confirmation | ❌ | ❌ | ❌ | |
-| MT900 | fx_transaction_debit | ❌ | ❌ | ❌ | |
-| MT900 | standing_order_debit | ❌ | ❌ | ❌ | |
-| MT910 | basic_credit_confirmation | ❌ | ❌ | ❌ | |
-| MT910 | dividend_payment | ❌ | ❌ | ❌ | |
-| MT910 | incoming_wire_transfer | ❌ | ❌ | ❌ | |
-| MT910 | interest_credit | ❌ | ❌ | ❌ | |
-| MT910 | refund_credit | ❌ | ❌ | ❌ | |
-| MT920 | interim_report_request | ❌ | ❌ | ❌ | |
-| MT920 | multi_account_request | ❌ | ❌ | ❌ | |
-| MT920 | statement_request_basic | ❌ | ❌ | ❌ | |
+| MT296 | no_payment_found | ✅ | ✅ | ✅ | Fixed: Removed empty string from Field21, changed Field76 from answer to information, removed Field79 for C1 rule |
+| MT296 | partial_cancellation | ✅ | ✅ | ✅ | Fixed: Removed empty string from Field21, changed Field76 from answer to information, removed Field79 for C1 rule |
+| MT900 | basic_debit_confirmation | ✅ | ✅ | ✅ | Fixed: Removed empty string from Field21, changed Field25 from account to NoOption/authorisation |
+| MT900 | direct_debit_confirmation | ✅ | ✅ | ✅ | Fixed: Removed empty string from Field21, changed Field25 from account to NoOption/authorisation |
+| MT900 | fee_debit_confirmation | ✅ | ✅ | ✅ | Fixed: Removed empty string from Field21, changed Field25 from account to NoOption/authorisation |
+| MT900 | fx_transaction_debit | ✅ | ✅ | ✅ | Fixed: Removed empty string from Field21, changed Field25 to NoOption/authorisation, fixed Field13D structure |
+| MT900 | standing_order_debit | ✅ | ✅ | ✅ | Fixed: Removed empty string from Field21, changed Field25 to NoOption/authorisation, fixed Field13D structure, shortened Field21 reference, reduced Field72 to 6 lines |
+| MT910 | basic_credit_confirmation | ✅ | ✅ | ✅ | Fixed: Changed Field25 from account to NoOption/authorisation |
+| MT910 | dividend_payment | ✅ | ✅ | ✅ | Created file, fixed Field25 to NoOption/authorisation |
+| MT910 | incoming_wire_transfer | ✅ | ✅ | ✅ | Created file, fixed Field25 to NoOption/authorisation |
+| MT910 | interest_credit | ✅ | ✅ | ✅ | Created file, fixed Field25 to NoOption/authorisation |
+| MT910 | refund_credit | ✅ | ✅ | ✅ | Created file, fixed Field25 to NoOption/authorisation |
+| MT920 | interim_report_request | ✅ | ✅ | ✅ | Fixed: Changed Field12 from message_type to type_code, shortened Field20 reference, changed Field25NoOption to Field25A in message definition |
+| MT920 | multi_account_request | ✅ | ✅ | ✅ | Fixed: Changed Field12 from message_type to type_code, shortened Field20 reference, changed Field25NoOption to Field25A in message definition |
+| MT920 | statement_request_basic | ✅ | ✅ | ✅ | Fixed: Changed Field12 from message_type to type_code, changed Field25NoOption to Field25A in message definition |
 | MT935 | central_bank_rate_notification | ❌ | ❌ | ❌ | |
 | MT935 | deposit_rate_change | ❌ | ❌ | ❌ | |
 | MT935 | fx_rate_update | ❌ | ❌ | ❌ | |

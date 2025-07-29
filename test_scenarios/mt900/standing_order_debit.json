@@ -24,12 +24,12 @@
     },
     "related_ref": {
       "cat": [
-        "STOREF",
+        "STO",
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            100000000,
+            999999999
           ]
         }
       ]
@@ -146,21 +146,21 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "25": {
-        "account": {
-          "var": "account_number"
+        "NoOption": {
+          "authorisation": {
+            "var": "account_number"
+          }
         }
       },
       "13D": {
-        "date_time_indication": "2412010800+0000"
+        "date": "2024-12-01",
+        "time": "08:00:00",
+        "offset_sign": "+",
+        "offset_seconds": "0000"
       },
       "32A": {
         "value_date": {
@@ -216,8 +216,7 @@
               " OF 60"
             ]
           },
-          "/FREQ/MONTHLY",
-          "/RFB/RENT PAYMENT"
+          "/FREQ/MONTHLY"
         ]
       }
     }

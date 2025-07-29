@@ -105,16 +105,11 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "76": {
-        "answer": [
+        "information": [
           "NPAY",
           "NO PAYMENT FOUND",
           {
@@ -145,44 +140,6 @@
               }
             ]
           }
-        ]
-      },
-      "79": {
-        "narrative": [
-          "NO MATCHING PAYMENT FOUND IN OUR RECORDS.",
-          "SEARCH CRITERIA:",
-          {
-            "cat": [
-              "- REFERENCE: ",
-              {
-                "var": "search_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "- VALUE DATE: ",
-              {
-                "var": "search_date"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "- AMOUNT: ",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "search_amount"
-              }
-            ]
-          },
-          "PLEASE VERIFY THE PAYMENT DETAILS AND",
-          "RESUBMIT WITH CORRECT INFORMATION.",
-          "IF YOU BELIEVE THIS IS AN ERROR, PLEASE",
-          "CONTACT OUR OPERATIONS DEPARTMENT."
         ]
       }
     }

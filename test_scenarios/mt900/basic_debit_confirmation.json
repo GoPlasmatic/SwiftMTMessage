@@ -110,17 +110,14 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "25": {
-        "account": {
-          "var": "account_number"
+        "NoOption": {
+          "authorisation": {
+            "var": "account_number"
+          }
         }
       },
       "32A": {

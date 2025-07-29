@@ -35,8 +35,9 @@
       "#": [
         {
           "23": {
-            "function_code": "DEPOSIT",
-            "reference": "DEPRATE2025"
+            "function_code": "DEP",
+            "days": 1,
+            "reference": "DEPRATE025"
           },
           "30": {
             "execution_date": {"var": "effective_date"}
@@ -50,8 +51,9 @@
         },
         {
           "23": {
-            "function_code": "CURRENT",
-            "reference": "SAVRATE2025"
+            "function_code": "CUR",
+            "days": 1,
+            "reference": "SAVRATE025"
           },
           "30": {
             "execution_date": {"var": "effective_date"}
@@ -65,8 +67,9 @@
         },
         {
           "23": {
-            "function_code": "PRIME",
-            "reference": "CRDRATE2025"
+            "function_code": "PRM",
+            "days": 1,
+            "reference": "CRDRATE025"
           },
           "30": {
             "execution_date": {"var": "effective_date"}
@@ -80,7 +83,8 @@
         },
         {
           "23": {
-            "function_code": "CALL",
+            "function_code": "CAL",
+            "days": 1,
             "reference": "MMRATE2025"
           },
           "30": {

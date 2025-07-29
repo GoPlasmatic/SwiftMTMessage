@@ -11,12 +11,12 @@
 
 ### Summary
 - Total Scenarios: 80
-- Passing: 77 (96.25%)
-- Failing: 3 (3.75%)
-- Failing Tests: 300 out of 12,300 (2.44%)
+- Passing: 80 (100%)
+- Failing: 0 (0%)
+- Failing Tests: 0 out of 12,300 (0%)
 
 ### Remaining Issues
-- MT935: 3 scenarios failing validation due to repetitive sequence parsing issue (rate_changes array empty)
+- None - All scenarios passing!
 
 | Message Type | Scenario | Parser | Validation | Round Trip | Notes |
 |--------------|----------|--------|------------|------------|-------|
@@ -74,11 +74,11 @@
 | MT920 | interim_report_request | ✅ | ✅ | ✅ | Fixed: Changed Field12 from message_type to type_code, shortened Field20 reference, changed Field25NoOption to Field25A in message definition |
 | MT920 | multi_account_request | ✅ | ✅ | ✅ | Fixed: Changed Field12 from message_type to type_code, shortened Field20 reference, changed Field25NoOption to Field25A in message definition |
 | MT920 | statement_request_basic | ✅ | ✅ | ✅ | Fixed: Changed Field12 from message_type to type_code, changed Field25NoOption to Field25A in message definition |
-| MT935 | central_bank_rate_notification | ✅ | ❌ | ✅ | Validation fails - repetitive sequence parsing issue, rate_changes array empty |
+| MT935 | central_bank_rate_notification | ✅ | ✅ | ✅ | Fixed: Field23 format (3-letter code + optional 2 digits + 10-char reference) |
 | MT935 | deposit_rate_change | ✅ | ✅ | ✅ | Fixed: Removed NoOption wrapper, shortened Field72 lines, set is_negative to false |
-| MT935 | fx_rate_update | ✅ | ❌ | ✅ | Validation fails - same repetitive sequence parsing issue |
+| MT935 | fx_rate_update | ✅ | ✅ | ✅ | Fixed: Field23 format, shortened function codes to 3 letters |
 | MT935 | loan_rate_adjustment | ✅ | ✅ | ✅ | Fixed: Removed NoOption wrapper, added is_negative field, shortened Field72 line |
-| MT935 | multi_product_rate_change | ✅ | ❌ | ✅ | Validation fails - same repetitive sequence parsing issue |
+| MT935 | multi_product_rate_change | ✅ | ✅ | ✅ | Fixed: Field23 format for all rate changes |
 | MT940 | repeated_sequence_issues | ✅ | ✅ | ✅ | Fixed: Changed statement_lines to #, mark to debit_credit_mark, supplementary to supplementary_details, information to narrative |
 | MT941 | daily_balance_report | ✅ | ✅ | ✅ | Fixed: Changed Field25 to NoOption/authorisation, 28C to 28, field names: debit_credit_indicator to debit_credit_mark, date to value_date |
 | MT941 | multi_currency_balance | ✅ | ✅ | ✅ | Created file, fixed items to number, shortened transaction_ref |

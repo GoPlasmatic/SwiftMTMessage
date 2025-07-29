@@ -36,8 +36,9 @@
       "#": [
         {
           "23": {
-            "function_code": "DEPOSIT",
-            "reference": "FX2024RATE1"
+            "function_code": "DEP",
+            "days": 1,
+            "reference": "FX2024RATE"
           },
           "30": {
             "execution_date": {"var": "effective_date_1"}
@@ -55,8 +56,9 @@
         },
         {
           "23": {
-            "function_code": "DEPOSIT",
-            "reference": "FX2024RATE2"
+            "function_code": "DEP",
+            "days": 2,
+            "reference": "FX2024RATE"
           },
           "30": {
             "execution_date": {"var": "effective_date_2"}

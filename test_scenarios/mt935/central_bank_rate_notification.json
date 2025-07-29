@@ -35,7 +35,8 @@
         {
           "23": {
             "function_code": "DEP",
-            "reference": "CBRATE20241"
+            "days": 1,
+            "reference": "CBRATE2024"
           },
           "30": {
             "execution_date": {"var": "effective_date"}

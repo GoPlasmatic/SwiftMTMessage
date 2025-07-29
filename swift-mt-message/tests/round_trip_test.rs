@@ -260,9 +260,7 @@ fn test_single_scenario(
                                                     eprintln!("Fields deserialization succeeded!")
                                                 }
                                                 Err(e) => {
-                                                    eprintln!(
-                                                        "Fields deserialization error: {e}"
-                                                    );
+                                                    eprintln!("Fields deserialization error: {e}");
 
                                                     // Print the fields JSON for debugging
                                                     if let Ok(fields_str) =
@@ -700,9 +698,7 @@ fn test_round_trip_scenarios() {
             println!("Testing {}: {} scenarios", message_type, scenarios.len());
 
             for scenario in scenarios {
-                println!(
-                    "  Testing {message_type}/{scenario} ({samples_per_scenario} samples)..."
-                );
+                println!("  Testing {message_type}/{scenario} ({samples_per_scenario} samples)...");
                 for i in 0..samples_per_scenario {
                     let result = test_single_scenario(&message_type, &scenario, i + 1, debug_mode);
                     test_results.push(result);
@@ -713,9 +709,7 @@ fn test_round_trip_scenarios() {
             // Two parameters: test specific scenario for given message type
             let message_type = message_type.to_uppercase();
 
-            println!(
-                "Testing {message_type}/{scenario} ({samples_per_scenario} samples)..."
-            );
+            println!("Testing {message_type}/{scenario} ({samples_per_scenario} samples)...");
 
             for i in 0..samples_per_scenario {
                 let result = test_single_scenario(&message_type, &scenario, i + 1, debug_mode);
@@ -801,10 +795,7 @@ fn print_results_summary(results: &[TestResult]) {
 
     for result in results {
         let key = format!("{}/{}", result.message_type, result.scenario);
-        scenario_results
-            .entry(key)
-            .or_default()
-            .push(result);
+        scenario_results.entry(key).or_default().push(result);
     }
 
     // Sort scenarios by name

@@ -7,6 +7,17 @@
 - ⏳ In Progress
 - ❔ Not Started
 
+## Last Updated: 2025-01-29
+
+### Summary
+- Total Scenarios: 80
+- Passing: 77 (96.25%)
+- Failing: 3 (3.75%)
+- Failing Tests: 300 out of 12,300 (2.44%)
+
+### Remaining Issues
+- MT935: 3 scenarios failing validation due to repetitive sequence parsing issue (rate_changes array empty)
+
 | Message Type | Scenario | Parser | Validation | Round Trip | Notes |
 |--------------|----------|--------|------------|------------|-------|
 | MT101 | standard | ✅ | ✅ | ✅ | |
@@ -74,7 +85,7 @@
 | MT941 | negative_balance_report | ✅ | ✅ | ✅ | Created file, shortened transaction_ref |
 | MT942 | intraday_liquidity_report | ✅ | ✅ | ✅ | Fixed: Field25 to NoOption/authorisation, Field28C, Field13D structure, shortened transaction_ref, field names (mark→debit_credit_mark, information→narrative, number_of_entries→number), date format, static amount for Field90D |
 | MT942 | real_time_position_update | ✅ | ✅ | ✅ | Fixed: Field25 to NoOption/authorisation, Field28C, Field13D structure, field names (mark→debit_credit_mark, information→narrative), date format |
-| MT942 | treasury_cash_sweep | ❌ | ❌ | ❌ | |
-| MT950 | correspondent_banking | ❌ | ❌ | ❌ | |
-| MT950 | high_volume_batch | ❌ | ❌ | ❌ | |
-| MT950 | simplified_statement | ❌ | ❌ | ❌ | |
+| MT942 | treasury_cash_sweep | ✅ | ✅ | ✅ | Fixed: Field25 to NoOption/authorisation, Field28C structure, Field13D structure, shortened transaction_ref (SWP), field names (mark→debit_credit_mark, supplementary→supplementary_details, information→narrative, number_of_entries→number), date format, static amount for Field90D |
+| MT950 | correspondent_banking | ✅ | ✅ | ✅ | Fixed: Shortened transaction_ref (COR), field names in Field61 (mark→debit_credit_mark, supplementary→supplementary_details) |
+| MT950 | high_volume_batch | ✅ | ✅ | ✅ | Fixed: Shortened transaction_ref (BAT), field names in Field61 (mark→debit_credit_mark, supplementary→supplementary_details) |
+| MT950 | simplified_statement | ✅ | ✅ | ✅ | Fixed: Field names in Field61 (mark→debit_credit_mark) |

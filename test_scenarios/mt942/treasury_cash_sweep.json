@@ -12,12 +12,12 @@
     },
     "transaction_ref": {
       "cat": [
-        "SWEEP",
+        "SWP",
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            1000000000000,
+            9999999999999
           ]
         }
       ]
@@ -166,28 +166,21 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "25": {
-        "account": {
-          "var": "account_number"
+        "NoOption": {
+          "authorisation": {
+            "var": "account_number"
+          }
         }
       },
       "28C": {
-        "statement_sequence": {
-          "cat": [
-            {
-              "var": "statement_num"
-            },
-            "/1"
-          ]
-        }
+        "statement_number": {
+          "var": "statement_num"
+        },
+        "sequence_number": 1
       },
       "34F#1": {
         "currency": {
@@ -206,14 +199,17 @@
         }
       },
       "13D": {
-        "date_time_indication": "2412201700+0000"
+        "date": "2024-12-20",
+        "time": "17:00",
+        "offset_sign": "+",
+        "offset_seconds": "0000"
       },
       "#": [
         {
           "61": {
-            "value_date": "241220",
+            "value_date": "2024-12-20",
             "entry_date": "1220",
-            "mark": "D",
+            "debit_credit_mark": "D",
             "currency": {
               "var": "currency"
             },
@@ -225,10 +221,10 @@
               "var": "ref1"
             },
             "bank_reference": "//AUTOSWEEP",
-            "supplementary": "EOD"
+            "supplementary_details": "EOD"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/TYPE/AUTOMATED CASH SWEEP",
               "/FROM/SUBSIDIARY ACCOUNT",
               {
@@ -245,9 +241,9 @@
         },
         {
           "61": {
-            "value_date": "241220",
+            "value_date": "2024-12-20",
             "entry_date": "1220",
-            "mark": "D",
+            "debit_credit_mark": "D",
             "currency": {
               "var": "currency"
             },
@@ -261,7 +257,7 @@
             "bank_reference": "//SWEEPFEE"
           },
           "86": {
-            "information": [
+            "narrative": [
               "/CHARGES/CASH SWEEP SERVICE FEE",
               "/TYPE/AUTOMATED TRANSFER",
               "/RATE/0.02% OF SWEPT AMOUNT"
@@ -270,24 +266,14 @@
         }
       ],
       "90D": {
-        "number_of_entries": "2",
+        "number": 2,
         "currency": {
           "var": "currency"
         },
-        "amount": {
-          "expr": [
-            "+",
-            {
-              "var": "sweep_amount"
-            },
-            {
-              "var": "fee_amount"
-            }
-          ]
-        }
+        "amount": 250050.00
       },
       "86": {
-        "information": [
+        "narrative": [
           "/SERVICE/TREASURY CASH MANAGEMENT",
           "/TYPE/END OF DAY SWEEP",
           "/STATUS/COMPLETED SUCCESSFULLY",

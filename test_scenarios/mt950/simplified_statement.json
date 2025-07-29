@@ -163,7 +163,7 @@
       "61": [
         {
           "value_date": "2024-12-20",
-          "mark": "C",
+          "debit_credit_mark": "C",
           "currency": "USD",
           "amount": 15000.0,
           "transaction_type": "NMSC",
@@ -172,7 +172,7 @@
         },
         {
           "value_date": "2024-12-20",
-          "mark": "D",
+          "debit_credit_mark": "D",
           "currency": "USD",
           "amount": 25000.0,
           "transaction_type": "NMSC",
@@ -181,7 +181,7 @@
         },
         {
           "value_date": "2024-12-20",
-          "mark": "D",
+          "debit_credit_mark": "D",
           "currency": "USD",
           "amount": 8000.0,
           "transaction_type": "NCHG",

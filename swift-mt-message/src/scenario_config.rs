@@ -11,11 +11,11 @@ use crate::errors::{ParseError, Result};
 /// Load a scenario configuration from a JSON file
 pub fn load_scenario_json<P: AsRef<Path>>(path: P) -> Result<Value> {
     let content = fs::read_to_string(path).map_err(|e| ParseError::InvalidFormat {
-        message: format!("Failed to read scenario file: {}", e),
+        message: format!("Failed to read scenario file: {e}"),
     })?;
 
     serde_json::from_str(&content).map_err(|e| ParseError::InvalidFormat {
-        message: format!("Failed to parse scenario JSON: {}", e),
+        message: format!("Failed to parse scenario JSON: {e}"),
     })
 }
 
@@ -54,13 +54,11 @@ pub fn find_scenario_for_message_type(message_type: &str) -> Result<Value> {
 
         // Find the first .json file
         if let Ok(entries) = fs::read_dir(&mt_dir) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let path = entry.path();
+            for entry in entries.flatten() {
+                let path = entry.path();
 
-                    if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                        return load_scenario_json(path);
-                    }
+                if path.extension().and_then(|s| s.to_str()) == Some("json") {
+                    return load_scenario_json(path);
                 }
             }
         }
@@ -98,8 +96,7 @@ pub fn find_scenario_by_name(message_type: &str, scenario_name: &str) -> Result<
 
     Err(ParseError::InvalidFormat {
         message: format!(
-            "Scenario '{}' not found for {}. Tried paths: {:?}",
-            scenario_name, message_type, paths
+            "Scenario '{scenario_name}' not found for {message_type}. Tried paths: {paths:?}"
         ),
     })
 }

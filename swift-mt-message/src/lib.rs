@@ -126,7 +126,7 @@ where
     // Create datafake-rs generator from the scenario
     let generator = DataGenerator::from_value(scenario_json).map_err(|e| {
         errors::ParseError::InvalidFormat {
-            message: format!("Failed to create datafake generator: {:?}", e),
+            message: format!("Failed to create datafake generator: {e:?}"),
         }
     })?;
 
@@ -134,21 +134,20 @@ where
     let generated_data = generator
         .generate()
         .map_err(|e| errors::ParseError::InvalidFormat {
-            message: format!("datafake-rs generation failed: {:?}", e),
+            message: format!("datafake-rs generation failed: {e:?}"),
         })?;
 
     // Convert generated data to string for parsing
     let generated_json = serde_json::to_string_pretty(&generated_data).map_err(|e| {
         errors::ParseError::InvalidFormat {
-            message: format!("Failed to serialize generated data: {}", e),
+            message: format!("Failed to serialize generated data: {e}"),
         }
     })?;
 
     // Parse the generated JSON into the complete SwiftMessage
     serde_json::from_str(&generated_json).map_err(|e| errors::ParseError::InvalidFormat {
         message: format!(
-            "Failed to parse generated JSON into SwiftMessage<{}>: {}",
-            message_type, e
+            "Failed to parse generated JSON into SwiftMessage<{message_type}>: {e}"
         ),
     })
 }

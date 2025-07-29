@@ -201,22 +201,30 @@ match parser.parse_with_errors::<MT103>(raw_message_with_errors) {
 
 ## 🧪 Testing Strategy
 
-### Scenario-Based Testing
+SwiftMTMessage uses a comprehensive testing approach with 165 real-world scenarios across 23 message types, including CBPR+ compliance testing and edge cases.
 
-The library includes comprehensive scenario-based tests for each message type. These tests validate parsing, validation, and round-trip conversion.
+### Key Testing Features
 
-Run all scenario tests:
+- **Scenario-Based Testing**: Real-world use cases from basic payments to complex correspondent banking
+- **Round-Trip Validation**: JSON → MT → JSON conversion testing ensures data integrity
+- **CBPR+ Compliance**: 57 dedicated CBPR+ scenarios for cross-border payment compliance
+- **Sample Generation**: Automatic test data generation using the `datafake` library
+- **100% Success Rate**: All 16,500 tests (100 samples per scenario) pass validation
+
+### Quick Start
 
 ```bash
+# Run all test scenarios
 cargo test round_trip_scenarios -- --nocapture
+
+# Test specific message type
+TEST_MESSAGE_TYPE=MT103 cargo test round_trip_scenarios -- --nocapture
+
+# Debug a specific scenario
+TEST_MESSAGE_TYPE=MT103 TEST_SCENARIO=cbpr_business_payment TEST_DEBUG=1 cargo test round_trip_scenarios -- --nocapture
 ```
 
-Debug a specific failing scenario:
-
-```bash
-# Set environment variables for detailed debugging
-TEST_MESSAGE_TYPE=MT103 TEST_SCENARIO=cbpr_social_security TEST_DEBUG=1 cargo test round_trip_scenarios -- --nocapture
-```
+For detailed test scenarios, running instructions, and coverage information, see the [Test Scenarios Documentation](test_scenarios/README.md).
 
 ## 🤝 Contributing
 

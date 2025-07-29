@@ -33,7 +33,7 @@ AND MORE LINES
     println!("1. Traditional fail-fast parsing:");
     match SwiftParser::parse::<MT103>(mt103_with_errors) {
         Ok(msg) => println!("✓ Message parsed successfully: {:?}", msg.fields.field_20),
-        Err(e) => println!("✗ Parsing failed at first error: {}", e),
+        Err(e) => println!("✗ Parsing failed at first error: {e}"),
     }
 
     println!("\n{}\n", "=".repeat(50));
@@ -69,8 +69,8 @@ AND MORE LINES
             }
         }
         Err(e) => {
-            println!("✗ Unexpected error: {}", e);
-            println!("  Debug: {:?}", e);
+            println!("✗ Unexpected error: {e}");
+            println!("  Debug: {e:?}");
         }
     }
 
@@ -105,7 +105,7 @@ BENEFICIARY NAME
         Ok(ParseResult::Failure(errors)) => {
             println!("✗ Message parsing failed with {} errors", errors.len());
         }
-        Err(e) => println!("✗ Unexpected error: {}", e),
+        Err(e) => println!("✗ Unexpected error: {e}"),
     }
 
     println!("\n{}\n", "=".repeat(50));
@@ -118,7 +118,7 @@ BENEFICIARY NAME
             println!("  Transaction Reference: {:?}", msg.fields.field_20);
         }
         Err(e) => {
-            println!("✗ Parsing failed: {}", e);
+            println!("✗ Parsing failed: {e}");
         }
     }
 }

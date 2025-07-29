@@ -199,7 +199,7 @@ fn test_single_scenario(
         .map(|msg| ParsedSwiftMessage::MT950(Box::new(msg))),
         // Add more message types as needed
         _ => {
-            result.mark_parse_failed(format!("Unsupported message type: {}", message_type));
+            result.mark_parse_failed(format!("Unsupported message type: {message_type}"));
             return result;
         }
     };
@@ -209,88 +209,116 @@ fn test_single_scenario(
         Err(e) => {
             result.mark_parse_failed(format!("Generation error: {e}"));
             if debug_mode {
-                eprintln!("\n[Test {}] Generation failed: {}", test_index, e);
-                eprintln!("Message type: {}", message_type);
-                eprintln!("Scenario: {}", scenario_name);
-                
+                eprintln!("\n[Test {test_index}] Generation failed: {e}");
+                eprintln!("Message type: {message_type}");
+                eprintln!("Scenario: {scenario_name}");
+
                 // Try to read the scenario file for debugging
-                let scenario_file = format!("../test_scenarios/{}/{}.json", 
-                    message_type.to_lowercase(), scenario_name);
+                let scenario_file = format!(
+                    "../test_scenarios/{}/{}.json",
+                    message_type.to_lowercase(),
+                    scenario_name
+                );
                 if let Ok(content) = std::fs::read_to_string(&scenario_file) {
                     eprintln!("Scenario file content (first 500 chars):");
                     eprintln!("{}", &content[..content.len().min(500)]);
                 }
-                
+
                 // Additional debug: try to see what datafake generates
-                if let Ok(scenario_json) = swift_mt_message::scenario_config::find_scenario_by_name(message_type, scenario_name) {
+                if let Ok(scenario_json) = swift_mt_message::scenario_config::find_scenario_by_name(
+                    message_type,
+                    scenario_name,
+                ) {
                     if let Ok(generator) = datafake_rs::DataGenerator::from_value(scenario_json) {
                         if let Ok(generated_data) = generator.generate() {
                             if let Ok(json_str) = serde_json::to_string_pretty(&generated_data) {
                                 let lines: Vec<&str> = json_str.lines().collect();
-                                
+
                                 // Show around line 20 where the error occurs
                                 eprintln!("\nGenerated JSON around line 20:");
                                 for i in 10..30 {
                                     if i < lines.len() {
-                                        eprintln!("{}: {}", i+1, lines[i]);
+                                        eprintln!("{}: {}", i + 1, lines[i]);
                                     }
                                 }
-                                
+
                                 // Try to deserialize just to see the exact error
                                 eprintln!("\nAttempting to deserialize generated JSON...");
                                 if message_type == "MT935" {
                                     // First try to extract the fields from the JSON
-                                    if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                                    if let Ok(value) =
+                                        serde_json::from_str::<serde_json::Value>(&json_str)
+                                    {
                                         if let Some(fields) = value.get("fields") {
                                             eprintln!("\nFound fields object. Attempting to deserialize just the fields...");
-                                            match serde_json::from_value::<swift_mt_message::messages::mt935::MT935>(fields.clone()) {
-                                                Ok(_) => eprintln!("Fields deserialization succeeded!"),
+                                            match serde_json::from_value::<
+                                                swift_mt_message::messages::mt935::MT935,
+                                            >(
+                                                fields.clone()
+                                            ) {
+                                                Ok(_) => {
+                                                    eprintln!("Fields deserialization succeeded!")
+                                                }
                                                 Err(e) => {
-                                                    eprintln!("Fields deserialization error: {}", e);
-                                                    
+                                                    eprintln!(
+                                                        "Fields deserialization error: {e}"
+                                                    );
+
                                                     // Print the fields JSON for debugging
-                                                    if let Ok(fields_str) = serde_json::to_string_pretty(fields) {
+                                                    if let Ok(fields_str) =
+                                                        serde_json::to_string_pretty(fields)
+                                                    {
                                                         eprintln!("\nFields JSON:");
-                                                        let lines: Vec<&str> = fields_str.lines().collect();
+                                                        let lines: Vec<&str> =
+                                                            fields_str.lines().collect();
                                                         for i in 0..10.min(lines.len()) {
-                                                            eprintln!("{}: {}", i+1, lines[i]);
+                                                            eprintln!("{}: {}", i + 1, lines[i]);
                                                         }
                                                     }
                                                 }
                                             }
                                         }
                                     }
-                                    
-                                    match serde_json::from_str::<swift_mt_message::messages::mt935::MT935>(&json_str) {
-                                        Ok(_) => eprintln!("Direct deserialization succeeded (shouldn't happen)"),
+
+                                    match serde_json::from_str::<
+                                        swift_mt_message::messages::mt935::MT935,
+                                    >(&json_str)
+                                    {
+                                        Ok(_) => eprintln!(
+                                            "Direct deserialization succeeded (shouldn't happen)"
+                                        ),
                                         Err(e) => {
-                                            eprintln!("\nDirect deserialization error: {}", e);
-                                            eprintln!("Error location: line {}, column {}", e.line(), e.column());
+                                            eprintln!("\nDirect deserialization error: {e}");
+                                            eprintln!(
+                                                "Error location: line {}, column {}",
+                                                e.line(),
+                                                e.column()
+                                            );
                                         }
                                     }
                                 }
-                                
+
                                 // Show around line 35 where new error occurs
                                 eprintln!("\nGenerated JSON around line 35:");
                                 for i in 25..45 {
                                     if i < lines.len() {
-                                        eprintln!("{}: {}", i+1, lines[i]);
+                                        eprintln!("{}: {}", i + 1, lines[i]);
                                     }
                                 }
-                                
+
                                 // Show around line 56 for newer error
                                 eprintln!("\nGenerated JSON around line 56:");
                                 for i in 46..66 {
                                     if i < lines.len() {
-                                        eprintln!("{}: {}", i+1, lines[i]);
+                                        eprintln!("{}: {}", i + 1, lines[i]);
                                     }
                                 }
-                                
+
                                 if lines.len() > 82 {
                                     eprintln!("\nGenerated JSON around line 82:");
                                     for i in 70..90 {
                                         if i < lines.len() {
-                                            eprintln!("{}: {}", i+1, lines[i]);
+                                            eprintln!("{}: {}", i + 1, lines[i]);
                                         }
                                     }
                                 }
@@ -330,9 +358,9 @@ fn test_single_scenario(
         ParsedSwiftMessage::MT199(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT299(msg) => msg.to_mt_message(),
     };
-    
+
     if debug_mode && (message_type == "MT935" || message_type == "MT940") {
-        eprintln!("\n[Test {}] Generated MT message:", test_index);
+        eprintln!("\n[Test {test_index}] Generated MT message:");
         eprintln!("{}", &mt_format);
     }
 
@@ -351,13 +379,13 @@ fn test_single_scenario(
             result.mark_parse_failed(error_str.clone());
 
             if debug_mode {
-                eprintln!("\n[Test {}] Parse failed: {}", test_index, error_str);
+                eprintln!("\n[Test {test_index}] Parse failed: {error_str}");
                 eprintln!("MT message preview (first 500 chars):");
                 eprintln!("{}", &mt_format[..mt_format.len().min(500)]);
-                
+
                 // For MT935 and MT940, show the entire message
                 if message_type == "MT935" || message_type == "MT940" {
-                    eprintln!("\nFull {} message:", message_type);
+                    eprintln!("\nFull {message_type} message:");
                     eprintln!("{}", &mt_format);
                 }
 
@@ -373,7 +401,7 @@ fn test_single_scenario(
                                     .unwrap_or(mt_format.len() - field_pos);
                                 let field_content = &mt_format[field_pos..field_pos + field_end];
                                 eprintln!("\nProblematic field content:");
-                                eprintln!("{}", field_content);
+                                eprintln!("{field_content}");
                             }
                         }
                     }
@@ -394,7 +422,7 @@ fn test_single_scenario(
         result.mark_validation_failed(error_summaries.clone());
 
         if debug_mode {
-            eprintln!("\n[Test {}] Validation failed:", test_index);
+            eprintln!("\n[Test {test_index}] Validation failed:");
             for (idx, error) in error_summaries.iter().enumerate() {
                 eprintln!("  Error {}: {}", idx + 1, error);
             }
@@ -433,7 +461,10 @@ fn test_single_scenario(
                     eprintln!("  Field 25: {:?}", msg.fields.field_25);
                     eprintln!("  Field 28C: {:?}", msg.fields.field_28c);
                     eprintln!("  Field 60: {:?}", msg.fields.field_60);
-                    eprintln!("  Statement lines count: {}", msg.fields.statement_lines.len());
+                    eprintln!(
+                        "  Statement lines count: {}",
+                        msg.fields.statement_lines.len()
+                    );
                     for (idx, line) in msg.fields.statement_lines.iter().enumerate() {
                         eprintln!("  Statement line {}:", idx + 1);
                         eprintln!("    Field 61: {:?}", line.field_61);
@@ -458,7 +489,7 @@ fn test_single_scenario(
         Err(e) => {
             result.mark_roundtrip_failed(&format!("JSON serialize: {e}"));
             if debug_mode {
-                eprintln!("\n[Test {}] JSON serialization failed: {}", test_index, e);
+                eprintln!("\n[Test {test_index}] JSON serialization failed: {e}");
             }
             return result;
         }
@@ -471,7 +502,7 @@ fn test_single_scenario(
         Err(e) => {
             result.mark_roundtrip_failed(&format!("JSON deserialize: {e}"));
             if debug_mode {
-                eprintln!("\n[Test {}] JSON deserialization failed: {}", test_index, e);
+                eprintln!("\n[Test {test_index}] JSON deserialization failed: {e}");
                 eprintln!("JSON that failed to deserialize:");
                 eprintln!(
                     "{}",
@@ -504,7 +535,7 @@ fn test_single_scenario(
     } else {
         result.mark_roundtrip_failed("JSON mismatch after deserialization");
         if debug_mode {
-            eprintln!("\n[Test {}] JSON roundtrip mismatch", test_index);
+            eprintln!("\n[Test {test_index}] JSON roundtrip mismatch");
             eprintln!("Original JSON length: {}", original_json.len());
             eprintln!("Deserialized JSON length: {}", deserialized_json.len());
 
@@ -515,7 +546,7 @@ fn test_single_scenario(
                 if c1 != c2 {
                     let start = i.saturating_sub(50);
                     let end = (i + 50).min(chars1.len()).min(chars2.len());
-                    eprintln!("First difference at position {}:", i);
+                    eprintln!("First difference at position {i}:");
                     eprintln!(
                         "Original: ...{}...",
                         chars1[start..end].iter().collect::<String>()
@@ -566,12 +597,12 @@ fn get_scenarios_for_message_type(message_type: &str) -> Vec<String> {
         Ok(content) => match serde_json::from_str::<ScenarioIndex>(&content) {
             Ok(index) => index.scenarios,
             Err(e) => {
-                eprintln!("Failed to parse index.json for {}: {}", message_type, e);
+                eprintln!("Failed to parse index.json for {message_type}: {e}");
                 Vec::new()
             }
         },
         Err(e) => {
-            eprintln!("Failed to read index.json for {}: {}", message_type, e);
+            eprintln!("Failed to read index.json for {message_type}: {e}");
             Vec::new()
         }
     }
@@ -614,15 +645,15 @@ fn test_round_trip_scenarios() {
 
     if debug_mode {
         eprintln!("🔍 Debug mode enabled");
-        eprintln!("   Samples per scenario: {}", samples_per_scenario);
+        eprintln!("   Samples per scenario: {samples_per_scenario}");
         if stop_on_failure {
             eprintln!("   Stop on first failure: enabled");
         }
         if let Some(ref mt) = message_type {
-            eprintln!("   Message type: {}", mt);
+            eprintln!("   Message type: {mt}");
         }
         if let Some(ref sc) = scenario_name {
-            eprintln!("   Scenario: {}", sc);
+            eprintln!("   Scenario: {sc}");
         }
         eprintln!();
     }
@@ -631,7 +662,7 @@ fn test_round_trip_scenarios() {
         (None, None) => {
             // No parameters: test all message types and all scenarios
             let message_types = get_message_types();
-            println!("Testing all message types: {:?}", message_types);
+            println!("Testing all message types: {message_types:?}");
 
             for message_type in message_types {
                 let scenarios = get_scenarios_for_message_type(&message_type);
@@ -639,8 +670,7 @@ fn test_round_trip_scenarios() {
 
                 for scenario in scenarios {
                     println!(
-                        "  Testing {}/{} ({} samples)...",
-                        message_type, scenario, samples_per_scenario
+                        "  Testing {message_type}/{scenario} ({samples_per_scenario} samples)..."
                     );
                     for i in 0..samples_per_scenario {
                         let result =
@@ -664,15 +694,14 @@ fn test_round_trip_scenarios() {
             let scenarios = get_scenarios_for_message_type(&message_type);
 
             if scenarios.is_empty() {
-                panic!("No scenarios found for message type: {}", message_type);
+                panic!("No scenarios found for message type: {message_type}");
             }
 
             println!("Testing {}: {} scenarios", message_type, scenarios.len());
 
             for scenario in scenarios {
                 println!(
-                    "  Testing {}/{} ({} samples)...",
-                    message_type, scenario, samples_per_scenario
+                    "  Testing {message_type}/{scenario} ({samples_per_scenario} samples)..."
                 );
                 for i in 0..samples_per_scenario {
                     let result = test_single_scenario(&message_type, &scenario, i + 1, debug_mode);
@@ -685,8 +714,7 @@ fn test_round_trip_scenarios() {
             let message_type = message_type.to_uppercase();
 
             println!(
-                "Testing {}/{} ({} samples)...",
-                message_type, scenario, samples_per_scenario
+                "Testing {message_type}/{scenario} ({samples_per_scenario} samples)..."
             );
 
             for i in 0..samples_per_scenario {
@@ -723,7 +751,7 @@ fn test_round_trip_scenarios() {
             let key = format!("{}/{}", result.message_type, result.scenario);
             failure_summary
                 .entry(key)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push((*idx, *result));
         }
 
@@ -775,7 +803,7 @@ fn print_results_summary(results: &[TestResult]) {
         let key = format!("{}/{}", result.message_type, result.scenario);
         scenario_results
             .entry(key)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(result);
     }
 
@@ -837,12 +865,7 @@ fn print_results_summary(results: &[TestResult]) {
         let roundtrip_symbol = get_status_symbol(roundtrip_success, total);
 
         println!(
-            "║ {:<width$} │      {:^2}     │      {:^2}     │      {:^2}     ║",
-            scenario_name,
-            parse_symbol,
-            validation_symbol,
-            roundtrip_symbol,
-            width = scenario_width
+            "║ {scenario_name:<scenario_width$} │      {parse_symbol:^2}     │      {validation_symbol:^2}     │      {roundtrip_symbol:^2}     ║"
         );
     }
 
@@ -868,7 +891,7 @@ fn print_results_summary(results: &[TestResult]) {
         .count();
 
     println!("\n📊 Summary:");
-    println!("   Total tests: {}", total_tests);
+    println!("   Total tests: {total_tests}");
     println!(
         "   Parse successful: {} ({}%)",
         parse_success_total,

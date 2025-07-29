@@ -36,81 +36,81 @@ Each scenario file uses a consistent JSON structure with:
 
 | Message Type | Scenario Name | Purpose | Use Case | Key Features | Fields Used | Sample Generator | Parsing | Validation | Round Trip Test |
 |--------------|---------------|---------|----------|--------------|-------------|------------------|---------|------------|-----------------|
-| **MT101** | standard | Basic corporate payment request | Standard accounts payable | 2 transactions, single currency | 20, 21, 21R, 23E, 30, 32B, 50F/G/H, 52A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT101** | bulk_payment | Large batch processing | Corporate AP batch runs | 5 transactions, batch tracking | 20, 21R, 23E (INTC), 25, 30, 32B, 50, 52A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT101** | multi_currency | FX payment processing | International treasury ops | Multiple currencies, FX rates | 20, 21F, 30, 32B, 33B, 36, 50, 52A, 56A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT101** | scheduled_payment | Future-dated payments | Recurring obligations | Future execution dates | 20, 23E (PHON), 30, 32B, 50#1, 52A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT101** | salary_payment | Payroll processing | Monthly salary runs | Employee references, OUR charges | 20, 21R, 25A, 30, 32B, 50F, 52A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT101** | vendor_payment | Supplier settlements | Accounts payable | Invoice refs, regulatory info | 20, 21R, 23E (TELE), 30, 32B, 50, 52A, 59, 70, 71A, 77B | ✅ | ✅ | ✅ | ✅ |
-| **MT101** | urgent_payment | Time-critical transfers | Emergency payments | Urgent priority, notifications | 20, 21R, 23E (URGP), 30, 32B, 50, 52A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT101** | direct_debit | Direct debit collection | Subscriptions, utilities | Mandate references, HOLD | 20, 21R, 23E (HOLD), 30, 32B, 50#1, 52A, 59, 70 | ✅ | ✅ | ✅ | ✅ |
-| **MT101** | minimal | Minimum required fields | Testing, validation | Single transaction only | 20, 21, 30, 32B, 50, 59 | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | standard | Basic credit transfer | Retail/commercial payment | Standard processing (CRED) | 20, 23B, 32A, 50K, 52A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | stp | Straight-through processing | Automated processing | All BIC codes (50A, 59A) | 20, 13C, 23B (SSTD), 32A, 50A, 52A, 59A, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | high_value | Large amount payment | Corporate acquisitions | Priority (SPRI), regulatory | 20, 23B (SPRI), 32A, 50K, 52A, 59, 70, 71A, 77B | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cover_payment | Separate cover payment | Correspondent banking | Full correspondent chain | 20, 23B, 32A, 50, 52A, 53A, 54A, 56A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | fx_conversion | Cross-currency payment | International trade | Exchange rate, receiver charges | 20, 23B, 32A, 33B, 36, 50, 52A, 59, 70, 71A, 71G | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_business_payment | CBPR+ B2B payment | Cross-border B2B | Purpose code, LEI, structured remit | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_person_to_person | CBPR+ P2P payment | Individual remittances | Purpose code (/PURP/CASH) | 20, 23B, 32A, 50K, 52A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_real_estate | CBPR+ property payment | Property purchases | Purpose (/PURP/PHYS), escrow refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_trade_finance | CBPR+ trade payment | L/C settlements | Purpose (/PURP/TRAD), trade docs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_charity_donation | CBPR+ charity payment | Charitable donations | Purpose (/PURP/CHAR), charity details | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_commission_payment | CBPR+ commission payment | Sales commissions | Purpose (/PURP/COMC), commission details | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_crypto_settlement | CBPR+ crypto settlement | Cryptocurrency trading | Purpose (/PURP/TRFD), crypto refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_dividend_distribution | CBPR+ dividend distribution | Shareholder dividends | Purpose (/PURP/DIVI), dividend details | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_dividend_payment | CBPR+ dividend payment | Investment dividends | Purpose (/PURP/DIVI), investment refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_ecommerce_b2c | CBPR+ e-commerce B2C | Online retail | Purpose (/PURP/GDDS), order refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_education_international | CBPR+ intl education | International tuition | Purpose (/PURP/EDUC), student ID | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_education_payment | CBPR+ education payment | Domestic tuition | Purpose (/PURP/EDUC), enrollment refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_fees_payment | CBPR+ fees payment | Professional fees | Purpose (/PURP/FEES), service details | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_gig_economy | CBPR+ gig economy | Freelance payments | Purpose (/PURP/SALA), contractor ID | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_government_disbursement | CBPR+ govt disbursement | Government benefits | Purpose (/PURP/GOVT), benefit type | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_healthcare_payment | CBPR+ healthcare payment | Medical services | Purpose (/PURP/HLTH), claim refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_insurance_cross_border | CBPR+ intl insurance | Cross-border insurance | Purpose (/PURP/INSU), policy number | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_insurance_payment | CBPR+ insurance payment | Insurance premiums | Purpose (/PURP/INSU), policy details | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_interest_payment | CBPR+ interest payment | Loan interest | Purpose (/PURP/INTE), loan refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_investment_payment | CBPR+ investment payment | Securities investment | Purpose (/PURP/SECU), investment ID | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_loan_disbursement | CBPR+ loan disbursement | Loan proceeds | Purpose (/PURP/LOAN), loan agreement | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_pension_payment | CBPR+ pension payment | Retirement benefits | Purpose (/PURP/PENS), beneficiary ID | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_remittance_corridor | CBPR+ remittance corridor | Worker remittances | Purpose (/PURP/CASH), corridor details | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_rent_payment | CBPR+ rent payment | Property rent | Purpose (/PURP/RENT), lease refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_royalty_payment | CBPR+ royalty payment | IP royalties | Purpose (/PURP/INTC), IP details | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_salary_payment | CBPR+ salary payment | Employee wages | Purpose (/PURP/SALA), employee ID | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_sanctions_failure | CBPR+ sanctions failure | Sanctions screening test | Sanctioned entity refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_social_security | CBPR+ social security | Social benefits | Purpose (/PURP/SSBE), benefit type | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_stp_compliant | CBPR+ STP compliant | Full automation | All structured fields | 20, 23B, 32A, 50A, 52A, 59A, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_stp_enhanced | CBPR+ STP enhanced | Enhanced automation | Extended structured data | 20, 23B, 32A, 50A, 52A, 59A, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_subscription_saas | CBPR+ SaaS subscription | Software subscriptions | Purpose (/PURP/SUBS), subscription ID | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_supplier_payment | CBPR+ supplier payment | B2B settlements | Purpose (/PURP/SUPP), invoice refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_tax_payment | CBPR+ tax payment | Tax obligations | Purpose (/PURP/TAXS), tax ID | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_treasury_intercompany | CBPR+ intercompany | Corporate treasury | Purpose (/PURP/INTC), company refs | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_utility_cross_border | CBPR+ intl utility | Cross-border utilities | Purpose (/PURP/UBIL), account number | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_utility_payment | CBPR+ utility payment | Domestic utilities | Purpose (/PURP/UBIL), meter number | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | cbpr_validation_failure | CBPR+ validation failure | Validation testing | Invalid purpose codes | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | correspondent_banking | Correspondent banking | FI relationships | Nostro/vostro accounts | 20, 23B, 32A, 50, 52A, 53A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | duplicate_uetr | Duplicate UETR test | UETR tracking | Duplicate detection | 20, 23B, 32A, 50, 52A, 59, 70, 71A, 121 | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | invalid_purpose_code | Invalid purpose code | Validation testing | Error handling | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | minimal | Minimal fields | Testing baseline | Required fields only | 20, 23B, 32A, 50, 59 | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | missing_lei_entity | Missing LEI test | Compliance testing | LEI validation | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | regulatory_compliant | Regulatory compliance | Compliance testing | Full regulatory data | 20, 23B, 32A, 50K, 52A, 59, 70, 71A, 77B | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | rejection | Payment rejection | Rejection handling | Rejection codes | 20, 23B, 32A, 50, 52A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | remit_basic | Basic remittance | Simple remittance | Basic remit info | 20, 23B, 32A, 50K, 52A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | remit_structured | Structured remittance | Complex remittance | Structured remit data | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | remittance_enhanced | Enhanced remittance | Detailed remittance | Extended remit info | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | return | Payment return | Return processing | Return reason codes | 20, 23B, 32A, 50, 52A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | test_minimal | Test minimal | Unit testing | Absolute minimum | 20, 23B, 32A, 50, 59 | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | treasury_payment | Treasury payment | Corporate treasury | Treasury operations | 20, 23B, 32A, 50F, 52A, 59F, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT103** | unresolved_intermediary | Unresolved intermediary | Routing testing | Missing intermediary | 20, 23B, 32A, 50, 52A, 56A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT104** | fi_direct_debit_basic | Basic direct debit | Standard collections | CORT instruction, mandate ref | 20, 21, 23E, 30, 32B, 50, 52A, 53B, 59, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT104** | fi_direct_debit_cbpr | CBPR+ direct debit | Cross-border collections | LEI, purpose codes, transparency | 20, 21, 23E, 30, 32B, 50F, 52A, 59F, 70, 71A, 77B | ✅ | ✅ | ✅ | ✅ |
-| **MT104** | fi_direct_debit_multiple | Batch collections | Multiple debtor processing | 3 transactions, batch refs | 20, 21, 23E, 30, 32B (multiple), 50, 52A, 59, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT104** | fi_direct_debit_recurring | Recurring collections | Subscriptions, utilities | Standing order references | 20, 21, 23E, 30, 32B, 50, 52A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
-| **MT104** | fi_direct_debit_return | Collection returns | Failed collections | Return reason codes | 20, 21, 21R, 23E, 30, 32B, 50, 52A, 59, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
-| **MT107** | authorized_bulk_collection | Authorized collections | Pre-approved bulk debits | Authorization refs, batch IDs | 20, 21E, 23E, 26T, 30, 32B, 50, 52A, 59, 71F | ✅ | ✅ | ✅ | ✅ |
+| **MT101** | standard | Basic corporate payment request | Standard accounts payable | 2 transactions, single currency | 20, 21, 28D, 30, 32B, 50#2F, 52A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT101** | bulk_payment | Large batch processing | Corporate AP batch runs | 5 transactions, batch tracking | 20, 21, 23E (INTC), 25, 28D, 30, 32B, 50#1K, 52A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT101** | multi_currency | FX payment processing | International treasury ops | Multiple currencies, FX rates | 20, 21, 21F, 23E, 28D, 30, 32B, 33B, 36, 50#1K, 52A, 56A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT101** | scheduled_payment | Future-dated payments | Recurring obligations | Future execution dates | 20, 21, 21R, 23E (PHON), 25, 28D, 30, 32B, 50#1K, 51A, 52A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT101** | salary_payment | Payroll processing | Monthly salary runs | Employee references, OUR charges | 20, 21, 21R, 25, 25A, 28D, 30, 32B, 50#1K, 52A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT101** | vendor_payment | Supplier settlements | Accounts payable | Invoice refs, regulatory info | 20, 21, 23E (TELE), 28D, 30, 32B, 50#1K, 52A, 56A, 57A, 59, 70, 71A, 77B | ✅ | ✅ | ✅ | ✅ |
+| **MT101** | urgent_payment | Time-critical transfers | Emergency payments | Urgent priority, notifications | 20, 21, 21R, 23E (URGP), 28D, 30, 32B, 50#1K, 52A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT101** | direct_debit | Direct debit collection | Subscriptions, utilities | Mandate references, HOLD | 20, 21, 21R, 23E (HOLD), 28D, 30, 32B, 50#1K, 52A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT101** | minimal | Minimum required fields | Testing, validation | Single transaction only | 20, 21, 28D, 30, 32B, 50#1K, 59, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | standard | Basic credit transfer | Retail/commercial payment | Standard processing (CRED) | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | stp | Straight-through processing | Automated processing | All BIC codes (50A, 59A) | 20, 13C, 23B (SSTD), 32A, 50A, 52A, 57A, 59A, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | high_value | Large amount payment | Corporate acquisitions | Priority (SPRI), regulatory | 20, 23B (SPRI), 32A, 50K, 52A, 57A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cover_payment | Separate cover payment | Correspondent banking | Full correspondent chain | 20, 23B, 32A, 50K, 52A, 53A, 54A, 56A, 57A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | fx_conversion | Cross-currency payment | International trade | Exchange rate, receiver charges | 20, 23B, 32A, 33B, 36, 50K, 52A, 57A, 59, 70, 71A, 71G, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_business_payment | CBPR+ B2B payment | Cross-border B2B | Purpose code, LEI, structured remit | 20, 23B, 32A, 50K, 52A, 56A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_person_to_person | CBPR+ P2P payment | Individual remittances | Purpose code (/PURP/CASH) | 20, 23B, 32A, 50K, 52A, 56A, 57A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_real_estate | CBPR+ property payment | Property purchases | Purpose (/PURP/PHYS), escrow refs | 20, 23B, 32A, 50K, 52A, 56A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_trade_finance | CBPR+ trade payment | L/C settlements | Purpose (/PURP/TRAD), trade docs | 20, 23B, 23E, 32A, 50K, 52A, 56A, 57A, 59, 70, 71A, 72, 77B, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_charity_donation | CBPR+ charity payment | Charitable donations | Purpose (/PURP/CHAR), charity details | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_commission_payment | CBPR+ commission payment | Sales commissions | Purpose (/PURP/COMC), commission details | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_crypto_settlement | CBPR+ crypto settlement | Cryptocurrency trading | Purpose (/PURP/TRFD), crypto refs | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_dividend_distribution | CBPR+ dividend distribution | Shareholder dividends | Purpose (/PURP/DIVI), dividend details | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_dividend_payment | CBPR+ dividend payment | Investment dividends | Purpose (/PURP/DIVI), investment refs | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_ecommerce_b2c | CBPR+ e-commerce B2C | Online retail | Purpose (/PURP/GDDS), order refs | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_education_international | CBPR+ intl education | International tuition | Purpose (/PURP/EDUC), student ID | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_education_payment | CBPR+ education payment | Domestic tuition | Purpose (/PURP/EDUC), enrollment refs | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_fees_payment | CBPR+ fees payment | Professional fees | Purpose (/PURP/FEES), service details | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_gig_economy | CBPR+ gig economy | Freelance payments | Purpose (/PURP/SALA), contractor ID | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_government_disbursement | CBPR+ govt disbursement | Government benefits | Purpose (/PURP/GOVT), benefit type | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77B, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_healthcare_payment | CBPR+ healthcare payment | Medical services | Purpose (/PURP/HLTH), claim refs | 20, 23B, 23E, 32A, 50K, 52A, 56A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_insurance_cross_border | CBPR+ intl insurance | Cross-border insurance | Purpose (/PURP/INSU), policy number | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_insurance_payment | CBPR+ insurance payment | Insurance premiums | Purpose (/PURP/INSU), policy details | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_interest_payment | CBPR+ interest payment | Loan interest | Purpose (/PURP/INTE), loan refs | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_investment_payment | CBPR+ investment payment | Securities investment | Purpose (/PURP/SECU), investment ID | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_loan_disbursement | CBPR+ loan disbursement | Loan proceeds | Purpose (/PURP/LOAN), loan agreement | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_pension_payment | CBPR+ pension payment | Retirement benefits | Purpose (/PURP/PENS), beneficiary ID | 20, 23B, 23E, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_remittance_corridor | CBPR+ remittance corridor | Worker remittances | Purpose (/PURP/CASH), corridor details | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_rent_payment | CBPR+ rent payment | Property rent | Purpose (/PURP/RENT), lease refs | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_royalty_payment | CBPR+ royalty payment | IP royalties | Purpose (/PURP/INTC), IP details | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_salary_payment | CBPR+ salary payment | Employee wages | Purpose (/PURP/SALA), employee ID | 20, 23B, 23E, 26T, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_sanctions_failure | CBPR+ sanctions failure | Sanctions screening test | Sanctioned entity refs | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_social_security | CBPR+ social security | Social benefits | Purpose (/PURP/SSBE), benefit type | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_stp_compliant | CBPR+ STP compliant | Full automation | All structured fields | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_stp_enhanced | CBPR+ STP enhanced | Enhanced automation | Extended structured data | 20, 23B, 32A, 33B, 50K, 52A, 56A, 57A, 59, 70, 71A, 71F, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_subscription_saas | CBPR+ SaaS subscription | Software subscriptions | Purpose (/PURP/SUBS), subscription ID | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_supplier_payment | CBPR+ supplier payment | B2B settlements | Purpose (/PURP/SUPP), invoice refs | 20, 23B, 32A, 50K, 52A, 56A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_tax_payment | CBPR+ tax payment | Tax obligations | Purpose (/PURP/TAXS), tax ID | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77B, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_treasury_intercompany | CBPR+ intercompany | Corporate treasury | Purpose (/PURP/INTC), company refs | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_utility_cross_border | CBPR+ intl utility | Cross-border utilities | Purpose (/PURP/UBIL), account number | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_utility_payment | CBPR+ utility payment | Domestic utilities | Purpose (/PURP/UBIL), meter number | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | cbpr_validation_failure | CBPR+ validation failure | Validation testing | Invalid purpose codes | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | correspondent_banking | Correspondent banking | FI relationships | Nostro/vostro accounts | 20, 23B, 32A, 50K, 51A, 52A, 53A, 54A, 55A, 56A, 57A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | duplicate_uetr | Duplicate UETR test | UETR tracking | Duplicate detection | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 121 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | invalid_purpose_code | Invalid purpose code | Validation testing | Error handling | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | minimal | Minimal fields | Testing baseline | Required fields only | 20, 23B, 32A, 50K, 59, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | missing_lei_entity | Missing LEI test | Compliance testing | LEI validation | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | regulatory_compliant | Regulatory compliance | Compliance testing | Full regulatory data | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | rejection | Payment rejection | Rejection handling | Rejection codes | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | remit_basic | Basic remittance | Simple remittance | Basic remit info | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | remit_structured | Structured remittance | Complex remittance | Structured remit data | 20, 23B, 23E, 32A, 50K, 52A, 57A, 59, 70, 71A, 72, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | remittance_enhanced | Enhanced remittance | Detailed remittance | Extended remit info | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 77T | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | return | Payment return | Return processing | Return reason codes | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | test_minimal | Test minimal | Unit testing | Absolute minimum | 20, 23B, 32A, 50K, 52A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | treasury_payment | Treasury payment | Corporate treasury | Treasury operations | 20, 23B, 32A, 50, 52, 57, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT103** | unresolved_intermediary | Unresolved intermediary | Routing testing | Missing intermediary | 20, 23B, 32A, 50, 52, 56, 57, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT104** | fi_direct_debit_basic | Basic direct debit | Standard collections | CORT instruction, mandate ref | 20, 21, 23E, 28D, 30, 32B, 50#2K, 52A, 57A, 59, 70, 71A | ✅ | ✅ | ✅ | ✅ |
+| **MT104** | fi_direct_debit_cbpr | CBPR+ direct debit | Cross-border collections | LEI, purpose codes, transparency | 20, 21, 23E, 28D, 30, 32B, 50#2K, 52A, 57A, 59, 70, 71A, 77B | ✅ | ✅ | ✅ | ✅ |
+| **MT104** | fi_direct_debit_multiple | Batch collections | Multiple debtor processing | 3 transactions, batch refs | 19, 20, 21, 23E, 28D, 30, 32B (multiple), 50#2K, 52A, 57A, 59, 70, 71A, 77B | ✅ | ✅ | ✅ | ✅ |
+| **MT104** | fi_direct_debit_recurring | Recurring collections | Subscriptions, utilities | Standing order references | 20, 21, 23E, 28D, 30, 32B, 50#2K, 52A, 57A, 59, 70, 71A, 77B | ✅ | ✅ | ✅ | ✅ |
+| **MT104** | fi_direct_debit_return | Collection returns | Failed collections | Return reason codes | 20, 21, 21C, 23E, 28D, 30, 32B, 50#2K, 52A, 57A, 59, 70, 71A, 77B | ✅ | ✅ | ✅ | ✅ |
+| **MT107** | authorized_bulk_collection | Authorized collections | Pre-approved bulk debits | Authorization refs, batch IDs | 20, 21E, 23E, 26T, 30, 32B, 50K, 52A, 59, 71F | ✅ | ✅ | ✅ | ✅ |
 | **MT107** | general_direct_debit_basic | Standard direct debit | Basic collection request | Simple authorization | 20, 21E, 30, 32B, 50K, 52A, 59 | ✅ | ✅ | ✅ | ✅ |
-| **MT107** | return_processing | Direct debit returns | Failed/disputed collections | Return codes, original refs | 20, 21E, 23E, 30, 32B, 50, 52A, 59, 72 | ✅ | ✅ | ✅ | ✅ |
-| **MT107** | unauthorized_debit_processing | Unauthorized debits | Dispute handling | Dispute refs, investigation | 20, 21E, 26T, 30, 32B, 50#2, 52A, 59, 70, 77B | ✅ | ✅ | ✅ | ✅ |
-| **MT110** | cheque_collection_advice | Cheque collection | Cheque processing | Cheque details, collection | 20, 21, 23, 25, 32A, 50, 52A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT107** | return_processing | Direct debit returns | Failed/disputed collections | Return codes, original refs | 20, 21E, 23E, 30, 32B, 50K, 52A, 59, 72 | ✅ | ✅ | ✅ | ✅ |
+| **MT107** | unauthorized_debit_processing | Unauthorized debits | Dispute handling | Dispute refs, investigation | 20, 21E, 26T, 30, 32B, 50#2K, 52A, 59, 70, 77B | ✅ | ✅ | ✅ | ✅ |
+| **MT110** | cheque_collection_advice | Cheque collection | Cheque processing | Cheque details, collection | 20, 21, 23, 25, 32A, 50K, 52A, 59, 70, 71A, 72 | ✅ | ✅ | ✅ | ✅ |
 | **MT111** | lost_cheque_stop | Lost cheque stop | Lost cheque handling | Stop payment request | 20, 21, 23, 25, 30, 52A, 59, 70, 75 | ✅ | ✅ | ✅ | ✅ |
 | **MT111** | fraud_prevention_stop | Fraud prevention | Fraud detection | Urgent stop payment | 20, 21, 23, 25, 30, 52A, 59, 70, 75 | ✅ | ✅ | ✅ | ✅ |
 | **MT111** | duplicate_cheque_stop | Duplicate cheque | Duplicate prevention | Stop duplicate processing | 20, 21, 23, 25, 30, 52A, 59, 70, 75 | ✅ | ✅ | ✅ | ✅ |
@@ -174,8 +174,8 @@ Each scenario file uses a consistent JSON structure with:
 | **Round Trip Test** | ✅ | Full JSON→MT→JSON round trip successful |
 
 ### Test Coverage
-- **Total Scenarios**: 80
-- **Total Tests Run**: 12,300 (100 samples per scenario)
+- **Total Scenarios**: 165
+- **Total Tests Run**: 16,500 (100 samples per scenario)
 - **Success Rate**: 100%
 
 ## Status Legend

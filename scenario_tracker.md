@@ -36,18 +36,18 @@
 | MT112 | stop_payment_pending | ✅ | ✅ | ✅ | |
 | MT112 | stop_payment_rejected | ✅ | ✅ | ✅ | |
 | MT192 | request_cancellation | ✅ | ✅ | ✅ | Fixed: Replaced date_format with static date, fixed Field11S to use static values, simplified Field79 information array to use static strings |
-| MT196 | answer_cancellation | ❌ | ❌ | ❌ | |
+| MT196 | answer_cancellation | ✅ | ✅ | ✅ | Fixed: Changed Field79 from "narrative" to "information" |
 | MT202 | cbpr_cov_standard | ✅ | ✅ | ✅ | |
-| MT202 | cbpr_cov_complex_routing | ❌ | ❌ | ❌ | |
-| MT202 | cbpr_cov_compliance_enhanced | ✅ | ❌ | ✅ | |
-| MT202 | cov_mismatch | ❌ | ❌ | ❌ | |
-| MT202 | fi_to_fi_transparency | ❌ | ❌ | ❌ | |
-| MT205 | bank_transfer_non_cover | ❌ | ❌ | ❌ | |
-| MT210 | expected_incoming_funds | ❌ | ❌ | ❌ | |
-| MT292 | fi_cancellation_request | ❌ | ❌ | ❌ | |
-| MT296 | cancellation_accepted | ❌ | ❌ | ❌ | |
-| MT296 | cancellation_rejected | ❌ | ❌ | ❌ | |
-| MT296 | inquiry_response | ❌ | ❌ | ❌ | |
+| MT202 | cbpr_cov_complex_routing | ✅ | ✅ | ✅ | Fixed: Shortened Field21 reference, fixed Field72 line lengths, changed field 50 to 50#b |
+| MT202 | cbpr_cov_compliance_enhanced | ✅ | ✅ | ✅ | Fixed: Changed field 50 to 50#b, reduced Field72#b to 6 lines |
+| MT202 | cov_mismatch | ✅ | ✅ | ✅ | Fixed: Replaced expr with static amount, shortened references, moved sequence_b fields to root with #b suffix |
+| MT202 | fi_to_fi_transparency | ✅ | ✅ | ✅ | Fixed: Shortened references, simplified Field72 with static UETR |
+| MT205 | bank_transfer_non_cover | ✅ | ✅ | ✅ | Fixed: Corrected Field13C structure, shortened references |
+| MT210 | expected_incoming_funds | ✅ | ✅ | ✅ | Fixed: Changed date_format to static date, fixed Field25 to use authorisation instead of account, changed Field30 to use execution_date, changed Field50 to NoOption variant |
+| MT292 | fi_cancellation_request | ✅ | ✅ | ✅ | Fixed: Changed date_format to static date, removed empty string concatenation from Field21, changed Field79 from narrative to information, fixed Field11S structure, simplified switch/case to static values |
+| MT296 | cancellation_accepted | ✅ | ✅ | ✅ | Fixed: Changed time_24h to static time, removed empty string concatenation from Field21, changed Field76 from answer to information, removed Field79 to comply with validation rule C1 |
+| MT296 | cancellation_rejected | ✅ | ✅ | ✅ | Fixed: Removed empty string concatenation from Field21, changed Field76 from answer to information, removed Field11 and Field79 to comply with validation rule C1 |
+| MT296 | inquiry_response | ✅ | ✅ | ✅ | Fixed: Removed empty string concatenation from Field21, changed Field76 from answer to information, removed Field79 to comply with validation rule C1 |
 | MT296 | no_payment_found | ❌ | ❌ | ❌ | |
 | MT296 | partial_cancellation | ❌ | ❌ | ❌ | |
 | MT900 | basic_debit_confirmation | ❌ | ❌ | ❌ | |

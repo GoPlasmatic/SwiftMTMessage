@@ -116,16 +116,11 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "76": {
-        "answer": [
+        "information": [
           "INFO",
           "PAYMENT STATUS INFORMATION",
           {
@@ -178,74 +173,6 @@
             ]
           },
           "/REQUESTED BY/OPERATIONS"
-        ]
-      },
-      "79": {
-        "narrative": [
-          "PAYMENT STATUS DETAILS:",
-          {
-            "cat": [
-              "REFERENCE: ",
-              {
-                "var": "payment_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "CURRENT STATUS: ",
-              {
-                "var": "status"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "AMOUNT: ",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "amount"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "VALUE DATE: ",
-              {
-                "var": "value_date"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "BENEFICIARY BANK: ",
-              {
-                "var": "beneficiary_bic"
-              }
-            ]
-          },
-          "ROUTING:",
-          {
-            "cat": [
-              "- INTERMEDIARY: ",
-              {
-                "var": "intermediary_bic"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "- FINAL DESTINATION: ",
-              {
-                "var": "beneficiary_bic"
-              }
-            ]
-          },
-          "EXPECTED SETTLEMENT: END OF BUSINESS DAY",
-          "NO ISSUES OR DELAYS REPORTED"
         ]
       }
     }

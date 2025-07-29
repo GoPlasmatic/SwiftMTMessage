@@ -42,11 +42,7 @@
       ]
     },
     "currency": "USD",
-    "cancellation_time": {
-      "fake": [
-        "time_24h"
-      ]
-    },
+    "cancellation_time": "14:30:00",
     "original_value_date": "2024-12-20",
     "session_num": "0001",
     "sequence_num": "000123"
@@ -98,16 +94,11 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "76": {
-        "answer": [
+        "information": [
           "CANC",
           "CANCELLATION ACCEPTED",
           {
@@ -138,15 +129,6 @@
               }
             ]
           }
-        ]
-      },
-      "79": {
-        "narrative": [
-          "THE REQUESTED CANCELLATION HAS BEEN ACCEPTED.",
-          "THE ORIGINAL TRANSFER HAS BEEN REVERSED.",
-          "FUNDS WILL BE CREDITED BACK TO THE ORDERING",
-          "PARTY'S ACCOUNT BY END OF BUSINESS DAY.",
-          "NO CANCELLATION FEES APPLY."
         ]
       }
     }

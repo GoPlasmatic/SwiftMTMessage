@@ -35,26 +35,9 @@
       ]
     },
     "message_type": "202",
-    "date": {
-      "fake": [
-        "date_format",
-        "%y%m%d"
-      ]
-    },
-    "session": {
-      "fake": [
-        "i64",
-        1000,
-        9999
-      ]
-    },
-    "sequence": {
-      "fake": [
-        "i64",
-        100000,
-        999999
-      ]
-    },
+    "date": "2024-12-20",
+    "session": "1234",
+    "sequence": "567890",
     "reason_code": "AGNT",
     "amount": {
       "fake": [
@@ -118,34 +101,25 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "original_ref"
-            }
-          ]
+          "var": "original_ref"
         }
       },
       "11S": {
-        "mt_and_date": {
-          "cat": [
-            {
-              "var": "message_type"
-            },
-            {
-              "var": "date"
-            },
-            {
-              "var": "session"
-            },
-            {
-              "var": "sequence"
-            }
-          ]
+        "message_type": {
+          "var": "message_type"
+        },
+        "date": {
+          "var": "date"
+        },
+        "session_number": {
+          "var": "session"
+        },
+        "input_sequence_number": {
+          "var": "sequence"
         }
       },
       "79": {
-        "narrative": [
+        "information": [
           {
             "cat": [
               "/",
@@ -187,43 +161,10 @@
             ]
           },
           "",
-          {
-            "switch": {
-              "var": "reason_code"
-            },
-            "cases": {
-              "AGNT": [
-                "AGENT ERROR DETECTED",
-                "INCORRECT ROUTING INFORMATION PROVIDED",
-                "INTERMEDIARY INSTITUTION MISMATCH",
-                "PLEASE HALT PROCESSING IMMEDIATELY"
-              ],
-              "AM09": [
-                "WRONG AMOUNT TRANSMITTED",
-                "DECIMAL POSITION ERROR IN ORIGINAL",
-                "CORRECT AMOUNT WILL BE SENT SEPARATELY",
-                "DO NOT EXECUTE CURRENT TRANSFER"
-              ],
-              "DUPL": [
-                "DUPLICATE INSTITUTIONAL TRANSFER",
-                "ORIGINAL ALREADY SENT VIA ALTERNATE ROUTE",
-                "RECONCILIATION SHOWS DOUBLE ENTRY",
-                "PREVENT DUPLICATE SETTLEMENT"
-              ],
-              "TECH": [
-                "TECHNICAL PROCESSING ERROR",
-                "SYSTEM MALFUNCTION DURING TRANSMISSION",
-                "MESSAGE INTEGRITY COMPROMISED",
-                "REQUIRE FRESH TRANSMISSION"
-              ],
-              "COVR": [
-                "COVER PAYMENT ISSUE IDENTIFIED",
-                "UNDERLYING TRANSACTION CANCELLED",
-                "NO CORRESPONDING MT103 EXISTS",
-                "COVER NO LONGER REQUIRED"
-              ]
-            }
-          },
+          "AGENT ERROR DETECTED",
+          "INCORRECT ROUTING INFORMATION PROVIDED",
+          "INTERMEDIARY INSTITUTION MISMATCH",
+          "PLEASE HALT PROCESSING IMMEDIATELY",
           "",
           "TREASURY OPERATIONS NOTIFICATION",
           "IMMEDIATE ACTION REQUIRED",

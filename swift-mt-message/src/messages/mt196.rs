@@ -105,3 +105,76 @@ const MT196_VALIDATION_RULES: &str = r#"{
     }
   ]
 }"#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{headers::*, SwiftMessage};
+
+    #[test]
+    fn test_mt196_json_serialization() {
+        // Create a simple MT196 message
+        let mt196 = MT196 {
+            field_20: Field20 { reference: "ANS123456".to_string() },
+            field_21: Field21NoOption { reference: "CANCEL789012".to_string() },
+            field_76: Field76 {
+                information: vec![
+                    "/CUST/ACCEPTED".to_string(),
+                    "CANCELLATION ACCEPTED".to_string(),
+                    "AMOUNT: USD 50000.00".to_string(),
+                ]
+            },
+            field_77a: None,
+            field_11: Some(Field11::S(Field11S {
+                message_type: "192".to_string(),
+                date: chrono::NaiveDate::from_ymd_opt(2024, 12, 20).unwrap(),
+                session_number: Some("1234".to_string()),
+                input_sequence_number: Some("123456".to_string()),
+            })),
+            field_79: Some(Field79 {
+                information: vec![
+                    "RESPONSE TO CANCELLATION REQUEST".to_string(),
+                    "THE REQUEST HAS BEEN PROCESSED.".to_string(),
+                ]
+            }),
+        };
+
+        // Create SwiftMessage wrapper
+        let swift_msg = SwiftMessage {
+            basic_header: BasicHeader {
+                application_id: "F".to_string(),
+                service_id: "01".to_string(),
+                logical_terminal: "TESTBIC1XXXX".to_string(),
+                sender_bic: "TESTBIC1".to_string(),
+                session_number: "0001".to_string(),
+                sequence_number: "000123".to_string(),
+            },
+            application_header: ApplicationHeader {
+                direction: "I".to_string(),
+                message_type: "196".to_string(),
+                destination_address: "TESTBIC2XXXX".to_string(),
+                receiver_bic: "TESTBIC2".to_string(),
+                priority: "N".to_string(),
+                delivery_monitoring: None,
+                obsolescence_period: None,
+            },
+            user_header: None,
+            trailer: None,
+            message_type: "196".to_string(),
+            fields: mt196,
+        };
+
+        // Serialize to JSON
+        let json = serde_json::to_string_pretty(&swift_msg).expect("Failed to serialize");
+        println!("Serialized JSON:\n{}", json);
+
+        // Deserialize back
+        let deserialized: SwiftMessage<MT196> = serde_json::from_str(&json)
+            .expect("Failed to deserialize");
+        
+        // Verify key fields
+        assert_eq!(deserialized.fields.field_20.reference, "ANS123456");
+        assert_eq!(deserialized.fields.field_21.reference, "CANCEL789012");
+        assert_eq!(deserialized.fields.field_76.information.len(), 3);
+    }
+}

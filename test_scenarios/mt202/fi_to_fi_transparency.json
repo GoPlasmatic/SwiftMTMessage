@@ -21,8 +21,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            1000000000,
+            9999999999
           ]
         }
       ]
@@ -33,8 +33,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            1000000,
+            9999999
           ]
         }
       ]
@@ -134,12 +134,7 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "32A": {
@@ -196,34 +191,9 @@
       "72": {
         "information": [
           "/TRANSPARENCY/GPI COMPLIANT",
-          {
-            "cat": [
-              "/UETR/",
-              {
-                "var": "uetr"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/FEE/",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "fee_amount"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/EXCH/",
-              {
-                "var": "exchange_rate"
-              }
-            ]
-          },
+          "/UETR/3be5bde8-dd6f-4046-8377",
+          "/FEE/USD 32.68",
+          "/EXCH/1.2637",
           "/TIME/T2S 08:00-16:00",
           "/TRACKING/REAL-TIME ENABLED"
         ]

@@ -48,8 +48,8 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            1000000000,
+            9999999999
           ]
         }
       ]
@@ -138,12 +138,7 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "13C": [
@@ -216,34 +211,12 @@
       "72": {
         "information": [
           "/ACC/CBPR+ COMPLEX ROUTING",
-          {
-            "cat": [
-              "/UETR/",
-              {
-                "var": "uetr"
-              }
-            ]
-          },
+          "/UETR/c8bb451b-b6a2-419b-b0d1",
           "/INS/FX CONVERSION APPLIED",
-          {
-            "cat": [
-              "/EXCH/",
-              {
-                "var": "original_currency"
-              },
-              "/",
-              {
-                "var": "settlement_currency"
-              },
-              "/",
-              {
-                "var": "exchange_rate"
-              }
-            ]
-          }
+          "/EXCH/EUR/USD/1.0916"
         ]
       },
-      "50": {
+      "50#b": {
         "K": {
           "account": "/FR1420041010050500013M02606",
           "name_and_address": [
@@ -283,7 +256,7 @@
           ]
         }
       },
-      "52#b": {
+      "52": {
         "A": {
           "bic": {
             "var": "sender_bic"
@@ -370,33 +343,9 @@
       "72#b": {
         "information": [
           "/ACC/ROUTING TRANSPARENCY",
-          {
-            "cat": [
-              "/R1/",
-              {
-                "var": "intermediary1_bic"
-              },
-              " CORRESPONDENT"
-            ]
-          },
-          {
-            "cat": [
-              "/R2/",
-              {
-                "var": "intermediary2_bic"
-              },
-              " CLEARING"
-            ]
-          },
-          {
-            "cat": [
-              "/R3/",
-              {
-                "var": "intermediary3_bic"
-              },
-              " SETTLEMENT"
-            ]
-          }
+          "/R1/CHASUS33 CORRESPONDENT",
+          "/R2/DEUTDEFF CLEARING",
+          "/R3/BNPAFRPP SETTLEMENT"
         ]
       }
     }

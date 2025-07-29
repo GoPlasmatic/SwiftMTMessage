@@ -227,6 +227,31 @@ fn test_single_scenario(
                         if let Ok(generated_data) = generator.generate() {
                             if let Ok(json_str) = serde_json::to_string_pretty(&generated_data) {
                                 let lines: Vec<&str> = json_str.lines().collect();
+                                
+                                // Show around line 20 where the error occurs
+                                eprintln!("\nGenerated JSON around line 20:");
+                                for i in 10..30 {
+                                    if i < lines.len() {
+                                        eprintln!("{}: {}", i+1, lines[i]);
+                                    }
+                                }
+                                
+                                // Show around line 35 where new error occurs
+                                eprintln!("\nGenerated JSON around line 35:");
+                                for i in 25..45 {
+                                    if i < lines.len() {
+                                        eprintln!("{}: {}", i+1, lines[i]);
+                                    }
+                                }
+                                
+                                // Show around line 56 for newer error
+                                eprintln!("\nGenerated JSON around line 56:");
+                                for i in 46..66 {
+                                    if i < lines.len() {
+                                        eprintln!("{}: {}", i+1, lines[i]);
+                                    }
+                                }
+                                
                                 if lines.len() > 82 {
                                     eprintln!("\nGenerated JSON around line 82:");
                                     for i in 70..90 {

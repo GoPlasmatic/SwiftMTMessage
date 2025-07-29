@@ -21,20 +21,20 @@
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            1000000000,
+            9999999999
           ]
         }
       ]
     },
     "related_ref": {
       "cat": [
-        "MT103-",
+        "MT103",
         {
           "fake": [
             "i64",
-            100000000000,
-            999999999999
+            1000000000,
+            9999999999
           ]
         }
       ]
@@ -48,18 +48,10 @@
       ]
     },
     "mt202_amount": {
-      "expr": [
-        {
-          "var": "mt103_amount"
-        },
-        "+",
-        {
-          "fake": [
-            "f64",
-            100.0,
-            500.0
-          ]
-        }
+      "fake": [
+        "f64",
+        50100.0,
+        500500.0
       ]
     },
     "value_date": "2024-12-20",
@@ -141,12 +133,7 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "32A": {
@@ -203,23 +190,15 @@
       "72": {
         "information": [
           "/COV/COVER PAYMENT",
-          {
-            "cat": [
-              "/ORIG/",
-              {
-                "var": "related_ref"
-              }
-            ]
-          },
+          "/ORIG/MT1031234567890",
           "/MISMATCH/MULTIPLE DISCREPANCIES",
           "/AMT/DIFFERENCE DUE TO FEES",
           "/NAME/ENTITY NAME VARIATION",
           "/ACC/BENEFICIARY ACCOUNT MISMATCH"
         ]
       },
-      "sequence_b": {
-        "50": {
-          "K": {
+      "50#b": {
+        "K": {
             "account": "/GB82WEST12345698765432",
             "name_and_address": [
               {
@@ -231,8 +210,8 @@
             ]
           }
         },
-        "59": {
-          "NoOption": {
+      "59#b": {
+        "NoOption": {
             "account": {
               "var": "beneficiary_acct_mt202"
             },
@@ -244,8 +223,8 @@
             ]
           }
         },
-        "70": {
-          "narrative": [
+      "70#b": {
+        "narrative": [
             {
               "cat": [
                 "/INV/",
@@ -259,15 +238,14 @@
             "/NOTE/RECONCILIATION REQUIRED"
           ]
         },
-        "33B": {
-          "currency": {
+      "33B#b": {
+        "currency": {
             "var": "currency"
           },
           "amount": {
             "var": "mt103_amount"
           }
         }
-      }
     }
   }
 }

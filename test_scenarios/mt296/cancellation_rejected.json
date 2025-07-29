@@ -102,16 +102,11 @@
       },
       "21": {
         "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
+          "var": "related_ref"
         }
       },
       "76": {
-        "answer": [
+        "information": [
           "RJCT",
           "CANCELLATION REJECTED",
           {
@@ -131,47 +126,6 @@
               }
             ]
           }
-        ]
-      },
-      "11": {
-        "mt_number": "202",
-        "date": {
-          "var": "settlement_date"
-        }
-      },
-      "79": {
-        "narrative": [
-          "THE REQUESTED CANCELLATION CANNOT BE PROCESSED.",
-          {
-            "cat": [
-              "PAYMENT REF ",
-              {
-                "var": "original_payment_ref"
-              },
-              " HAS ALREADY"
-            ]
-          },
-          {
-            "cat": [
-              "BEEN SETTLED ON ",
-              {
-                "var": "settlement_date"
-              },
-              "."
-            ]
-          },
-          {
-            "cat": [
-              "BENEFICIARY BANK ",
-              {
-                "var": "beneficiary_bic"
-              },
-              " HAS"
-            ]
-          },
-          "CONFIRMED RECEIPT OF FUNDS.",
-          "PLEASE INITIATE A SEPARATE RETURN REQUEST",
-          "IF FUNDS NEED TO BE RECOVERED."
         ]
       }
     }

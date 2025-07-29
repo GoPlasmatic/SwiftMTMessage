@@ -34,12 +34,7 @@
         }
       ]
     },
-    "value_date": {
-      "fake": [
-        "date_format",
-        "%y%m%d"
-      ]
-    },
+    "value_date": "2024-12-20",
     "payment1_ref": {
       "cat": [
         "PAY",
@@ -159,16 +154,16 @@
         }
       },
       "25": {
-        "account": {
+        "authorisation": {
           "var": "account_id"
         }
       },
       "30": {
-        "value_date": {
+        "execution_date": {
           "var": "value_date"
         }
       },
-      "sequences": [
+      "#": [
         {
           "21": {
             "reference": {
@@ -184,35 +179,10 @@
             }
           },
           "50": {
-            "F": {
-              "party_identifier": "/US/123456789",
+            "NoOption": {
               "name_and_address": [
-                {
-                  "fake": [
-                    "company_name"
-                  ]
-                },
-                "CORPORATE TREASURY",
-                {
-                  "fake": [
-                    "street_address"
-                  ]
-                },
-                {
-                  "cat": [
-                    {
-                      "fake": [
-                        "city_name"
-                      ]
-                    },
-                    ", ",
-                    {
-                      "fake": [
-                        "country_code"
-                      ]
-                    }
-                  ]
-                }
+                "ORDERING CUSTOMER NAME",
+                "NEW YORK NY 10001"
               ]
             }
           },

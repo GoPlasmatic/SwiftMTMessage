@@ -79,7 +79,12 @@
       ]
     },
     "benefit_type": "RETIREMENT",
-    "payment_month": "DEC-2024"
+    "payment_month": "DEC-2024",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    }
   },
   "schema": {
     "basic_header": {
@@ -118,6 +123,13 @@
         "var": "receiver_bic"
       },
       "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
     },
     "message_type": "103",
     "fields": {

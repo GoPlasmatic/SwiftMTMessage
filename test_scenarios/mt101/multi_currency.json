@@ -40,6 +40,11 @@
         0.85,
         0.95
       ]
+    },
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
     }
   },
   "schema": {
@@ -79,6 +84,13 @@
         "var": "receiver_bic"
       },
       "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
     },
     "message_type": "101",
     "fields": {

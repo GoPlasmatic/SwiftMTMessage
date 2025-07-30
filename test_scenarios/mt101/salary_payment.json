@@ -1,37 +1,98 @@
 {
   "variables": {
-    "sender_bic": {"fake": ["bic"]},
-    "receiver_bic": {"fake": ["bic"]},
-    "message_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "message_ref": {
+      "cat": [
+        "PAY",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
     "payroll_ref": "PAYROLL-2024-12",
     "execution_date": "2024-12-25",
     "session_num": "0001",
     "sequence_num": "000567",
-    "currency": {"fake": ["currency_code"]}
+    "currency": {
+      "fake": [
+        "currency_code"
+      ]
+    },
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    }
   },
   "schema": {
     "basic_header": {
       "application_id": "F",
       "service_id": "01",
-      "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-      "sender_bic": {"var": "sender_bic"},
-      "session_number": {"var": "session_num"},
-      "sequence_number": {"var": "sequence_num"}
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
     },
     "application_header": {
       "direction": "I",
       "message_type": "101",
-      "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-      "receiver_bic": {"var": "receiver_bic"},
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
       "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
     },
     "message_type": "101",
     "fields": {
       "20": {
-        "reference": {"var": "message_ref"}
+        "reference": {
+          "var": "message_ref"
+        }
       },
       "21R": {
-        "reference": {"var": "payroll_ref"}
+        "reference": {
+          "var": "payroll_ref"
+        }
       },
       "28D": {
         "index": 1,
@@ -40,174 +101,338 @@
       "50#2": {
         "F": {
           "account": "/HR/PAYROLL",
-          "bic": {"fake": ["bic"]}
+          "bic": {
+            "fake": [
+              "bic"
+            ]
+          }
         }
       },
       "52": {
         "A": {
-          "bic": {"var": "receiver_bic"}
+          "bic": {
+            "var": "receiver_bic"
+          }
         }
       },
       "30": {
-        "execution_date": {"var": "execution_date"}
+        "execution_date": {
+          "var": "execution_date"
+        }
       },
       "25": {
         "authorisation": "PAYROLL-AUTH-2024"
       },
       "#": [
-          {
-            "21": {
-              "reference": {"cat": ["EMP-", {"fake": ["i64", 10000, 99999]}]}
-            },
-            "32B": {
-              "currency": {"var": "currency"},
-              "amount": {"fake": ["f64", 3000.0, 8000.0]}
-            },
-            "57": {
-              "A": {
-                "bic": {"fake": ["bic"]}
-              }
-            },
-            "59": {
-              "NoOption": {
-                "account": "/GB82WEST12345698765432",
-                "name_and_address": [
-                  {"fake": ["name"]},
-                  {"fake": ["street_address"]},
-                  {"fake": ["city_name"]},
-                  {"fake": ["country_name"]}
-                ]
-              }
-            },
-            "70": {
-              "narrative": [
-                "SALARY PAYMENT",
-                "DECEMBER 2024",
-                "EMPLOYEE ID: 10001"
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "EMP-",
+                {
+                  "fake": [
+                    "i64",
+                    10000,
+                    99999
+                  ]
+                }
               ]
-            },
-            "71A": {
-              "code": "OUR"
-            },
-            "25A": {
-              "account": "/PAYROLL-CHARGES"
             }
           },
-          {
-            "21": {
-              "reference": {"cat": ["EMP-", {"fake": ["i64", 10000, 99999]}]}
+          "32B": {
+            "currency": {
+              "var": "currency"
             },
-            "32B": {
-              "currency": {"var": "currency"},
-              "amount": {"fake": ["f64", 4000.0, 10000.0]}
-            },
-            "57": {
-              "A": {
-                "bic": {"fake": ["bic"]}
-              }
-            },
-            "59": {
-              "NoOption": {
-                "account": "/GB82WEST12345698765432",
-                "name_and_address": [
-                  {"fake": ["name"]},
-                  {"fake": ["street_address"]},
-                  {"fake": ["city_name"]},
-                  {"fake": ["country_name"]}
-                ]
-              }
-            },
-            "70": {
-              "narrative": [
-                "SALARY PAYMENT",
-                "DECEMBER 2024",
-                "EMPLOYEE ID: 10002"
+            "amount": {
+              "fake": [
+                "f64",
+                3000.0,
+                8000.0
               ]
-            },
-            "71A": {
-              "code": "OUR"
-            },
-            "25A": {
-              "account": "/PAYROLL-CHARGES"
             }
           },
-          {
-            "21": {
-              "reference": {"cat": ["EMP-", {"fake": ["i64", 10000, 99999]}]}
-            },
-            "32B": {
-              "currency": {"var": "currency"},
-              "amount": {"fake": ["f64", 5000.0, 15000.0]}
-            },
-            "57": {
-              "A": {
-                "bic": {"fake": ["bic"]}
-              }
-            },
-            "59": {
-              "NoOption": {
-                "account": "/GB82WEST12345698765432",
-                "name_and_address": [
-                  {"fake": ["name"]},
-                  {"fake": ["street_address"]},
-                  {"fake": ["city_name"]},
-                  {"fake": ["country_name"]}
+          "57": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
                 ]
               }
-            },
-            "70": {
-              "narrative": [
-                "SALARY PAYMENT",
-                "DECEMBER 2024",
-                "EMPLOYEE ID: 10003"
-              ]
-            },
-            "71A": {
-              "code": "OUR"
-            },
-            "25A": {
-              "account": "/PAYROLL-CHARGES"
             }
           },
-          {
-            "21": {
-              "reference": {"cat": ["BONUS-", {"fake": ["i64", 10000, 99999]}]}
-            },
-            "32B": {
-              "currency": {"var": "currency"},
-              "amount": {"fake": ["f64", 10000.0, 25000.0]}
-            },
-            "57": {
-              "A": {
-                "bic": {"fake": ["bic"]}
-              }
-            },
-            "59": {
-              "NoOption": {
-                "account": "/GB82WEST12345698765432",
-                "name_and_address": [
-                  {"fake": ["name"]},
-                  {"fake": ["street_address"]},
-                  {"fake": ["city_name"]},
-                  {"fake": ["country_name"]}
-                ]
-              }
-            },
-            "70": {
-              "narrative": [
-                "YEAR-END BONUS",
-                "DECEMBER 2024",
-                "PERFORMANCE BONUS"
+          "59": {
+            "NoOption": {
+              "account": "/GB82WEST12345698765432",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "country_name"
+                  ]
+                }
               ]
-            },
-            "71A": {
-              "code": "OUR"
-            },
-            "25A": {
-              "account": "/PAYROLL-CHARGES"
             }
+          },
+          "70": {
+            "narrative": [
+              "SALARY PAYMENT",
+              "DECEMBER 2024",
+              "EMPLOYEE ID: 10001"
+            ]
+          },
+          "71A": {
+            "code": "OUR"
+          },
+          "25A": {
+            "account": "/PAYROLL-CHARGES"
           }
-        ]
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "EMP-",
+                {
+                  "fake": [
+                    "i64",
+                    10000,
+                    99999
+                  ]
+                }
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                4000.0,
+                10000.0
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
+                ]
+              }
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": "/GB82WEST12345698765432",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "country_name"
+                  ]
+                }
+              ]
+            }
+          },
+          "70": {
+            "narrative": [
+              "SALARY PAYMENT",
+              "DECEMBER 2024",
+              "EMPLOYEE ID: 10002"
+            ]
+          },
+          "71A": {
+            "code": "OUR"
+          },
+          "25A": {
+            "account": "/PAYROLL-CHARGES"
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "EMP-",
+                {
+                  "fake": [
+                    "i64",
+                    10000,
+                    99999
+                  ]
+                }
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                5000.0,
+                15000.0
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
+                ]
+              }
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": "/GB82WEST12345698765432",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "country_name"
+                  ]
+                }
+              ]
+            }
+          },
+          "70": {
+            "narrative": [
+              "SALARY PAYMENT",
+              "DECEMBER 2024",
+              "EMPLOYEE ID: 10003"
+            ]
+          },
+          "71A": {
+            "code": "OUR"
+          },
+          "25A": {
+            "account": "/PAYROLL-CHARGES"
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "BONUS-",
+                {
+                  "fake": [
+                    "i64",
+                    10000,
+                    99999
+                  ]
+                }
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                10000.0,
+                25000.0
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
+                ]
+              }
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": "/GB82WEST12345698765432",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "country_name"
+                  ]
+                }
+              ]
+            }
+          },
+          "70": {
+            "narrative": [
+              "YEAR-END BONUS",
+              "DECEMBER 2024",
+              "PERFORMANCE BONUS"
+            ]
+          },
+          "71A": {
+            "code": "OUR"
+          },
+          "25A": {
+            "account": "/PAYROLL-CHARGES"
+          }
+        }
+      ]
     }
   }
 }

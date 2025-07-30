@@ -53,7 +53,12 @@
     "bank_op_code": "CRED",
     "charges": "SHA",
     "session_num": "0002",
-    "sequence_num": "001234"
+    "sequence_num": "001234",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    }
   },
   "schema": {
     "basic_header": {
@@ -92,6 +97,13 @@
         "var": "receiver_bic"
       },
       "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
     },
     "message_type": "103",
     "fields": {

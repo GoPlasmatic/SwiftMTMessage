@@ -124,6 +124,11 @@
         100.0,
         1000.0
       ]
+    },
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
     }
   },
   "schema": {
@@ -163,6 +168,13 @@
         "var": "receiver_bic"
       },
       "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
     },
     "message_type": "103",
     "fields": {
@@ -269,7 +281,7 @@
       "70": {
         "narrative": [
           "/INV/20241201/INV-12345",
-          "/INV/20241215/INV-12346", 
+          "/INV/20241215/INV-12346",
           "/INV/20241220/INV-12347",
           "/PO/PO-2024-789456"
         ]

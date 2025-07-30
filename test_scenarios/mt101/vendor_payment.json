@@ -1,33 +1,92 @@
 {
   "variables": {
-    "sender_bic": {"fake": ["bic"]},
-    "receiver_bic": {"fake": ["bic"]},
-    "message_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "message_ref": {
+      "cat": [
+        "PAY",
+        {
+          "fake": [
+            "i64",
+            100000000000,
+            999999999999
+          ]
+        }
+      ]
+    },
     "execution_date": "2024-12-20",
     "session_num": "0001",
     "sequence_num": "000678",
-    "currency": {"fake": ["currency_code"]}
+    "currency": {
+      "fake": [
+        "currency_code"
+      ]
+    },
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    }
   },
   "schema": {
     "basic_header": {
       "application_id": "F",
       "service_id": "01",
-      "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-      "sender_bic": {"var": "sender_bic"},
-      "session_number": {"var": "session_num"},
-      "sequence_number": {"var": "sequence_num"}
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
     },
     "application_header": {
       "direction": "I",
       "message_type": "101",
-      "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-      "receiver_bic": {"var": "receiver_bic"},
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
       "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
     },
     "message_type": "101",
     "fields": {
       "20": {
-        "reference": {"var": "message_ref"}
+        "reference": {
+          "var": "message_ref"
+        }
       },
       "28D": {
         "index": 1,
@@ -36,145 +95,274 @@
       "50#2": {
         "G": {
           "account": "/AP-MASTER-ACCOUNT",
-          "bic": {"fake": ["bic"]}
+          "bic": {
+            "fake": [
+              "bic"
+            ]
+          }
         }
       },
       "52": {
         "A": {
-          "bic": {"var": "receiver_bic"}
+          "bic": {
+            "var": "receiver_bic"
+          }
         }
       },
       "30": {
-        "execution_date": {"var": "execution_date"}
+        "execution_date": {
+          "var": "execution_date"
+        }
       },
       "#": [
-          {
-            "21": {
-              "reference": {"cat": ["INV-", {"fake": ["i64", 100000, 999999]}]}
-            },
-            "23E": [
-              {
-                "instruction_code": "INTC",
-                "additional_info": "/NOTIFY ON COMPLETION"
-              }
-            ],
-            "32B": {
-              "currency": {"var": "currency"},
-              "amount": {"fake": ["f64", 15000.0, 50000.0]}
-            },
-            "56": {
-              "A": {
-                "bic": {"fake": ["bic"]}
-              }
-            },
-            "57": {
-              "A": {
-                "bic": {"fake": ["bic"]}
-              }
-            },
-            "59": {
-              "NoOption": {
-                "account": "/NL91ABNA0417164300",
-                "name_and_address": [
-                  {"fake": ["company_name"]},
-                  "ACCOUNTS RECEIVABLE",
-                  {"fake": ["street_address"]},
-                  {"fake": ["city_name"]},
-                  {"fake": ["country_name"]}
-                ]
-              }
-            },
-            "70": {
-              "narrative": [
-                "VENDOR PAYMENT",
-                "INV-2024-12-001",
-                "PO-2024-11-456",
-                "GOODS DELIVERED"
-              ]
-            },
-            "71A": {
-              "code": "SHA"
-            },
-            "77B": {
-              "narrative": [
-                "/ORDERRES/US//TAX ID 12-3456789",
-                "/BENEFRES/EU//VAT DE123456789"
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "INV-",
+                {
+                  "fake": [
+                    "i64",
+                    100000,
+                    999999
+                  ]
+                }
               ]
             }
           },
-          {
-            "21": {
-              "reference": {"cat": ["INV-", {"fake": ["i64", 100000, 999999]}]}
+          "23E": [
+            {
+              "instruction_code": "INTC",
+              "additional_info": "/NOTIFY ON COMPLETION"
+            }
+          ],
+          "32B": {
+            "currency": {
+              "var": "currency"
             },
-            "32B": {
-              "currency": {"var": "currency"},
-              "amount": {"fake": ["f64", 25000.0, 75000.0]}
-            },
-            "57": {
-              "A": {
-                "bic": {"fake": ["bic"]}
-              }
-            },
-            "59": {
-              "NoOption": {
-                "account": "/NL91ABNA0417164300",
-                "name_and_address": [
-                  {"fake": ["company_name"]},
-                  {"fake": ["street_address"]},
-                  {"fake": ["city_name"]},
-                  {"fake": ["country_name"]}
-                ]
-              }
-            },
-            "70": {
-              "narrative": [
-                "VENDOR PAYMENT",
-                "INV-2024-12-002",
-                "SERVICES RENDERED",
-                "NET 30 TERMS"
+            "amount": {
+              "fake": [
+                "f64",
+                15000.0,
+                50000.0
               ]
-            },
-            "71A": {
-              "code": "SHA"
             }
           },
-          {
-            "21": {
-              "reference": {"cat": ["INV-", {"fake": ["i64", 100000, 999999]}]}
-            },
-            "32B": {
-              "currency": {"var": "currency"},
-              "amount": {"fake": ["f64", 50000.0, 150000.0]}
-            },
-            "57": {
-              "A": {
-                "bic": {"fake": ["bic"]}
-              }
-            },
-            "59": {
-              "NoOption": {
-                "account": "/NL91ABNA0417164300",
-                "name_and_address": [
-                  {"fake": ["company_name"]},
-                  {"fake": ["street_address"]},
-                  {"fake": ["city_name"]},
-                  {"fake": ["country_name"]}
+          "56": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
                 ]
               }
-            },
-            "70": {
-              "narrative": [
-                "VENDOR PAYMENT",
-                "CONTRACT MILESTONE",
-                "PROJECT PHASE 2",
-                "50% COMPLETION"
-              ]
-            },
-            "71A": {
-              "code": "BEN"
             }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
+                ]
+              }
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": "/NL91ABNA0417164300",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                "ACCOUNTS RECEIVABLE",
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "country_name"
+                  ]
+                }
+              ]
+            }
+          },
+          "70": {
+            "narrative": [
+              "VENDOR PAYMENT",
+              "INV-2024-12-001",
+              "PO-2024-11-456",
+              "GOODS DELIVERED"
+            ]
+          },
+          "71A": {
+            "code": "SHA"
+          },
+          "77B": {
+            "narrative": [
+              "/ORDERRES/US//TAX ID 12-3456789",
+              "/BENEFRES/EU//VAT DE123456789"
+            ]
           }
-        ]
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "INV-",
+                {
+                  "fake": [
+                    "i64",
+                    100000,
+                    999999
+                  ]
+                }
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                25000.0,
+                75000.0
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
+                ]
+              }
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": "/NL91ABNA0417164300",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "country_name"
+                  ]
+                }
+              ]
+            }
+          },
+          "70": {
+            "narrative": [
+              "VENDOR PAYMENT",
+              "INV-2024-12-002",
+              "SERVICES RENDERED",
+              "NET 30 TERMS"
+            ]
+          },
+          "71A": {
+            "code": "SHA"
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "INV-",
+                {
+                  "fake": [
+                    "i64",
+                    100000,
+                    999999
+                  ]
+                }
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "fake": [
+                "f64",
+                50000.0,
+                150000.0
+              ]
+            }
+          },
+          "57": {
+            "A": {
+              "bic": {
+                "fake": [
+                  "bic"
+                ]
+              }
+            }
+          },
+          "59": {
+            "NoOption": {
+              "account": "/NL91ABNA0417164300",
+              "name_and_address": [
+                {
+                  "fake": [
+                    "company_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "street_address"
+                  ]
+                },
+                {
+                  "fake": [
+                    "city_name"
+                  ]
+                },
+                {
+                  "fake": [
+                    "country_name"
+                  ]
+                }
+              ]
+            }
+          },
+          "70": {
+            "narrative": [
+              "VENDOR PAYMENT",
+              "CONTRACT MILESTONE",
+              "PROJECT PHASE 2",
+              "50% COMPLETION"
+            ]
+          },
+          "71A": {
+            "code": "BEN"
+          }
+        }
+      ]
     }
   }
 }

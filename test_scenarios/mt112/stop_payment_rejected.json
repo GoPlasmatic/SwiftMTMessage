@@ -39,7 +39,12 @@
       ]
     },
     "session_num": "0001",
-    "sequence_num": "000123"
+    "sequence_num": "000123",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    }
   },
   "schema": {
     "basic_header": {
@@ -79,6 +84,13 @@
       },
       "priority": "N"
     },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
+    },
     "message_type": "112",
     "fields": {
       "20": {
@@ -88,7 +100,12 @@
       },
       "21": {
         "reference": {
-          "cat": ["", {"var": "cheque_number"}]
+          "cat": [
+            "",
+            {
+              "var": "cheque_number"
+            }
+          ]
         }
       },
       "30": {

@@ -1,68 +1,181 @@
 {
   "variables": {
-    "sender_bic": {"fake": ["bic"]},
-    "receiver_bic": {"fake": ["bic"]},
-    "transaction_ref": {"cat": ["RATE", {"fake": ["i64", 100000, 999999]}]},
-    "account_1": {"cat": ["ACC", {"fake": ["i64", 1000000000, 9999999999]}]},
+    "sender_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "receiver_bic": {
+      "fake": [
+        "bic"
+      ]
+    },
+    "transaction_ref": {
+      "cat": [
+        "RATE",
+        {
+          "fake": [
+            "i64",
+            100000,
+            999999
+          ]
+        }
+      ]
+    },
+    "account_1": {
+      "cat": [
+        "ACC",
+        {
+          "fake": [
+            "i64",
+            1000000000,
+            9999999999
+          ]
+        }
+      ]
+    },
     "effective_date_1": "2025-01-01",
-    "old_rate_1": {"fake": ["f64", 1.0, 3.0]},
-    "new_rate_1": {"fake": ["f64", 2.0, 4.0]},
-    "account_2": {"cat": ["ACC", {"fake": ["i64", 1000000000, 9999999999]}]},
+    "old_rate_1": {
+      "fake": [
+        "f64",
+        1.0,
+        3.0
+      ]
+    },
+    "new_rate_1": {
+      "fake": [
+        "f64",
+        2.0,
+        4.0
+      ]
+    },
+    "account_2": {
+      "cat": [
+        "ACC",
+        {
+          "fake": [
+            "i64",
+            1000000000,
+            9999999999
+          ]
+        }
+      ]
+    },
     "effective_date_2": "2025-01-15",
-    "old_rate_2": {"fake": ["f64", 1.5, 3.5]},
-    "new_rate_2": {"fake": ["f64", 2.5, 4.5]},
+    "old_rate_2": {
+      "fake": [
+        "f64",
+        1.5,
+        3.5
+      ]
+    },
+    "new_rate_2": {
+      "fake": [
+        "f64",
+        2.5,
+        4.5
+      ]
+    },
     "session_num": "0001",
-    "sequence_num": "000123"
+    "sequence_num": "000123",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    }
   },
   "schema": {
     "basic_header": {
       "application_id": "F",
       "service_id": "01",
-      "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-      "sender_bic": {"var": "sender_bic"},
-      "session_number": {"var": "session_num"},
-      "sequence_number": {"var": "sequence_num"}
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
     },
     "application_header": {
       "direction": "I",
       "message_type": "935",
-      "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-      "receiver_bic": {"var": "receiver_bic"},
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
       "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
     },
     "message_type": "935",
     "fields": {
       "20": {
-        "reference": {"var": "transaction_ref"}
+        "reference": {
+          "var": "transaction_ref"
+        }
       },
       "#": [
         {
           "25": {
-            "authorisation": {"var": "account_1"}
+            "authorisation": {
+              "var": "account_1"
+            }
           },
           "30": {
-            "execution_date": {"var": "effective_date_1"}
+            "execution_date": {
+              "var": "effective_date_1"
+            }
           },
           "37H": [
             {
               "rate_indicator": "C",
               "is_negative": false,
-              "rate": {"var": "new_rate_1"}
+              "rate": {
+                "var": "new_rate_1"
+              }
             }
           ]
         },
         {
           "25": {
-            "authorisation": {"var": "account_2"}
+            "authorisation": {
+              "var": "account_2"
+            }
           },
           "30": {
-            "execution_date": {"var": "effective_date_2"}
+            "execution_date": {
+              "var": "effective_date_2"
+            }
           },
           "37H": [
             {
               "rate_indicator": "C",
               "is_negative": false,
-              "rate": {"var": "new_rate_2"}
+              "rate": {
+                "var": "new_rate_2"
+              }
             }
           ]
         }

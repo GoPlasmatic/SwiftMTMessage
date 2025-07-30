@@ -45,7 +45,12 @@
     "cancellation_time": "14:30:00",
     "original_value_date": "2024-12-20",
     "session_num": "0001",
-    "sequence_num": "000123"
+    "sequence_num": "000123",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    }
   },
   "schema": {
     "basic_header": {
@@ -84,6 +89,13 @@
         "var": "receiver_bic"
       },
       "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
     },
     "message_type": "296",
     "fields": {

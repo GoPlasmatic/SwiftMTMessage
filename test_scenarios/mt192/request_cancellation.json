@@ -46,7 +46,12 @@
     "session": "0001",
     "sequence": "123456",
     "session_num": "0001",
-    "sequence_num": "000123"
+    "sequence_num": "000123",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    }
   },
   "schema": {
     "basic_header": {

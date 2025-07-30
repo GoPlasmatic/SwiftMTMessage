@@ -60,20 +60,8 @@
         24
       ]
     },
-    "fee_amount": {
-      "fake": [
-        "f64",
-        10.0,
-        50.0
-      ]
-    },
-    "exchange_rate": {
-      "fake": [
-        "f64",
-        1.05,
-        1.15
-      ]
-    },
+    "fee_amount": "25.00",
+    "exchange_rate": "1.1200",
     "credit_datetime": {
       "cat": [
         "2024-12-20 ",
@@ -96,8 +84,8 @@
       ]
     },
     "purpose_code": "GDDS",
-    "ordering_lei": "LEIXG8HWVXGGR1B2V5K893",
-    "beneficiary_lei": "LEIZBQR12345HKLMNOP678"
+    "ordering_lei": "LEIXG8HWVXGGR1B2V5K8",
+    "beneficiary_lei": "LEIZBQR12345HKLMNOP6"
   },
   "schema": {
     "basic_header": {
@@ -137,6 +125,13 @@
       },
       "priority": "N"
     },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
+    },
     "message_type": "299",
     "fields": {
       "20": {
@@ -158,144 +153,201 @@
         "information": [
           "CBPR+ PAYMENT STATUS RESPONSE",
           {
-            "cat": [
-              "INQUIRY REFERENCE: ",
+            "substr": [
               {
-                "var": "inquiry_ref"
-              }
+                "cat": [
+                  "INQUIRY REFERENCE: ",
+                  {
+                    "var": "inquiry_ref"
+                  }
+                ]
+              },
+              0,
+              50
             ]
           },
           {
-            "cat": [
-              "PAYMENT REFERENCE: ",
+            "substr": [
               {
-                "var": "payment_ref"
-              }
+                "cat": [
+                  "PAYMENT REFERENCE: ",
+                  {
+                    "var": "payment_ref"
+                  }
+                ]
+              },
+              0,
+              50
             ]
           },
           {
-            "cat": [
-              "UETR: ",
+            "substr": [
               {
-                "var": "uetr"
-              }
+                "cat": [
+                  "UETR: ",
+                  {
+                    "var": "uetr"
+                  }
+                ]
+              },
+              0,
+              50
             ]
           },
-          "",
           "CURRENT STATUS: COMPLETED",
           {
-            "cat": [
-              "BENEFICIARY CREDITED: ",
+            "substr": [
               {
-                "var": "credit_datetime"
+                "cat": [
+                  "BENEFICIARY CREDITED: ",
+                  {
+                    "var": "credit_datetime"
+                  },
+                  " CET"
+                ]
               },
-              " CET"
+              0,
+              50
             ]
           },
-          "",
           "TRANSPARENCY PATH:",
           "1. SENDER -> SENDER'S BANK",
           "   TIME: T+0 09:00:00",
           "   STATUS: PROCESSED",
           "   FEE: 15.00 EUR",
-          "",
           "2. SENDER'S BANK -> CORRESPONDENT",
           "   TIME: T+0 09:30:00",
           "   STATUS: FORWARDED",
           {
-            "cat": [
-              "   FEE: ",
+            "substr": [
               {
-                "var": "fee_amount"
+                "cat": [
+                  "   FEE: ",
+                  {
+                    "var": "fee_amount"
+                  },
+                  " EUR"
+                ]
               },
-              " EUR"
+              0,
+              50
             ]
           },
-          "",
           "3. CORRESPONDENT -> BENEFICIARY BANK",
           "   TIME: T+0 14:00:00",
           "   STATUS: PROCESSED",
           "   FEE: 10.00 EUR",
-          "",
           "4. BENEFICIARY BANK -> BENEFICIARY",
           {
-            "cat": [
-              "   TIME: ",
+            "substr": [
               {
-                "var": "credit_datetime"
-              }
+                "cat": [
+                  "   TIME: ",
+                  {
+                    "var": "credit_datetime"
+                  }
+                ]
+              },
+              0,
+              50
             ]
           },
           "   STATUS: CREDITED",
           "   FEE: 5.00 EUR",
-          "",
           "CBPR+ COMPLIANCE SUMMARY:",
           {
-            "cat": [
-              "- PURPOSE CODE: ",
+            "substr": [
               {
-                "var": "purpose_code"
+                "cat": [
+                  "- PURPOSE CODE: ",
+                  {
+                    "var": "purpose_code"
+                  },
+                  " (VALIDATED)"
+                ]
               },
-              " (VALIDATED)"
+              0,
+              50
             ]
           },
           {
-            "cat": [
-              "- ORDERING LEI: ",
+            "substr": [
               {
-                "var": "ordering_lei"
+                "cat": [
+                  "- ORDERING LEI: ",
+                  {
+                    "var": "ordering_lei"
+                  },
+                  " (VERIFIED)"
+                ]
               },
-              " (VERIFIED)"
+              0,
+              50
             ]
           },
           {
-            "cat": [
-              "- BENEFICIARY LEI: ",
+            "substr": [
               {
-                "var": "beneficiary_lei"
+                "cat": [
+                  "- BENEFICIARY LEI: ",
+                  {
+                    "var": "beneficiary_lei"
+                  },
+                  " (VERIFIED)"
+                ]
               },
-              " (VERIFIED)"
+              0,
+              50
             ]
           },
-          "- STRUCTURED REMITTANCE: PROCESSED",
-          "- REGULATORY SCREENING: PASSED",
-          "- TRANSPARENCY REQUIREMENTS: MET",
-          "",
           "FEE SUMMARY:",
           {
-            "cat": [
-              "- TOTAL FEES: ",
+            "substr": [
               {
-                "var": "fee_amount"
+                "cat": [
+                  "- TOTAL FEES: ",
+                  {
+                    "var": "fee_amount"
+                  },
+                  " EUR"
+                ]
               },
-              " EUR"
+              0,
+              50
             ]
           },
           "- FEE TRANSPARENCY: FULL DISCLOSURE",
           {
-            "cat": [
-              "- EXCHANGE RATE APPLIED: ",
+            "substr": [
               {
-                "var": "exchange_rate"
-              }
-            ]
-          },
-          "",
-          {
-            "cat": [
-              "PROCESSING TIME: ",
-              {
-                "var": "processing_time"
+                "cat": [
+                  "- EXCHANGE RATE APPLIED: ",
+                  {
+                    "var": "exchange_rate"
+                  }
+                ]
               },
-              " HOURS"
+              0,
+              50
             ]
           },
-          "ESTIMATED TIME: 24 HOURS",
+          {
+            "substr": [
+              {
+                "cat": [
+                  "PROCESSING TIME: ",
+                  {
+                    "var": "processing_time"
+                  },
+                  " HOURS"
+                ]
+              },
+              0,
+              50
+            ]
+          },
           "PERFORMANCE: WITHIN SLA",
-          "",
-          "NO COMPLIANCE HOLDS OR ISSUES ENCOUNTERED",
           "ALL CBPR+ REQUIREMENTS SATISFIED",
-          "",
           "END OF RESPONSE"
         ]
       }

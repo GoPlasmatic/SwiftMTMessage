@@ -121,7 +121,12 @@
       ]
     },
     "session_num": "0001",
-    "sequence_num": "000123"
+    "sequence_num": "000123",
+    "uetr": {
+      "fake": [
+        "uuid"
+      ]
+    }
   },
   "schema": {
     "basic_header": {
@@ -156,6 +161,13 @@
         "var": "receiver_bic"
       },
       "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
     },
     "message_type": "942",
     "fields": {
@@ -270,7 +282,7 @@
         "currency": {
           "var": "currency"
         },
-        "amount": 250050.00
+        "amount": 250050.0
       },
       "86": {
         "narrative": [

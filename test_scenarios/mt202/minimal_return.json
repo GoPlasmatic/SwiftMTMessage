@@ -1,0 +1,48 @@
+{
+  "variables": {},
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": "DEUTDEFFXXXX",
+      "sender_bic": "DEUTDEFF",
+      "session_number": "0001",
+      "sequence_number": "000001"
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "202",
+      "destination_address": "CHASUS33XXXX",
+      "receiver_bic": "CHASUS33",
+      "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    },
+    "message_type": "202",
+    "fields": {
+      "20": {
+        "reference": "RET1234567"
+      },
+      "21": {
+        "reference": "ORIG9876543"
+      },
+      "32A": {
+        "value_date": "2024-12-20",
+        "currency": "USD",
+        "amount": 50000.00
+      },
+      "58": {
+        "A": {
+          "bic": "CHASUS33"
+        }
+      },
+      "72": {
+        "information": [
+          "/RETN/AC01"
+        ]
+      }
+    }
+  }
+}

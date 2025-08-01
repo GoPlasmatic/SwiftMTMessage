@@ -4,6 +4,9 @@
     "cbpr_cov_complex_routing",
     "cbpr_cov_compliance_enhanced",
     "cov_mismatch",
-    "fi_to_fi_transparency"
+    "fi_to_fi_transparency",
+    "return",
+    "return_simple",
+    "minimal_return"
   ]
 }

@@ -1,207 +1,100 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": "USD",
+        "amount": {"fake": ["f64", 100000.0, 1000000.0]},
+        "value_date": "2024-12-20",
+        "bank_op_code": "CRED",
+        "charges": "SHA",
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "PAY",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
-        }
-      ]
-    },
-    "currency": "USD",
-    "amount": {
-      "fake": [
-        "f64",
-        100000.0,
-        1000000.0
-      ]
-    },
-    "value_date": "2024-12-20",
-    "bank_op_code": "CRED",
-    "charges": "SHA",
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "103",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "103",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "23B": {
-        "instruction_code": {
-          "var": "bank_op_code"
-        }
-      },
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "currency": {
-          "var": "currency"
+        "application_header": {
+            "direction": "I",
+            "message_type": "103",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        "amount": {
-          "var": "amount"
-        }
-      },
-      "50": {
-        "K": {
-          "account": "/GB82WEST12345698765432",
-          "name_and_address": [
-            {
-              "fake": [
-                "company_name"
-              ]
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "103",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
-            {
-              "fake": [
-                "street_address"
-              ]
-            },
-            {
-              "cat": [
-                {
-                  "fake": [
-                    "city_name"
-                  ]
-                },
-                ", ",
-                {
-                  "fake": [
-                    "country_code"
-                  ]
+            "50": {
+                "K": {
+                    "account": "/GB82WEST12345698765432",
+                    "name_and_address": [
+                        {"fake": ["company_name"]},
+                        {"fake": ["street_address"]},
+                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                    ]
                 }
-              ]
-            }
-          ]
-        }
-      },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "sender_bic"
-          }
-        }
-      },
-      "56": {
-        "C": {
-          "party_identifier": "//UNKNOWN"
-        }
-      },
-      "57": {
-        "D": {
-          "party_identifier": "//MISSING BIC",
-          "name_and_address": [
-            "CORRESPONDENT BANK NAME UNKNOWN",
-            "NO ADDRESS PROVIDED",
-            "ROUTING INFORMATION MISSING",
-            "COUNTRY UNKNOWN"
-          ]
-        }
-      },
-      "59": {
-        "NoOption": {
-          "account": "/??????????????????",
-          "name_and_address": [
-            {
-              "fake": [
-                "company_name"
-              ]
             },
-            "ADDRESS LINE 1",
-            "ADDRESS LINE 2",
-            "COUNTRY"
-          ]
+            "52": {"A": {"bic": {"var": "sender_bic"}}},
+            "56": {"C": {"party_identifier": "//UNKNOWN"}},
+            "57": {
+                "D": {
+                    "party_identifier": "//MISSING BIC",
+                    "name_and_address": [
+                        "CORRESPONDENT BANK NAME UNKNOWN",
+                        "NO ADDRESS PROVIDED",
+                        "ROUTING INFORMATION MISSING",
+                        "COUNTRY UNKNOWN"
+                    ]
+                }
+            },
+            "59": {
+                "NoOption": {
+                    "account": "/??????????????????",
+                    "name_and_address": [
+                        {"fake": ["company_name"]},
+                        "ADDRESS LINE 1",
+                        "ADDRESS LINE 2",
+                        "COUNTRY"
+                    ]
+                }
+            },
+            "70": {
+                "narrative": [
+                    "/RFB/PAYMENT REFERENCE",
+                    "/NOTE/INTERMEDIARY INFO MISSING",
+                    "/WARN/ROUTING MAY FAIL",
+                    "/ACTION/MANUAL INTERVENTION"
+                ]
+            },
+            "71A": {"code": {"var": "charges"}},
+            "72": {
+                "information": [
+                    "/ERR/UNRESOLVED INTERMEDIARY",
+                    "/MISS/BIC OR ACCOUNT INFO",
+                    "/56C/PARTY ID ONLY",
+                    "/57D/NAME WITHOUT BIC",
+                    "/REQ/COMPLETE ROUTING INFO",
+                    "/RISK/PAYMENT DELAY OR RETURN"
+                ]
+            }
         }
-      },
-      "70": {
-        "narrative": [
-          "/RFB/PAYMENT REFERENCE",
-          "/NOTE/INTERMEDIARY INFO MISSING",
-          "/WARN/ROUTING MAY FAIL",
-          "/ACTION/MANUAL INTERVENTION"
-        ]
-      },
-      "71A": {
-        "code": {
-          "var": "charges"
-        }
-      },
-      "72": {
-        "information": [
-          "/ERR/UNRESOLVED INTERMEDIARY",
-          "/MISS/BIC OR ACCOUNT INFO",
-          "/56C/PARTY ID ONLY",
-          "/57D/NAME WITHOUT BIC",
-          "/REQ/COMPLETE ROUTING INFO",
-          "/RISK/PAYMENT DELAY OR RETURN"
-        ]
-      }
     }
-  }
 }

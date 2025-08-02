@@ -132,7 +132,11 @@ const MT210_VALIDATION_RULES: &str = r#"{
       "id": "C1",
       "description": "The repetitive sequence (fields 50a-32B) must not appear more than 10 times",
       "condition": {
-        "<=": [{"length": {"var": "fields.#"}}, 10]
+        "if": [
+          {"!!": {"var": "fields.#"}},
+          {"<=": [{"length": {"var": "fields.#"}}, 10]},
+          true
+        ]
       }
     }
   ]

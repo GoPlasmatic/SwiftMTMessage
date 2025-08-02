@@ -1,0 +1,68 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "message_ref": {"cat": ["SSI", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "session_num": "0002",
+        "sequence_num": "001234",
+        "uetr": {"fake": ["uuid"]},
+        "effective_date": "2025-01-01",
+        "old_account": "GB82WEST12345698765432",
+        "new_account": "GB33BNBK20123456789012",
+        "currency": "USD"
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "299",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "299",
+        "fields": {
+            "20": {"reference": {"var": "message_ref"}},
+            "79": {
+                "information": [
+                    "URGENT: SETTLEMENT INSTRUCTIONS UPDATE",
+                    {"substr": [{"cat": ["EFFECTIVE: ", {"var": "effective_date"}]}, 0, 50]},
+                    "",
+                    "USD NOSTRO ACCOUNT CHANGE",
+                    "",
+                    "OLD INSTRUCTIONS (CLOSING 2024-12-31):",
+                    {"substr": [{"cat": ["ACCT: ", {"var": "old_account"}]}, 0, 50]},
+                    "BIC: WESTGB2LXXX",
+                    "",
+                    "NEW INSTRUCTIONS (FROM 2025-01-01):",
+                    {"substr": [{"cat": ["ACCT: ", {"var": "new_account"}]}, 0, 50]},
+                    "BIC: BNBKGB2LXXX",
+                    "",
+                    "TRANSITION: 2024-12-24 TO 2024-12-31",
+                    "BOTH ACCOUNTS ACTIVE",
+                    "",
+                    "OTHER CURRENCIES UNCHANGED",
+                    "",
+                    "CONFIRM RECEIPT VIA MT299",
+                    "",
+                    "CONTACT:",
+                    "NOSTRO DEPT",
+                    "nostro@bank.com",
+                    "+44 20 3456 7890"
+                ]
+            }
+        }
+    }
+}

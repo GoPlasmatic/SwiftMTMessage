@@ -1,0 +1,85 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "answer_ref": {"cat": ["INQ", {"fake": ["i64", 100000, 999999]}]},
+        "inquiry_ref": {"cat": ["TRC", {"fake": ["i64", 100000, 999999]}]},
+        "original_mt": "195",
+        "date": "2024-12-20",
+        "session": "4567",
+        "sequence": "456789",
+        "response_code": "FOUND",
+        "reason_code": "INFO",
+        "amount": {"fake": ["f64", 75000.0, 150000.0]},
+        "currency": "GBP",
+        "session_num": "0003",
+        "sequence_num": "001234",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "196",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "196",
+        "fields": {
+            "20": {"reference": {"var": "answer_ref"}},
+            "21": {"reference": {"var": "inquiry_ref"}},
+            "76": {
+                "information": [
+                    "/INFO/FOUND",
+                    "PAYMENT LOCATED",
+                    "AMOUNT: GBP 95000.00",
+                    "STATUS: COMPLETED",
+                    "VALUE DATE: 2024-12-19"
+                ]
+            },
+            "11": {
+                "S": {
+                    "message_type": {"var": "original_mt"},
+                    "date": {"var": "date"},
+                    "session_number": {"var": "session"},
+                    "input_sequence_number": {"var": "sequence"}
+                }
+            },
+            "79": {
+                "information": [
+                    "RESPONSE TO PAYMENT INQUIRY",
+                    "",
+                    "ORIGINAL MT195 REFERENCE: TRC890123",
+                    "",
+                    "PAYMENT FOUND AND PROCESSED",
+                    "ORIGINAL REF: PAY20241219001",
+                    "ORDERING: GLOBAL CORP LTD",
+                    "BENEFICIARY: TECH SOLUTIONS INC",
+                    "",
+                    "EXECUTION DATE: 2024-12-19",
+                    "VALUE DATE: 2024-12-19",
+                    "SETTLEMENT: COMPLETED 14:45 UTC",
+                    "",
+                    "INTERMEDIARY: INTBANK123XXX",
+                    "CHARGES: GBP 25.00 (SHA)",
+                    "NET AMOUNT CREDITED: GBP 94975.00",
+                    "",
+                    "MT910 SENT: 2024-12-19 15:00 UTC"
+                ]
+            }
+        }
+    }
+}

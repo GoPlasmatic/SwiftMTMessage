@@ -1,9 +1,10 @@
 {
-  "scenarios": [
-    "basic_credit_confirmation",
-    "incoming_wire_transfer",
-    "interest_credit",
-    "dividend_payment",
-    "refund_credit"
-  ]
+    "scenarios": [
+        "basic_credit_confirmation",
+        "incoming_wire_transfer",
+        "interest_credit",
+        "dividend_payment",
+        "refund_credit",
+        "cbpr_credit_confirmation"
+    ]
 }

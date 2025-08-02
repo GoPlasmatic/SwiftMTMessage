@@ -1,0 +1,78 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["FX", {"fake": ["i64", 100000, 999999]}]},
+        "account_id": {"cat": ["JP33MUFG", {"fake": ["i64", 10000000000000, 99999999999999]}]},
+        "value_date": "2024-12-22",
+        "fx_leg1_ref": {"cat": ["FXBUY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "fx_leg1_currency": "JPY",
+        "fx_leg1_amount": {"fake": ["f64", 10000000.0, 50000000.0]},
+        "fx_leg2_ref": {"cat": ["FXSELL", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "fx_leg2_currency": "USD",
+        "fx_leg2_amount": {"fake": ["f64", 65000.0, 325000.0]},
+        "counterparty_bic": {"fake": ["bic"]},
+        "session_num": "0001",
+        "sequence_num": "000789",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "210",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "210",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "25": {"authorisation": {"var": "account_id"}},
+            "30": {"execution_date": {"var": "value_date"}},
+            "#": [
+                {
+                    "21": {"reference": {"var": "fx_leg1_ref"}},
+                    "32B": {"currency": {"var": "fx_leg1_currency"}, "amount": {"var": "fx_leg1_amount"}},
+                    "50": {
+                        "F": {
+                            "account": "/FX1234567890",
+                            "party_identifier": "/FXDESK/TOKYO",
+                            "name_and_address": ["FX TRADING DESK", "SPOT SETTLEMENT", "RATE: 154.25", "DEAL: 2024122001"],
+                            "bic": {"fake": ["bic"]}
+                        }
+                    }
+                },
+                {
+                    "21": {"reference": {"var": "fx_leg2_ref"}},
+                    "32B": {"currency": {"var": "fx_leg2_currency"}, "amount": {"var": "fx_leg2_amount"}},
+                    "50": {
+                        "F": {
+                            "account": "/FX9876543210",
+                            "party_identifier": "/FXDESK/NEWYORK",
+                            "name_and_address": [
+                                "FX COUNTERPARTY",
+                                "SETTLEMENT DEPT",
+                                "CONTRACT: FX20241220-001",
+                                "NET SETTLEMENT"
+                            ],
+                            "bic": {"fake": ["bic"]}
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

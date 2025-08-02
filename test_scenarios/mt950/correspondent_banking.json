@@ -1,241 +1,103 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "COR",
-        {
-          "fake": [
-            "i64",
-            1000000000000,
-            9999999999999
-          ]
-        }
-      ]
-    },
-    "nostro_account": {
-      "cat": [
-        "NOSTRO-",
-        {
-          "fake": [
-            "i64",
-            100000000,
-            999999999
-          ]
-        }
-      ]
-    },
-    "statement_num": {
-      "fake": [
-        "i64",
-        1,
-        999
-      ]
-    },
-    "currency": "GBP",
-    "opening_balance": {
-      "fake": [
-        "f64",
-        2500000.0,
-        10000000.0
-      ]
-    },
-    "closing_balance": {
-      "fake": [
-        "f64",
-        2500000.0,
-        10000000.0
-      ]
-    },
-    "available_balance": {
-      "fake": [
-        "f64",
-        2000000.0,
-        9500000.0
-      ]
-    },
-    "value_date": "241220",
-    "swift_amount": {
-      "fake": [
-        "f64",
-        500000.0,
-        2000000.0
-      ]
-    },
-    "clearing_amount": {
-      "fake": [
-        "f64",
-        750000.0,
-        3000000.0
-      ]
-    },
-    "interest_amount": {
-      "fake": [
-        "f64",
-        1000.0,
-        5000.0
-      ]
-    },
-    "swift_ref": {
-      "cat": [
-        "MT202-",
-        {
-          "fake": [
-            "i64",
-            100000,
-            999999
-          ]
-        }
-      ]
-    },
-    "clearing_ref": {
-      "cat": [
-        "CLR",
-        {
-          "fake": [
-            "i64",
-            100000,
-            999999
-          ]
-        }
-      ]
-    },
-    "interest_ref": {
-      "cat": [
-        "INT",
-        {
-          "fake": [
-            "i64",
-            100000,
-            999999
-          ]
-        }
-      ]
-    },
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": "0001",
-      "sequence_number": "000001"
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "950",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "950",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "25": {
-        "authorisation": "NOSTRO123456789"
-      },
-      "28C": {
-        "statement_number": 999,
-        "sequence_number": 1
-      },
-      "60": {
-        "M": {
-          "debit_credit_mark": "C",
-          "value_date": "2024-12-20",
-          "currency": "GBP",
-          "amount": 5000000.0
-        }
-      },
-      "61": [
-        {
-          "value_date": "2024-12-20",
-          "debit_credit_mark": "C",
-          "currency": "GBP",
-          "amount": 1250000.0,
-          "transaction_type": "NMSC",
-          "customer_reference": "MT202-123456",
-          "bank_reference": "//CORR/IN",
-          "supplementary_details": "MT202"
-        },
-        {
-          "value_date": "2024-12-20",
-          "debit_credit_mark": "D",
-          "currency": "GBP",
-          "amount": 1500000.0,
-          "transaction_type": "NMSC",
-          "customer_reference": "CLR789012",
-          "bank_reference": "//CHAPS/OUT"
-        },
-        {
-          "value_date": "2024-12-20",
-          "debit_credit_mark": "C",
-          "currency": "GBP",
-          "amount": 3000.0,
-          "transaction_type": "NINT",
-          "customer_reference": "INT345678",
-          "bank_reference": "//NOSTRO/INT"
-        }
-      ],
-      "62": {
-        "M": {
-          "debit_credit_mark": "C",
-          "value_date": "2024-12-20",
-          "currency": "GBP",
-          "amount": 4773000.0
-        }
-      },
-      "64": {
-        "debit_credit_mark": "C",
-        "value_date": "2024-12-20",
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["COR", {"fake": ["i64", 1000000000000, 9999999999999]}]},
+        "nostro_account": {"cat": ["NOSTRO-", {"fake": ["i64", 100000000, 999999999]}]},
+        "statement_num": {"fake": ["i64", 1, 999]},
         "currency": "GBP",
-        "amount": 4500000.0
-      }
+        "opening_balance": {"fake": ["f64", 2500000.0, 10000000.0]},
+        "closing_balance": {"fake": ["f64", 2500000.0, 10000000.0]},
+        "available_balance": {"fake": ["f64", 2000000.0, 9500000.0]},
+        "value_date": "241220",
+        "swift_amount": {"fake": ["f64", 500000.0, 2000000.0]},
+        "clearing_amount": {"fake": ["f64", 750000.0, 3000000.0]},
+        "interest_amount": {"fake": ["f64", 1000.0, 5000.0]},
+        "swift_ref": {"cat": ["MT202-", {"fake": ["i64", 100000, 999999]}]},
+        "clearing_ref": {"cat": ["CLR", {"fake": ["i64", 100000, 999999]}]},
+        "interest_ref": {"cat": ["INT", {"fake": ["i64", 100000, 999999]}]},
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": "0001",
+            "sequence_number": "000001"
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "950",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "950",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "25": {"authorisation": "NOSTRO123456789"},
+            "28C": {"statement_number": 999, "sequence_number": 1},
+            "60": {
+                "M": {
+                    "debit_credit_mark": "C",
+                    "value_date": "2024-12-20",
+                    "currency": "GBP",
+                    "amount": 5000000.0
+                }
+            },
+            "61": [
+                {
+                    "value_date": "2024-12-20",
+                    "debit_credit_mark": "C",
+                    "currency": "GBP",
+                    "amount": 1250000.0,
+                    "transaction_type": "NMSC",
+                    "customer_reference": "MT202-123456",
+                    "bank_reference": "//CORR/IN",
+                    "supplementary_details": "MT202"
+                },
+                {
+                    "value_date": "2024-12-20",
+                    "debit_credit_mark": "D",
+                    "currency": "GBP",
+                    "amount": 1500000.0,
+                    "transaction_type": "NMSC",
+                    "customer_reference": "CLR789012",
+                    "bank_reference": "//CHAPS/OUT"
+                },
+                {
+                    "value_date": "2024-12-20",
+                    "debit_credit_mark": "C",
+                    "currency": "GBP",
+                    "amount": 3000.0,
+                    "transaction_type": "NINT",
+                    "customer_reference": "INT345678",
+                    "bank_reference": "//NOSTRO/INT"
+                }
+            ],
+            "62": {
+                "M": {
+                    "debit_credit_mark": "C",
+                    "value_date": "2024-12-20",
+                    "currency": "GBP",
+                    "amount": 4773000.0
+                }
+            },
+            "64": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-20",
+                "currency": "GBP",
+                "amount": 4500000.0
+            }
+        }
     }
-  }
 }

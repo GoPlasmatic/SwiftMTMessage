@@ -1,0 +1,125 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "message_ref": {"cat": ["FCOL", {"fake": ["i64", 100000, 999999]}]},
+        "currency": "CAD",
+        "cheque1_ref": {"cat": ["FCHQ", {"fake": ["i64", 1000000, 9999999]}]},
+        "cheque1_amount": {"fake": ["f64", 10000.0, 50000.0]},
+        "cheque1_date": "2024-12-22",
+        "cheque2_ref": {"cat": ["FCHQ", {"fake": ["i64", 1000000, 9999999]}]},
+        "cheque2_amount": {"fake": ["f64", 25000.0, 100000.0]},
+        "cheque2_date": "2024-12-21",
+        "drawer_bic": {"fake": ["bic"]},
+        "session_num": "0001",
+        "sequence_num": "000789",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "110",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "110",
+        "fields": {
+            "20": {"reference": {"var": "message_ref"}},
+            "53": {
+                "D": {
+                    "party_identifier": "/CA/CLEARING123",
+                    "name_and_address": ["CANADIAN CLEARING BANK", "FOREIGN CHEQUE PROCESSING", "TORONTO", "CANADA"]
+                }
+            },
+            "54": {"A": {"bic": {"var": "receiver_bic"}}},
+            "72": {
+                "information": [
+                    "/COLLECTION/FOREIGN CHEQUES",
+                    "/COUNT/2 CHEQUES",
+                    "/PROCESS/INTERNATIONAL CLEARING",
+                    "/AVAIL/AFTER FINAL SETTLEMENT",
+                    "/FEES/COLLECTION CHARGES APPLY",
+                    "/NOTE/SUBJECT TO FX CONVERSION"
+                ]
+            },
+            "#": [
+                {
+                    "21": {"reference": {"var": "cheque1_ref"}},
+                    "30": {"execution_date": {"var": "cheque1_date"}},
+                    "32": {"B": {"currency": {"var": "currency"}, "amount": {"var": "cheque1_amount"}}},
+                    "50": {
+                        "K": {
+                            "account": "/CA1234567890",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "EXPORT DIVISION",
+                                {"fake": ["street_address"]},
+                                "VANCOUVER",
+                                "CANADA"
+                            ]
+                        }
+                    },
+                    "52": {
+                        "D": {
+                            "party_identifier": "//CANBNK456",
+                            "name_and_address": ["BANK OF CANADA BRANCH", "COMMERCIAL BANKING", "VANCOUVER", "CANADA"]
+                        }
+                    },
+                    "59": {
+                        "NoOption": {
+                            "account": "/US9876543210",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "IMPORT DEPARTMENT",
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]}
+                            ]
+                        }
+                    }
+                },
+                {
+                    "21": {"reference": {"var": "cheque2_ref"}},
+                    "30": {"execution_date": {"var": "cheque2_date"}},
+                    "32": {"B": {"currency": {"var": "currency"}, "amount": {"var": "cheque2_amount"}}},
+                    "50": {
+                        "K": {
+                            "account": "/CA9876543210",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                {"fake": ["street_address"]},
+                                "MONTREAL",
+                                "CANADA"
+                            ]
+                        }
+                    },
+                    "52": {"A": {"bic": {"var": "drawer_bic"}}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/US1111222233",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "HEADQUARTERS",
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]}
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

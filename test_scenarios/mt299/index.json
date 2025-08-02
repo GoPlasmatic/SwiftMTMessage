@@ -1,5 +1,8 @@
 {
-  "scenarios": [
-    "cbpr_payment_response"
-  ]
+    "scenarios": [
+        "cbpr_payment_response",
+        "regulatory_notification",
+        "settlement_instructions_update",
+        "system_maintenance_notice"
+    ]
 }

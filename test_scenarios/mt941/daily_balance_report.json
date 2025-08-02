@@ -1,163 +1,62 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["BAL", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "currency": "USD",
+        "opening_balance": {"fake": ["f64", 10000.0, 1000000.0]},
+        "closing_balance": {"fake": ["f64", 10000.0, 1000000.0]},
+        "statement_date": "2024-12-20",
+        "previous_date": "2024-12-19",
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "BAL",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "941",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "941",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
+            "28": {"statement_number": 1, "sequence_number": 1},
+            "60F": {
+                "debit_credit_mark": "C",
+                "value_date": {"var": "previous_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "opening_balance"}
+            },
+            "62F": {
+                "debit_credit_mark": "C",
+                "value_date": {"var": "statement_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "closing_balance"}
+            },
+            "64": {
+                "debit_credit_mark": "C",
+                "value_date": {"var": "statement_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "closing_balance"}
+            }
         }
-      ]
-    },
-    "account_number": {
-      "cat": [
-        "/",
-        {
-          "fake": [
-            "i64",
-            1000000000000000,
-            9999999999999999
-          ]
-        }
-      ]
-    },
-    "currency": "USD",
-    "opening_balance": {
-      "fake": [
-        "f64",
-        10000.0,
-        1000000.0
-      ]
-    },
-    "closing_balance": {
-      "fake": [
-        "f64",
-        10000.0,
-        1000000.0
-      ]
-    },
-    "statement_date": "2024-12-20",
-    "previous_date": "2024-12-19",
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
     }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "941",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "941",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "25": {
-        "NoOption": {
-          "authorisation": {
-            "var": "account_number"
-          }
-        }
-      },
-      "28": {
-        "statement_number": 1,
-        "sequence_number": 1
-      },
-      "60F": {
-        "debit_credit_mark": "C",
-        "value_date": {
-          "var": "previous_date"
-        },
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "opening_balance"
-        }
-      },
-      "62F": {
-        "debit_credit_mark": "C",
-        "value_date": {
-          "var": "statement_date"
-        },
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "closing_balance"
-        }
-      },
-      "64": {
-        "debit_credit_mark": "C",
-        "value_date": {
-          "var": "statement_date"
-        },
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "closing_balance"
-        }
-      }
-    }
-  }
 }

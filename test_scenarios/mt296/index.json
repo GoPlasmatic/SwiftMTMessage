@@ -1,9 +1,9 @@
 {
-  "scenarios": [
-    "cancellation_accepted",
-    "cancellation_rejected",
-    "partial_cancellation",
-    "no_payment_found",
-    "inquiry_response"
-  ]
+    "scenarios": [
+        "cancellation_accepted",
+        "cancellation_rejected",
+        "partial_cancellation",
+        "no_payment_found",
+        "inquiry_response"
+    ]
 }

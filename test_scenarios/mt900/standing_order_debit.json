@@ -1,207 +1,70 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["STO", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["STO", {"fake": ["i64", 100000000, 999999999]}]},
+        "currency": "USD",
+        "standing_amount": {"fake": ["f64", 500.0, 10000.0]},
+        "value_date": "2024-12-01",
+        "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "beneficiary_bic": {"fake": ["bic"]},
+        "beneficiary_name": {"fake": ["company_name"]},
+        "beneficiary_account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "order_ref": {"cat": ["STO-", {"fake": ["i64", 100000, 999999]}]},
+        "payment_number": {"fake": ["i64", 1, 60]},
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "STO",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
-        }
-      ]
-    },
-    "related_ref": {
-      "cat": [
-        "STO",
-        {
-          "fake": [
-            "i64",
-            100000000,
-            999999999
-          ]
-        }
-      ]
-    },
-    "currency": "USD",
-    "standing_amount": {
-      "fake": [
-        "f64",
-        500.0,
-        10000.0
-      ]
-    },
-    "value_date": "2024-12-01",
-    "account_number": {
-      "cat": [
-        "/",
-        {
-          "fake": [
-            "i64",
-            1000000000000000,
-            9999999999999999
-          ]
-        }
-      ]
-    },
-    "beneficiary_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "beneficiary_name": {
-      "fake": [
-        "company_name"
-      ]
-    },
-    "beneficiary_account": {
-      "cat": [
-        "/",
-        {
-          "fake": [
-            "i64",
-            1000000000000000,
-            9999999999999999
-          ]
-        }
-      ]
-    },
-    "order_ref": {
-      "cat": [
-        "STO-",
-        {
-          "fake": [
-            "i64",
-            100000,
-            999999
-          ]
-        }
-      ]
-    },
-    "payment_number": {
-      "fake": [
-        "i64",
-        1,
-        60
-      ]
-    },
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "900",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "900",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "21": {
-        "reference": {
-          "var": "related_ref"
-        }
-      },
-      "25": {
-        "NoOption": {
-          "authorisation": {
-            "var": "account_number"
-          }
-        }
-      },
-      "13D": {
-        "date": "2024-12-01",
-        "time": "08:00:00",
-        "offset_sign": "+",
-        "offset_seconds": "0000"
-      },
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "currency": {
-          "var": "currency"
+        "application_header": {
+            "direction": "I",
+            "message_type": "900",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        "amount": {
-          "var": "standing_amount"
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "900",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
+            "13D": {
+                "date": "2024-12-01",
+                "time": "08:00:00",
+                "offset_sign": "+",
+                "offset_seconds": "0000"
+            },
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "standing_amount"}
+            },
+            "52": {"A": {"bic": {"var": "beneficiary_bic"}}},
+            "72": {
+                "information": [
+                    "/INS/STANDING ORDER EXECUTION",
+                    "/BEN/ABC COMPANY LTD",
+                    "/BENACCT/1234567890",
+                    "/OREF/STO-123456",
+                    "/PMT/12 OF 60",
+                    "/FREQ/MONTHLY"
+                ]
+            }
         }
-      },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "beneficiary_bic"
-          }
-        }
-      },
-      "72": {
-        "information": [
-          "/INS/STANDING ORDER EXECUTION",
-          "/BEN/ABC COMPANY LTD",
-          "/BENACCT/1234567890",
-          "/OREF/STO-123456",
-          "/PMT/12 OF 60",
-          "/FREQ/MONTHLY"
-        ]
-      }
     }
-  }
 }

@@ -1,9 +1,9 @@
 {
-  "scenarios": [
-    "deposit_rate_change",
-    "fx_rate_update",
-    "loan_rate_adjustment",
-    "multi_product_rate_change",
-    "central_bank_rate_notification"
-  ]
+    "scenarios": [
+        "deposit_rate_change",
+        "fx_rate_update",
+        "loan_rate_adjustment",
+        "multi_product_rate_change",
+        "central_bank_rate_notification"
+    ]
 }

@@ -1,0 +1,95 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "ordering_bic": {"fake": ["bic"]},
+        "intermediary_bic": {"fake": ["bic"]},
+        "account_with_bic": {"fake": ["bic"]},
+        "instructing_party_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["COV", {"fake": ["i64", 1000000000, 9999999999]}]},
+        "related_ref": {"cat": ["REL", {"fake": ["i64", 1000000000, 9999999999]}]},
+        "currency": "USD",
+        "amount": {"fake": ["f64", 100000.0, 50000000.0]},
+        "value_date": "2024-12-20",
+        "time_code": "CLSTIME",
+        "time_value": "1430+0100",
+        "session_num": "0001",
+        "sequence_num": "000456",
+        "uetr": {"fake": ["uuid"]},
+        "ordering_customer": {"fake": ["name"]},
+        "beneficiary_customer": {"fake": ["name"]},
+        "remittance_info": {"fake": ["bs", 20, 30]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "205",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "COV"
+        },
+        "message_type": "205",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "13C": [
+                {
+                    "code": {"var": "time_code"},
+                    "time": "1430",
+                    "sign": "+",
+                    "offset": "0100"
+                }
+            ],
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
+            },
+            "52": {"A": {"bic": {"var": "ordering_bic"}}},
+            "56": {"A": {"bic": {"var": "intermediary_bic"}}},
+            "57": {"A": {"bic": {"var": "account_with_bic"}}},
+            "58": {"A": {"bic": {"var": "receiver_bic"}}},
+            "72": {
+                "information": [
+                    "/COV/",
+                    {"substr": [{"cat": ["/INS/", {"var": "instructing_party_bic"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/INTA/", {"var": "ordering_bic"}]}, 0, 35]},
+                    "/SVCLVL/PRPT",
+                    "/PURP/GDDS"
+                ]
+            },
+            "50": {
+                "K": {
+                    "name_and_address": [
+                        {"var": "ordering_customer"},
+                        "CUSTOMER ADDRESS LINE 1",
+                        "CUSTOMER ADDRESS LINE 2",
+                        "CUSTOMER CITY COUNTRY"
+                    ]
+                }
+            },
+            "59": {
+                "name_and_address": [
+                    {"var": "beneficiary_customer"},
+                    "BENEFICIARY ADDRESS LINE 1",
+                    "BENEFICIARY ADDRESS LINE 2",
+                    "BENEFICIARY CITY COUNTRY"
+                ]
+            },
+            "70": {"information": [{"var": "remittance_info"}]}
+        }
+    }
+}

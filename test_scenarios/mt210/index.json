@@ -1,5 +1,8 @@
 {
-  "scenarios": [
-    "expected_incoming_funds"
-  ]
+    "scenarios": [
+        "expected_incoming_funds",
+        "single_payment_notice",
+        "fx_settlement_notice",
+        "securities_settlement_notice"
+    ]
 }

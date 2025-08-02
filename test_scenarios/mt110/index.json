@@ -1,5 +1,8 @@
 {
-  "scenarios": [
-    "cheque_collection_advice"
-  ]
+    "scenarios": [
+        "cheque_collection_advice",
+        "single_cheque_advice",
+        "foreign_cheque_collection",
+        "returned_cheque_advice"
+    ]
 }

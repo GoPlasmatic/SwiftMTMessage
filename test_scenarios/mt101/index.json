@@ -1,13 +1,16 @@
 {
-  "scenarios": [
-    "standard",
-    "bulk_payment",
-    "multi_currency",
-    "scheduled_payment",
-    "salary_payment",
-    "vendor_payment",
-    "urgent_payment",
-    "direct_debit",
-    "minimal"
-  ]
+    "scenarios": [
+        "standard",
+        "bulk_payment",
+        "multi_currency",
+        "scheduled_payment",
+        "salary_payment",
+        "vendor_payment",
+        "urgent_payment",
+        "direct_debit",
+        "minimal",
+        "cbpr_corporate_bulk_payment",
+        "cbpr_payroll_batch",
+        "cbpr_supplier_batch"
+    ]
 }

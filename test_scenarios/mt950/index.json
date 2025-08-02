@@ -1,7 +1,3 @@
 {
-  "scenarios": [
-    "simplified_statement",
-    "high_volume_batch",
-    "correspondent_banking"
-  ]
+    "scenarios": ["simplified_statement", "high_volume_batch", "correspondent_banking"]
 }

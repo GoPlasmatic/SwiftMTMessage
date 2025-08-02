@@ -1,5 +1,9 @@
 {
-  "scenarios": [
-    "answer_cancellation"
-  ]
+    "scenarios": [
+        "answer_cancellation",
+        "answer_rejection",
+        "answer_pending_investigation",
+        "answer_inquiry_response",
+        "cbpr_cancellation_response"
+    ]
 }

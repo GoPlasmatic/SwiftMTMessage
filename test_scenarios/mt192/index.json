@@ -1,5 +1,9 @@
 {
-  "scenarios": [
-    "request_cancellation"
-  ]
+    "scenarios": [
+        "request_cancellation",
+        "urgent_cancellation_mt202",
+        "fraud_prevention_cancellation",
+        "regulatory_compliance_cancellation",
+        "cbpr_cancellation_request"
+    ]
 }

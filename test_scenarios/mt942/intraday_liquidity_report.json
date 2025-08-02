@@ -1,341 +1,131 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["INT", {"fake": ["i64", 100000000, 999999999]}]},
+        "related_ref": {"cat": ["STMT", {"fake": ["i64", 1000, 9999]}]},
+        "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "statement_num": {"fake": ["i64", 1, 999]},
+        "currency": "USD",
+        "debit_limit": {"fake": ["f64", 100000.0, 1000000.0]},
+        "credit_limit": {"fake": ["f64", 500000.0, 5000000.0]},
+        "report_date": "241220",
+        "report_time": "1430",
+        "amount1": {"fake": ["f64", 10000.0, 50000.0]},
+        "amount2": {"fake": ["f64", 5000.0, 25000.0]},
+        "amount3": {"fake": ["f64", 15000.0, 75000.0]},
+        "ref1": {"cat": ["PAY", {"fake": ["i64", 100000, 999999]}]},
+        "ref2": {"cat": ["FEE", {"fake": ["i64", 100000, 999999]}]},
+        "ref3": {"cat": ["TRF", {"fake": ["i64", 100000, 999999]}]},
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "INT",
-        {
-          "fake": [
-            "i64",
-            100000000,
-            999999999
-          ]
-        }
-      ]
-    },
-    "related_ref": {
-      "cat": [
-        "STMT",
-        {
-          "fake": [
-            "i64",
-            1000,
-            9999
-          ]
-        }
-      ]
-    },
-    "account_number": {
-      "cat": [
-        "/",
-        {
-          "fake": [
-            "i64",
-            1000000000000000,
-            9999999999999999
-          ]
-        }
-      ]
-    },
-    "statement_num": {
-      "fake": [
-        "i64",
-        1,
-        999
-      ]
-    },
-    "currency": "USD",
-    "debit_limit": {
-      "fake": [
-        "f64",
-        100000.0,
-        1000000.0
-      ]
-    },
-    "credit_limit": {
-      "fake": [
-        "f64",
-        500000.0,
-        5000000.0
-      ]
-    },
-    "report_date": "241220",
-    "report_time": "1430",
-    "amount1": {
-      "fake": [
-        "f64",
-        10000.0,
-        50000.0
-      ]
-    },
-    "amount2": {
-      "fake": [
-        "f64",
-        5000.0,
-        25000.0
-      ]
-    },
-    "amount3": {
-      "fake": [
-        "f64",
-        15000.0,
-        75000.0
-      ]
-    },
-    "ref1": {
-      "cat": [
-        "PAY",
-        {
-          "fake": [
-            "i64",
-            100000,
-            999999
-          ]
-        }
-      ]
-    },
-    "ref2": {
-      "cat": [
-        "FEE",
-        {
-          "fake": [
-            "i64",
-            100000,
-            999999
-          ]
-        }
-      ]
-    },
-    "ref3": {
-      "cat": [
-        "TRF",
-        {
-          "fake": [
-            "i64",
-            100000,
-            999999
-          ]
-        }
-      ]
-    },
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": "0001",
-      "sequence_number": "000001"
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "942",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "942",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "21": {
-        "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": "0001",
+            "sequence_number": "000001"
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "942",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "942",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"cat": ["", {"var": "related_ref"}]}},
+            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
+            "28C": {"statement_number": {"var": "statement_num"}, "sequence_number": 1},
+            "34F#1": {"currency": {"var": "currency"}, "amount": {"var": "debit_limit"}, "indicator": "D"},
+            "34F#2": {"currency": {"var": "currency"}, "amount": {"var": "credit_limit"}, "indicator": "C"},
+            "13D": {
+                "date": "2024-12-20",
+                "time": "14:30",
+                "offset_sign": "+",
+                "offset_seconds": "0100"
+            },
+            "#": [
+                {
+                    "61": {
+                        "value_date": "2024-12-20",
+                        "entry_date": "1220",
+                        "debit_credit_mark": "D",
+                        "currency": {"var": "currency"},
+                        "amount": {"var": "amount1"},
+                        "transaction_type": "NMSC",
+                        "customer_reference": {"var": "ref1"},
+                        "bank_reference": "//INTRA001",
+                        "supplementary_details": "REALTIME"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/ORIGINATOR/CORPORATE TREASURY",
+                            "/BENEF/SUPPLIER ACCOUNT",
+                            "/REMI/URGENT PAYMENT FOR SUPPLIES",
+                            "/TIME/14:15:32"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-20",
+                        "entry_date": "1220",
+                        "debit_credit_mark": "D",
+                        "currency": {"var": "currency"},
+                        "amount": {"var": "amount2"},
+                        "transaction_type": "NCHG",
+                        "customer_reference": {"var": "ref2"},
+                        "bank_reference": "//INTRA002",
+                        "supplementary_details": "FEE"
+                    },
+                    "86": {
+                        "narrative": ["/CHARGES/INTRADAY LIQUIDITY FEE", "/TYPE/OVERDRAFT CHARGE", "/RATE/0.05% DAILY"]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-20",
+                        "entry_date": "1220",
+                        "debit_credit_mark": "C",
+                        "currency": {"var": "currency"},
+                        "amount": {"var": "amount3"},
+                        "transaction_type": "NMSC",
+                        "customer_reference": {"var": "ref3"},
+                        "bank_reference": "//INTRA003",
+                        "supplementary_details": "INCOMING"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/ORIGINATOR/CUSTOMER PAYMENT",
+                            "/BENEF/OPERATING ACCOUNT",
+                            "/REMI/INVOICE SETTLEMENT",
+                            "/TIME/14:28:15"
+                        ]
+                    }
+                }
+            ],
+            "90D": {"number": 2, "currency": {"var": "currency"}, "amount": 100000.0},
+            "90C": {"number": 1, "currency": {"var": "currency"}, "amount": {"var": "amount3"}},
+            "86": {
+                "narrative": [
+                    "/LIQUIDITY/INTRADAY MONITORING REPORT",
+                    "/LIMIT/DEBIT USD 1,000,000.00",
+                    "/LIMIT/CREDIT USD 5,000,000.00",
+                    "/STATUS/WITHIN LIMITS"
+                ]
             }
-          ]
         }
-      },
-      "25": {
-        "NoOption": {
-          "authorisation": {
-            "var": "account_number"
-          }
-        }
-      },
-      "28C": {
-        "statement_number": {
-          "var": "statement_num"
-        },
-        "sequence_number": 1
-      },
-      "34F#1": {
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "debit_limit"
-        },
-        "indicator": "D"
-      },
-      "34F#2": {
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "credit_limit"
-        },
-        "indicator": "C"
-      },
-      "13D": {
-        "date": "2024-12-20",
-        "time": "14:30",
-        "offset_sign": "+",
-        "offset_seconds": "0100"
-      },
-      "#": [
-        {
-          "61": {
-            "value_date": "2024-12-20",
-            "entry_date": "1220",
-            "debit_credit_mark": "D",
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "amount1"
-            },
-            "transaction_type": "NMSC",
-            "customer_reference": {
-              "var": "ref1"
-            },
-            "bank_reference": "//INTRA001",
-            "supplementary_details": "REALTIME"
-          },
-          "86": {
-            "narrative": [
-              "/ORIGINATOR/CORPORATE TREASURY",
-              "/BENEF/SUPPLIER ACCOUNT",
-              "/REMI/URGENT PAYMENT FOR SUPPLIES",
-              "/TIME/14:15:32"
-            ]
-          }
-        },
-        {
-          "61": {
-            "value_date": "2024-12-20",
-            "entry_date": "1220",
-            "debit_credit_mark": "D",
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "amount2"
-            },
-            "transaction_type": "NCHG",
-            "customer_reference": {
-              "var": "ref2"
-            },
-            "bank_reference": "//INTRA002",
-            "supplementary_details": "FEE"
-          },
-          "86": {
-            "narrative": [
-              "/CHARGES/INTRADAY LIQUIDITY FEE",
-              "/TYPE/OVERDRAFT CHARGE",
-              "/RATE/0.05% DAILY"
-            ]
-          }
-        },
-        {
-          "61": {
-            "value_date": "2024-12-20",
-            "entry_date": "1220",
-            "debit_credit_mark": "C",
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "amount3"
-            },
-            "transaction_type": "NMSC",
-            "customer_reference": {
-              "var": "ref3"
-            },
-            "bank_reference": "//INTRA003",
-            "supplementary_details": "INCOMING"
-          },
-          "86": {
-            "narrative": [
-              "/ORIGINATOR/CUSTOMER PAYMENT",
-              "/BENEF/OPERATING ACCOUNT",
-              "/REMI/INVOICE SETTLEMENT",
-              "/TIME/14:28:15"
-            ]
-          }
-        }
-      ],
-      "90D": {
-        "number": 2,
-        "currency": {
-          "var": "currency"
-        },
-        "amount": 100000.0
-      },
-      "90C": {
-        "number": 1,
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "amount3"
-        }
-      },
-      "86": {
-        "narrative": [
-          "/LIQUIDITY/INTRADAY MONITORING REPORT",
-          "/LIMIT/DEBIT USD 1,000,000.00",
-          "/LIMIT/CREDIT USD 5,000,000.00",
-          "/STATUS/WITHIN LIMITS"
-        ]
-      }
     }
-  }
 }

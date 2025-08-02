@@ -627,13 +627,15 @@ const MT104_VALIDATION_RULES: &str = r#"{
           {
             "and": [
               {"!": {"var": "fields.21R"}},
-              {"or": [
-                {"!!": {"var": "fields.32B"}},
-                {"!!": {"var": "fields.19"}},
-                {"!!": {"var": "fields.71F"}},
-                {"!!": {"var": "fields.71G"}},
-                {"!!": {"var": "fields.53"}}
-              ]}
+              {
+                "or": [
+                  {"!!": {"var": "fields.32B"}},
+                  {"!!": {"var": "fields.19"}},
+                  {"!!": {"var": "fields.71F"}},
+                  {"!!": {"var": "fields.71G"}},
+                  {"!!": {"var": "fields.53"}}
+                ]
+              }
             ]
           }
         ]

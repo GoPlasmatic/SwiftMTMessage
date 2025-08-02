@@ -1,279 +1,84 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "message_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "execution_date": "2024-12-20",
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "transaction_ref_1": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "transaction_ref_2": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": {"fake": ["currency_code"]},
+        "amount_1": {"fake": ["f64", 10000.0, 50000.0]},
+        "amount_2": {"fake": ["f64", 15000.0, 75000.0]},
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "message_ref": {
-      "cat": [
-        "PAY",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
-        }
-      ]
-    },
-    "execution_date": "2024-12-20",
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "transaction_ref_1": {
-      "cat": [
-        "PAY",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
-        }
-      ]
-    },
-    "transaction_ref_2": {
-      "cat": [
-        "PAY",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
-        }
-      ]
-    },
-    "currency": {
-      "fake": [
-        "currency_code"
-      ]
-    },
-    "amount_1": {
-      "fake": [
-        "f64",
-        10000.0,
-        50000.0
-      ]
-    },
-    "amount_2": {
-      "fake": [
-        "f64",
-        15000.0,
-        75000.0
-      ]
-    },
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "101",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "101",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "message_ref"
-        }
-      },
-      "28D": {
-        "index": 1,
-        "total": 1
-      },
-      "50#2": {
-        "F": {
-          "account": "/1234567890",
-          "bic": {
-            "fake": [
-              "bic"
-            ]
-          }
-        }
-      },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "receiver_bic"
-          }
-        }
-      },
-      "30": {
-        "execution_date": {
-          "var": "execution_date"
-        }
-      },
-      "#": [
-        {
-          "21": {
-            "reference": {
-              "var": "transaction_ref_1"
-            }
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "amount_1"
-            }
-          },
-          "57": {
-            "A": {
-              "bic": {
-                "fake": [
-                  "bic"
-                ]
-              }
-            }
-          },
-          "59": {
-            "NoOption": {
-              "account": "/DE89370400440532013000",
-              "name_and_address": [
-                {
-                  "fake": [
-                    "name"
-                  ]
-                },
-                {
-                  "fake": [
-                    "street_address"
-                  ]
-                },
-                {
-                  "fake": [
-                    "city_name"
-                  ]
-                },
-                {
-                  "fake": [
-                    "country_name"
-                  ]
-                }
-              ]
-            }
-          },
-          "70": {
-            "narrative": [
-              "PAYMENT FOR SERVICES",
-              "INVOICE REF 2024-001"
-            ]
-          },
-          "71A": {
-            "code": "SHA"
-          }
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        {
-          "21": {
-            "reference": {
-              "var": "transaction_ref_2"
-            }
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "amount_2"
-            }
-          },
-          "57": {
-            "A": {
-              "bic": {
-                "fake": [
-                  "bic"
-                ]
-              }
-            }
-          },
-          "59": {
-            "NoOption": {
-              "account": "/FR1420041010050500013M02606",
-              "name_and_address": [
+        "application_header": {
+            "direction": "I",
+            "message_type": "101",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "101",
+        "fields": {
+            "20": {"reference": {"var": "message_ref"}},
+            "28D": {"index": 1, "total": 1},
+            "50#2": {"F": {"account": "/1234567890", "bic": {"fake": ["bic"]}}},
+            "52": {"A": {"bic": {"var": "receiver_bic"}}},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "#": [
                 {
-                  "fake": [
-                    "name"
-                  ]
+                    "21": {"reference": {"var": "transaction_ref_1"}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount_1"}},
+                    "57": {"A": {"bic": {"fake": ["bic"]}}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/DE89370400440532013000",
+                            "name_and_address": [
+                                {"fake": ["name"]},
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]},
+                                {"fake": ["country_name"]}
+                            ]
+                        }
+                    },
+                    "70": {"narrative": ["PAYMENT FOR SERVICES", "INVOICE REF 2024-001"]},
+                    "71A": {"code": "SHA"}
                 },
                 {
-                  "fake": [
-                    "street_address"
-                  ]
-                },
-                {
-                  "fake": [
-                    "city_name"
-                  ]
-                },
-                {
-                  "fake": [
-                    "country_name"
-                  ]
+                    "21": {"reference": {"var": "transaction_ref_2"}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount_2"}},
+                    "57": {"A": {"bic": {"fake": ["bic"]}}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/FR1420041010050500013M02606",
+                            "name_and_address": [
+                                {"fake": ["name"]},
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]},
+                                {"fake": ["country_name"]}
+                            ]
+                        }
+                    },
+                    "70": {"narrative": ["SUPPLIER PAYMENT", "PO NUMBER 2024-456"]},
+                    "71A": {"code": "SHA"}
                 }
-              ]
-            }
-          },
-          "70": {
-            "narrative": [
-              "SUPPLIER PAYMENT",
-              "PO NUMBER 2024-456"
             ]
-          },
-          "71A": {
-            "code": "SHA"
-          }
         }
-      ]
     }
-  }
 }

@@ -1,373 +1,113 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "intermediary_bic": {"fake": ["bic"]},
+        "account_with_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["CMP", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["SCRN", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": "USD",
+        "amount": {"fake": ["f64", 100000.0, 1000000.0]},
+        "value_date": "2024-12-20",
+        "session_num": "0001",
+        "sequence_num": "005678",
+        "ordering_bank_lei": "LEIXG8HWVXGGR1B2V5K893",
+        "ordering_customer_lei": "LEIXG8HWVXGGR1B2V8N896",
+        "ultimate_debtor_lei": "LEIXG8HWVXGGR1B2V9O897",
+        "beneficiary_bank_lei": "LEIZBQR12345HKLMNOP678",
+        "beneficiary_customer_lei": "LEIZBQR12345HKLMNOP679",
+        "ultimate_creditor_lei": "LEIZBQR12345HKLMNOP680",
+        "purpose_code": "INTC",
+        "screening_ref": {"cat": ["SCRN-", {"fake": ["i64", 10000000, 99999999]}]},
+        "kyc_ref": {"cat": ["KYC-", {"fake": ["i64", 10000000, 99999999]}]},
+        "aml_ref": {"cat": ["AML-", {"fake": ["i64", 10000000, 99999999]}]},
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "intermediary_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "account_with_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "CMP",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
-        }
-      ]
-    },
-    "related_ref": {
-      "cat": [
-        "SCRN",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
-        }
-      ]
-    },
-    "currency": "USD",
-    "amount": {
-      "fake": [
-        "f64",
-        100000.0,
-        1000000.0
-      ]
-    },
-    "value_date": "2024-12-20",
-    "session_num": "0001",
-    "sequence_num": "005678",
-    "ordering_bank_lei": "LEIXG8HWVXGGR1B2V5K893",
-    "ordering_customer_lei": "LEIXG8HWVXGGR1B2V8N896",
-    "ultimate_debtor_lei": "LEIXG8HWVXGGR1B2V9O897",
-    "beneficiary_bank_lei": "LEIZBQR12345HKLMNOP678",
-    "beneficiary_customer_lei": "LEIZBQR12345HKLMNOP679",
-    "ultimate_creditor_lei": "LEIZBQR12345HKLMNOP680",
-    "purpose_code": "INTC",
-    "screening_ref": {
-      "cat": [
-        "SCRN-",
-        {
-          "fake": [
-            "i64",
-            10000000,
-            99999999
-          ]
-        }
-      ]
-    },
-    "kyc_ref": {
-      "cat": [
-        "KYC-",
-        {
-          "fake": [
-            "i64",
-            10000000,
-            99999999
-          ]
-        }
-      ]
-    },
-    "aml_ref": {
-      "cat": [
-        "AML-",
-        {
-          "fake": [
-            "i64",
-            10000000,
-            99999999
-          ]
-        }
-      ]
-    },
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "202",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "202",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "21": {
-        "reference": {
-          "cat": [
-            "",
-            {
-              "var": "related_ref"
-            }
-          ]
-        }
-      },
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "currency": {
-          "var": "currency"
+        "application_header": {
+            "direction": "I",
+            "message_type": "202",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        "amount": {
-          "var": "amount"
-        }
-      },
-      "52": {
-        "A": {
-          "account": "/COMPLIANCE-VERIFIED",
-          "bic": {
-            "var": "sender_bic"
-          }
-        }
-      },
-      "56": {
-        "A": {
-          "bic": {
-            "var": "intermediary_bic"
-          }
-        }
-      },
-      "57": {
-        "A": {
-          "bic": {
-            "var": "account_with_bic"
-          }
-        }
-      },
-      "58": {
-        "A": {
-          "account": "/SANCTIONS-CLEARED",
-          "bic": {
-            "var": "receiver_bic"
-          }
-        }
-      },
-      "72": {
-        "information": [
-          "/ACC/CBPR+ COMPLIANCE ENHANCED",
-          {
-            "cat": [
-              "/SCR/",
-              {
-                "var": "screening_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/KYC/",
-              {
-                "var": "kyc_ref"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "/AML/",
-              {
-                "var": "aml_ref"
-              }
-            ]
-          }
-        ]
-      },
-      "50#b": {
-        "K": {
-          "account": "/VERIFIED-ACCOUNT-123456",
-          "name_and_address": [
-            {
-              "fake": [
-                "company_name"
-              ]
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "202",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"cat": ["", {"var": "related_ref"}]}},
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
-            {
-              "cat": [
-                "/LEI/",
-                {
-                  "var": "ordering_customer_lei"
-                }
-              ]
+            "52": {"A": {"account": "/COMPLIANCE-VERIFIED", "bic": {"var": "sender_bic"}}},
+            "56": {"A": {"bic": {"var": "intermediary_bic"}}},
+            "57": {"A": {"bic": {"var": "account_with_bic"}}},
+            "58": {"A": {"account": "/SANCTIONS-CLEARED", "bic": {"var": "receiver_bic"}}},
+            "72": {
+                "information": [
+                    "/ACC/CBPR+ COMPLIANCE ENHANCED",
+                    {"substr": [{"cat": ["/SCR/", {"var": "screening_ref"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/KYC/", {"var": "kyc_ref"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/AML/", {"var": "aml_ref"}]}, 0, 35]}
+                ]
             },
-            {
-              "cat": [
-                "/ULTD/",
-                {
-                  "var": "ultimate_debtor_lei"
+            "50#b": {
+                "K": {
+                    "account": "/VERIFIED-ACCOUNT-123456",
+                    "name_and_address": [
+                        {"fake": ["company_name"]},
+                        {"cat": ["/LEI/", {"var": "ordering_customer_lei"}]},
+                        {"cat": ["/ULTD/", {"var": "ultimate_debtor_lei"}]},
+                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                    ]
                 }
-              ]
             },
-            {
-              "cat": [
-                {
-                  "fake": [
-                    "city_name"
-                  ]
-                },
-                ", ",
-                {
-                  "fake": [
-                    "country_code"
-                  ]
+            "52#b": {"A": {"bic": {"var": "sender_bic"}}},
+            "56#b": {"A": {"bic": {"var": "intermediary_bic"}}},
+            "57#b": {"A": {"bic": {"var": "account_with_bic"}}},
+            "59#b": {
+                "NoOption": {
+                    "account": "/VERIFIED-ACCOUNT-789012",
+                    "name_and_address": [
+                        {"fake": ["company_name"]},
+                        {"cat": ["/LEI/", {"var": "beneficiary_customer_lei"}]},
+                        {"cat": ["/ULTB/", {"var": "ultimate_creditor_lei"}]},
+                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                    ]
                 }
-              ]
+            },
+            "70#b": {
+                "narrative": [
+                    {"cat": ["/PURP/", {"var": "purpose_code"}]},
+                    "/COMPL/SANCTIONS SCREENING PASSED",
+                    "/COMPL/KYC VERIFICATION COMPLETE",
+                    "/COMPL/AML CHECKS CLEARED"
+                ]
+            },
+            "72#b": {
+                "information": [
+                    "/ACC/NESTED LEI STRUCTURE",
+                    "/ORD/LEIXG8HWVXGGR1B2V5K893",
+                    "/BNF/LEIZBQR12345HKLMNOP678",
+                    "/ULTD/LEIXG8HWVXGGR1B2V9O897",
+                    "/ULTB/LEIZBQR12345HKLMNOP680",
+                    "/COMPL/ALL LEIS VERIFIED"
+                ]
             }
-          ]
         }
-      },
-      "52#b": {
-        "A": {
-          "bic": {
-            "var": "sender_bic"
-          }
-        }
-      },
-      "56#b": {
-        "A": {
-          "bic": {
-            "var": "intermediary_bic"
-          }
-        }
-      },
-      "57#b": {
-        "A": {
-          "bic": {
-            "var": "account_with_bic"
-          }
-        }
-      },
-      "59#b": {
-        "NoOption": {
-          "account": "/VERIFIED-ACCOUNT-789012",
-          "name_and_address": [
-            {
-              "fake": [
-                "company_name"
-              ]
-            },
-            {
-              "cat": [
-                "/LEI/",
-                {
-                  "var": "beneficiary_customer_lei"
-                }
-              ]
-            },
-            {
-              "cat": [
-                "/ULTB/",
-                {
-                  "var": "ultimate_creditor_lei"
-                }
-              ]
-            },
-            {
-              "cat": [
-                {
-                  "fake": [
-                    "city_name"
-                  ]
-                },
-                ", ",
-                {
-                  "fake": [
-                    "country_code"
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "70#b": {
-        "narrative": [
-          {
-            "cat": [
-              "/PURP/",
-              {
-                "var": "purpose_code"
-              }
-            ]
-          },
-          "/COMPL/SANCTIONS SCREENING PASSED",
-          "/COMPL/KYC VERIFICATION COMPLETE",
-          "/COMPL/AML CHECKS CLEARED"
-        ]
-      },
-      "72#b": {
-        "information": [
-          "/ACC/NESTED LEI STRUCTURE",
-          "/ORD/LEIXG8HWVXGGR1B2V5K893",
-          "/BNF/LEIZBQR12345HKLMNOP678",
-          "/ULTD/LEIXG8HWVXGGR1B2V9O897",
-          "/ULTB/LEIZBQR12345HKLMNOP680",
-          "/COMPL/ALL LEIS VERIFIED"
-        ]
-      }
     }
-  }
 }

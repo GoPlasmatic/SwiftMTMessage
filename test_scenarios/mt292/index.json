@@ -1,5 +1,8 @@
 {
-  "scenarios": [
-    "fi_cancellation_request"
-  ]
+    "scenarios": [
+        "fi_cancellation_request",
+        "compliance_hold_cancellation",
+        "system_error_cancellation",
+        "wrong_beneficiary_cancellation"
+    ]
 }

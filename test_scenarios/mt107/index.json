@@ -1,8 +1,8 @@
 {
-  "scenarios": [
-    "general_direct_debit_basic",
-    "authorized_bulk_collection",
-    "unauthorized_debit_processing",
-    "return_processing"
-  ]
+    "scenarios": [
+        "general_direct_debit_basic",
+        "authorized_bulk_collection",
+        "unauthorized_debit_processing",
+        "return_processing"
+    ]
 }

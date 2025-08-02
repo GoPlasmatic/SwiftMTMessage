@@ -1,294 +1,89 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["DDRET", {"fake": ["i64", 10000000000, 99999999999]}]},
+        "original_ref": {"cat": ["DD", {"fake": ["i64", 1000000000000, 9999999999999]}]},
+        "currency": "USD",
+        "return_amount": {"fake": ["f64", 100.0, 5000.0]},
+        "execution_date": "2024-12-28",
+        "charges": "SHA",
+        "uetr": {"fake": ["uuid"]},
+        "original_uetr": {"fake": ["uuid"]},
+        "return_reason": "AC04",
+        "session_num": "0001",
+        "sequence_num": "000123"
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "DDRET",
-        {
-          "fake": [
-            "i64",
-            10000000000,
-            99999999999
-          ]
-        }
-      ]
-    },
-    "original_ref": {
-      "cat": [
-        "DD",
-        {
-          "fake": [
-            "i64",
-            1000000000000,
-            9999999999999
-          ]
-        }
-      ]
-    },
-    "currency": "USD",
-    "return_amount": {
-      "fake": [
-        "f64",
-        100.0,
-        5000.0
-      ]
-    },
-    "execution_date": "2024-12-28",
-    "charges": "SHA",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    },
-    "original_uetr": {
-      "fake": [
-        "uuid"
-      ]
-    },
-    "return_reason": "AC04",
-    "session_num": "0001",
-    "sequence_num": "000123"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "104",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_id": "gpi",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "monetary_amount": {
-        "cat": [
-          {
-            "var": "currency"
-          },
-          {
-            "var": "return_amount"
-          }
-        ]
-      }
-    },
-    "message_type": "104",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "28D": {
-        "message_index": 1,
-        "total_messages": 1
-      },
-      "30": {
-        "execution_date": {
-          "var": "execution_date"
-        }
-      },
-      "#": [
-        {
-          "21": {
-            "reference": {
-              "cat": [
-                "RET",
-                {
-                  "fake": [
-                    "i64",
-                    10000000,
-                    99999999
-                  ]
-                }
-              ]
-            }
-          },
-          "23E": {
-            "instruction_code": "RTND",
-            "additional_info": "RETURN"
-          },
-          "21C": {
-            "reference": {
-              "var": "original_ref"
-            }
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "return_amount"
-            }
-          },
-          "50#2": {
-            "K": {
-              "account": "/RETURN-PROCESSING",
-              "name_and_address": [
-                {
-                  "fake": [
-                    "company_name"
-                  ]
-                },
-                "RETURNS DEPARTMENT",
-                {
-                  "fake": [
-                    "street_address"
-                  ]
-                },
-                {
-                  "cat": [
-                    {
-                      "fake": [
-                        "city_name"
-                      ]
-                    },
-                    ", ",
-                    {
-                      "fake": [
-                        "country_code"
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "59": {
-            "NoOption": {
-              "account": {
-                "cat": [
-                  "/",
-                  {
-                    "fake": [
-                      "i64",
-                      1000000000000000,
-                      9999999999999999
-                    ]
-                  }
-                ]
-              },
-              "name_and_address": [
-                {
-                  "fake": [
-                    "company_name"
-                  ]
-                },
-                "ORIGINAL DEBTOR",
-                {
-                  "fake": [
-                    "street_address"
-                  ]
-                },
-                {
-                  "cat": [
-                    {
-                      "fake": [
-                        "city_name"
-                      ]
-                    },
-                    ", ",
-                    {
-                      "fake": [
-                        "country_code"
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "57": {
-            "A": {
-              "bic": {
-                "var": "receiver_bic"
-              }
-            }
-          },
-          "70": {
-            "narrative": [
-              "/RFB/DD RETURN",
-              {
-                "cat": [
-                  "/RETN/",
-                  {
-                    "var": "return_reason"
-                  }
-                ]
-              },
-              {
-                "cat": [
-                  "/ORGNL/",
-                  {
-                    "var": "original_ref"
-                  }
-                ]
-              },
-              "/CD/RETURN TRANSACTION"
-            ]
-          },
-          "71A": {
-            "code": {
-              "var": "charges"
-            }
-          }
-        }
-      ],
-      "32B": {
-        "currency": {
-          "var": "currency"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "amount": {
-          "var": "return_amount"
+        "application_header": {
+            "direction": "I",
+            "message_type": "104",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_id": "gpi",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "monetary_amount": {"cat": [{"var": "currency"}, {"var": "return_amount"}]}
+        },
+        "message_type": "104",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "28D": {"message_index": 1, "total_messages": 1},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "#": [
+                {
+                    "21": {"reference": {"cat": ["RET", {"fake": ["i64", 10000000, 99999999]}]}},
+                    "23E": {"instruction_code": "RTND", "additional_info": "RETURN"},
+                    "21C": {"reference": {"var": "original_ref"}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "return_amount"}},
+                    "50#2": {
+                        "K": {
+                            "account": "/RETURN-PROCESSING",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "RETURNS DEPARTMENT",
+                                {"fake": ["street_address"]},
+                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                            ]
+                        }
+                    },
+                    "59": {
+                        "NoOption": {
+                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "ORIGINAL DEBTOR",
+                                {"fake": ["street_address"]},
+                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                            ]
+                        }
+                    },
+                    "57": {"A": {"bic": {"var": "receiver_bic"}}},
+                    "70": {
+                        "narrative": [
+                            "/RFB/DD RETURN",
+                            {"cat": ["/RETN/", {"var": "return_reason"}]},
+                            {"cat": ["/ORGNL/", {"var": "original_ref"}]},
+                            "/CD/RETURN TRANSACTION"
+                        ]
+                    },
+                    "71A": {"code": {"var": "charges"}}
+                }
+            ],
+            "32B": {"currency": {"var": "currency"}, "amount": {"var": "return_amount"}},
+            "77B": {
+                "narrative": ["/RETN/DIRECT DEBIT RETURN", "/RSNCD/ACCOUNT CLOSED", "/PROC/AUTOMATED RETURN"]
+            }
         }
-      },
-      "77B": {
-        "narrative": [
-          "/RETN/DIRECT DEBIT RETURN",
-          "/RSNCD/ACCOUNT CLOSED",
-          "/PROC/AUTOMATED RETURN"
-        ]
-      }
     }
-  }
 }

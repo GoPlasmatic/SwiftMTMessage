@@ -1,228 +1,96 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["BAT", {"fake": ["i64", 1000000000000, 9999999999999]}]},
+        "account_number": {"cat": ["CORP", {"fake": ["i64", 10000000, 99999999]}]},
+        "statement_num": {"fake": ["i64", 5000, 9999]},
+        "currency": "EUR",
+        "opening_balance": {"fake": ["f64", 1000000.0, 5000000.0]},
+        "closing_balance": {"fake": ["f64", 1000000.0, 5000000.0]},
+        "value_date": "241220",
+        "batch_amount": {"fake": ["f64", 250000.0, 750000.0]},
+        "refund_amount": {"fake": ["f64", 15000.0, 45000.0]},
+        "fee_amount": {"fake": ["f64", 500.0, 2500.0]},
+        "batch_ref": {"cat": ["BATCH", {"fake": ["i64", 1000, 9999]}]},
+        "refund_ref": {"cat": ["RFND", {"fake": ["i64", 1000, 9999]}]},
+        "fee_ref": {"cat": ["FEE", {"fake": ["i64", 1000, 9999]}]},
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "BAT",
-        {
-          "fake": [
-            "i64",
-            1000000000000,
-            9999999999999
-          ]
-        }
-      ]
-    },
-    "account_number": {
-      "cat": [
-        "CORP",
-        {
-          "fake": [
-            "i64",
-            10000000,
-            99999999
-          ]
-        }
-      ]
-    },
-    "statement_num": {
-      "fake": [
-        "i64",
-        5000,
-        9999
-      ]
-    },
-    "currency": "EUR",
-    "opening_balance": {
-      "fake": [
-        "f64",
-        1000000.0,
-        5000000.0
-      ]
-    },
-    "closing_balance": {
-      "fake": [
-        "f64",
-        1000000.0,
-        5000000.0
-      ]
-    },
-    "value_date": "241220",
-    "batch_amount": {
-      "fake": [
-        "f64",
-        250000.0,
-        750000.0
-      ]
-    },
-    "refund_amount": {
-      "fake": [
-        "f64",
-        15000.0,
-        45000.0
-      ]
-    },
-    "fee_amount": {
-      "fake": [
-        "f64",
-        500.0,
-        2500.0
-      ]
-    },
-    "batch_ref": {
-      "cat": [
-        "BATCH",
-        {
-          "fake": [
-            "i64",
-            1000,
-            9999
-          ]
-        }
-      ]
-    },
-    "refund_ref": {
-      "cat": [
-        "RFND",
-        {
-          "fake": [
-            "i64",
-            1000,
-            9999
-          ]
-        }
-      ]
-    },
-    "fee_ref": {
-      "cat": [
-        "FEE",
-        {
-          "fake": [
-            "i64",
-            1000,
-            9999
-          ]
-        }
-      ]
-    },
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": "0001",
-      "sequence_number": "000001"
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "950",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "950",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "25": {
-        "authorisation": "CORP10000001"
-      },
-      "28C": {
-        "statement_number": 5678,
-        "sequence_number": 1
-      },
-      "60": {
-        "F": {
-          "debit_credit_mark": "C",
-          "value_date": "2024-12-20",
-          "currency": "EUR",
-          "amount": 2500000.0
-        }
-      },
-      "61": [
-        {
-          "value_date": "2024-12-20",
-          "debit_credit_mark": "D",
-          "currency": "EUR",
-          "amount": 500000.0,
-          "transaction_type": "NMSC",
-          "customer_reference": "BATCH1234",
-          "bank_reference": "//SEPA/BATCH/125",
-          "supplementary_details": "PAYROLL"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": "0001",
+            "sequence_number": "000001"
         },
-        {
-          "value_date": "2024-12-20",
-          "debit_credit_mark": "C",
-          "currency": "EUR",
-          "amount": 30000.0,
-          "transaction_type": "NMSC",
-          "customer_reference": "RFND5678",
-          "bank_reference": "//SEPA/RETURN"
+        "application_header": {
+            "direction": "I",
+            "message_type": "950",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        {
-          "value_date": "2024-12-20",
-          "debit_credit_mark": "D",
-          "currency": "EUR",
-          "amount": 1500.0,
-          "transaction_type": "NCHG",
-          "customer_reference": "FEE9012",
-          "bank_reference": "//BATCH/FEE"
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "950",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "25": {"authorisation": "CORP10000001"},
+            "28C": {"statement_number": 5678, "sequence_number": 1},
+            "60": {
+                "F": {
+                    "debit_credit_mark": "C",
+                    "value_date": "2024-12-20",
+                    "currency": "EUR",
+                    "amount": 2500000.0
+                }
+            },
+            "61": [
+                {
+                    "value_date": "2024-12-20",
+                    "debit_credit_mark": "D",
+                    "currency": "EUR",
+                    "amount": 500000.0,
+                    "transaction_type": "NMSC",
+                    "customer_reference": "BATCH1234",
+                    "bank_reference": "//SEPA/BATCH/125",
+                    "supplementary_details": "PAYROLL"
+                },
+                {
+                    "value_date": "2024-12-20",
+                    "debit_credit_mark": "C",
+                    "currency": "EUR",
+                    "amount": 30000.0,
+                    "transaction_type": "NMSC",
+                    "customer_reference": "RFND5678",
+                    "bank_reference": "//SEPA/RETURN"
+                },
+                {
+                    "value_date": "2024-12-20",
+                    "debit_credit_mark": "D",
+                    "currency": "EUR",
+                    "amount": 1500.0,
+                    "transaction_type": "NCHG",
+                    "customer_reference": "FEE9012",
+                    "bank_reference": "//BATCH/FEE"
+                }
+            ],
+            "62": {
+                "F": {
+                    "debit_credit_mark": "C",
+                    "value_date": "2024-12-20",
+                    "currency": "EUR",
+                    "amount": 2265500.0
+                }
+            }
         }
-      ],
-      "62": {
-        "F": {
-          "debit_credit_mark": "C",
-          "value_date": "2024-12-20",
-          "currency": "EUR",
-          "amount": 2265500.0
-        }
-      }
     }
-  }
 }

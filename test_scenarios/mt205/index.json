@@ -1,5 +1,10 @@
 {
-  "scenarios": [
-    "bank_transfer_non_cover"
-  ]
+    "scenarios": [
+        "bank_transfer_non_cover",
+        "bank_transfer_cover",
+        "return_payment",
+        "rejection_payment",
+        "urgent_liquidity_transfer",
+        "regulatory_reporting"
+    ]
 }

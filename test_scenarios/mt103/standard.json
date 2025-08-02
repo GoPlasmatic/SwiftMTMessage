@@ -1,196 +1,73 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": {"fake": ["currency_code"]},
+        "amount": {"fake": ["f64", 10000.0, 500000.0]},
+        "value_date": "2024-12-20",
+        "bank_op_code": "CRED",
+        "charges": "SHA",
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "PAY",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
-        }
-      ]
-    },
-    "currency": {
-      "fake": [
-        "currency_code"
-      ]
-    },
-    "amount": {
-      "fake": [
-        "f64",
-        10000.0,
-        500000.0
-      ]
-    },
-    "value_date": "2024-12-20",
-    "bank_op_code": "CRED",
-    "charges": "SHA",
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "103",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "103",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "23B": {
-        "instruction_code": {
-          "var": "bank_op_code"
-        }
-      },
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "currency": {
-          "var": "currency"
+        "application_header": {
+            "direction": "I",
+            "message_type": "103",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        "amount": {
-          "var": "amount"
-        }
-      },
-      "50": {
-        "K": {
-          "account": "/1234567890",
-          "name_and_address": [
-            {
-              "fake": [
-                "company_name"
-              ]
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "103",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
-            {
-              "fake": [
-                "street_address"
-              ]
+            "50": {
+                "K": {
+                    "account": "/1234567890",
+                    "name_and_address": [
+                        {"fake": ["company_name"]},
+                        {"fake": ["street_address"]},
+                        {"fake": ["city_name"]},
+                        {"fake": ["country_name"]}
+                    ]
+                }
             },
-            {
-              "fake": [
-                "city_name"
-              ]
+            "52": {"A": {"bic": {"var": "sender_bic"}}},
+            "57": {"A": {"bic": {"var": "receiver_bic"}}},
+            "59": {
+                "NoOption": {
+                    "account": "/DE89370400440532013000",
+                    "name_and_address": [
+                        {"fake": ["company_name"]},
+                        {"fake": ["street_address"]},
+                        {"fake": ["city_name"]},
+                        {"fake": ["country_name"]}
+                    ]
+                }
             },
-            {
-              "fake": [
-                "country_name"
-              ]
-            }
-          ]
+            "70": {"narrative": ["INVOICE PAYMENT"]},
+            "71A": {"code": {"var": "charges"}}
         }
-      },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "sender_bic"
-          }
-        }
-      },
-      "57": {
-        "A": {
-          "bic": {
-            "var": "receiver_bic"
-          }
-        }
-      },
-      "59": {
-        "NoOption": {
-          "account": "/DE89370400440532013000",
-          "name_and_address": [
-            {
-              "fake": [
-                "company_name"
-              ]
-            },
-            {
-              "fake": [
-                "street_address"
-              ]
-            },
-            {
-              "fake": [
-                "city_name"
-              ]
-            },
-            {
-              "fake": [
-                "country_name"
-              ]
-            }
-          ]
-        }
-      },
-      "70": {
-        "narrative": [
-          "INVOICE PAYMENT"
-        ]
-      },
-      "71A": {
-        "code": {
-          "var": "charges"
-        }
-      }
     }
-  }
 }

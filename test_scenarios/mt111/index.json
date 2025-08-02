@@ -1,7 +1,3 @@
 {
-  "scenarios": [
-    "lost_cheque_stop",
-    "fraud_prevention_stop",
-    "duplicate_cheque_stop"
-  ]
+    "scenarios": ["lost_cheque_stop", "fraud_prevention_stop", "duplicate_cheque_stop"]
 }

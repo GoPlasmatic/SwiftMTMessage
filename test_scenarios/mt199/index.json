@@ -1,6 +1,1 @@
-{
-  "scenarios": [
-    "cbpr_inquiry",
-    "cbpr_cancellation"
-  ]
-}
+{"scenarios": ["cbpr_inquiry", "cbpr_cancellation"]}

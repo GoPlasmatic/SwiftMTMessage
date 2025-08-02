@@ -1,156 +1,45 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["MAR", {"fake": ["i64", 100000000, 999999999]}]},
+        "account1": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "account2": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "account3": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "currency": "USD",
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "MAR",
-        {
-          "fake": [
-            "i64",
-            100000000,
-            999999999
-          ]
-        }
-      ]
-    },
-    "account1": {
-      "cat": [
-        "/",
-        {
-          "fake": [
-            "i64",
-            1000000000000000,
-            9999999999999999
-          ]
-        }
-      ]
-    },
-    "account2": {
-      "cat": [
-        "/",
-        {
-          "fake": [
-            "i64",
-            1000000000000000,
-            9999999999999999
-          ]
-        }
-      ]
-    },
-    "account3": {
-      "cat": [
-        "/",
-        {
-          "fake": [
-            "i64",
-            1000000000000000,
-            9999999999999999
-          ]
-        }
-      ]
-    },
-    "currency": "USD",
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "920",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "920",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "#": [
-        {
-          "12": {
-            "type_code": "940"
-          },
-          "25": {
-            "account": {
-              "var": "account1"
-            }
-          }
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        {
-          "12": {
-            "type_code": "941"
-          },
-          "25": {
-            "account": {
-              "var": "account2"
-            }
-          }
+        "application_header": {
+            "direction": "I",
+            "message_type": "920",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        {
-          "12": {
-            "type_code": "950"
-          },
-          "25": {
-            "account": {
-              "var": "account3"
-            }
-          }
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "920",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "#": [
+                {"12": {"type_code": "940"}, "25": {"account": {"var": "account1"}}},
+                {"12": {"type_code": "941"}, "25": {"account": {"var": "account2"}}},
+                {"12": {"type_code": "950"}, "25": {"account": {"var": "account3"}}}
+            ]
         }
-      ]
     }
-  }
 }

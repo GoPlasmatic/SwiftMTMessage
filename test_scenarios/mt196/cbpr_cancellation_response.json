@@ -1,0 +1,67 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "reference": {"cat": ["CBPRRESP", {"fake": ["i64", 100000, 999999]}]},
+        "related_ref": {"cat": ["CBPRCAN", {"fake": ["i64", 100000, 999999]}]},
+        "uetr_original": {"fake": ["uuid"]},
+        "uetr_return": {"fake": ["uuid"]},
+        "session_num": "0001",
+        "sequence_num": "009012",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "196",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "196",
+        "fields": {
+            "11S": {
+                "message_type": "192",
+                "date": "241223",
+                "logical_terminal": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+                "session_number": "0001",
+                "sequence_number": "008901"
+            },
+            "20": {"reference": {"var": "reference"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "76": {
+                "information": [
+                    "/CANSTAT/ACCP",
+                    "/ORIGUETR/",
+                    {"substr": [{"var": "uetr_original"}, 0, 35]},
+                    "/CBPR/CANCELLATION ACCEPTED",
+                    "/ORIGAMT/USD1000000.00",
+                    "/VALUEDATE/2024-12-23"
+                ]
+            },
+            "79": {
+                "information": [
+                    "/ADDINFO/PAYMENT CANCELLED AS REQUESTED",
+                    "/TIMELINE/REQUEST RECEIVED 13:45 UTC",
+                    "/TIMELINE/CANCELLATION PROCESSED 14:30 UTC",
+                    "/TIMELINE/FUNDS RETURNED 14:35 UTC",
+                    "/COMPLIANCE/NO ISSUES DETECTED",
+                    "/AUDIT/TRAIL REFERENCE AUD-2024-567890"
+                ]
+            }
+        }
+    }
+}

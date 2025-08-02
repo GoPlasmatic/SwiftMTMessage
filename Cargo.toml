@@ -19,7 +19,7 @@ quote = "1.0"
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 
 # Data validation
-datalogic-rs = "3.0.29"
+datalogic-rs = { version = "3.0.29", path = "../datalogic-rs" }
 
 # Random number generation for sample data
 rand = "0.8"

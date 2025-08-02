@@ -1,182 +1,82 @@
 {
-  "variables": {
-    "sender_bic": {
-      "fake": [
-        "bic"
-      ]
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["ANS", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["CANC", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "total_amount": {"fake": ["f64", 10000.0, 100000.0]},
+        "cancelled_amount": {"fake": ["f64", 5000.0, 50000.0]},
+        "processed_amount": {"fake": ["f64", 5000.0, 50000.0]},
+        "currency": "USD",
+        "num_transactions": 5,
+        "cancelled_count": 3,
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
     },
-    "receiver_bic": {
-      "fake": [
-        "bic"
-      ]
-    },
-    "transaction_ref": {
-      "cat": [
-        "ANS",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "296",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "296",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "76": {
+                "information": [
+                    "PART",
+                    "PARTIAL CANCELLATION",
+                    {
+                        "cat": [
+                            "TOTAL AMOUNT ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "total_amount"}
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "CANCELLED ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "cancelled_amount"}
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "PROCESSED ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "processed_amount"}
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "TRANSACTIONS ",
+                            {"var": "cancelled_count"},
+                            " OF ",
+                            {"var": "num_transactions"}
+                        ]
+                    }
+                ]
+            }
         }
-      ]
-    },
-    "related_ref": {
-      "cat": [
-        "CANC",
-        {
-          "fake": [
-            "i64",
-            100000000000,
-            999999999999
-          ]
-        }
-      ]
-    },
-    "total_amount": {
-      "fake": [
-        "f64",
-        10000.0,
-        100000.0
-      ]
-    },
-    "cancelled_amount": {
-      "fake": [
-        "f64",
-        5000.0,
-        50000.0
-      ]
-    },
-    "processed_amount": {
-      "fake": [
-        "f64",
-        5000.0,
-        50000.0
-      ]
-    },
-    "currency": "USD",
-    "num_transactions": 5,
-    "cancelled_count": 3,
-    "session_num": "0001",
-    "sequence_num": "000123",
-    "uetr": {
-      "fake": [
-        "uuid"
-      ]
     }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "296",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "296",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "21": {
-        "reference": {
-          "var": "related_ref"
-        }
-      },
-      "76": {
-        "information": [
-          "PART",
-          "PARTIAL CANCELLATION",
-          {
-            "cat": [
-              "TOTAL AMOUNT ",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "total_amount"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "CANCELLED ",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "cancelled_amount"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "PROCESSED ",
-              {
-                "var": "currency"
-              },
-              " ",
-              {
-                "var": "processed_amount"
-              }
-            ]
-          },
-          {
-            "cat": [
-              "TRANSACTIONS ",
-              {
-                "var": "cancelled_count"
-              },
-              " OF ",
-              {
-                "var": "num_transactions"
-              }
-            ]
-          }
-        ]
-      }
-    }
-  }
 }

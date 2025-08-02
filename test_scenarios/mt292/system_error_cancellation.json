@@ -1,0 +1,83 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "cancel_ref": {"cat": ["SYSER", {"fake": ["i64", 100000, 999999]}]},
+        "original_ref": {"cat": ["BATCH", {"fake": ["i64", 10000000, 99999999]}]},
+        "message_type": "205",
+        "date": "2024-12-21",
+        "session": "3456",
+        "sequence": "789012",
+        "reason_code": "TECH",
+        "amount": {"fake": ["f64", 3000000.0, 15000000.0]},
+        "currency": "JPY",
+        "session_num": "0002",
+        "sequence_num": "000789",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "292",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
+        },
+        "user_header": {
+            "service_type_id": "fin",
+            "banking_priority": "9999",
+            "unique_end_to_end_reference": {"var": "uetr"}
+        },
+        "message_type": "292",
+        "fields": {
+            "20": {"reference": {"var": "cancel_ref"}},
+            "21": {"reference": {"var": "original_ref"}},
+            "11S": {
+                "message_type": {"var": "message_type"},
+                "date": {"var": "date"},
+                "session_number": {"var": "session"},
+                "input_sequence_number": {"var": "sequence"}
+            },
+            "79": {
+                "information": [
+                    {"cat": ["/", {"var": "reason_code"}, "/"]},
+                    "SYSTEM ERROR - URGENT CANCELLATION",
+                    "",
+                    {"cat": ["ORIGINAL MESSAGE: MT", {"var": "message_type"}]},
+                    {"cat": ["REFERENCE: ", {"var": "original_ref"}]},
+                    {
+                        "cat": [
+                            "AMOUNT: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "amount"}
+                        ]
+                    },
+                    "",
+                    "CRITICAL SYSTEM FAILURE DETECTED",
+                    "BATCH PROCESSING ERROR",
+                    "DATA CORRUPTION IN TRANSMISSION",
+                    "",
+                    "IMMEDIATE ACTION REQUIRED:",
+                    "- HALT ALL RELATED TRANSACTIONS",
+                    "- DO NOT PROCESS PAYMENT",
+                    "- AWAIT SYSTEM RECOVERY",
+                    "",
+                    "ERROR CODE: SYS-CRITICAL-2024-001",
+                    "IT OPERATIONS NOTIFIED",
+                    "ESTIMATED RESOLUTION: 2-4 HOURS",
+                    "",
+                    "ESCALATION: systems@bank.com"
+                ]
+            }
+        }
+    }
+}

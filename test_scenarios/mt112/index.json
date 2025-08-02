@@ -1,7 +1,3 @@
 {
-  "scenarios": [
-    "stop_payment_accepted",
-    "stop_payment_rejected",
-    "stop_payment_pending"
-  ]
+    "scenarios": ["stop_payment_accepted", "stop_payment_rejected", "stop_payment_pending"]
 }

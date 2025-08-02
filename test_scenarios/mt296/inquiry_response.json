@@ -42,7 +42,7 @@
             "21": {"reference": {"var": "related_ref"}},
             "76": {
                 "information": [
-                    "INFO",
+                    "/PDCR/",
                     "PAYMENT STATUS INFORMATION",
                     {"cat": ["PAYMENT REF ", {"var": "payment_ref"}]},
                     {"cat": ["STATUS ", {"var": "status"}]},

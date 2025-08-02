@@ -43,7 +43,7 @@
             "21": {"reference": {"var": "inquiry_ref"}},
             "76": {
                 "information": [
-                    "/INFO/FOUND",
+                    "/CUST/INFO/FOUND",
                     "PAYMENT LOCATED",
                     "AMOUNT: GBP 95000.00",
                     "STATUS: COMPLETED",

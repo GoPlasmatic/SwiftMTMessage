@@ -43,7 +43,7 @@
             "21": {"reference": {"var": "cancel_ref"}},
             "76": {
                 "information": [
-                    "/LATE/REJECTED",
+                    "/RJCR/LATE/REJECTED",
                     "CANCELLATION REJECTED",
                     "AMOUNT: EUR 250000.00",
                     "DATE: 2024-12-22",

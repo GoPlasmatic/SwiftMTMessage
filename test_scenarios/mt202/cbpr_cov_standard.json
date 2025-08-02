@@ -41,7 +41,7 @@
         "message_type": "202",
         "fields": {
             "20": {"reference": {"var": "transaction_ref"}},
-            "21": {"reference": {"cat": ["", {"var": "related_ref"}]}},
+            "21": {"reference": {"var": "related_ref"}},
             "32A": {
                 "value_date": {"var": "value_date"},
                 "currency": {"var": "currency"},

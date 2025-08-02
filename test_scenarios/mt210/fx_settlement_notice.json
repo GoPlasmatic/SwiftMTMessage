@@ -5,10 +5,10 @@
         "transaction_ref": {"cat": ["FX", {"fake": ["i64", 100000, 999999]}]},
         "account_id": {"cat": ["JP33MUFG", {"fake": ["i64", 10000000000000, 99999999999999]}]},
         "value_date": "2024-12-22",
-        "fx_leg1_ref": {"cat": ["FXBUY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "fx_leg1_ref": {"cat": ["FXBUY", {"fake": ["i64", 1000000000, 9999999999]}]},
         "fx_leg1_currency": "JPY",
         "fx_leg1_amount": {"fake": ["f64", 10000000.0, 50000000.0]},
-        "fx_leg2_ref": {"cat": ["FXSELL", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "fx_leg2_ref": {"cat": ["FXSELL", {"fake": ["i64", 1000000000, 9999999999]}]},
         "fx_leg2_currency": "USD",
         "fx_leg2_amount": {"fake": ["f64", 65000.0, 325000.0]},
         "counterparty_bic": {"fake": ["bic"]},
@@ -49,8 +49,6 @@
                     "50": {
                         "F": {
                             "account": "/FX1234567890",
-                            "party_identifier": "/FXDESK/TOKYO",
-                            "name_and_address": ["FX TRADING DESK", "SPOT SETTLEMENT", "RATE: 154.25", "DEAL: 2024122001"],
                             "bic": {"fake": ["bic"]}
                         }
                     }
@@ -61,13 +59,6 @@
                     "50": {
                         "F": {
                             "account": "/FX9876543210",
-                            "party_identifier": "/FXDESK/NEWYORK",
-                            "name_and_address": [
-                                "FX COUNTERPARTY",
-                                "SETTLEMENT DEPT",
-                                "CONTRACT: FX20241220-001",
-                                "NET SETTLEMENT"
-                            ],
                             "bic": {"fake": ["bic"]}
                         }
                     }

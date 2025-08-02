@@ -43,7 +43,7 @@
             "21": {"reference": {"var": "cancel_ref"}},
             "76": {
                 "information": [
-                    "/INVS/PENDING",
+                    "/PDCR/INVS/PENDING",
                     "INVESTIGATION IN PROGRESS",
                     "AMOUNT: USD 125000.00",
                     "DATE: 2024-12-21",

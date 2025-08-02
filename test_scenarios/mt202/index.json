@@ -10,6 +10,7 @@
         "minimal_return",
         "cbpr_cov_return",
         "cbpr_cov_rejection",
-        "cbpr_serial_payment"
+        "cbpr_serial_payment",
+        "standard"
     ]
 }

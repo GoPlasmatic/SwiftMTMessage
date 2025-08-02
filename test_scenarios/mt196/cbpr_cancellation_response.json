@@ -44,7 +44,7 @@
             "21": {"reference": {"var": "related_ref"}},
             "76": {
                 "information": [
-                    "/CANSTAT/ACCP",
+                    "/CNCL/CANSTAT/ACCP",
                     "/ORIGUETR/",
                     {"substr": [{"var": "uetr_original"}, 0, 35]},
                     "/CBPR/CANCELLATION ACCEPTED",

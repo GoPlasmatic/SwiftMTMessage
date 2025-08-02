@@ -39,7 +39,7 @@
             "21": {"reference": {"var": "related_ref"}},
             "76": {
                 "information": [
-                    "NPAY",
+                    "/RJCR/",
                     "NO PAYMENT FOUND",
                     {"cat": ["SEARCH REF ", {"var": "search_ref"}]},
                     {"cat": ["VALUE DATE ", {"var": "search_date"}]},

@@ -41,7 +41,7 @@
             "21": {"reference": {"var": "related_ref"}},
             "76": {
                 "information": [
-                    "PART",
+                    "/CNCL/",
                     "PARTIAL CANCELLATION",
                     {
                         "cat": [

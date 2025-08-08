@@ -5,8 +5,16 @@ use std::path::Path;
 use swift_mt_message::{generate_sample, ParsedSwiftMessage, SwiftParser};
 
 #[derive(Debug, Serialize, Deserialize)]
+struct ScenarioInfo {
+    file: String,
+    description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct ScenarioIndex {
-    scenarios: Vec<String>,
+    message_type: String,
+    description: String,
+    scenarios: Vec<ScenarioInfo>,
 }
 
 #[derive(Debug)]
@@ -593,7 +601,10 @@ fn get_scenarios_for_message_type(message_type: &str) -> Vec<String> {
 
     match fs::read_to_string(&index_path) {
         Ok(content) => match serde_json::from_str::<ScenarioIndex>(&content) {
-            Ok(index) => index.scenarios,
+            Ok(index) => index.scenarios.into_iter().map(|s| {
+                // Extract the scenario name from the file name (remove .json extension)
+                s.file.trim_end_matches(".json").to_string()
+            }).collect(),
             Err(e) => {
                 eprintln!("Failed to parse index.json for {message_type}: {e}");
                 Vec::new()

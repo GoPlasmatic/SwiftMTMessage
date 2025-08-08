@@ -1,8 +1,22 @@
 {
+    "message_type": "MT940",
+    "description": "Customer Statement Message",
     "scenarios": [
-        "repeated_sequence_issues",
-        "daily_account_statement",
-        "interim_statement_intraday",
-        "year_end_statement"
+        {
+            "file": "repeated_sequence_issues.json",
+            "description": "Statement with repeated sequences"
+        },
+        {
+            "file": "daily_account_statement.json",
+            "description": "Daily account statement"
+        },
+        {
+            "file": "interim_statement_intraday.json",
+            "description": "Interim intraday statement"
+        },
+        {
+            "file": "year_end_statement.json",
+            "description": "Year-end account statement"
+        }
     ]
 }

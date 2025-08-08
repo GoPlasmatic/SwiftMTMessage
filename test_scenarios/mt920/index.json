@@ -1,3 +1,18 @@
 {
-    "scenarios": ["statement_request_basic", "multi_account_request", "interim_report_request"]
+    "message_type": "MT920",
+    "description": "Request Message",
+    "scenarios": [
+        {
+            "file": "statement_request_basic.json",
+            "description": "Basic statement request"
+        },
+        {
+            "file": "multi_account_request.json",
+            "description": "Multi-account statement request"
+        },
+        {
+            "file": "interim_report_request.json",
+            "description": "Request for interim report"
+        }
+    ]
 }

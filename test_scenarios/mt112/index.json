@@ -1,3 +1,18 @@
 {
-    "scenarios": ["stop_payment_accepted", "stop_payment_rejected", "stop_payment_pending"]
+    "message_type": "MT112",
+    "description": "Status of a Request for Stop Payment of a Cheque",
+    "scenarios": [
+        {
+            "file": "stop_payment_accepted.json",
+            "description": "Stop payment request accepted"
+        },
+        {
+            "file": "stop_payment_rejected.json",
+            "description": "Stop payment request rejected"
+        },
+        {
+            "file": "stop_payment_pending.json",
+            "description": "Stop payment request pending"
+        }
+    ]
 }

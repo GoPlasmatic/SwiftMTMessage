@@ -1,3 +1,18 @@
 {
-    "scenarios": ["lost_cheque_stop", "fraud_prevention_stop", "duplicate_cheque_stop"]
+    "message_type": "MT111",
+    "description": "Stop Cheque",
+    "scenarios": [
+        {
+            "file": "lost_cheque_stop.json",
+            "description": "Stop payment for lost cheque"
+        },
+        {
+            "file": "fraud_prevention_stop.json",
+            "description": "Stop payment for fraud prevention"
+        },
+        {
+            "file": "duplicate_cheque_stop.json",
+            "description": "Stop payment for duplicate cheque"
+        }
+    ]
 }

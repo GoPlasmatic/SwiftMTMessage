@@ -16,12 +16,12 @@ Test scenarios are organized by message type, with each directory containing:
 ```
 test_scenarios/
 ├── mt101/              # Request for Transfer
-│   ├── index.json      # List of available scenarios
+│   ├── index.json      # Scenario manifest with descriptions
 │   ├── standard.json   # Basic scenario
 │   ├── bulk_payment.json
 │   └── ...
 ├── mt103/              # Single Customer Credit Transfer
-│   ├── index.json
+│   ├── index.json      # Scenario manifest with descriptions
 │   ├── standard.json
 │   ├── cbpr_*.json     # CBPR+ compliant scenarios
 │   └── ...
@@ -307,7 +307,13 @@ For each scenario, the round-trip test performs:
    }
    ```
 
-2. Add the scenario name to the `index.json` file
+2. Add the scenario to the `index.json` file with file name and description:
+   ```json
+   {
+     "file": "your_new_scenario.json",
+     "description": "Brief description of the scenario"
+   }
+   ```
 
 3. Update this README with the scenario details
 

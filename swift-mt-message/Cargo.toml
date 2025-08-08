@@ -39,6 +39,7 @@ uuid = { workspace = true }
 
 [dev-dependencies]
 pretty_assertions = "1.4"
+tempfile = "3.8"
 
 [[example]]
 name = "parse_auto"
@@ -51,5 +52,9 @@ path = "../examples/benchmark.rs"
 [[example]]
 name = "error_collection"
 path = "../examples/error_collection.rs"
+
+[[example]]
+name = "sample_generation_custom"
+path = "../examples/sample_generation_custom.rs"
 
 

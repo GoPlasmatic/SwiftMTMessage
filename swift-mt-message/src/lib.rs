@@ -80,7 +80,8 @@ pub use validation_result::ValidationResult;
 pub use swift_mt_message_macros::{serde_swift_fields, SwiftField, SwiftMessage};
 
 // Re-export sample generation
-pub use sample::generate_sample;
+pub use sample::{generate_sample, generate_sample_with_config, SampleGenerator};
+pub use scenario_config::ScenarioConfig;
 
 /// Simplified result type for SWIFT operations
 pub type SwiftResult<T> = std::result::Result<T, crate::errors::ParseError>;

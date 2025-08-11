@@ -220,34 +220,23 @@ pub fn extract_option_vec_inner_type(ty: &Type) -> Type {
 pub trait TypeMatcher: std::fmt::Debug {
     /// Check if this matcher matches the given type
     fn matches(&self, ty: &Type) -> bool;
-
-    /// Get a human-readable description of what this matcher matches
-    fn description(&self) -> String;
 }
 
 /// Matcher for basic types like String, u32, etc.
 #[derive(Debug, Clone)]
 pub struct BasicTypeMatcher {
-    type_name: &'static str,
     category: TypeCategory,
 }
 
 impl BasicTypeMatcher {
-    pub const fn new(type_name: &'static str, category: TypeCategory) -> Self {
-        Self {
-            type_name,
-            category,
-        }
+    pub const fn new(category: TypeCategory) -> Self {
+        Self { category }
     }
 }
 
 impl TypeMatcher for BasicTypeMatcher {
     fn matches(&self, ty: &Type) -> bool {
         matches!(categorize_type(ty), ref cat if cat == &self.category)
-    }
-
-    fn description(&self) -> String {
-        format!("Type::{}", self.type_name)
     }
 }
 
@@ -278,10 +267,6 @@ impl<T: TypeMatcher> TypeMatcher for OptionTypeMatcher<T> {
         }
         false
     }
-
-    fn description(&self) -> String {
-        format!("Option<{}>", self.inner.description())
-    }
 }
 
 /// Matcher for Vec<T> types
@@ -311,10 +296,6 @@ impl<T: TypeMatcher> TypeMatcher for VecTypeMatcher<T> {
         }
         false
     }
-
-    fn description(&self) -> String {
-        format!("Vec<{}>", self.inner.description())
-    }
 }
 
 /// Convenience functions for creating matchers
@@ -323,22 +304,22 @@ pub mod matchers {
 
     /// Create a matcher for String type
     pub fn string() -> BasicTypeMatcher {
-        BasicTypeMatcher::new("String", TypeCategory::String)
+        BasicTypeMatcher::new(TypeCategory::String)
     }
 
     /// Create a matcher for f64 type
     pub fn f64() -> BasicTypeMatcher {
-        BasicTypeMatcher::new("f64", TypeCategory::F64)
+        BasicTypeMatcher::new(TypeCategory::F64)
     }
 
     /// Create a matcher for u32 type
     pub fn u32() -> BasicTypeMatcher {
-        BasicTypeMatcher::new("u32", TypeCategory::U32)
+        BasicTypeMatcher::new(TypeCategory::U32)
     }
 
     /// Create a matcher for u8 type
     pub fn u8() -> BasicTypeMatcher {
-        BasicTypeMatcher::new("u8", TypeCategory::U8)
+        BasicTypeMatcher::new(TypeCategory::U8)
     }
 
     /// Create a matcher for Option<T>
@@ -501,19 +482,6 @@ mod tests {
         assert_eq!(
             categorize_type(&option_field_type),
             TypeCategory::OptionField
-        );
-    }
-
-    #[test]
-    fn test_matcher_descriptions() {
-        use matchers::*;
-
-        assert_eq!(string().description(), "Type::String");
-        assert_eq!(option(string()).description(), "Option<Type::String>");
-        assert_eq!(vec(string()).description(), "Vec<Type::String>");
-        assert_eq!(
-            option(vec(string())).description(),
-            "Option<Vec<Type::String>>"
         );
     }
 }

@@ -16,7 +16,7 @@ categories = ["data-structures", "development-tools", "parsing"]
 # Macro crate
 swift-mt-message-macros = { version = "3.0", path = "../swift-mt-message-macros" }
 
-datafake-rs = { version = "0.1", path = "../../datafake-rs" }
+datafake-rs = "0.1"
 
 # Core serialization and parsing
 serde = { workspace = true }
@@ -31,30 +31,6 @@ once_cell = { workspace = true }
 # Data validation
 datalogic-rs = { workspace = true }
 
-# Random number generation for sample data
-rand = { workspace = true }
-
-# UUID generation for realistic UETR
-uuid = { workspace = true }
-
 [dev-dependencies]
 pretty_assertions = "1.4"
 tempfile = "3.8"
-
-[[example]]
-name = "parse_auto"
-path = "../examples/parse_auto.rs"
-
-[[example]]
-name = "benchmark"
-path = "../examples/benchmark.rs"
-
-[[example]]
-name = "error_collection"
-path = "../examples/error_collection.rs"
-
-[[example]]
-name = "sample_generation_custom"
-path = "../examples/sample_generation_custom.rs"
-
-

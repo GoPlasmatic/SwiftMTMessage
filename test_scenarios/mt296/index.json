@@ -1,0 +1,26 @@
+{
+    "message_type": "MT296",
+    "description": "Answers",
+    "scenarios": [
+        {
+            "file": "cancellation_accepted.json",
+            "description": "Cancellation request accepted"
+        },
+        {
+            "file": "cancellation_rejected.json",
+            "description": "Cancellation request rejected"
+        },
+        {
+            "file": "partial_cancellation.json",
+            "description": "Partial cancellation accepted"
+        },
+        {
+            "file": "no_payment_found.json",
+            "description": "No payment found response"
+        },
+        {
+            "file": "inquiry_response.json",
+            "description": "Response to inquiry"
+        }
+    ]
+}

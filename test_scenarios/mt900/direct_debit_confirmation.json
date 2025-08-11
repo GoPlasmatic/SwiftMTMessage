@@ -1,0 +1,62 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["DD", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["MND", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": "USD",
+        "dd_amount": {"fake": ["f64", 50.0, 5000.0]},
+        "value_date": "2024-12-15",
+        "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "creditor_bic": {"fake": ["bic"]},
+        "creditor_name": {"fake": ["company_name"]},
+        "mandate_ref": {"cat": ["MANDATE-", {"fake": ["i64", 1000000, 9999999]}]},
+        "purpose": "UTILITY PAYMENT",
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "900",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "900",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "dd_amount"}
+            },
+            "52": {"A": {"bic": {"var": "creditor_bic"}}},
+            "72": {
+                "information": [
+                    "/INS/DIRECT DEBIT",
+                    {"substr": [{"cat": ["/CRED/", {"var": "creditor_name"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/MREF/", {"var": "mandate_ref"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/PURP/", {"var": "purpose"}]}, 0, 35]},
+                    "/FREQ/MONTHLY"
+                ]
+            }
+        }
+    }
+}

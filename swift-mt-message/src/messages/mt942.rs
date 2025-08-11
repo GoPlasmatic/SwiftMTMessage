@@ -1,211 +1,186 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// # MT942: Interim Transaction Report
+/// MT942: Interim Transaction Report
 ///
-/// This message is used by financial institutions to send periodic interim
-/// transaction reports containing summary information about account activity
-/// within a specified period. Unlike MT940, this message focuses on transaction
-/// summaries rather than detailed transaction lines.
+/// ## Purpose
+/// Used to report interim account information including real-time or intraday transaction
+/// details and balance updates. This message provides timely account information between
+/// regular statement periods for enhanced cash management and liquidity monitoring.
+///
+/// ## Scope
+/// This message is:
+/// - Sent for real-time or intraday account reporting
+/// - Used when immediate transaction visibility is required
+/// - Applied for active cash management and treasury operations
+/// - Essential for intraday liquidity management and position monitoring
+/// - Part of real-time cash management and payment system integration
 ///
 /// ## Key Features
-/// - **Interim reporting**: Regular transaction summaries between full statements
-/// - **Transaction counts**: Summary of debit and credit transaction volumes
-/// - **Floor limits**: Threshold-based reporting for significant transactions
-/// - **Balance progression**: Opening and closing balance information
-/// - **High-volume accounts**: Efficient reporting for accounts with many transactions
-/// - **Cash management**: Regular monitoring of account activity
+/// - **Real-time Reporting**: Immediate transaction and balance information
+/// - **Intraday Updates**: Multiple reports possible within a single business day
+/// - **Balance Limits**: Credit and debit limit information for account management
+/// - **Transaction Details**: Individual transaction entries with real-time processing
+/// - **Summary Information**: Debit and credit entry summaries for quick analysis
+/// - **Available Balance**: Current available balance for immediate decision making
+///
+/// ## Common Use Cases
+/// - Intraday liquidity monitoring
+/// - Real-time cash position management
+/// - Payment system integration
+/// - Overdraft and credit limit monitoring
+/// - High-frequency trading account management
+/// - Treasury operations requiring immediate visibility
+/// - Risk management and exposure monitoring
+/// - Automated cash sweeping and positioning
 ///
 /// ## Field Structure
-/// All fields follow the enhanced macro system with proper validation rules.
-/// The message supports optional floor limit information and transaction summaries.
+/// - **20**: Transaction Reference (mandatory) - Unique report reference
+/// - **21**: Related Reference (optional) - Reference to related period or statement
+/// - **25**: Account Identification (mandatory) - Account being reported
+/// - **28C**: Statement Number/Sequence (mandatory) - Report numbering
+/// - **34F**: Debit Floor Limit (mandatory) - Minimum debit amount for reporting
+/// - **34F**: Credit Ceiling Limit (optional) - Maximum credit limit information
+/// - **13D**: Date/Time Indication (mandatory) - Precise timing of report
+/// - **Statement Lines**: Repetitive sequence of transaction details
+/// - **90D**: Number/Sum of Debit Entries (optional) - Debit transaction summary
+/// - **90C**: Number/Sum of Credit Entries (optional) - Credit transaction summary
+/// - **86**: Information to Account Owner (optional) - Additional transaction information
 ///
-/// ## Business Rules
-/// - All balance fields must use the same currency
-/// - Transaction counts represent actual processed transactions
-/// - Floor limits determine which transactions are included in summaries
-/// - Entry counts should match the sum of individual transaction counts
+/// ## Network Validation Rules
+/// - **Currency Consistency**: All balance and limit fields must use consistent currency
+/// - **Entry Currency Consistency**: Entry summaries must use same currency as balances
+/// - **Reference Format**: Transaction references must follow SWIFT standards
+/// - **Required Fields**: All mandatory fields must be present and properly formatted
+/// - **Real-time Constraints**: Timing information must reflect current processing
+///
+/// ## SRG2025 Status
+/// - **Structural Changes**: None - MT942 format remains unchanged in SRG2025
+/// - **Validation Updates**: Additional validation for real-time reporting accuracy
+/// - **Processing Improvements**: Improved support for real-time banking platforms
+/// - **Compliance Notes**: Enhanced support for modern payment system APIs
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Real-time integration with payment processing and account management systems
+/// - **Treasury Systems**: Critical input for intraday liquidity management and cash positioning
+/// - **API Integration**: Essential for modern real-time banking and payment system integration
+/// - **Risk Management**: Key component for real-time exposure monitoring and limit management
+///
+/// ## Relationship to Other Messages
+/// - **Triggered by**: MT920 (Request Message) for real-time account information requests
+/// - **Complements**: MT940 (daily statements) and MT941 (balance reports) with real-time updates
+/// - **Supports**: Intraday liquidity management, payment processing, and real-time cash management
+/// - **Integrates with**: Real-time payment systems, treasury platforms, and risk management systems
+
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT942_VALIDATION_RULES)]
 pub struct MT942 {
-    /// **Transaction Reference Number** - Field 20
-    ///
-    /// Unique reference for this interim transaction report.
-    /// Used for tracking and referencing this specific report.
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField,
+    #[field("20")]
+    pub field_20: Field20,
 
-    /// **Related Reference** - Field 21 (Optional)
-    ///
-    /// Links to MT920 request if applicable.
-    /// Provides connection to report request that triggered this response.
-    #[field("21", optional)]
-    pub field_21: Option<GenericReferenceField>,
+    #[field("21")]
+    pub field_21: Option<Field21NoOption>,
 
-    /// **Account Identification** - Field 25
-    ///
-    /// IBAN or account identifier for the reported account.
-    /// Identifies the account for which transaction summary is provided.
-    #[field("25", mandatory)]
-    pub field_25: GenericTextField,
+    #[field("25")]
+    pub field_25: Field25AccountIdentification,
 
-    /// **Statement Number** - Field 28C
-    ///
-    /// Statement sequence number and optional page number.
-    /// Enables proper sequencing of interim reports.
-    #[field("28C", mandatory)]
+    #[field("28C")]
     pub field_28c: Field28C,
 
-    /// **Floor Limit Indicator** - Field 34F (Optional)
-    ///
-    /// Minimum transaction amount for inclusion in the report.
-    /// Transactions below this threshold may be excluded from summaries.
-    #[field("34F", optional)]
-    pub field_34f: Option<Field34F>,
+    #[field("34F#1")]
+    pub field_34f_debit_limit: Field34F,
 
-    /// **Date/Time Indication** - Field 13D (Optional)
-    ///
-    /// Date and time when the report was generated.
-    /// Provides timestamp for report generation context.
-    #[field("13D", optional)]
-    pub field_13d: Option<Field13D>,
+    #[field("34F#2")]
+    pub field_34f_credit_limit: Option<Field34F>,
 
-    /// **Opening Balance** - Field 60F
-    ///
-    /// Booked opening balance at start of reporting period.
-    /// Reference point for transaction summaries during the period.
-    #[field("60F", mandatory)]
-    pub field_60f: GenericBalanceField,
+    #[field("13D")]
+    pub field_13d: Field13D,
 
-    /// **Sum of Debit Entries** - Field 90D (Optional)
-    ///
-    /// Total amount and count of debit transactions.
-    /// Summarizes all debit activity during the reporting period.
-    #[field("90D", optional)]
+    #[field("#")]
+    pub statement_lines: Vec<MT942StatementLine>,
+
+    #[field("90D")]
     pub field_90d: Option<Field90D>,
 
-    /// **Sum of Credit Entries** - Field 90C (Optional)
-    ///
-    /// Total amount and count of credit transactions.
-    /// Summarizes all credit activity during the reporting period.
-    #[field("90C", optional)]
+    #[field("90C")]
     pub field_90c: Option<Field90C>,
 
-    /// **Closing Balance** - Field 62F
-    ///
-    /// Booked closing balance at end of reporting period.
-    /// Final balance after all transactions during the period.
-    #[field("62F", mandatory)]
-    pub field_62f: GenericBalanceField,
-
-    /// **Closing Available Balance** - Field 64 (Optional)
-    ///
-    /// Available funds at close of reporting period.
-    /// Shows actual spendable balance after reserves and holds.
-    #[field("64", optional)]
-    pub field_64: Option<GenericBalanceField>,
-
-    /// **Forward Available Balance** - Field 65 (Optional)
-    ///
-    /// Value-dated available balance for future periods.
-    /// Shows projected available funds considering pending transactions.
-    #[field("65", optional)]
-    pub field_65: Option<GenericBalanceField>,
-
-    /// **Info to Account Owner** - Field 86 (Optional)
-    ///
-    /// Additional narrative information about the report.
-    /// Provides context or explanatory details for the transaction summary.
-    #[field("86", optional)]
-    pub field_86: Option<GenericMultiLineTextField<6, 65>>,
+    #[field("86")]
+    pub field_86: Option<Field86>,
 }
 
-/// Enhanced validation rules for MT942
+#[serde_swift_fields]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+pub struct MT942StatementLine {
+    #[field("61")]
+    pub field_61: Option<Field61>,
+
+    #[field("86")]
+    pub field_86: Option<Field86>,
+}
+
+/// Validation rules for MT942 - Interim Transaction Report
 const MT942_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
-      "id": "CURRENCY_CONSISTENCY",
-      "description": "All balance fields must use the same currency",
+      "id": "C1",
+      "description": "The first two characters of the three-character currency code in fields 34F, 61, 90D, and 90C must be the same for all occurrences",
       "condition": {
         "and": [
-          {"==": [
-            {"var": "field_60f.currency"},
-            {"var": "field_62f.currency"}
-          ]},
+          {"!!": {"var": "fields.34F#1"}},
           {
             "if": [
-              {"var": "field_64.is_some"},
+              {"!!": {"var": "fields.34F#2"}},
               {"==": [
-                {"var": "field_60f.currency"},
-                {"var": "field_64.currency"}
+                {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.34F#2.currency"}, 0, 2]}
               ]},
               true
             ]
           },
           {
             "if": [
-              {"var": "field_65.is_some"},
+              {"!!": {"var": "fields.90D"}},
               {"==": [
-                {"var": "field_60f.currency"},
-                {"var": "field_65.currency"}
-              ]},
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "ENTRY_CURRENCY_CONSISTENCY",
-      "description": "Entry summaries must use same currency as balances",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"var": "field_90d.is_some"},
-              {"==": [
-                {"var": "field_60f.currency"},
-                {"var": "field_90d.currency"}
+                {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.90D.currency"}, 0, 2]}
               ]},
               true
             ]
           },
           {
             "if": [
-              {"var": "field_90c.is_some"},
+              {"!!": {"var": "fields.90C"}},
               {"==": [
-                {"var": "field_60f.currency"},
-                {"var": "field_90c.currency"}
+                {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.90C.currency"}, 0, 2]}
               ]},
               true
             ]
+          },
+          {
+            "if": [
+              {">=": [{"length": {"var": "fields.#"}}, 1]},
+              {
+                "all": [
+                  {"var": "fields.#"},
+                  {
+                    "if": [
+                      {"!!": {"var": "61"}},
+                      {"==": [
+                        {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                        {"substr": [{"var": "61.currency"}, 0, 2]}
+                      ]},
+                      true
+                    ]
+                  }
+                ]
+              },
+              true
+            ]
           }
-        ]
-      }
-    },
-    {
-      "id": "REF_FORMAT",
-      "description": "Transaction reference must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_25.value"}, ""]},
-          {"var": "field_28c.is_valid"},
-          {"var": "field_60f.is_valid"},
-          {"var": "field_62f.is_valid"}
         ]
       }
     }

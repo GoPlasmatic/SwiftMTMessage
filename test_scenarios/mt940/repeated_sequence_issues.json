@@ -1,0 +1,145 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "account_id": {"cat": ["GB82WEST", {"fake": ["i64", 10000000000000, 99999999999999]}]},
+        "statement_num": {"fake": ["i64", 1000, 9999]},
+        "opening_balance": {"fake": ["f64", 100000.0, 500000.0]},
+        "currency": "USD",
+        "value_date": "2024-12-20",
+        "entry_date": "1220",
+        "amount1": {"fake": ["f64", 1000.0, 10000.0]},
+        "amount2": {"fake": ["f64", 2000.0, 20000.0]},
+        "ref1": {"cat": ["REF", {"fake": ["i64", 100000, 999999]}]},
+        "ref2": {"cat": ["REF", {"fake": ["i64", 100000, 999999]}]},
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "940",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "940",
+        "fields": {
+            "20": {"reference": {"cat": ["STMT", {"var": "statement_num"}]}},
+            "21": {"reference": {"cat": ["DAILY", {"var": "statement_num"}]}},
+            "25": {"NoOption": {"authorisation": {"var": "account_id"}}},
+            "28C": {"statement_number": {"var": "statement_num"}, "sequence_number": 1},
+            "60": {
+                "F": {
+                    "debit_credit_mark": "C",
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "opening_balance"}
+                }
+            },
+            "#": [
+                {
+                    "61": {
+                        "value_date": "2024-12-20",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "C",
+                        "amount": {"var": "amount1"},
+                        "transaction_type": "NMSC",
+                        "customer_reference": {"var": "ref1"},
+                        "bank_reference": "//BANK001",
+                        "supplementary_details": "DUPLICATE-SEQ-1"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/ORIGINATOR/ACME CORPORATION",
+                            "/BENEF/CUSTOMER ACCOUNT",
+                            "/REMI/PAYMENT FOR INVOICE 12345",
+                            "/DUPLICATE/FIELD 61 REPEATED"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-20",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "C",
+                        "amount": {"var": "amount1"},
+                        "transaction_type": "NMSC",
+                        "customer_reference": {"var": "ref1"},
+                        "bank_reference": "//BANK001",
+                        "supplementary_details": "DUPLICATE-SEQ-2"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/ORIGINATOR/ACME CORPORATION",
+                            "/BENEF/CUSTOMER ACCOUNT",
+                            "/REMI/PAYMENT FOR INVOICE 12345",
+                            "/ERROR/DUPLICATE TRANSACTION ENTRY"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-20",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "D",
+                        "amount": {"var": "amount2"},
+                        "transaction_type": "NCHG",
+                        "customer_reference": {"var": "ref2"},
+                        "bank_reference": "//BANK002",
+                        "supplementary_details": "NORMAL-TXN"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/CHARGES/ACCOUNT MAINTENANCE FEE",
+                            "/PERIOD/DECEMBER 2024",
+                            "/TYPE/MONTHLY CHARGE"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-20",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "C",
+                        "amount": {"var": "amount1"},
+                        "transaction_type": "NMSC",
+                        "customer_reference": {"var": "ref1"},
+                        "bank_reference": "//BANK001",
+                        "supplementary_details": "DUPLICATE-SEQ-3"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/ORIGINATOR/ACME CORPORATION",
+                            "/BENEF/CUSTOMER ACCOUNT",
+                            "/REMI/PAYMENT FOR INVOICE 12345",
+                            "/ERROR/TRIPLE DUPLICATE DETECTED"
+                        ]
+                    }
+                }
+            ],
+            "62": {
+                "F": {
+                    "debit_credit_mark": "C",
+                    "value_date": "2024-12-20",
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "opening_balance"}
+                }
+            }
+        }
+    }
+}

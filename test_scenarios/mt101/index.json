@@ -1,0 +1,54 @@
+{
+    "message_type": "MT101",
+    "description": "Request for Transfer",
+    "scenarios": [
+        {
+            "file": "standard.json",
+            "description": "Standard payment request"
+        },
+        {
+            "file": "bulk_payment.json",
+            "description": "Bulk payment with multiple transactions"
+        },
+        {
+            "file": "multi_currency.json",
+            "description": "Multi-currency payment batch"
+        },
+        {
+            "file": "scheduled_payment.json",
+            "description": "Scheduled future-dated payment"
+        },
+        {
+            "file": "salary_payment.json",
+            "description": "Monthly salary payment batch"
+        },
+        {
+            "file": "vendor_payment.json",
+            "description": "Vendor/supplier payment batch"
+        },
+        {
+            "file": "urgent_payment.json",
+            "description": "Urgent priority payment"
+        },
+        {
+            "file": "direct_debit.json",
+            "description": "Direct debit collection"
+        },
+        {
+            "file": "minimal.json",
+            "description": "Minimal payment request with only required fields"
+        },
+        {
+            "file": "cbpr_corporate_bulk_payment.json",
+            "description": "CBPR+ compliant corporate bulk payment"
+        },
+        {
+            "file": "cbpr_payroll_batch.json",
+            "description": "CBPR+ compliant payroll batch payment"
+        },
+        {
+            "file": "cbpr_supplier_batch.json",
+            "description": "CBPR+ compliant supplier batch payment"
+        }
+    ]
+}

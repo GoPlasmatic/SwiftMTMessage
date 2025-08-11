@@ -1,158 +1,165 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// # MT935: Rate Change Advice
+/// MT935: Rate Change Advice
 ///
-/// This message is used by a financial institution to advise another financial institution
-/// of a change in interest rates. This message is critical for managing interest
-/// rate exposure, updating pricing models, and ensuring accurate interest calculations
-/// across correspondent banking relationships and customer accounts.
+/// ## Purpose
+/// Used to advise changes in interest rates, exchange rates, or other financial rates that
+/// affect existing agreements, accounts, or financial instruments. This message provides
+/// formal notification of rate changes with effective dates and detailed rate information.
+///
+/// ## Scope
+/// This message is:
+/// - Sent by financial institutions to notify customers or correspondents of rate changes
+/// - Used for interest rate changes on deposits, loans, and credit facilities
+/// - Applied to foreign exchange rate notifications and updates
+/// - Essential for pricing transparency and regulatory compliance
+/// - Part of relationship management and customer communication processes
 ///
 /// ## Key Features
-/// - **Interest rate updates**: Notifying changes in deposit or lending rates
-/// - **Base rate changes**: Communicating central bank rate adjustments
-/// - **Account-specific rates**: Updating rates for specific customer accounts
-/// - **Product rate changes**: Modifying rates for specific banking products
-/// - **Regulatory compliance**: Meeting rate disclosure requirements
-/// - **Risk management**: Coordinating rate changes across institutions
+/// - **Rate Change Notification**: Formal advice of rate modifications
+/// - **Multiple Rate Changes**: Support for up to 10 rate changes in a single message
+/// - **Effective Dating**: Precise effective dates for each rate change
+/// - **Flexible Identification**: Either function code (field 23) or account (field 25) identification
+/// - **Detailed Rate Information**: Comprehensive rate details using field 37H
+/// - **Additional Information**: Optional narrative for context and explanations
 ///
-/// ## Field Structure
-/// All fields follow the enhanced macro system with proper validation rules.
-/// The message supports repetitive rate change sequences for bulk updates.
+/// ## Common Use Cases
+/// - Interest rate changes on deposit accounts
+/// - Loan and credit facility rate adjustments
+/// - Foreign exchange rate updates for currency accounts
+/// - Investment product rate notifications
+/// - Central bank rate change implementations
+/// - Correspondent banking rate adjustments
+/// - Treasury and money market rate updates
+/// - Regulatory rate change compliance notifications
 ///
-/// ## Conditional Rules
-/// - **C1**: The repeating sequence of fields 23/25/30/37H must occur at least once and at most 10 times
-/// - **C2**: Either Field 23 or Field 25 must be present in each sequence, but not both
+/// ## Message Structure
+/// ### Header Section
+/// - **20**: Transaction Reference (mandatory) - Unique reference for this rate change advice
+/// - **Rate Changes**: Repetitive sequence (1-10 occurrences) of rate change details
+/// - **72**: Sender to Receiver Information (optional) - Additional context and explanations
+///
+/// ### Rate Change Sequence (MT935RateChange)
+/// Each rate change sequence contains:
+/// - **23**: Function Code (optional) - Type of rate change or product code
+/// - **25**: Account Identification (optional) - Specific account affected by rate change
+/// - **30**: Effective Date (mandatory) - Date when new rate becomes effective
+/// - **37H**: New Rate (mandatory, repetitive) - Detailed rate information
+///
+/// ## Network Validation Rules
+/// - **C1 Rule**: Rate change sequences must occur 1-10 times
+/// - **C2 Rule**: Either field 23 (Function Code) or field 25 (Account) must be present, but not both
+/// - **Reference Format**: Transaction references must follow SWIFT formatting standards
+/// - **Required Fields**: All mandatory fields must be present and properly formatted
+/// - **Date Validation**: Effective dates must be valid and properly formatted
+/// - **Rate Validation**: Rate information must be complete and valid
+///
+/// ## Field 23 - Function Codes
+/// When used, field 23 may contain codes such as:
+/// - **DEPOSIT**: Interest rates for deposit products
+/// - **LOAN**: Interest rates for lending products
+/// - **FX**: Foreign exchange rates
+/// - **CREDIT**: Credit facility rates
+/// - **INVEST**: Investment product rates
+/// - **MONEY**: Money market rates
+///
+/// ## Field 37H - Rate Information
+/// Provides detailed rate information including:
+/// - Rate type and classification
+/// - Percentage rates or basis point changes
+/// - Spread information over reference rates
+/// - Tier-based or graduated rate structures
+/// - Minimum and maximum rate constraints
+///
+/// ## Processing Context
+/// ### Rate Change Implementation
+/// 1. Rate change decision made by institution
+/// 2. MT935 prepared with effective date and rate details
+/// 3. Message sent to affected customers/correspondents
+/// 4. Recipients update systems and communicate changes
+/// 5. New rates become effective on specified date
+///
+/// ### Regulatory Compliance
+/// - Documentation of rate change notifications
+/// - Audit trail for regulatory review
+/// - Customer communication requirements
+/// - Transparency and disclosure obligations
+///
+/// ## SRG2025 Status
+/// - **No Structural Changes**: MT935 format remains unchanged in SRG2025
+/// - **Enhanced Validation**: Additional validation for rate accuracy and completeness
+/// - **Digital Integration**: Improved support for automated rate change processing
+/// - **Regulatory Compliance**: Enhanced support for regulatory reporting requirements
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Direct integration with rate management and pricing systems
+/// - **Customer Systems**: Input for customer treasury and financial management systems
+/// - **Compliance Systems**: Essential for regulatory reporting and audit trail maintenance
+/// - **Communication Platforms**: Integration with multi-channel customer notification systems
+///
+/// ## Relationship to Other Messages
+/// - **Supports**: Rate-sensitive account management and transaction processing
+/// - **Complements**: Statement messages (MT940, MT950) that reflect rate changes
+/// - **Integrates with**: Customer communication and relationship management processes
+/// - **Documentation**: Provides formal record of rate change notifications for compliance
+
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT935_VALIDATION_RULES)]
 pub struct MT935 {
-    /// **Transaction Reference Number** - Field 20
-    ///
-    /// Unique sender's reference for this rate change advice.
-    /// Used for tracking and auditing rate change communications.
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField,
+    #[field("20")]
+    pub field_20: Field20,
 
-    /// **Rate Change Sequences** (Repetitive)
-    ///
-    /// Each sequence represents one rate change with either rate type
-    /// identification (Field 23) or account identification (Field 25),
-    /// along with the effective date and new rate.
-    #[field("RATE_CHANGES", repetitive)]
+    #[field("#")]
     pub rate_changes: Vec<MT935RateChange>,
 
-    /// **Sender to Receiver Information** - Field 72 (Optional)
-    ///
-    /// Additional information about the rate changes.
-    /// Can include structured text or narrative details.
-    #[field("72", optional)]
-    pub field_72: Option<GenericMultiLineTextField<6, 35>>,
+    #[field("72")]
+    pub field_72: Option<Field72>,
 }
 
-/// # MT935 Rate Change Sequence
-///
-/// Represents a single rate change within an MT935 message.
-/// Each sequence must have either Field 23 (rate type) OR Field 25 (account), but not both.
-/// Enhanced with SwiftMessage derive for automatic parsing and validation as a sub-message structure.
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT935_RATE_CHANGE_VALIDATION_RULES)]
 pub struct MT935RateChange {
-    /// **Further Identification** - Field 23 (Conditional C2)
-    ///
-    /// Identifies the type of rate being changed (BASE, CALL, COMMERCIAL, etc.)
-    /// Function codes: BASE, CALL, COMMERCIAL, CURRENT, DEPOSIT, NOTICE, PRIME
-    #[field("23", optional)]
+    #[field("23")]
     pub field_23: Option<Field23>,
 
-    /// **Account Identification** - Field 25 (Conditional C2)
-    ///
-    /// Identifies specific account for account-specific rate changes.
-    /// Alternative to Field 23 when rate applies to individual account.
-    #[field("25", optional)]
-    pub field_25: Option<GenericTextField>,
+    #[field("25")]
+    pub field_25: Option<Field25NoOption>,
 
-    /// **Effective Date of New Rate** - Field 30 (Mandatory)
-    ///
-    /// When the new rate becomes effective (YYMMDD format).
-    /// Must be a valid calendar date.
-    #[field("30", mandatory)]
-    pub field_30: GenericTextField,
+    #[field("30")]
+    pub field_30: Field30,
 
-    /// **New Interest Rate** - Field 37H (Mandatory)
-    ///
-    /// The new interest rate value with C/D indicator.
-    /// Indicator: 'C' for credit rate, 'D' for debit rate.
-    #[field("37H", mandatory)]
-    pub field_37h: Field37H,
+    #[field("37H")]
+    pub field_37h: Vec<Field37H>,
 }
 
-/// Enhanced validation rules for MT935
+/// Validation rules for MT935 - Rate Change Advice
 const MT935_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "Rate change sequences must occur 1-10 times",
+      "description": "The repetitive sequence (fields 23/25 to 37H) must appear at least once but no more than ten times",
       "condition": {
         "and": [
-          {">=": [{"length": {"var": "rate_changes"}}, 1]},
-          {"<=": [{"length": {"var": "rate_changes"}}, 10]}
+          {">=": [{"length": {"var": "fields.#"}}, 1]},
+          {"<=": [{"length": {"var": "fields.#"}}, 10]}
         ]
       }
     },
-    {
-      "id": "REF_FORMAT", 
-      "description": "Transaction reference must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "!=": [{"var": "field_20.value"}, ""]
-      }
-    }
-  ]
-}"#;
-
-/// Validation rules specific to MT935 rate change sequences
-const MT935_RATE_CHANGE_VALIDATION_RULES: &str = r#"{
-  "rules": [
     {
       "id": "C2",
-      "description": "Either Field 23 or Field 25 must be present, but not both",
+      "description": "In each repetitive sequence, either field 23 or field 25, but not both, must be present",
       "condition": {
-        "or": [
+        "none": [
+          {"var": "fields.#"},
           {
             "and": [
-              {"var": "field_23.is_some"},
-              {"var": "field_25.is_none"}
-            ]
-          },
-          {
-            "and": [
-              {"var": "field_23.is_none"},
-              {"var": "field_25.is_some"}
+              {"!!": {"var": "23"}},
+              {"!!": {"var": "25"}}
             ]
           }
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_SEQUENCE_FIELDS",
-      "description": "Effective date and new rate must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_30.value"}, ""]},
-          {"var": "field_37h.is_valid"}
         ]
       }
     }

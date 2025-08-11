@@ -19,8 +19,6 @@ target/
 # Added by cargo
 
 /target
-
+/specifications/
 .DS_Store
-specifications
 .claude/
-CLAUDE.md

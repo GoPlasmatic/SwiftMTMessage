@@ -1,0 +1,64 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["DSTOP", {"fake": ["i64", 100000, 999999]}]},
+        "cheque_number": {"fake": ["i64", 100000, 999999]},
+        "issue_date": "2024-12-10",
+        "currency": "USD",
+        "amount": {"fake": ["f64", 1000.0, 25000.0]},
+        "drawer_bic": {"fake": ["bic"]},
+        "payee_name": {"fake": ["company_name"]},
+        "payee_address": {"fake": ["street_address"]},
+        "payee_city": {"fake": ["city_name"]},
+        "payee_country": {"fake": ["country_code"]},
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "111",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "111",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"cat": ["", {"var": "cheque_number"}]}},
+            "30": {"execution_date": {"var": "issue_date"}},
+            "32": {"B": {"currency": {"var": "currency"}, "amount": {"var": "amount"}}},
+            "52": {"A": {"bic": {"var": "drawer_bic"}}},
+            "59": {
+                "name_and_address": [
+                    {"var": "payee_name"},
+                    {"var": "payee_address"},
+                    {"cat": [{"var": "payee_city"}, ", ", {"var": "payee_country"}]}
+                ]
+            },
+            "75": {
+                "information": [
+                    "REASON: DUPLICATE ISSUE",
+                    "REPLACEMENT CHEQUE ISSUED",
+                    "ORIGINAL TO BE CANCELLED",
+                    "NEW CHEQUE NUMBER: 123456"
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,93 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["DIVD", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": "USD",
+        "dividend_amount": {"fake": ["f64", 100.0, 100000.0]},
+        "value_date": "2024-12-28",
+        "bank_op_code": "CRED",
+        "charges": "SHA",
+        "company_lei": "LEIXG9PUBLICCOMPANY01",
+        "uetr": {"fake": ["uuid"]},
+        "shares_held": {"fake": ["i64", 100, 100000]},
+        "dividend_rate": "USD 0.05",
+        "record_date": "2024-12-15",
+        "session_num": "0001",
+        "sequence_num": "000123"
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "103",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_id": "gpi",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "monetary_amount": {"cat": [{"var": "currency"}, {"var": "dividend_amount"}]}
+        },
+        "message_type": "103",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "dividend_amount"}
+            },
+            "50": {
+                "K": {
+                    "account": "/DIVIDEND-ACCOUNT",
+                    "name_and_address": [
+                        {"fake": ["company_name"]},
+                        {"cat": ["ISSUER/", {"var": "company_lei"}]},
+                        {"fake": ["street_address"]},
+                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                    ]
+                }
+            },
+            "52": {"A": {"bic": {"var": "sender_bic"}}},
+            "57": {"A": {"bic": {"var": "receiver_bic"}}},
+            "59": {
+                "NoOption": {
+                    "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                    "name_and_address": [
+                        {"fake": ["name"]},
+                        "SHAREHOLDER",
+                        {"fake": ["street_address"]},
+                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                    ]
+                }
+            },
+            "70": {
+                "narrative": [
+                    "/PURP/DIVD",
+                    "/SHARES/{shares}",
+                    "/RATE/{rate} /RECORD/{date}",
+                    "/RFB/QUARTERLY DIVIDEND"
+                ]
+            },
+            "71A": {"code": {"var": "charges"}},
+            "72": {
+                "information": [
+                    "/CBPR/COMPLIANT",
+                    "/TYPE/DIVIDEND PAYMENT",
+                    {"substr": [{"cat": ["/ISSUER/", {"var": "company_lei"}]}, 0, 35]},
+                    "/TAX/WITHHOLDING APPLIED",
+                    "/INS/Q4 2024 DIVIDEND"
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "message_type": "MT192",
+    "description": "Request for Cancellation",
+    "scenarios": [
+        {
+            "file": "request_cancellation.json",
+            "description": "Request for cancellation"
+        },
+        {
+            "file": "urgent_cancellation_mt202.json",
+            "description": "Urgent MT202 cancellation"
+        },
+        {
+            "file": "fraud_prevention_cancellation.json",
+            "description": "Fraud prevention cancellation"
+        },
+        {
+            "file": "regulatory_compliance_cancellation.json",
+            "description": "Regulatory compliance cancellation"
+        },
+        {
+            "file": "cbpr_cancellation_request.json",
+            "description": "CBPR+ cancellation request"
+        }
+    ]
+}

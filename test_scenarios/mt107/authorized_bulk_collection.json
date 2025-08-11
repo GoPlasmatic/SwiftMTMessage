@@ -1,0 +1,118 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["AUTHDD", {"fake": ["i64", 1000000000, 9999999999]}]},
+        "currency": "USD",
+        "execution_date": "2024-12-31",
+        "charges": "SHA",
+        "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+        "uetr": {"fake": ["uuid"]},
+        "total_amount": {"fake": ["f64", 50000.0, 200000.0]},
+        "session_num": "0001",
+        "sequence_num": "000123"
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "107",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_id": "gpi",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "monetary_amount": {"cat": [{"var": "currency"}, {"var": "total_amount"}]}
+        },
+        "message_type": "107",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "52": {"A": {"bic": {"var": "sender_bic"}}},
+            "26T": {"type_code": "TAX"},
+            "77B": {"narrative": ["/ORDERRES/GB//TAX COLLECTION", "/BENEFRES/GB//GOVERNMENT"]},
+            "71A": {"code": {"var": "charges"}},
+            "#": [
+                {
+                    "21": {"reference": {"cat": ["TAX", {"fake": ["i64", 10000000, 99999999]}]}},
+                    "23E": {"instruction_code": "AUTH"},
+                    "50": {
+                        "K": {
+                            "account": "/TAX-AUTHORITY-001",
+                            "name_and_address": [
+                                "NATIONAL TAX AUTHORITY",
+                                {"cat": ["GOV ENTITY/", {"var": "sender_lei"}]},
+                                "GOVERNMENT DISTRICT",
+                                "CAPITAL CITY, GB"
+                            ]
+                        }
+                    },
+                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 5000.0, 25000.0]}},
+                    "59": {
+                        "NoOption": {
+                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                {"cat": ["TAX ID ", {"fake": ["i64", 10000000, 99999999]}]},
+                                {"fake": ["street_address"]},
+                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "/RFB/CORPORATE TAX",
+                            {"cat": ["/TAXID/", {"fake": ["i64", 10000000, 99999999]}]},
+                            "/PURP/TAXS",
+                            "/PERIOD/Q4 2024"
+                        ]
+                    }
+                },
+                {
+                    "21": {"reference": {"cat": ["VAT", {"fake": ["i64", 10000000, 99999999]}]}},
+                    "23E": {"instruction_code": "AUTH"},
+                    "50": {
+                        "K": {
+                            "account": "/TAX-AUTHORITY-001",
+                            "name_and_address": [
+                                "NATIONAL TAX AUTHORITY",
+                                {"cat": ["GOV ENTITY/", {"var": "sender_lei"}]},
+                                "GOVERNMENT DISTRICT",
+                                "CAPITAL CITY, GB"
+                            ]
+                        }
+                    },
+                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 3000.0, 15000.0]}},
+                    "59": {
+                        "NoOption": {
+                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                {"cat": ["VAT REG ", {"fake": ["i64", 10000000, 99999999]}]},
+                                {"fake": ["street_address"]},
+                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "/RFB/VAT PAYMENT",
+                            {"cat": ["/VATID/", {"fake": ["i64", 10000000, 99999999]}]},
+                            "/PURP/TAXS",
+                            "/PERIOD/DEC 2024"
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -1,12 +1,12 @@
 <div align="center">
   <img src="https://avatars.githubusercontent.com/u/207296579?s=200&v=4" alt="Plasmatic Logo" width="120" height="120">
-  
-  # SwiftMTMessage
-  
-  **Enterprise-Grade SWIFT MT Message Processing Library**
-  
-  *Macro-driven, type-safe parsing with automatic test data generation*
-  
+
+# SwiftMTMessage
+
+**A Rust library for parsing and building SWIFT MT messages.**
+
+*Uses macros for type-safe parsing and automatic test data generation.*
+
   [![Release Crates](https://github.com/GoPlasmatic/SwiftMTMessage/actions/workflows/crate-publish.yml/badge.svg)](https://github.com/GoPlasmatic/SwiftMTMessage/actions/workflows/crate-publish.yml)
   [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
   [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
@@ -19,53 +19,52 @@
   </p>
 </div>
 
----
+-----
 
-A modern Rust library for parsing SWIFT MT (Message Type) financial messages with **macro-based field definitions** and **serde-like automatic serialization**. Built for financial institutions requiring type-safe, high-performance SWIFT message processing with comprehensive test data generation.
+SwiftMTMessage is a modern Rust library for handling SWIFT MT financial messages. It uses a macro-driven approach with a `serde`-like feel for defining fields, parsing messages, and serializing data. It's designed for performance and type safety, with powerful features for generating test data.
 
 ## 🚀 Key Features
 
-- **Macro-Driven Architecture**: `#[derive(SwiftField)]` and `#[derive(SwiftMessage)]` for automatic field and message generation
-- **Serde-Like Design**: Familiar serialization patterns adapted for financial messaging standards
-- **Type-safe Parsing**: Dedicated field structs with automatic validation
-- **Sample Data Generation**: Automatic generation of valid SWIFT test data with JSON configuration support
-- **Comprehensive Field Support**: All MT103 fields with proper SWIFT compliance
-- **Zero-Copy Parsing**: Efficient parsing with minimal memory allocations
-- **Financial-Grade Validation**: Strict SWIFT compliance with comprehensive error reporting
+  - **Macro-Driven:** Use `#[derive(SwiftField)]` and `#[derive(SwiftMessage)]` to automatically generate parsing and serialization logic.
+  - **`serde`-like API:** A familiar design for developers who have worked with `serde`.
+  - **Type-Safe Parsing:** SWIFT fields are parsed into dedicated, validated structs.
+  - **Test Data Generation:** Automatically create valid SWIFT test data, with or without JSON configuration.
+  - **Comprehensive:** Full support for MT103 fields, with more message types on the way.
+  - **Zero-Copy:** Efficient, low-allocation parsing.
+  - **Strict Validation:** Enforces SWIFT rules and provides detailed error reports.
 
-## 🏗️ Macro-Based Architecture
+## 🏗️ How It Works: Macro-Based Architecture
 
-### SwiftField Derive Macro
+### `#[derive(SwiftField)]`
 
-Define SWIFT fields with automatic parsing, validation, and serialization:
+Define a SWIFT field once, and let the macro generate the boilerplate.
 
 ```rust
 use swift_mt_message::SwiftField;
 
 #[derive(SwiftField)]
-#[format("4!c")]
+#[format("4!c")] // Defines the SWIFT format for validation
 pub struct Field23B {
     #[format("4!c")]
     pub bank_operation_code: String,
 }
 
-// Automatically generates:
-// - parse() method with format validation
-// - to_swift_string() method
-// - validate() method with SWIFT rules
-// - sample() and sample_with_config() methods
-// - Serde serialization/deserialization
+// The macro automatically generates:
+// - A `parse()` method with format validation
+// - A `to_swift_string()` method
+// - `validate()` for SWIFT rule compliance
+// - `serde` serialization/deserialization traits
 ```
 
-### SwiftMessage Derive Macro
+### `#[derive(SwiftMessage)]`
 
-Compose complete MT messages using field macros:
+Compose fields into a complete MT message.
 
 ```rust
 use swift_mt_message::{SwiftMessage, swift_serde};
 
 #[derive(SwiftMessage)]
-#[swift_serde(rename_all = "FIELD_TAGS")]
+#[swift_serde(rename_all = "FIELD_TAGS")] // Maps struct fields to SWIFT tags in JSON
 pub struct MT103 {
     #[field("20")]
     pub transaction_reference: Field20,
@@ -75,34 +74,32 @@ pub struct MT103 {
     
     #[field("32A")]
     pub value_date_currency_amount: Field32A,
-    
-    // Automatically handles:
-    // - Field validation
-    // - SWIFT format compliance
-    // - JSON serialization with field tags
-    // - Sample data generation
-    // - Error propagation
 }
+
+// The macro handles:
+// - Field validation and ordering
+// - SWIFT format compliance
+// - JSON serialization
+// - Error propagation
 ```
 
-## 🎯 Serde-Like Design for Financial Messages
+## 🎯 `serde`-like Serialization
 
-### Automatic Serialization
-
-The library provides serde-like automatic serialization optimized for financial data:
+The library's `serde`-like design makes it easy to serialize parsed SWIFT messages to JSON.
 
 ```rust
 use serde_json;
 use swift_mt_message::{SwiftParser, SwiftMessage, messages::MT103};
 
-// Parse SWIFT message
+// Parse a raw SWIFT message
 let mt103: SwiftMessage<MT103> = SwiftParser::parse(raw_swift_message)?;
 
-// Automatic JSON serialization with financial field tags
+// Automatically serialize to a clean JSON structure
 let json = serde_json::to_string_pretty(&mt103)?;
 ```
 
-**Output (Financial-Optimized JSON):**
+**Example JSON Output:**
+
 ```json
 {
   "message_type": "103",
@@ -122,208 +119,21 @@ let json = serde_json::to_string_pretty(&mt103)?;
 }
 ```
 
-### Custom Financial Serialization
+Complex fields, like enums with different option structures (e.g., `Field50` with options A, F, or K), are flattened for a cleaner JSON output.
 
-Complex financial fields use custom serialization for clean JSON:
-
-```rust
-// Field 50 (Ordering Customer) - Complex enum with 3 variants
-#[derive(SwiftField)]
-pub enum Field50 {
-    A(Field50A),  // Account + BIC
-    F(Field50F),  // Party + Address
-    K(Field50K),  // Name + Address
-}
-
-// Custom serialization flattens the structure:
-// Instead of: {"50": {"K": {"name_and_address": [...]}}}
-// Produces:   {"50": {"name_and_address": [...]}}
-```
-
-## 🎲 Sample Data Generation
-
-### Automatic Test Data Creation
-
-Generate valid SWIFT test data automatically using the same macro-driven approach:
-
-```rust
-use swift_mt_message::{fields::Field20, messages::MT103, SwiftField, SwiftMessageBody};
-
-// Generate individual field samples
-let transaction_ref = Field20::sample();
-println!("Generated reference: {}", transaction_ref.to_swift_string());
-// Output: :20:ABC123DEF4567890
-
-// Generate complete message samples
-let mt103_sample = MT103::sample();
-let json = serde_json::to_string_pretty(&mt103_sample)?;
-println!("Sample MT103:\n{}", json);
-```
-
-### JSON Configuration-Based Generation
-
-Customize sample generation with JSON configurations for precise test scenarios:
-
-```rust
-use swift_mt_message::sample::{FieldConfig, MessageConfig, ValueRange, LengthPreference};
-
-// Configure field-specific generation
-let field_config_json = r#"
-{
-    "length_preference": { "Exact": 16 },
-    "pattern": "^STP[0-9]{13}$",
-    "value_range": {
-        "Amount": {
-            "min": 10000.0,
-            "max": 50000.0,
-            "currency": "EUR"
-        }
-    }
-}
-"#;
-
-let config: FieldConfig = serde_json::from_str(field_config_json)?;
-let custom_sample = Field20::sample_with_config(&config);
-```
-
-### Multi-Scenario Test Generation
-
-Generate test data for different financial scenarios:
-
-```rust
-let scenarios_json = r#"
-[
-    {
-        "name": "High Value Transaction",
-        "config": {
-            "include_optional": true,
-            "scenario": "Standard",
-            "field_configs": {
-                "32A": {
-                    "value_range": {
-                        "Amount": {
-                            "min": 100000.0,
-                            "max": 1000000.0,
-                            "currency": "USD"
-                        }
-                    }
-                }
-            }
-        }
-    },
-    {
-        "name": "STP Compliant Payment",
-        "config": {
-            "include_optional": true,
-            "scenario": "StpCompliant",
-            "field_configs": {
-                "20": {
-                    "pattern": "^STP[0-9]{13}$"
-                }
-            }
-        }
-    }
-]
-"#;
-
-let scenarios: Vec<TestScenario> = serde_json::from_str(scenarios_json)?;
-for scenario in scenarios {
-    let sample = MT103::sample_with_config(&scenario.config);
-    println!("Scenario '{}': {}", scenario.name, sample.field_20.value);
-}
-```
-
-### Format-Aware Generation
-
-Sample generation respects SWIFT format specifications automatically:
-
-```rust
-// Field with format specification "6!n" (exactly 6 numeric characters)
-#[derive(SwiftField)]
-#[format("6!n")]
-pub struct DateField {
-    #[format("6!n")]
-    pub date: String,
-}
-
-let sample = DateField::sample();
-// Generates: "240315" (valid YYMMDD format)
-```
-
-### Predefined Scenarios
-
-Built-in scenarios for common testing needs:
-
-- **Standard**: Basic compliant messages
-- **StpCompliant**: Straight Through Processing optimized
-- **CoverPayment**: Cover payment message format
-- **Minimal**: Only mandatory fields
-- **Full**: All fields populated
-
-```rust
-use swift_mt_message::sample::MessageScenario;
-
-let config = MessageConfig {
-    include_optional: true,
-    scenario: Some(MessageScenario::StpCompliant),
-    field_configs: HashMap::new(),
-};
-
-let stp_sample = MT103::sample_with_config(&config);
-```
-
-## 📋 Financial Field Types
-
-### Institution Fields (Macro-Generated)
-
-All institution fields are generated with consistent structure:
-
-```rust
-#[derive(SwiftField)]
-#[format("institution")]
-pub struct Field52A {
-    pub account_line_indicator: Option<String>,
-    pub account_number: Option<String>,
-    pub bic: String,
-}
-
-// Auto-generated methods:
-// - validate_bic() - 8 or 11 character validation
-// - validate_account() - IBAN/account format checking
-// - to_swift_format() - Proper SWIFT field formatting
-```
-
-### Complex Financial Enums
-
-```rust
-#[derive(SwiftField)]
-pub enum Field50 {
-    #[variant("A")]
-    A(Field50A),  // Account + BIC format
-    
-    #[variant("F")]  
-    F(Field50F),  // Party identifier + Address
-    
-    #[variant("K")]
-    K(Field50K),  // Name + Address only
-}
-
-// Automatic variant detection during parsing
-// Smart serialization without enum wrappers
-```
 
 ## 🔧 Installation
 
-Add this to your `Cargo.toml`:
+Add `swift-mt-message` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-swift-mt-message = "2.0.0"
+swift-mt-message = "3.0.0"
 ```
 
-## 📖 Usage Examples
+## 📖 Usage
 
-### Basic Financial Message Processing
+### Basic Parsing
 
 ```rust
 use swift_mt_message::{SwiftParser, SwiftMessage, messages::MT103};
@@ -332,209 +142,109 @@ let raw_mt103 = r#"{1:F01BANKDEFF0123456789}{2:I103BANKDEFFAXXXU3003}{4:
 :20:FT21234567890
 :23B:CRED
 :32A:210315EUR1234567,89
-:50K:ACME CORPORATION
+:50K:/123456789
+ACME CORPORATION
 123 BUSINESS AVENUE
 NEW YORK NY 10001
 :52A:BANKDEFF
 :57A:DEUTDEFF
-:59A:/DE89370400440532013000
+:59:/DE89370400440532013000
 DEUTDEFF
 :70:PAYMENT FOR SERVICES
 :71A:OUR
 -}"#;
 
-// Macro-powered parsing with automatic validation
-let parsed: SwiftMessage<MT103> = SwiftParser::parse(raw_mt103)?;
-
-// Serde-like JSON serialization
-let json = serde_json::to_string_pretty(&parsed)?;
-println!("Financial Message JSON: {}", json);
+match SwiftParser::parse::<MT103>(raw_mt103) {
+    Ok(parsed) => {
+        let json = serde_json::to_string_pretty(&parsed).unwrap();
+        println!("Parsed Message:\n{}", json);
+    }
+    Err(e) => {
+        // Rich error reporting
+        eprintln!("Parse error: {}", e.brief_message());
+        eprintln!("\nDetails:\n{}", e.debug_report());
+        eprintln!("\n{}", e.format_with_context(raw_mt103));
+    }
+}
 ```
 
-### Working with Financial Field Macros
+### Error Collection Mode (v3.0)
+
+Instead of failing on the first error, you can configure the parser to collect all errors. This is useful for processing messages that may have non-critical issues.
 
 ```rust
-use swift_mt_message::fields::{Field50, Field50K, Field59, Field59A};
+use swift_mt_message::{SwiftParser, ParseResult, ParserConfig, messages::MT103};
 
-// Macro-generated field creation with validation
-let ordering_customer = Field50::K(Field50K::new(vec![
-    "ACME CORPORATION".to_string(),
-    "123 BUSINESS AVENUE".to_string(),
-    "NEW YORK NY 10001".to_string(),
-])?);
+// Configure the parser to collect all errors
+let parser = SwiftParser::with_config(ParserConfig {
+    fail_fast: false,
+    collect_all_errors: true,
+    ..Default::default()
+});
 
-let beneficiary = Field59::A(Field59A::new(
-    Some("DE89370400440532013000".to_string()),
-    "DEUTDEFF"
-)?);
-
-// Automatic SWIFT format generation
-println!("SWIFT Format: {}", ordering_customer.to_swift_string());
+match parser.parse_with_errors::<MT103>(raw_message_with_errors) {
+    Ok(ParseResult::Success(msg)) => {
+        println!("✓ Message parsed successfully");
+    }
+    Ok(ParseResult::PartialSuccess(msg, errors)) => {
+        println!("⚠ Parsed with {} non-critical errors", errors.len());
+        // You can still work with the valid parts of the message
+        // for error in errors { ... }
+    }
+    Ok(ParseResult::Failure(errors)) => {
+        println!("✗ Failed with {} errors:", errors.len());
+        // for error in errors { ... }
+    }
+    Err(e) => eprintln!("Unexpected error: {}", e),
+}
 ```
 
-### Financial Validation
+## 🧪 Testing Strategy
 
-```rust
-use swift_mt_message::fields::Field52A;
+SwiftMTMessage uses a comprehensive testing approach with 165 real-world scenarios across 23 message types, including CBPR+ compliance testing and edge cases.
 
-// Macro-generated validation with financial rules
-let institution = Field52A::new(
-    Some("A".to_string()),           // Account line indicator
-    Some("12345678901234567890".to_string()), // Account number
-    "DEUTDEFF"                       // BIC code
-)?;
+### Key Testing Features
 
-// Automatic validation includes:
-// - BIC format (8 or 11 characters)
-// - Account number length (max 34 chars)
-// - SWIFT compliance checking
-assert!(institution.validate().is_valid);
-```
+- **Scenario-Based Testing**: Real-world use cases from basic payments to complex correspondent banking
+- **Round-Trip Validation**: JSON → MT → JSON conversion testing ensures data integrity
+- **CBPR+ Compliance**: 57 dedicated CBPR+ scenarios for cross-border payment compliance
+- **Sample Generation**: Automatic test data generation using the `datafake` library
+- **100% Success Rate**: All 16,500 tests (100 samples per scenario) pass validation
 
-## 🏗️ Macro Architecture
-
-### Field Generation Pipeline
-
-```
-SWIFT Field Definition
-        ↓
-#[derive(SwiftField)] Macro
-        ↓
-Generated Implementation:
-├── parse() - Format-aware parsing
-├── validate() - SWIFT compliance
-├── to_swift_string() - Format generation
-├── sample() - Test data generation
-├── sample_with_config() - Configurable generation
-└── Serde traits - JSON serialization
-```
-
-### Message Composition
-
-```
-Individual Fields (Macro-Generated)
-        ↓
-#[derive(SwiftMessage)] Macro
-        ↓
-Complete MT Message:
-├── Field validation pipeline
-├── Message structure validation
-├── Automatic header handling
-├── Sample data generation
-└── Financial JSON serialization
-```
-
-## 🎯 Financial-Grade Features
-
-### SWIFT Compliance
-- **Format Validation**: Automatic SWIFT format checking
-- **Field Length Limits**: Enforced character limits per SWIFT standards
-- **BIC Validation**: Strict 8/11 character BIC code validation
-- **Currency Codes**: ISO 4217 currency validation
-- **Date Formats**: SWIFT-compliant date parsing (YYMMDD)
-
-### Performance Optimizations
-- **Zero-Copy Parsing**: Minimal memory allocations during parsing
-- **Compile-Time Generation**: Macro-generated code for optimal performance
-- **Efficient Serialization**: Custom serialization for financial data structures
-- **Memory Safety**: Rust's ownership system prevents financial data corruption
-
-### Error Handling
-- **Structured Errors**: Detailed error types for financial message validation
-- **Field-Level Errors**: Precise error reporting with field tags
-- **Compliance Reporting**: SWIFT standard violation reporting
-- **Recovery Strategies**: Graceful handling of malformed financial data
-
-## 🧪 Testing
-
-Run the comprehensive test suite:
+### Quick Start
 
 ```bash
-cargo test
+# Run all test scenarios
+cargo test round_trip_scenarios -- --nocapture
+
+# Test specific message type
+TEST_MESSAGE_TYPE=MT103 cargo test round_trip_scenarios -- --nocapture
+
+# Debug a specific scenario
+TEST_MESSAGE_TYPE=MT103 TEST_SCENARIO=cbpr_business_payment TEST_DEBUG=1 cargo test round_trip_scenarios -- --nocapture
 ```
 
-Test with financial message examples:
-
-```bash
-cargo test --features financial-examples -- --nocapture
-```
-
-Run sample generation examples:
-
-```bash
-# Basic sample generation
-cargo run --example sample_generation
-
-# JSON configuration-based generation
-cargo run --example json_config_sample_generation
-```
-
-## 📚 Macro Reference
-
-### SwiftField Attributes
-
-| Attribute | Purpose | Example |
-|-----------|---------|---------|
-| `#[format("4!c")]` | Field format specification | 4 characters, alphabetic |
-| `#[variant("A")]` | Enum variant tag | Field50A variant |
-| `#[validate(bic)]` | Custom validation | BIC code validation |
-| `#[sample(generator)]` | Custom sample generator | Specialized test data |
-
-### SwiftMessage Attributes
-
-| Attribute | Purpose | Example |
-|-----------|---------|---------|
-| `#[field("20")]` | SWIFT field tag | Transaction reference |
-| `#[optional]` | Optional field | Non-mandatory fields |
-| `#[swift_serde(...)]` | Serialization control | Field tag mapping |
-| `#[sample_scenario(...)]` | Default sample scenario | StpCompliant generation |
-
-## 🔍 Financial Validation Rules
-
-- **BIC Codes**: 8 or 11 characters, alphanumeric (SWIFT standard)
-- **Account Numbers**: Maximum 34 characters (IBAN compliance)
-- **Currency Codes**: 3-character ISO 4217 codes
-- **Amount Formats**: Decimal precision with currency-specific rules
-- **Date Formats**: YYMMDD format with leap year validation
-- **Message Structure**: Complete MT message validation
-
-## 🎯 Sample Generation Features
-
-- **Format-Driven**: Generates data based on SWIFT format specifications
-- **Validation-Aware**: All generated data passes SWIFT compliance checks
-- **JSON Configurable**: External configuration for test scenarios
-- **Scenario-Based**: Predefined scenarios for common testing needs
-- **Type-Safe**: Generated samples match field type constraints
-- **Reproducible**: Configurable random seed for deterministic testing
+For detailed test scenarios, running instructions, and coverage information, see the [Test Scenarios Documentation](test_scenarios/README.md).
 
 ## 🤝 Contributing
 
-We welcome contributions! Please ensure:
-- Financial compliance testing
-- Macro documentation updates
-- SWIFT standard adherence
-- Test coverage for new features
+Contributions are welcome\! If you'd like to help, please feel free to fork the repository, make your changes, and submit a pull request. We ask that you ensure test coverage for new features and adhere to SWIFT standards.
 
 ## 🏢 About Plasmatic
 
-SwiftMTMessage is developed by [Plasmatic](https://github.com/GoPlasmatic), a technology organization focused on building open-source financial infrastructure tools. We believe in:
+SwiftMTMessage is developed by [Plasmatic](https://github.com/GoPlasmatic), an organization focused on building open-source tools for financial infrastructure. We believe in transparency, security, and performance.
 
-- **🔓 Open Source**: Transparent, community-driven development
-- **🛡️ Security First**: Financial-grade security and compliance
-- **⚡ Performance**: High-performance solutions for enterprise needs
-- **🌍 Global Standards**: Supporting international financial protocols
+Check out our other projects:
+
+  - [Reframe](https://github.com/GoPlasmatic/Reframe): A SWIFT MT to ISO 20022 (and back) transformation engine.
+  - [MXMessage](https://github.com/GoPlasmatic/MXMessage): An ISO 20022 (MX) message parsing library.
 
 ## 📄 License
 
-Licensed under the Apache License, Version 2.0 ([LICENSE](LICENSE))
+This library is licensed under the Apache License, Version 2.0. See the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
 
-## 🔗 Related Projects
-
-- [Reframe](https://github.com/GoPlasmatic/Reframe) - SWIFT MT ↔ ISO 20022 Transformation Engine
-- [MXMessage](https://github.com/GoPlasmatic/MXMessage) - MX Message - ISO20022 Parser Library
-
----
+-----
 
 <div align="center">
-  <p>Built with ❤️ by the <a href="https://github.com/GoPlasmatic">Plasmatic</a> team</p>
+<p>Built with ❤️ by the <a href="[https://github.com/GoPlasmatic](https://github.com/GoPlasmatic)">Plasmatic</a> team</p>
 </div>

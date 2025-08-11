@@ -1,0 +1,58 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["ANS", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["CANC", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "search_ref": {"cat": ["PMT", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "search_date": "2024-12-20",
+        "search_amount": {"fake": ["f64", 1000.0, 50000.0]},
+        "currency": "USD",
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "296",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "296",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "76": {
+                "information": [
+                    "/RJCR/",
+                    "NO PAYMENT FOUND",
+                    {"cat": ["SEARCH REF ", {"var": "search_ref"}]},
+                    {"cat": ["VALUE DATE ", {"var": "search_date"}]},
+                    {
+                        "cat": [
+                            "AMOUNT ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "search_amount"}
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

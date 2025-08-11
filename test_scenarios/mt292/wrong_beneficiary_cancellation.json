@@ -1,0 +1,82 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "cancel_ref": {"cat": ["WBEN", {"fake": ["i64", 100000, 999999]}]},
+        "original_ref": {"cat": ["PMT", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "message_type": "103",
+        "date": "2024-12-23",
+        "session": "4567",
+        "sequence": "890123",
+        "reason_code": "AC04",
+        "amount": {"fake": ["f64", 25000.0, 100000.0]},
+        "currency": "GBP",
+        "session_num": "0003",
+        "sequence_num": "001234",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "292",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
+        },
+        "user_header": {
+            "service_type_id": "fin",
+            "banking_priority": "9999",
+            "unique_end_to_end_reference": {"var": "uetr"}
+        },
+        "message_type": "292",
+        "fields": {
+            "20": {"reference": {"var": "cancel_ref"}},
+            "21": {"reference": {"var": "original_ref"}},
+            "11S": {
+                "message_type": {"var": "message_type"},
+                "date": {"var": "date"},
+                "session_number": {"var": "session"},
+                "input_sequence_number": {"var": "sequence"}
+            },
+            "79": {
+                "information": [
+                    {"cat": ["/", {"var": "reason_code"}, "/"]},
+                    "WRONG BENEFICIARY - CANCELLATION REQUEST",
+                    "",
+                    {"cat": ["ORIGINAL MESSAGE: MT", {"var": "message_type"}]},
+                    {"cat": ["REFERENCE: ", {"var": "original_ref"}]},
+                    {
+                        "cat": [
+                            "AMOUNT: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "amount"}
+                        ]
+                    },
+                    "",
+                    "INCORRECT BENEFICIARY DETAILS",
+                    "ACCOUNT CLOSED/DOES NOT EXIST",
+                    "",
+                    "INTENDED: J SMITH & CO LTD",
+                    "ACTUAL: J SMITH CORP",
+                    "ACCOUNT: GB12ABCD12345678901234",
+                    "",
+                    "CUSTOMER NOTIFIED OF ERROR",
+                    "FUNDS MUST BE RETURNED",
+                    "NEW PAYMENT TO BE INITIATED",
+                    "",
+                    "PLEASE CONFIRM CANCELLATION",
+                    "CUSTOMER SERVICE REF: CS-2024-7890"
+                ]
+            }
+        }
+    }
+}

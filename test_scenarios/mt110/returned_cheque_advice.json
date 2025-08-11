@@ -1,0 +1,83 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "message_ref": {"cat": ["RETCHQ", {"fake": ["i64", 100000, 999999]}]},
+        "currency": "GBP",
+        "cheque_ref": {"cat": ["CHQ", {"fake": ["i64", 1000000, 9999999]}]},
+        "cheque_amount": {"fake": ["f64", 15000.0, 75000.0]},
+        "cheque_date": "2024-12-15",
+        "drawer_bic": {"fake": ["bic"]},
+        "session_num": "0001",
+        "sequence_num": "000321",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "110",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "110",
+        "fields": {
+            "20": {"reference": {"var": "message_ref"}},
+            "53": {"A": {"bic": {"var": "sender_bic"}}},
+            "54": {"A": {"bic": {"var": "receiver_bic"}}},
+            "72": {
+                "information": [
+                    "/RETURN/CHEQUE RETURNED UNPAID",
+                    "/REASON/INSUFFICIENT FUNDS",
+                    "/ORIG-DATE/2024-12-10",
+                    "/PROCESS/URGENT RETURN",
+                    "/ACTION/DEBIT BENEFICIARY ACCOUNT",
+                    "/FEES/RETURN CHARGES GBP 35.00"
+                ]
+            },
+            "#": [
+                {
+                    "21": {"reference": {"var": "cheque_ref"}},
+                    "30": {"execution_date": {"var": "cheque_date"}},
+                    "32": {"B": {"currency": {"var": "currency"}, "amount": {"var": "cheque_amount"}}},
+                    "50": {
+                        "K": {
+                            "account": "/GB12345678901234",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]},
+                                "UNITED KINGDOM"
+                            ]
+                        }
+                    },
+                    "52": {"A": {"bic": {"var": "drawer_bic"}}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/GB98765432109876",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "ACCOUNTS RECEIVABLE",
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]}
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,104 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "intermediary_bic": {"fake": ["bic"]},
+        "account_with_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["COV", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["REF", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": "USD",
+        "amount": {"fake": ["f64", 25000.0, 250000.0]},
+        "instructed_amount": {"fake": ["f64", 25000.0, 250000.0]},
+        "value_date": "2024-12-20",
+        "session_num": "0001",
+        "sequence_num": "003456",
+        "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+        "receiver_lei": "LEIZBQR12345HKLMNOP678",
+        "purpose_code": "GDDS",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "202",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "202",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
+            },
+            "52": {"A": {"bic": {"var": "sender_bic"}}},
+            "56": {"A": {"bic": {"var": "intermediary_bic"}}},
+            "57": {"A": {"bic": {"var": "account_with_bic"}}},
+            "58": {"A": {"bic": {"var": "receiver_bic"}}},
+            "72": {
+                "information": [
+                    "/ACC/CBPR+ COV PAYMENT",
+                    "/INS/UNDERLYING MT103 CBPR+",
+                    {"substr": [{"cat": ["/BNF/PURPOSE CODE ", {"var": "purpose_code"}]}, 0, 35]}
+                ]
+            },
+            "50#b": {
+                "K": {
+                    "account": "/GB82WEST12345698765432",
+                    "name_and_address": [
+                        {"fake": ["company_name"]},
+                        {"cat": ["/", {"var": "sender_lei"}]},
+                        {"fake": ["street_address"]},
+                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                    ]
+                }
+            },
+            "52#b": {"A": {"bic": {"var": "sender_bic"}}},
+            "56#b": {"A": {"bic": {"var": "intermediary_bic"}}},
+            "57#b": {"A": {"bic": {"var": "account_with_bic"}}},
+            "59#b": {
+                "NoOption": {
+                    "account": "/DE89370400440532013000",
+                    "name_and_address": [
+                        {"fake": ["company_name"]},
+                        {"cat": ["/", {"var": "receiver_lei"}]},
+                        {"fake": ["street_address"]},
+                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                    ]
+                }
+            },
+            "70#b": {
+                "narrative": [
+                    {"cat": ["/PURP/", {"var": "purpose_code"}]},
+                    "/RFB/CBPR-PAYMENT-REF",
+                    "CBPR+ TRANSPARENCY MAINTAINED",
+                    "SEE UNDERLYING MT103"
+                ]
+            },
+            "33B#b": {"currency": {"var": "currency"}, "amount": {"var": "instructed_amount"}},
+            "72#b": {
+                "information": [
+                    "/ACC/TRANSPARENCY DATA",
+                    "/INS/FEE DEDUCTED 25.00 USD",
+                    "/BNF/PROCESSING TIME 2 DAYS"
+                ]
+            }
+        }
+    }
+}

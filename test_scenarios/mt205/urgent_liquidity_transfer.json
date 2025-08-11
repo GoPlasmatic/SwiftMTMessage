@@ -1,0 +1,81 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "ordering_bic": {"fake": ["bic"]},
+        "intermediary_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["LIQ", {"fake": ["i64", 1000000000, 9999999999]}]},
+        "related_ref": {"cat": ["URGNT", {"fake": ["i64", 1000000000, 9999999999]}]},
+        "currency": "USD",
+        "amount": {"fake": ["f64", 10000000.0, 100000000.0]},
+        "value_date": "2024-12-20",
+        "time_code": "CLSTIME",
+        "time_value": "1700+0100",
+        "session_num": "0002",
+        "sequence_num": "005678",
+        "uetr": {"fake": ["uuid"]},
+        "treasury_reference": {"cat": ["TREAS", {"fake": ["i64", 1000000, 9999999]}]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "205",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP",
+            "priority": "URGP"
+        },
+        "message_type": "205",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "23B": {"value": "URGP"},
+            "13C": [
+                {
+                    "code": {"var": "time_code"},
+                    "time": "1700",
+                    "sign": "+",
+                    "offset": "0100"
+                }
+            ],
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
+            },
+            "52": {"A": {"bic": {"var": "ordering_bic"}}},
+            "53": {
+                "A": {
+                    "bic": {"var": "sender_bic"},
+                    "party_identifier": {"cat": ["//RT", {"fake": ["i64", 10000000, 99999999]}]}
+                }
+            },
+            "56": {"A": {"bic": {"var": "intermediary_bic"}, "party_identifier": "//RT"}},
+            "57": {"A": {"bic": {"var": "receiver_bic"}}},
+            "58": {"A": {"bic": {"var": "receiver_bic"}}},
+            "72": {
+                "information": [
+                    "/BNF/URGENT LIQUIDITY TRANSFER",
+                    "/PURPOSE/INTRADAY LIQUIDITY MGT",
+                    {"substr": [{"cat": ["/REF/", {"var": "treasury_reference"}]}, 0, 35]},
+                    "/TYPE/URGENT SERIAL PAYMENT",
+                    "/SVCLVL/URGP",
+                    "/CATPURP/CASH"
+                ]
+            }
+        }
+    }
+}

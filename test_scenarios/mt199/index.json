@@ -1,0 +1,14 @@
+{
+    "message_type": "MT199",
+    "description": "Free Format Message",
+    "scenarios": [
+        {
+            "file": "cbpr_inquiry.json",
+            "description": "CBPR+ free format inquiry"
+        },
+        {
+            "file": "cbpr_cancellation.json",
+            "description": "CBPR+ free format cancellation"
+        }
+    ]
+}

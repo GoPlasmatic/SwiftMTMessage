@@ -1,0 +1,125 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "account_id": {"cat": ["JP33MUFG", {"fake": ["i64", 10000000000000, 99999999999999]}]},
+        "statement_num": {"fake": ["i64", 1000, 9999]},
+        "opening_balance": {"fake": ["f64", 50000000.0, 200000000.0]},
+        "currency": "JPY",
+        "value_date": "2024-12-22",
+        "entry_date": "1222",
+        "session_num": "0002",
+        "sequence_num": "000789",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "940",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "940",
+        "fields": {
+            "20": {"reference": {"cat": ["INTR", {"var": "statement_num"}]}},
+            "21": {"reference": "INTERIM"},
+            "25": {"NoOption": {"authorisation": {"var": "account_id"}}},
+            "28C": {"statement_number": {"var": "statement_num"}, "sequence_number": 3},
+            "60": {
+                "M": {
+                    "debit_credit_mark": "C",
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "opening_balance"}
+                }
+            },
+            "#": [
+                {
+                    "61": {
+                        "value_date": "2024-12-22",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "C",
+                        "amount": 25000000,
+                        "transaction_type": "NTRF",
+                        "customer_reference": "FX-SETTLE-001",
+                        "bank_reference": "//FX-REF-001"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/FX/USD-JPY CONVERSION",
+                            "/RATE/154.25",
+                            "/ORIG-AMT/USD 162000.00",
+                            "/DEAL/FX20241222-001"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-22",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "D",
+                        "amount": 10000000,
+                        "transaction_type": "NTRF",
+                        "customer_reference": "DOM-TRF-001",
+                        "bank_reference": "//JP-REF-001"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/BENEF/TOKYO SUPPLIERS KK",
+                            "/PURPOSE/MATERIAL PURCHASE",
+                            "/ZENGIN/0138-001-1234567"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-22",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "D",
+                        "amount": 5000000,
+                        "transaction_type": "NTRF",
+                        "customer_reference": "DOM-TRF-002",
+                        "bank_reference": "//JP-REF-002"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/BENEF/OSAKA ELECTRONICS CO",
+                            "/PURPOSE/EQUIPMENT LEASE",
+                            "/ZENGIN/0456-002-7654321"
+                        ]
+                    }
+                }
+            ],
+            "62": {
+                "M": {
+                    "debit_credit_mark": "C",
+                    "value_date": "2024-12-22",
+                    "currency": {"var": "currency"},
+                    "amount": 60000000
+                }
+            },
+            "86": {
+                "narrative": [
+                    "/SUMMARY/INTRADAY MOVEMENTS",
+                    "/TIME/AS OF 14:30 JST",
+                    "/PENDING/3 TRANSACTIONS",
+                    "/AVAILABLE/JPY 55000000"
+                ]
+            }
+        }
+    }
+}

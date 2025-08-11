@@ -1,0 +1,38 @@
+{
+    "variables": {},
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": "DEUTDEFFXXXX",
+            "sender_bic": "DEUTDEFF",
+            "session_number": "0001",
+            "sequence_number": "000001"
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "202",
+            "destination_address": "CHASUS33XXXX",
+            "receiver_bic": "CHASUS33",
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": "8a562b67-59c6-489b-9c87-7a3b38c73b09"
+        },
+        "message_type": "202",
+        "fields": {
+            "20": {"reference": "RET1234567"},
+            "21": {"reference": "ORIG9876543"},
+            "32A": {"value_date": "2024-12-20", "currency": "USD", "amount": 50000.0},
+            "52": {"A": {"bic": "DEUTDEFF"}},
+            "53": {"B": {"account": "//DEUTDEFF"}},
+            "56": {"A": {"bic": "CITIUSNY"}},
+            "57": {"A": {"bic": "BOFAUS3N"}},
+            "58": {"A": {"bic": "CHASUS33"}},
+            "72": {
+                "information": ["/RETN/AC01", "/MREF/CBPR2024FI1234567890", "/TEXT/Incorrect account number"]
+            }
+        }
+    }
+}

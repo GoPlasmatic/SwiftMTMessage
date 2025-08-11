@@ -1,145 +1,144 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// # MT910: Confirmation of Credit
+/// MT910: Confirmation of Credit
 ///
-/// This message is used by a financial institution to confirm to another financial institution
-/// that a credit has been made to the sender's account held with the receiver, or that
-/// the sender's account held with a third party has been credited. This message serves
-/// as official confirmation of credit transactions and facilitates reconciliation between
-/// financial institutions.
+/// ## Purpose
+/// Used to confirm that a credit entry has been posted to an account. This message serves
+/// as notification to the account holder that their account has been credited with the
+/// specified amount and provides complete details of the transaction.
+///
+/// ## Scope
+/// This message is:
+/// - Sent by the account servicing institution to the account holder
+/// - Used to confirm that a credit has been processed and posted
+/// - Applied to various types of credits including incoming transfers, deposits, and reversals
+/// - Essential for account reconciliation and cash management
+/// - Part of real-time liquidity monitoring and cash flow management
 ///
 /// ## Key Features
-/// - **Credit confirmation**: Official confirmation of credit transactions
-/// - **Account reconciliation**: Facilitates reconciliation between institutions
-/// - **Audit trail**: Creates audit records for credit transactions
-/// - **Settlement confirmation**: Confirms settlement credits
-/// - **Liquidity management**: Account balance change notifications
+/// - **Credit Confirmation**: Official confirmation that account has been credited
+/// - **Transaction Details**: Complete information about the credit transaction
+/// - **Originator Information**: Details about who initiated the credit (field 50 or 52)
+/// - **Timing Information**: Optional date/time indication for processing details
+/// - **Reference Tracking**: Links to original payment instructions or related transactions
+/// - **Intermediary Details**: Optional information about intermediary institutions
+///
+/// ## Common Use Cases
+/// - Confirming incoming payment transfers to customer accounts
+/// - Notifying of investment proceeds and settlements
+/// - Confirming foreign exchange transaction proceeds
+/// - Trade settlement credit confirmations
+/// - Interest credit confirmations
+/// - Reversal and correction credit confirmations
+/// - Deposit and funding confirmations
+/// - Loan disbursement confirmations
 ///
 /// ## Field Structure
-/// All fields follow the enhanced macro system with proper validation rules.
-/// The message supports both customer and institutional originator identification.
+/// - **20**: Transaction Reference (mandatory) - Unique reference for this confirmation
+/// - **21**: Related Reference (mandatory) - Reference to original transaction/instruction
+/// - **25**: Account Identification (mandatory) - Account that has been credited
+/// - **13D**: Date/Time Indication (optional) - Processing timing details
+/// - **32A**: Value Date/Currency/Amount (mandatory) - Credit details
+/// - **50**: Ordering Customer (optional) - Customer who initiated the credit
+/// - **52**: Ordering Institution (optional) - Institution that initiated the credit
+/// - **56**: Intermediary Institution (optional) - Intermediary in the payment chain
+/// - **72**: Sender to Receiver Information (optional) - Additional transaction details
 ///
-/// ## Conditional Rules
-/// - **C1**: Either Field 50a or Field 52a must be present (not both)
+/// ## Network Validation Rules
+/// - **C1 Rule**: Either field 50 (Ordering Customer) or field 52 (Ordering Institution) must be present, but not both
+/// - **Reference Format**: Transaction references must follow SWIFT formatting standards
+/// - **Amount Validation**: Credit amounts must be positive
+/// - **Account Validation**: Account identification must be valid and properly formatted
+/// - **Date Validation**: Date/time indications must be valid when present
+/// - **Currency Validation**: Currency codes must be valid ISO 4217 codes
+///
+/// ## Processing Context
+/// ### Credit Processing Workflow
+/// 1. Incoming payment received (e.g., MT103, MT202, wire transfer)
+/// 2. Account credited by servicing institution
+/// 3. MT910 sent to confirm credit execution
+/// 4. Account holder updates records and cash position
+///
+/// ### Cash Management Integration
+/// - Real-time balance updates
+/// - Liquidity position management
+/// - Cash flow forecasting support
+/// - Working capital optimization
+///
+/// ## Originator Identification
+/// The message must identify the originator through either:
+/// - **Field 50**: When the credit originates from a customer
+/// - **Field 52**: When the credit originates from a financial institution
+///
+/// This distinction is important for:
+/// - Compliance and regulatory reporting
+/// - Know Your Customer (KYC) requirements
+/// - Anti-money laundering (AML) monitoring
+/// - Transaction categorization and analysis
+///
+/// ## SRG2025 Status
+/// - **No Structural Changes**: MT910 format remains unchanged in SRG2025
+/// - **Enhanced Validation**: Additional validation rules for improved transaction integrity
+/// - **Digital Banking Integration**: Better support for digital banking platforms
+/// - **Real-time Processing**: Enhanced capabilities for instant payment confirmations
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Direct integration with core banking and account management systems
+/// - **Treasury Systems**: Essential input for treasury and cash management platforms
+/// - **ERP Integration**: Critical for enterprise resource planning and financial reporting
+/// - **Reconciliation**: Automated matching with expected receipts and cash flow forecasts
+///
+/// ## Relationship to Other Messages
+/// - **Responds to**: MT103, MT202, MT205 and other payment instructions
+/// - **Complements**: MT900 (Confirmation of Debit) for complete transaction visibility
+/// - **Supports**: Cash management, liquidity monitoring, and reconciliation processes
+/// - **Integrates with**: Statement messages (MT940, MT950) for comprehensive account reporting
+
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT910_VALIDATION_RULES)]
 pub struct MT910 {
-    /// **Transaction Reference Number** - Field 20
-    ///
-    /// Unique sender's reference identifying this specific credit confirmation.
-    /// Used throughout the confirmation lifecycle for tracking, reconciliation, and audit.
-    /// Must be unique within the sender's system per business day.
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField,
+    #[field("20")]
+    pub field_20: Field20,
 
-    /// **Related Reference** - Field 21
-    ///
-    /// Reference to the original transaction or message that resulted in this credit.
-    /// Should be copied unchanged from the original inward MT103/202 that triggered
-    /// this credit confirmation.
-    #[field("21", mandatory)]
-    pub field_21: GenericReferenceField,
+    #[field("21")]
+    pub field_21: Field21NoOption,
 
-    /// **Account Identification** - Field 25a
-    ///
-    /// Identifies the specific account that has been credited. This account
-    /// is typically held by the sender with the receiver, or with a third party
-    /// as specified in the original transaction.
-    #[field("25", mandatory)]
-    pub field_25: GenericTextField,
+    #[field("25")]
+    pub field_25: Field25AccountIdentification,
 
-    /// **Value Date, Currency, Amount** - Field 32A
-    ///
-    /// Core credit details specifying when the credit was effective, in what currency,
-    /// and for what amount. The value date indicates when the credit actually
-    /// took effect on the account.
-    #[field("32A", mandatory)]
-    pub field_32a: Field32A,
-
-    /// **Date/Time Indication** - Field 13D (Optional)
-    ///
-    /// Provides precise timing information for when the credit was processed,
-    /// including UTC offset for accurate time coordination across time zones.
-    #[field("13D", optional)]
+    #[field("13D")]
     pub field_13d: Option<Field13D>,
 
-    /// **Ordering Customer** - Field 50a (Conditional C1)
-    ///
-    /// Identifies the customer who originated the transaction that resulted in this credit.
-    /// This field provides customer-level traceability for the credit transaction.
-    #[field("50", optional)]
-    pub field_50a: Option<Field50>,
+    #[field("32A")]
+    pub field_32a: Field32A,
 
-    /// **Ordering Institution** - Field 52a (Conditional C1)
-    ///
-    /// Identifies the financial institution of the ordering customer or the institution
-    /// that ordered the transaction resulting in this credit. Alternative to Field 50a
-    /// when institutional-level identification is more appropriate.
-    #[field("52", optional)]
-    pub field_52a: Option<GenericBicField>,
+    #[field("50")]
+    pub field_50: Option<Field50OrderingCustomerAFK>,
 
-    /// **Intermediary** - Field 56a (Optional)
-    ///
-    /// Identifies the financial institution from which the sender received the funds
-    /// that resulted in this credit. Used to document the routing chain and source
-    /// of funds for audit and reconciliation purposes.
-    #[field("56", optional)]
-    pub field_56a: Option<GenericBicField>,
+    #[field("52")]
+    pub field_52: Option<Field52OrderingInstitution>,
 
-    /// **Sender to Receiver Information** - Field 72 (Optional)
-    ///
-    /// Free-format field for additional information about the credit transaction.
-    /// Must contain narrative information only and may include structured codes
-    /// for bilateral use or exchange rate information.
-    #[field("72", optional)]
-    pub field_72: Option<GenericMultiLineTextField<6, 35>>,
+    #[field("56")]
+    pub field_56: Option<Field56Intermediary>,
+
+    #[field("72")]
+    pub field_72: Option<Field72>,
 }
 
-/// Enhanced validation rules for MT910
+/// Validation rules for MT910 - Confirmation of Credit
 const MT910_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "Either Field 50a or Field 52a must be present (not both)",
+      "description": "Either field 50a or field 52a must be present",
       "condition": {
         "or": [
-          {
-            "and": [
-              {"var": "field_50a.is_some"},
-              {"var": "field_52a.is_none"}
-            ]
-          },
-          {
-            "and": [
-              {"var": "field_50a.is_none"},
-              {"var": "field_52a.is_some"}
-            ]
-          }
+          {"!!": {"var": "fields.50"}},
+          {"!!": {"var": "fields.52"}}
         ]
-      }
-    },
-    {
-      "id": "REF_FORMAT",
-      "description": "Transaction and related references must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}},
-          {"!": {"startsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_21.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "AMOUNT_POSITIVE",
-      "description": "Credit amount must be positive",
-      "condition": {
-        ">": [{"var": "field_32a.amount"}, 0]
       }
     }
   ]

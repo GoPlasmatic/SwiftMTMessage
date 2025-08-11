@@ -1,0 +1,18 @@
+{
+    "message_type": "MT942",
+    "description": "Interim Transaction Report",
+    "scenarios": [
+        {
+            "file": "intraday_liquidity_report.json",
+            "description": "Intraday liquidity report"
+        },
+        {
+            "file": "real_time_position_update.json",
+            "description": "Real-time position update"
+        },
+        {
+            "file": "treasury_cash_sweep.json",
+            "description": "Treasury cash sweep report"
+        }
+    ]
+}

@@ -1,177 +1,143 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// # MT296: Answers (Treasury Messages)
+/// MT296: Answers (Category 2 - Financial Institution Transfers)
 ///
-/// This message is sent by a financial institution to provide answers, confirmations,
-/// or status information in response to queries or requests related to treasury messages.
-/// MT296 is used for answering treasury transfer queries and other institutional inquiries.
+/// ## Purpose
+/// Used to provide answers or responses to various queries and requests related to Category 2
+/// financial institution transfers. This message responds to different types of inquiries,
+/// including cancellation requests (MT292) and other operational queries.
+///
+/// ## Scope
+/// This message is:
+/// - Sent in response to MT292 cancellation requests and other Category 2 inquiries
+/// - Used to provide structured answers with detailed status information
+/// - Contains response codes and explanatory text for institutional transfer queries
+/// - Supports various inquiry types with flexible narrative content
+/// - Essential for treasury operations and institutional transfer management
 ///
 /// ## Key Features
-/// - **Treasury answer provision**: Official responses to treasury message queries
-/// - **Reference tracking**: Links to the original message through reference fields
-/// - **Conditional structure**: Either narrative (field 79) or copy of original message fields
-/// - **Answer codes**: Standardized answer codes with supplementary data
-/// - **Narrative support**: Additional narrative description capability
+/// - **Query Response**: Structured response to various types of institutional transfer inquiries
+/// - **Reference Tracking**: Links to original query or request message through field 21
+/// - **Answer Codes**: Field 76 provides structured answers with specific codes
+/// - **Status Information**: Clear indication of query resolution and outcome
+/// - **Flexible Format**: Adaptable to different types of institutional transfer inquiries
+/// - **Optional Narrative**: Field 79 for additional explanatory information
+///
+/// ## Common Use Cases
+/// - Response to MT292 cancellation requests (accept/reject/partial)
+/// - Status updates on institutional transfer processing
+/// - Inquiry responses about transaction details and settlement status
+/// - Error resolution and clarification messages for treasury operations
+/// - Settlement system status communications
+/// - Correspondent banking operational responses
+/// - Cross-border institutional transfer confirmations
 ///
 /// ## Field Structure
-/// The message follows a conditional structure where either field 79 (narrative description)
-/// or a copy of the mandatory fields from the original message may be present, but not both.
-/// This structure is identical to MT196 but used for treasury/institutional contexts.
+/// - **20**: Sender's Reference (mandatory) - Reference for this answer message
+/// - **21**: Related Reference (mandatory) - Reference to original inquiry/request
+/// - **76**: Answers (mandatory) - Structured answer codes and information
+/// - **77A**: Optional Query Section (optional) - Additional query details
+/// - **11**: MT and Date Reference (optional) - Reference to specific original message
+/// - **79**: Narrative (optional) - Additional explanatory text
 ///
-/// ## Answer Process
-/// Used when a treasury department or institutional receiver needs to provide answers,
-/// confirmations, or status updates regarding previously received treasury messages,
-/// including confirmations of institutional transfers, cover payments, or responses to treasury queries.
+/// ## Field 76 Answer Codes
+/// The Field 76 contains structured answer codes that may include:
+/// - **ACCEPTED**: Request has been accepted and processed
+/// - **REJECTED**: Request has been rejected with reason
+/// - **PARTIAL**: Partial acceptance/processing of request
+/// - **PENDING**: Request is under review/processing
+/// - **COMPLETED**: Processing has been completed
+/// - **ERROR**: Error encountered during processing
+/// - **TIMEOUT**: Request timed out or expired
+/// - **DUPLICATE**: Duplicate request detected
+/// - **INVALID**: Invalid request format or content
+///
+/// ## Network Validation Rules
+/// - **C1 Rule**: Field 79 or copy of original message fields may be present, but not both
+/// - **Reference Format**: All reference fields must follow SWIFT formatting conventions
+/// - **Field 11A Format**: When present, must have proper format with valid MT reference
+/// - **Required Fields**: All mandatory fields must be present and non-empty
+/// - **Answer Code Validation**: Field 76 must contain valid, recognizable answer codes
+/// - **Conditional Fields**: Optional fields must follow proper conditional logic
+///
+/// ## Answer Processing Types
+/// ### Cancellation Responses (to MT292)
+/// - **CANC**: Cancellation accepted and processed
+/// - **RJCT**: Cancellation rejected (payment already processed)
+/// - **PART**: Partial cancellation (only some transactions cancelled)
+/// - **NPAY**: No payment found matching cancellation request
+///
+/// ### Status Responses
+/// - **ACPT**: Message accepted for processing
+/// - **PROC**: Currently processing
+/// - **SETT**: Settlement completed
+/// - **FAIL**: Processing failed
+///
+/// ### Information Responses
+/// - **INFO**: Informational response provided
+/// - **CONF**: Confirmation of status or details
+/// - **NFND**: Requested information not found
+/// - **RSTR**: Restricted information (access denied)
+///
+/// ## Processing Considerations
+/// - **Timely Response**: Should be sent promptly after receiving inquiry
+/// - **Accurate Status**: Must reflect current and accurate status information
+/// - **Clear Communication**: Answer codes should be unambiguous
+/// - **Audit Trail**: Maintains record of all query-response interactions
+/// - **Follow-up**: May trigger additional operational actions
+///
+/// ## SRG2025 Status
+/// - **Structural Changes**: None - MT296 format remains unchanged in SRG2025
+/// - **Validation Updates**: Enhanced validation for institutional transfer responses
+/// - **Processing Improvements**: Improved validation for answer code consistency
+/// - **Compliance Notes**: Better integration with modern settlement systems
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Compatible with treasury management and customer service systems
+/// - **API Integration**: RESTful API support for modern institutional transfer response platforms
+/// - **Processing Requirements**: Supports real-time response generation with audit capabilities
+/// - **Compliance Integration**: Built-in validation for regulatory response requirements
+///
+/// ## Relationship to Other Messages
+/// - **Triggers**: Directly triggered by MT292 cancellation requests and Category 2 inquiries
+/// - **Responses**: Provides definitive responses to institutional transfer requests
+/// - **Related**: Works with Category 2 messages and operational workflow systems
+/// - **Alternatives**: Direct system notifications for internal processing status updates
+/// - **Status Updates**: Final response message in institutional transfer inquiry lifecycle
+
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT296_VALIDATION_RULES)]
 pub struct MT296 {
-    /// **Transaction Reference Number** - Field 20
-    ///
-    /// Unique reference assigned by the sender for this treasury answer message.
-    /// This reference is used throughout the answer lifecycle for tracking,
-    /// acknowledgment, and audit purposes. Must be unique within sender's system per business day.
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField,
+    #[field("20")]
+    pub field_20: Field20,
 
-    /// **Related Reference** - Field 21
-    ///
-    /// Contains the reference from field 20 of the treasury message being answered.
-    /// This creates a direct link between the answer and the original
-    /// treasury message, enabling complete audit trails and transaction tracking.
-    #[field("21", mandatory)]
-    pub field_21: GenericReferenceField,
+    #[field("21")]
+    pub field_21: Field21NoOption,
 
-    /// **Answers** - Field 76
-    ///
-    /// Contains response codes, narratives, and supplementary data.
-    /// Includes confirmation codes (1-33), cancellation codes (CNCL, PDCR, RJCR),
-    /// and reason codes with optional supplementary details in parentheses.
-    #[field("76", mandatory)]
-    pub field_76: GenericMultiLine6x35,
+    #[field("76")]
+    pub field_76: Field76,
 
-    /// **Narrative** - Field 77A (Optional)
-    ///
-    /// Free-form narrative description that supplements the answer codes in field 76.
-    /// Used for providing additional context, explanations, or details about the treasury answers.
-    #[field("77A", optional)]
-    pub field_77a: Option<GenericMultiLine20x35>,
+    #[field("77A")]
+    pub field_77a: Option<Field77A>,
 
-    /// **MT and Date of the Original Message** - Field 11a (Optional)
-    ///
-    /// Specifies the message type and date of the original treasury message being answered.
-    /// Can be in Option R format (with session/ISN) or Option S format (date only).
-    #[field("11a", optional)]
-    pub field_11a: Option<GenericTextField>,
+    #[field("11")]
+    pub field_11: Option<Field11>,
 
-    /// **Narrative Description of Original Message** - Field 79 (Conditional)
-    ///
-    /// Contains narrative description of the original treasury message being answered.
-    /// Must be present if copy of original message fields is not included.
-    /// Cannot be used together with copy of original message fields.
-    #[field("79", optional)]
-    pub field_79: Option<GenericMultiLine6x35>,
-
-    /// **Copy of Mandatory Fields from Original Message** - Multiple Fields (Conditional)
-    ///
-    /// When present, contains a copy of at least the mandatory fields from the original treasury message.
-    /// This helps identify the exact treasury transaction being answered.
-    /// Cannot be used together with field 79 according to conditional rule C1.
-    ///
-    /// For treasury messages:
-    /// - MT202: Would include fields 32A, 53, 58
-    /// - MT205: Would include fields 32A, 53, 56, 57, 58
-    /// - MT210: Would include fields 32A, 53
-    #[field("32A", optional)]
-    pub field_32a: Option<Field32A>,
-
-    #[field("58A", optional)]
-    pub field_58a: Option<GenericBicField>,
-
-    #[field("52A", optional)]
-    pub field_52a: Option<GenericBicField>,
-
-    #[field("53A", optional)]
-    pub field_53a: Option<GenericBicField>,
-
-    #[field("56A", optional)]
-    pub field_56a: Option<GenericBicField>,
-
-    #[field("57A", optional)]
-    pub field_57a: Option<GenericBicField>,
+    #[field("79")]
+    pub field_79: Option<Field79>,
 }
 
 /// Enhanced validation rules for MT296
 const MT296_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
-      "id": "CONDITIONAL_C1",
-      "description": "Field 79 or copy of original message fields may be present, but not both",
+      "id": "C1",
+      "description": "Only one of the following may be present: Field 79, or a copy of mandatory fields of the original message",
       "condition": {
-        "!": {
-          "and": [
-            {"!!": {"var": "field_79"}},
-            {
-              "or": [
-                {"!!": {"var": "field_32a"}},
-                {"!!": {"var": "field_58a"}},
-                {"!!": {"var": "field_52a"}},
-                {"!!": {"var": "field_53a"}},
-                {"!!": {"var": "field_56a"}},
-                {"!!": {"var": "field_57a"}}
-              ]
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": "REFERENCE_FORMAT",
-      "description": "Reference fields must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}},
-          {"!": {"startsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_21.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "FIELD_11A_FORMAT",
-      "description": "Field 11a must have proper format when present",
-      "condition": {
-        "if": [
-          {"!!": {"var": "field_11a"}},
-          {">": [{"strlen": {"var": "field_11a.reference"}}, 8]},
-          true
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_21.value"}, ""]},
-          {"!!": {"var": "field_76"}},
-          {">": [{"count": {"var": "field_76.answer_lines"}}, 0]}
-        ]
-      }
-    },
-    {
-      "id": "ANSWER_CODE_VALIDATION",
-      "description": "Field 76 must contain valid answer codes",
-      "condition": {
-        "all": [
-          {"var": "field_76.answer_lines"},
-          {"!=": [{"var": ""}, ""]}
-        ]
+        "!": {"!!": {"var": "fields.79"}}
       }
     }
   ]

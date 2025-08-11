@@ -1,123 +1,108 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// # MT900: Confirmation of Debit
+/// MT900: Confirmation of Debit
 ///
-/// This message is used by a financial institution to confirm to another financial institution
-/// that a debit has been made to the sender's account held with the receiver, or that
-/// the sender's account held with a third party has been debited. This message serves
-/// as official confirmation of debit transactions and facilitates reconciliation between
-/// financial institutions.
+/// ## Purpose
+/// Used to confirm that a debit entry has been posted to an account. This message serves
+/// as notification to the account holder that their account has been debited with the
+/// specified amount and provides details of the transaction.
+///
+/// ## Scope
+/// This message is:
+/// - Sent by the account servicing institution to the account holder
+/// - Used to confirm that a debit has been processed and posted
+/// - Applied to various types of debits including transfers, fees, and other charges
+/// - Essential for account reconciliation and transaction tracking
+/// - Part of the cash management and liquidity monitoring process
 ///
 /// ## Key Features
-/// - **Debit confirmation**: Official confirmation of debit transactions
-/// - **Account reconciliation**: Facilitates reconciliation between institutions
-/// - **Audit trail**: Creates audit records for debit transactions
-/// - **Settlement confirmation**: Confirms settlement debits
-/// - **Liquidity management**: Account balance change notifications
+/// - **Debit Confirmation**: Official confirmation that account has been debited
+/// - **Transaction Details**: Complete information about the debit transaction
+/// - **Timing Information**: Optional date/time indication for processing details
+/// - **Reference Tracking**: Links to original payment instructions or requests
+/// - **Account Identification**: Clear identification of the debited account
+/// - **Ordering Institution**: Optional details about the institution that initiated the debit
+///
+/// ## Common Use Cases
+/// - Confirming payment transfers from customer accounts
+/// - Notifying of fee debits and charges
+/// - Confirming investment transfers and settlements
+/// - Trade settlement confirmations
+/// - Standing order execution confirmations
+/// - Direct debit processing confirmations
+/// - Foreign exchange transaction confirmations
+/// - Account closure and transfer confirmations
 ///
 /// ## Field Structure
-/// All fields follow the enhanced macro system with proper validation rules.
-/// The message provides comprehensive debit transaction confirmation capabilities.
+/// - **20**: Transaction Reference (mandatory) - Unique reference for this confirmation
+/// - **21**: Related Reference (mandatory) - Reference to original transaction/instruction
+/// - **25**: Account Identification (mandatory) - Account that has been debited
+/// - **13D**: Date/Time Indication (optional) - Processing timing details
+/// - **32A**: Value Date/Currency/Amount (mandatory) - Debit details
+/// - **52**: Ordering Institution (optional) - Institution that initiated the debit
+/// - **72**: Sender to Receiver Information (optional) - Additional transaction details
 ///
-/// ## Usage Guidelines
-/// Used for ad-hoc confirmations of significant debit transactions requiring confirmation,
-/// exception cases for problem resolution, and when audit trail documentation is required.
+/// ## Processing Context
+/// ### Debit Processing Workflow
+/// 1. Original payment instruction received (e.g., MT103, MT202)
+/// 2. Account debited by servicing institution
+/// 3. MT900 sent to confirm debit execution
+/// 4. Account holder updates records based on confirmation
+///
+/// ### Account Management
+/// - Real-time account balance updates
+/// - Transaction history maintenance
+/// - Reconciliation support
+/// - Liquidity monitoring
+///
+/// ## Network Validation Rules
+/// - **Reference Format**: Transaction references must follow SWIFT standards
+/// - **Amount Validation**: Debit amounts must be positive
+/// - **Account Validation**: Account identification must be valid and properly formatted
+/// - **Date Validation**: Date/time indications must be valid when present
+/// - **Currency Validation**: Currency codes must be valid ISO 4217 codes
+///
+/// ## SRG2025 Status
+/// - **No Structural Changes**: MT900 format remains unchanged in SRG2025
+/// - **Enhanced Validation**: Additional validation rules for improved accuracy
+/// - **Digital Integration**: Better integration with digital banking platforms
+/// - **Real-time Processing**: Enhanced support for real-time transaction confirmation
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Direct integration with core banking systems
+/// - **Cash Management**: Part of comprehensive cash management solutions
+/// - **Reconciliation**: Essential input for automated reconciliation processes
+/// - **Reporting**: Key component of transaction reporting and audit trails
+///
+/// ## Relationship to Other Messages
+/// - **Responds to**: MT103, MT202, MT205 and other payment instructions
+/// - **Complements**: MT910 (Confirmation of Credit) for complete transaction lifecycle
+/// - **Supports**: Cash management and account reconciliation processes
+/// - **Integrates with**: Statement messages (MT940, MT950) for comprehensive account reporting
+
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT900_VALIDATION_RULES)]
 pub struct MT900 {
-    /// **Transaction Reference Number** - Field 20
-    ///
-    /// Unique sender's reference identifying this specific debit confirmation.
-    /// Used throughout the confirmation lifecycle for tracking, reconciliation, and audit.
-    /// Must be unique within the sender's system per business day.
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField,
+    #[field("20")]
+    pub field_20: Field20,
 
-    /// **Related Reference** - Field 21
-    ///
-    /// Reference to the original transaction or message that resulted in this debit.
-    /// Critical for linking the confirmation back to the initiating transaction
-    /// and maintaining complete audit trails.
-    #[field("21", mandatory)]
-    pub field_21: GenericReferenceField,
+    #[field("21")]
+    pub field_21: Field21NoOption,
 
-    /// **Account Identification** - Field 25
-    ///
-    /// Identifies the specific account that has been debited. This account
-    /// is typically held by the sender with the receiver, or with a third party
-    /// as specified in the original transaction.
-    #[field("25", mandatory)]
-    pub field_25: GenericTextField,
+    #[field("25")]
+    pub field_25: Field25AccountIdentification,
 
-    /// **Value Date, Currency, Amount** - Field 32A
-    ///
-    /// Core debit details specifying when the debit was effective, in what currency,
-    /// and for what amount. The value date indicates when the debit actually
-    /// took effect on the account.
-    #[field("32A", mandatory)]
-    pub field_32a: Field32A,
-
-    /// **Date/Time Indication** - Field 13D (Optional)
-    ///
-    /// Provides precise timing information for when the debit was processed,
-    /// including UTC offset for accurate time coordination across time zones.
-    #[field("13D", optional)]
+    #[field("13D")]
     pub field_13d: Option<Field13D>,
 
-    /// **Ordering Institution** - Field 52a (Optional)
-    ///
-    /// Identifies the financial institution that ordered or initiated the
-    /// transaction that resulted in this debit. May include additional
-    /// clearing or routing information.
-    #[field("52", optional)]
-    pub field_52a: Option<GenericBicField>,
+    #[field("32A")]
+    pub field_32a: Field32A,
 
-    /// **Sender to Receiver Information** - Field 72 (Optional)
-    ///
-    /// Free-format field for additional information about the debit transaction.
-    /// May contain structured codes, exchange rate information, or narrative
-    /// details relevant to the debit confirmation.
-    #[field("72", optional)]
-    pub field_72: Option<GenericMultiLineTextField<6, 35>>,
+    #[field("52")]
+    pub field_52: Option<Field52OrderingInstitution>,
+
+    #[field("72")]
+    pub field_72: Option<Field72>,
 }
-
-/// Enhanced validation rules for MT900
-const MT900_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "REF_FORMAT",
-      "description": "Transaction and related references must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}},
-          {"!": {"startsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_21.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_21.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "AMOUNT_POSITIVE",
-      "description": "Debit amount must be positive",
-      "condition": {
-        ">": [{"var": "field_32a.amount"}, 0]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_21.value"}, ""]},
-          {"!=": [{"var": "field_25.value"}, ""]}
-        ]
-      }
-    }
-  ]
-}"#;

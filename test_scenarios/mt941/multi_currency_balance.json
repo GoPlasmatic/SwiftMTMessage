@@ -1,0 +1,72 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["MCB", {"fake": ["i64", 100000000, 999999999]}]},
+        "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "currency1": "USD",
+        "currency2": "EUR",
+        "currency3": "GBP",
+        "opening_balance": {"fake": ["f64", 10000.0, 999999.99]},
+        "closing_balance": {"fake": ["f64", 10000.0, 999999.99]},
+        "previous_date": "2024-12-19",
+        "statement_date": "2024-12-20",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": "0001",
+            "sequence_number": "000123"
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "941",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "941",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
+            "28": {"statement_number": 1, "sequence_number": 1},
+            "60F": {
+                "debit_credit_mark": "C",
+                "value_date": {"var": "previous_date"},
+                "currency": {"var": "currency1"},
+                "amount": {"var": "opening_balance"}
+            },
+            "90D": {"number": 2, "currency": {"var": "currency2"}, "amount": 50000.0},
+            "90C": {"number": 1, "currency": {"var": "currency3"}, "amount": 25000.0},
+            "62F": {
+                "debit_credit_mark": "C",
+                "value_date": {"var": "statement_date"},
+                "currency": {"var": "currency1"},
+                "amount": {"var": "closing_balance"}
+            },
+            "64": {
+                "debit_credit_mark": "C",
+                "value_date": {"var": "statement_date"},
+                "currency": {"var": "currency1"},
+                "amount": {"var": "closing_balance"}
+            },
+            "86": {
+                "narrative": [
+                    "MULTI-CURRENCY BALANCE REPORT",
+                    "EUR BALANCE: 50,000.00 DR",
+                    "GBP BALANCE: 25,000.00 CR",
+                    "CONSOLIDATED USD EQUIVALENT"
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,53 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["STOP", {"fake": ["i64", 100000, 999999]}]},
+        "cheque_number": {"fake": ["i64", 100000, 999999]},
+        "issue_date": "2024-12-20",
+        "currency": "USD",
+        "amount": {"fake": ["f64", 5000.0, 50000.0]},
+        "drawer_bic": {"fake": ["bic"]},
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "112",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "112",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"cat": ["", {"var": "cheque_number"}]}},
+            "30": {"execution_date": {"var": "issue_date"}},
+            "32": {"B": {"currency": {"var": "currency"}, "amount": {"var": "amount"}}},
+            "52": {"A": {"bic": {"var": "drawer_bic"}}},
+            "76": {
+                "information": [
+                    "STATUS: PENDING REVIEW",
+                    "REASON: MANUAL VERIFICATION",
+                    "EXPECTED: 2024-12-29",
+                    "REFERENCE: COMPLIANCE-12345"
+                ]
+            }
+        }
+    }
+}

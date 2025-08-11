@@ -1,0 +1,22 @@
+{
+    "message_type": "MT110",
+    "description": "Advice of Cheque(s)",
+    "scenarios": [
+        {
+            "file": "cheque_collection_advice.json",
+            "description": "Cheque collection advice"
+        },
+        {
+            "file": "single_cheque_advice.json",
+            "description": "Single cheque advice"
+        },
+        {
+            "file": "foreign_cheque_collection.json",
+            "description": "Foreign cheque collection"
+        },
+        {
+            "file": "returned_cheque_advice.json",
+            "description": "Returned cheque advice"
+        }
+    ]
+}

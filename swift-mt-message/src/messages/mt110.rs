@@ -1,115 +1,138 @@
-use crate::fields::{
-    Field20, Field21, Field30, Field50, Field59, Field72, GenericBicField,
-    GenericCurrencyAmountField,
-};
+use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// # MT110: Advice of Cheque (Enhanced Architecture)
+/// MT110: Advice of Cheque(s)
 ///
-/// ## Overview
-/// MT110 is used by financial institutions to advise the receipt or dispatch
-/// of cheques. It provides detailed information about individual cheques including
-/// payer, payee, amounts, and banking details. The message supports batch processing
-/// of up to 10 cheques with consistent currency requirements.
+/// ## Purpose
+/// Used to advise the receipt of cheque(s) for collection or deposit between financial institutions.
+/// This message provides detailed information about each cheque including amounts, dates, and processing
+/// instructions to facilitate efficient cheque clearing and collection processes.
 ///
-/// This implementation uses the enhanced macro system with separate cheque
-/// structures for optimal type safety and validation.
-///
-/// ## Structure
-/// - **Header Fields**: General information and correspondent details
-/// - **Repeating Sequence**: Individual cheque details (up to 10 occurrences) - MT110Cheque struct
+/// ## Scope
+/// This message is:
+/// - Used for cheque collection advice between financial institutions
+/// - Applicable for bulk cheque processing with individual cheque identification
+/// - Designed for correspondent banking relationships in cheque clearing
+/// - Compatible with domestic and cross-border cheque collection schemes
+/// - Subject to cheque validation rules for proper clearing procedures
+/// - Integrated with traditional paper-based and electronic cheque processing systems
 ///
 /// ## Key Features
-/// - Multiple cheque processing in single message (up to 10)
-/// - Consistent currency requirement across all cheques
-/// - Flexible correspondent bank routing
-/// - Detailed payer/payee identification
-/// - Support for national clearing codes
-/// - Optional structured sender-to-receiver information
-/// - Type-safe cheque handling
+/// - **Comprehensive Cheque Details**: Individual cheque information with amounts, dates, and references
+/// - **Correspondent Banking Support**: Fields for sender/receiver correspondents (53A/54A)
+/// - **Collection Processing Framework**: Structured information for cheque collection and clearing
+/// - **Bulk Operations Support**: Multiple cheques can be advised in a single message
+/// - **Reference Tracking**: Unique identification for each cheque in the collection
+/// - **Currency Validation**: Ensures all cheques in a message use the same currency
+///
+/// ## Common Use Cases
+/// - Bank-to-bank cheque collection advice for deposited cheques
+/// - Correspondent banking cheque clearing operations
+/// - Cross-border cheque collection for foreign currency cheques
+/// - Bulk cheque deposit processing for corporate customers
+/// - Cheque truncation and electronic presentment advice
+/// - Collection of returned or dishonored cheques
+/// - High-value cheque collection requiring special handling
+///
+/// ## Message Structure
+/// ### Message Header
+/// - **Field 20**: Sender's Reference (mandatory) - Unique message identifier
+/// - **Field 53A**: Sender's Correspondent (optional) - Sender's correspondent bank
+/// - **Field 54A**: Receiver's Correspondent (optional) - Receiver's correspondent bank  
+/// - **Field 72**: Sender to Receiver Information (optional) - Additional processing instructions
+///
+/// ### Cheque Details (Repetitive Sequence)
+/// - **Field 21**: Cheque Reference (mandatory) - Unique reference for each cheque
+/// - **Field 30**: Date of Issue (mandatory) - Date when cheque was issued (YYMMDD)
+/// - **Field 32**: Currency/Amount (mandatory) - Cheque amount and currency code
+/// - **Field 50**: Ordering Customer (optional) - Drawer/issuer of the cheque
+/// - **Field 52**: Drawer Bank (optional) - Bank on which cheque is drawn
+/// - **Field 59**: Beneficiary Customer (mandatory) - Payee of the cheque
+///
+/// ## Network Validation Rules
+/// - **Cheque Quantity Limits**: Maximum 10 cheques per message for processing efficiency
+/// - **Currency Consistency**: All cheques must have the same currency within a single message
+/// - **Reference Uniqueness**: Each cheque reference must be unique within the message
+/// - **Date Validation**: Date of issue must be in valid YYMMDD format
+/// - **Reference Format**: Cheque references must not contain '/' or '//' characters
+/// - **Minimum Requirements**: At least one cheque required per advice message
+/// - **Correspondent Validation**: Proper BIC validation for correspondent bank fields
+///
+/// ## SRG2025 Status
+/// - **Structural Changes**: None - MT110 format remains stable for cheque processing
+/// - **Validation Updates**: Enhanced validation rules for electronic cheque processing
+/// - **Processing Improvements**: Improved handling of cheque truncation scenarios
+/// - **Compliance Notes**: Maintained compatibility with traditional cheque clearing systems
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Compatible with cheque processing systems and clearing houses
+/// - **API Integration**: RESTful API support for modern cheque collection platforms
+/// - **Processing Requirements**: Supports both batch and real-time cheque collection processing
+/// - **Compliance Integration**: Built-in validation for regulatory cheque processing requirements
+///
+/// ## Relationship to Other Messages
+/// - **Triggers**: Often triggered by cheque deposit systems or collection processing
+/// - **Responses**: May generate status messages or collection confirmation messages
+/// - **Related**: Works with cheque clearing messages and account reporting systems
+/// - **Alternatives**: Electronic payment messages for digital payment alternatives
+/// - **Status Updates**: May receive notifications about cheque clearing success or failure
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT110_VALIDATION_RULES)]
 pub struct MT110 {
-    // ================================
-    // HEADER FIELDS
-    // ================================
-    /// **Sender's Reference** - Field 20 (Mandatory)
-    /// No leading/trailing slash, no '//'
-    #[field("20", mandatory)]
+    #[field("20")]
     pub field_20: Field20,
 
-    /// **Sender's Correspondent** - Field 53a (Optional)
-    /// Options: A, B, D. Required if no direct account relationship
-    #[field("53A", optional)]
-    pub field_53a: Option<GenericBicField>,
+    #[field("53A")]
+    pub field_53a: Option<Field53SenderCorrespondent>,
 
-    /// **Receiver's Correspondent** - Field 54a (Optional)
-    /// Options: A, B, D. Used to route funds to Receiver
-    #[field("54A", optional)]
-    pub field_54a: Option<GenericBicField>,
+    #[field("54A")]
+    pub field_54a: Option<Field54ReceiverCorrespondent>,
 
-    /// **Sender to Receiver Information** - Field 72 (Optional)
-    /// Format: 6*35x, optional structured codes
-    /// Codes: ACC, INS, INT; REJT/RETN special rules
-    #[field("72", optional)]
+    #[field("72")]
     pub field_72: Option<Field72>,
 
-    // ================================
-    // REPEATING SEQUENCE - CHEQUE DETAILS (UP TO 10)
-    // ================================
-    /// **Cheque Details** - Repeating Sequence (Mandatory, up to 10 occurrences)
-    /// Each entry represents one cheque being advised
-    #[field("CHEQUES", repetitive)]
+    #[field("#")]
     pub cheques: Vec<MT110Cheque>,
 }
 
-/// # MT110 Cheque (Repeating Sequence)
+/// MT110 Cheque (Repetitive Sequence)
 ///
-/// Represents a single cheque within an MT110 advice message.
-/// This structure demonstrates the enhanced architecture for handling repetitive SWIFT sequences.
+/// ## Purpose
+/// Represents individual cheque details within an MT110 advice message.
+/// Each occurrence provides complete information for one cheque being advised.
 ///
-/// ## Architectural Benefits:
-/// 1. **Complete Validation**: Each cheque validates all its fields independently
-/// 2. **Memory Efficiency**: Only allocates fields that are present  
-/// 3. **Type Safety**: Compile-time validation of field types
-/// 4. **Business Logic**: Clear cheque-level operations and validation
-/// 5. **Scalability**: Easy to add new cheque types or fields
+/// ## Field Details
+/// - **21**: Cheque Reference (mandatory) - Unique reference for this cheque
+/// - **32B**: Currency/Amount - Cheque amount and currency
+/// - **30**: Date - Cheque date or value date
+/// - **25**: Account - Related account information
+///
+/// ## Validation Notes
+/// - Each cheque must have a unique reference (21)
+/// - Amount (32B) must be positive for valid cheque advice
+/// - Date information (30) required for proper clearing
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT110_CHEQUE_VALIDATION_RULES)]
 pub struct MT110Cheque {
-    /// **Cheque Number** - Field 21 (Mandatory)
-    /// Unique per cheque; no '/' or '//'
-    #[field("21", mandatory)]
-    pub field_21: Field21,
+    #[field("21")]
+    pub field_21: Field21NoOption,
 
-    /// **Date of Issue** - Field 30 (Mandatory)
-    /// Format: YYMMDD. Must be a valid date
-    #[field("30", mandatory)]
+    #[field("30")]
     pub field_30: Field30,
 
-    /// **Amount** - Field 32a (Mandatory)
-    /// Options: A (6!n3!a15d) / B (3!a15d)
-    /// Currency must be same for all cheques in the message
-    #[field("32A", mandatory)]
-    pub field_32a: GenericCurrencyAmountField,
+    #[field("32")]
+    pub field_32: Field32,
 
-    /// **Payer** - Field 50a (Optional)
-    /// Options: A, F, K. Detailed identity formats
-    #[field("50A", optional)]
-    pub field_50a: Option<Field50>,
+    #[field("50")]
+    pub field_50: Option<Field50OrderingCustomerAFK>,
 
-    /// **Drawer Bank** - Field 52a (Optional)
-    /// Options: A, B, D. Can specify BIC or national code
-    #[field("52A", optional)]
-    pub field_52a: Option<GenericBicField>,
+    #[field("52")]
+    pub field_52: Option<Field52DrawerBank>,
 
-    /// **Payee** - Field 59a (Mandatory)
-    /// Options: No letter, F option. Must use structured address and name
-    #[field("59A", mandatory)]
-    pub field_59a: Field59,
+    #[field("59")]
+    pub field_59: Field59,
 }
 
 /// Enhanced validation rules with forEach support for repetitive sequences
@@ -117,21 +140,27 @@ const MT110_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "Maximum 10 cheques per message",
+      "description": "The repetitive sequence (Cheque details) must not occur more than 10 times",
       "condition": {
-        "<=": [{"length": {"var": "cheques"}}, 10]
+        "<=": [{"length": {"var": "fields.#"}}, 10]
       }
     },
     {
       "id": "C2",
-      "description": "All cheques must have the same currency",
+      "description": "The currency code in field 32a must be the same in all occurrences of that field",
       "condition": {
         "if": [
-          {">": [{"length": {"var": "cheques"}}, 0]},
+          {">=": [{"length": {"var": "fields.#"}}, 2]},
           {
-            "allEqual": {
-              "map": ["cheques", "field_32a.currency"]
-            }
+            "all": [
+              {"var": "fields.#"},
+              {
+                "==": [
+                  {"var": "32.currency"},
+                  {"var": "fields.#.0.32.currency"}
+                ]
+              }
+            ]
           },
           true
         ]
@@ -141,31 +170,7 @@ const MT110_VALIDATION_RULES: &str = r#"{
       "id": "CHQ_MIN",
       "description": "At least one cheque required",
       "condition": {
-        ">=": [{"length": {"var": "cheques"}}, 1]
-      }
-    }
-  ]
-}"#;
-
-/// Validation rules specific to MT110 cheques
-const MT110_CHEQUE_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "CHQ_REF",
-      "description": "Cheque reference must be unique and not contain '/' or '//'",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_21.value"}, ""]},
-          {"!": [{"in": ["/", {"var": "field_21.value"}]}]},
-          {"!": [{"in": ["//", {"var": "field_21.value"}]}]}
-        ]
-      }
-    },
-    {
-      "id": "CHQ_DATE",
-      "description": "Date of issue must be a valid date",
-      "condition": {
-        "!=": [{"var": "field_30.value"}, ""]
+        ">=": [{"length": {"var": "fields.#"}}, 1]
       }
     }
   ]

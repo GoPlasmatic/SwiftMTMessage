@@ -1,0 +1,123 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "message_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "dd_mandate_ref": "DD-MANDATE-2024",
+        "execution_date": "2024-12-20",
+        "session_num": "0001",
+        "sequence_num": "000890",
+        "currency": {"fake": ["currency_code"]},
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "101",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "101",
+        "fields": {
+            "20": {"reference": {"var": "message_ref"}},
+            "21R": {"reference": {"var": "dd_mandate_ref"}},
+            "28D": {"index": 1, "total": 1},
+            "50#1": {"L": {"party_identifier": {"fake": ["company_name"]}}},
+            "50#2": {"F": {"account": "/DD/COLLECTOR", "bic": {"fake": ["bic"]}}},
+            "52": {"A": {"bic": {"var": "receiver_bic"}}},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "#": [
+                {
+                    "21": {"reference": {"cat": ["DD", {"fake": ["i64", 10000000000000, 99999999999999]}]}},
+                    "23E": [{"instruction_code": "INTC"}],
+                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 500.0, 2000.0]}},
+                    "57": {"A": {"bic": {"var": "receiver_bic"}}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/COLLECTION-ACCOUNT",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "COLLECTIONS",
+                                {"fake": ["city_name"]},
+                                {"fake": ["country_name"]}
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "DIRECT DEBIT COLLECTION",
+                            "MANDATE: DD-12345",
+                            "SUBSCRIPTION FEE",
+                            "MONTHLY CHARGE"
+                        ]
+                    },
+                    "71A": {"code": "SHA"}
+                },
+                {
+                    "21": {"reference": {"cat": ["DD", {"fake": ["i64", 10000000000000, 99999999999999]}]}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 100.0, 500.0]}},
+                    "57": {"A": {"bic": {"var": "receiver_bic"}}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/COLLECTION-ACCOUNT",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "COLLECTIONS",
+                                {"fake": ["city_name"]},
+                                {"fake": ["country_name"]}
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "DIRECT DEBIT COLLECTION",
+                            "MANDATE: DD-67890",
+                            "UTILITY PAYMENT",
+                            "ELECTRICITY BILL"
+                        ]
+                    },
+                    "71A": {"code": "SHA"}
+                },
+                {
+                    "21": {"reference": {"cat": ["DD", {"fake": ["i64", 10000000000000, 99999999999999]}]}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 250.0, 1000.0]}},
+                    "57": {"A": {"bic": {"var": "receiver_bic"}}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/COLLECTION-ACCOUNT",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "COLLECTIONS",
+                                {"fake": ["city_name"]},
+                                {"fake": ["country_name"]}
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "DIRECT DEBIT COLLECTION",
+                            "MANDATE: DD-11111",
+                            "INSURANCE PREMIUM",
+                            "MONTHLY INSTALLMENT"
+                        ]
+                    },
+                    "71A": {"code": "SHA"}
+                }
+            ]
+        }
+    }
+}

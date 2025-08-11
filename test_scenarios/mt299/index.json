@@ -1,0 +1,22 @@
+{
+    "message_type": "MT299",
+    "description": "Free Format Message",
+    "scenarios": [
+        {
+            "file": "cbpr_payment_response.json",
+            "description": "CBPR+ payment response"
+        },
+        {
+            "file": "regulatory_notification.json",
+            "description": "Regulatory notification"
+        },
+        {
+            "file": "settlement_instructions_update.json",
+            "description": "Settlement instructions update"
+        },
+        {
+            "file": "system_maintenance_notice.json",
+            "description": "System maintenance notice"
+        }
+    ]
+}

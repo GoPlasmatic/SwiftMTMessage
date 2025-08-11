@@ -1,0 +1,26 @@
+{
+    "message_type": "MT196",
+    "description": "Answers",
+    "scenarios": [
+        {
+            "file": "answer_cancellation.json",
+            "description": "Answer to cancellation request"
+        },
+        {
+            "file": "answer_rejection.json",
+            "description": "Answer rejection"
+        },
+        {
+            "file": "answer_pending_investigation.json",
+            "description": "Answer pending investigation"
+        },
+        {
+            "file": "answer_inquiry_response.json",
+            "description": "Answer to inquiry"
+        },
+        {
+            "file": "cbpr_cancellation_response.json",
+            "description": "CBPR+ cancellation response"
+        }
+    ]
+}

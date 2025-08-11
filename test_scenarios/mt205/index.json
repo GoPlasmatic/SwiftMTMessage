@@ -1,0 +1,30 @@
+{
+    "message_type": "MT205",
+    "description": "Financial Institution Transfer Execution",
+    "scenarios": [
+        {
+            "file": "bank_transfer_non_cover.json",
+            "description": "Bank transfer without cover"
+        },
+        {
+            "file": "bank_transfer_cover.json",
+            "description": "Bank transfer with cover"
+        },
+        {
+            "file": "return_payment.json",
+            "description": "Payment return"
+        },
+        {
+            "file": "rejection_payment.json",
+            "description": "Payment rejection"
+        },
+        {
+            "file": "urgent_liquidity_transfer.json",
+            "description": "Urgent liquidity transfer"
+        },
+        {
+            "file": "regulatory_reporting.json",
+            "description": "Regulatory reporting transfer"
+        }
+    ]
+}

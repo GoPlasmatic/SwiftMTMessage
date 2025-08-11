@@ -1,0 +1,70 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "cancel_ref": {"cat": ["FRAUD", {"fake": ["i64", 100000, 999999]}]},
+        "original_ref": {"cat": ["TRF", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "reason_code": "FRAD",
+        "session": "0002",
+        "sequence": "789012",
+        "session_num": "0002",
+        "sequence_num": "000789",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "192",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
+        },
+        "user_header": {
+            "service_type_id": "fin",
+            "banking_priority": "9999",
+            "unique_end_to_end_reference": {"var": "uetr"}
+        },
+        "message_type": "192",
+        "fields": {
+            "20": {"reference": {"var": "cancel_ref"}},
+            "21": {"reference": {"var": "original_ref"}},
+            "11S": {
+                "message_type": "103",
+                "date": "2024-12-21",
+                "session_number": "0002",
+                "input_sequence_number": "789012"
+            },
+            "79": {
+                "information": [
+                    "/FRAD/",
+                    "FRAUD ALERT - CANCELLATION REQUEST",
+                    "",
+                    "ORIGINAL MESSAGE TYPE: MT103",
+                    "ORIGINAL REFERENCE: TRF987654321098",
+                    "AMOUNT: USD 250000.00",
+                    "ORDERING CUSTOMER: ABC TRADING LTD",
+                    "BENEFICIARY: XYZ HOLDINGS",
+                    "",
+                    "SUSPECTED FRAUDULENT TRANSACTION",
+                    "SECURITY DEPARTMENT VERIFICATION FAILED",
+                    "ACCOUNT TAKEOVER SUSPECTED",
+                    "",
+                    "CRITICAL - STOP ALL PROCESSING",
+                    "DO NOT CREDIT BENEFICIARY",
+                    "FREEZE RELATED ACCOUNTS IF POSSIBLE",
+                    "",
+                    "SECURITY CONTACT: +9876543210",
+                    "CASE REF: SEC2024122101"
+                ]
+            }
+        }
+    }
+}

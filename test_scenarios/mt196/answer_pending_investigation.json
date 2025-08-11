@@ -1,0 +1,84 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "answer_ref": {"cat": ["PEND", {"fake": ["i64", 100000, 999999]}]},
+        "cancel_ref": {"cat": ["FRAUD", {"fake": ["i64", 100000, 999999]}]},
+        "original_mt": "192",
+        "date": "2024-12-21",
+        "session": "3456",
+        "sequence": "345678",
+        "response_code": "PENDING",
+        "reason_code": "INVS",
+        "amount": {"fake": ["f64", 50000.0, 250000.0]},
+        "currency": "USD",
+        "session_num": "0002",
+        "sequence_num": "000789",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "196",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "196",
+        "fields": {
+            "20": {"reference": {"var": "answer_ref"}},
+            "21": {"reference": {"var": "cancel_ref"}},
+            "76": {
+                "information": [
+                    "/PDCR/INVS/PENDING",
+                    "INVESTIGATION IN PROGRESS",
+                    "AMOUNT: USD 125000.00",
+                    "DATE: 2024-12-21",
+                    "ESTIMATED RESOLUTION: 24-48 HRS"
+                ]
+            },
+            "11": {
+                "S": {
+                    "message_type": {"var": "original_mt"},
+                    "date": {"var": "date"},
+                    "session_number": {"var": "session"},
+                    "input_sequence_number": {"var": "sequence"}
+                }
+            },
+            "79": {
+                "information": [
+                    "RESPONSE TO FRAUD CANCELLATION REQUEST",
+                    "",
+                    "ORIGINAL MT192 REFERENCE: FRAUD789012",
+                    "",
+                    "STATUS: UNDER INVESTIGATION",
+                    "PAYMENT TEMPORARILY FROZEN",
+                    "",
+                    "SECURITY TEAM NOTIFIED",
+                    "BENEFICIARY BANK CONTACTED",
+                    "AWAITING CONFIRMATION FROM INTERMEDIARY",
+                    "",
+                    "CASE NUMBER: SEC-2024-45678",
+                    "PRIORITY: HIGH",
+                    "ASSIGNED TO: FRAUD PREVENTION UNIT",
+                    "",
+                    "NEXT UPDATE: WITHIN 24 HOURS",
+                    "EMERGENCY CONTACT: +1-800-FRAUD-01"
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,144 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "message_ref": {"cat": ["CHQCOL", {"fake": ["i64", 100000, 999999]}]},
+        "currency": "USD",
+        "cheque1_ref": {"cat": ["CHQ", {"fake": ["i64", 1000000, 9999999]}]},
+        "cheque1_amount": {"fake": ["f64", 1000.0, 10000.0]},
+        "cheque1_date": "2024-12-20",
+        "cheque2_ref": {"cat": ["CHQ", {"fake": ["i64", 1000000, 9999999]}]},
+        "cheque2_amount": {"fake": ["f64", 2000.0, 20000.0]},
+        "cheque2_date": "2024-12-19",
+        "cheque3_ref": {"cat": ["CHQ", {"fake": ["i64", 1000000, 9999999]}]},
+        "cheque3_amount": {"fake": ["f64", 5000.0, 50000.0]},
+        "cheque3_date": "2024-12-18",
+        "drawer_bic": {"fake": ["bic"]},
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "110",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "110",
+        "fields": {
+            "20": {"reference": {"var": "message_ref"}},
+            "53": {"A": {"bic": {"var": "sender_bic"}}},
+            "54": {"A": {"bic": {"var": "receiver_bic"}}},
+            "72": {
+                "information": [
+                    "/COLLECTION/CHEQUES FOR DEPOSIT",
+                    "/COUNT/3 CHEQUES",
+                    "/PROCESS/STANDARD CLEARING",
+                    "/AVAIL/FUNDS AFTER CLEARING",
+                    "/NOTE/SUBJECT TO VERIFICATION"
+                ]
+            },
+            "#": [
+                {
+                    "21": {"reference": {"var": "cheque1_ref"}},
+                    "30": {"execution_date": {"var": "cheque1_date"}},
+                    "32": {"B": {"currency": {"var": "currency"}, "amount": {"var": "cheque1_amount"}}},
+                    "50": {
+                        "K": {
+                            "account": "/1234567890",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]},
+                                {"fake": ["country_name"]}
+                            ]
+                        }
+                    },
+                    "52": {"A": {"bic": {"var": "drawer_bic"}}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/9876543210",
+                            "name_and_address": [{"fake": ["company_name"]}, {"fake": ["street_address"]}, {"fake": ["city_name"]}]
+                        }
+                    }
+                },
+                {
+                    "21": {"reference": {"var": "cheque2_ref"}},
+                    "30": {"execution_date": {"var": "cheque2_date"}},
+                    "32": {"B": {"currency": {"var": "currency"}, "amount": {"var": "cheque2_amount"}}},
+                    "50": {
+                        "A": {
+                            "party_identifier": "/US/123456789",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]},
+                                {"fake": ["country_name"]}
+                            ]
+                        }
+                    },
+                    "52": {
+                        "D": {
+                            "party_identifier": "//NATL123456",
+                            "name_and_address": [
+                                "REGIONAL BANK",
+                                "CLEARING HOUSE MEMBER",
+                                {"fake": ["city_name"]},
+                                {"fake": ["country_name"]}
+                            ]
+                        }
+                    },
+                    "59": {
+                        "NoOption": {
+                            "account": "/9876543211",
+                            "name_and_address": [{"fake": ["company_name"]}, {"fake": ["street_address"]}, {"fake": ["city_name"]}]
+                        }
+                    }
+                },
+                {
+                    "21": {"reference": {"var": "cheque3_ref"}},
+                    "30": {"execution_date": {"var": "cheque3_date"}},
+                    "32": {"B": {"currency": {"var": "currency"}, "amount": {"var": "cheque3_amount"}}},
+                    "50": {
+                        "K": {
+                            "account": "/2222333344",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]},
+                                {"fake": ["country_name"]}
+                            ]
+                        }
+                    },
+                    "52": {"A": {"bic": {"var": "drawer_bic"}}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/9876543212",
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "TREASURY DEPARTMENT",
+                                {"fake": ["street_address"]},
+                                {"fake": ["city_name"]}
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

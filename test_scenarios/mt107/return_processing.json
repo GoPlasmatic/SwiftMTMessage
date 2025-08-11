@@ -1,0 +1,132 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["RTNDD", {"fake": ["i64", 10000000000, 99999999999]}]},
+        "original_ref": {"cat": ["GDDBT", {"fake": ["i64", 10000000000, 99999999999]}]},
+        "currency": "USD",
+        "execution_date": "2024-12-29",
+        "charges": "SHA",
+        "uetr": {"fake": ["uuid"]},
+        "original_uetr": {"fake": ["uuid"]},
+        "session_num": "0001",
+        "sequence_num": "000123"
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "107",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {"service_type_id": "gpi", "unique_end_to_end_reference": {"var": "uetr"}},
+        "message_type": "107",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23E": {"instruction_code": "RTND"},
+            "21E": {"reference": {"var": "original_ref"}},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "50#2": {
+                "K": {
+                    "account": "/RETURN-PROCESSOR",
+                    "name_and_address": [
+                        "RETURNS DEPARTMENT",
+                        "FINANCIAL INSTITUTION",
+                        "OPERATIONS CENTER",
+                        "LONDON, GB"
+                    ]
+                }
+            },
+            "51A": {"bic": {"var": "sender_bic"}},
+            "71A": {"code": {"var": "charges"}},
+            "72": {
+                "information": [
+                    "/RETN/DIRECT DEBIT RETURNS",
+                    {"substr": [{"cat": ["/ORGNL/", {"var": "original_ref"}]}, 0, 35]},
+                    "/RSNCD/AC04",
+                    "/DATE/2024-12-25"
+                ]
+            },
+            "#": [
+                {
+                    "21": {"reference": {"cat": ["RTN", {"fake": ["i64", 10000000, 99999999]}]}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 100.0, 1000.0]}},
+                    "59": {
+                        "NoOption": {
+                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "ACCOUNT HOLDER",
+                                {"fake": ["street_address"]},
+                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "/RFB/DD RETURN",
+                            "/RETN/AC04",
+                            {"cat": ["/ORGNL/TXN", {"fake": ["i64", 10000000, 99999999]}]},
+                            "/CD/ACCOUNT CLOSED"
+                        ]
+                    }
+                },
+                {
+                    "21": {"reference": {"cat": ["RTN", {"fake": ["i64", 10000000, 99999999]}]}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 200.0, 2000.0]}},
+                    "59": {
+                        "NoOption": {
+                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "CUSTOMER",
+                                {"fake": ["street_address"]},
+                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "/RFB/DD RETURN",
+                            "/RETN/AM04",
+                            {"cat": ["/ORGNL/TXN", {"fake": ["i64", 10000000, 99999999]}]},
+                            "/CD/INSUFFICIENT FUNDS"
+                        ]
+                    }
+                },
+                {
+                    "21": {"reference": {"cat": ["RTN", {"fake": ["i64", 10000000, 99999999]}]}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 150.0, 1500.0]}},
+                    "59": {
+                        "NoOption": {
+                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "name_and_address": [
+                                {"fake": ["company_name"]},
+                                "DEBTOR",
+                                {"fake": ["street_address"]},
+                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "/RFB/DD RETURN",
+                            "/RETN/MD01",
+                            "/CD/NO MANDATE",
+                            {"cat": ["/ORGNL/TXN", {"fake": ["i64", 10000000, 99999999]}]}
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}

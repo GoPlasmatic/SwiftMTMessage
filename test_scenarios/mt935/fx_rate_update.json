@@ -1,0 +1,67 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["FXRATE", {"fake": ["i64", 100000, 999999]}]},
+        "effective_date_1": "2024-12-29",
+        "usd_eur_rate": {"fake": ["f64", 0.89, 0.95]},
+        "eur_usd_rate": {"fake": ["f64", 1.05, 1.12]},
+        "effective_date_2": "2024-12-29",
+        "gbp_usd_rate": {"fake": ["f64", 1.25, 1.35]},
+        "usd_gbp_rate": {"fake": ["f64", 0.74, 0.8]},
+        "session_num": "0001",
+        "sequence_num": "000123",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "935",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "935",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "#": [
+                {
+                    "23": {"function_code": "DEP", "days": 1, "reference": "FX2024RATE"},
+                    "30": {"execution_date": {"var": "effective_date_1"}},
+                    "37H": [
+                        {"rate_indicator": "C", "rate": {"var": "usd_eur_rate"}},
+                        {"rate_indicator": "D", "rate": {"var": "eur_usd_rate"}}
+                    ]
+                },
+                {
+                    "23": {"function_code": "DEP", "days": 2, "reference": "FX2024RATE"},
+                    "30": {"execution_date": {"var": "effective_date_2"}},
+                    "37H": [
+                        {"rate_indicator": "C", "rate": {"var": "gbp_usd_rate"}},
+                        {"rate_indicator": "D", "rate": {"var": "usd_gbp_rate"}}
+                    ]
+                }
+            ],
+            "72": {
+                "information": [
+                    "DAILY FX RATE UPDATE",
+                    "EFFECTIVE FROM START OF BUSINESS",
+                    "RATES SUBJECT TO MARKET VOLATILITY"
+                ]
+            }
+        }
+    }
+}

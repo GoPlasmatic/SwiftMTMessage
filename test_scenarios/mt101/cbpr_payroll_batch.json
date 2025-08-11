@@ -1,0 +1,108 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "msg_id": {"cat": ["PAYROLL", {"fake": ["i64", 100000, 999999]}]},
+        "exec_date": "2024-12-28",
+        "currency": "EUR",
+        "account_id": {"cat": ["DE89DEUT", {"fake": ["i64", 10000000000000, 99999999999999]}]},
+        "emp1_amount": {"fake": ["f64", 4000.0, 6000.0]},
+        "emp2_amount": {"fake": ["f64", 3500.0, 5000.0]},
+        "emp3_amount": {"fake": ["f64", 5000.0, 8000.0]},
+        "emp4_amount": {"fake": ["f64", 3000.0, 4500.0]},
+        "session_num": "0001",
+        "sequence_num": "000789",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "101",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "101",
+        "fields": {
+            "20": {"reference": {"var": "msg_id"}},
+            "21": {"reference": "CBPRSAL"},
+            "28D": {"index": 1, "total": 1},
+            "50#2": {
+                "F": {
+                    "account": {"cat": ["/", {"var": "account_id"}]},
+                    "bic": {"var": "sender_bic"},
+                    "name_and_address": ["EUROPEAN TECH SOLUTIONS GMBH", "ALEXANDERPLATZ 1", "10178 BERLIN", "GERMANY"]
+                }
+            },
+            "52": {"A": {"bic": {"var": "sender_bic"}}},
+            "30": {"execution_date": {"var": "exec_date"}},
+            "#": [
+                {
+                    "21": {"reference": "SAL-DEC-001"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "emp1_amount"}},
+                    "57": {"A": {"bic": "DEUTDEFFXXX"}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/DE12345678901234567890",
+                            "name_and_address": ["SCHMIDT, ANNA MARIA", "HAUPTSTRASSE 45", "80331 MUNICH", "GERMANY"]
+                        }
+                    },
+                    "70": {"narrative": ["CBPR SALARY PAYMENT", "DECEMBER 2024", "EMP-001-2024"]},
+                    "71A": {"code": "OUR"}
+                },
+                {
+                    "21": {"reference": "SAL-DEC-002"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "emp2_amount"}},
+                    "57": {"A": {"bic": "COBADEFFXXX"}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/DE98765432109876543210",
+                            "name_and_address": ["MUELLER, THOMAS", "FRIEDRICHSTRASSE 123", "10117 BERLIN", "GERMANY"]
+                        }
+                    },
+                    "70": {"narrative": ["CBPR SALARY PAYMENT", "DECEMBER 2024", "EMP-002-2024"]},
+                    "71A": {"code": "OUR"}
+                },
+                {
+                    "21": {"reference": "SAL-DEC-003"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "emp3_amount"}},
+                    "57": {"A": {"bic": "DRESDEFFXXX"}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/DE11223344556677889900",
+                            "name_and_address": ["WEBER, JULIA", "GOETHESTRASSE 78", "60311 FRANKFURT", "GERMANY"]
+                        }
+                    },
+                    "70": {"narrative": ["CBPR SALARY PAYMENT", "DECEMBER 2024 PLUS BONUS", "EMP-003-2024"]},
+                    "71A": {"code": "OUR"}
+                },
+                {
+                    "21": {"reference": "SAL-DEC-004"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "emp4_amount"}},
+                    "57": {"A": {"bic": "HYVEDEMMXXX"}},
+                    "59": {
+                        "NoOption": {
+                            "account": "/DE99887766554433221100",
+                            "name_and_address": ["FISCHER, MARKUS", "MAXIMILIANSTRASSE 15", "20355 HAMBURG", "GERMANY"]
+                        }
+                    },
+                    "70": {"narrative": ["CBPR SALARY PAYMENT", "DECEMBER 2024", "EMP-004-2024"]},
+                    "71A": {"code": "OUR"}
+                }
+            ]
+        }
+    }
+}

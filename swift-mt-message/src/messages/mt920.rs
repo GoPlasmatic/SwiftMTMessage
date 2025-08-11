@@ -1,158 +1,238 @@
-use crate::fields::*;
+use crate::fields::{field34::Field34F, *};
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// # MT920: Request Message
+/// MT920: Request Message
 ///
-/// This message is used by a financial institution to request specific types of statements
-/// or reports from another financial institution. This message enables automated
-/// request processing for account statements, balance reports, and transaction
-/// reports, facilitating efficient cash management and reconciliation processes.
+/// ## Purpose
+/// Used to request specific account information or statement messages from another financial
+/// institution. This message allows institutions to request various types of account-related
+/// data including balances, statements, and transaction details on a per-account basis.
+///
+/// ## Scope
+/// This message is:
+/// - Sent between financial institutions to request account information
+/// - Used to request specific message types (MT940, MT941, MT942, MT950)
+/// - Applied for correspondent banking and account servicing relationships
+/// - Essential for account monitoring and reconciliation processes
+/// - Part of automated cash management and reporting systems
 ///
 /// ## Key Features
-/// - **Statement requests**: Requesting MT940 (customer statement) or MT950 (statement message)
-/// - **Balance reports**: Requesting MT941 (balance report)
-/// - **Interim reports**: Requesting MT942 (interim transaction report)
-/// - **Automated reporting**: Scheduled statement and report generation
-/// - **Cash management**: Regular balance and transaction monitoring
-/// - **Reconciliation**: Obtaining statements for reconciliation purposes
+/// - **Message Type Specification**: Field 12 specifies the exact message type requested
+/// - **Account-Specific Requests**: Individual account identification for targeted requests
+/// - **Balance Requirements**: Specific balance information requirements using field 34F
+/// - **Repetitive Structure**: Multiple account requests in a single message
+/// - **Flexible Reporting**: Support for different statement and balance message types
+/// - **Automated Processing**: Designed for systematic and automated information requests
 ///
-/// ## Field Structure
-/// All fields follow the enhanced macro system with proper validation rules.
-/// The message supports floor limit specification for MT942 requests.
+/// ## Common Use Cases
+/// - Requesting daily account statements (MT940)
+/// - Obtaining balance and transaction reports (MT941)
+/// - Requesting interim transaction statements (MT942)
+/// - Getting periodic balance statements (MT950)
+/// - Cash management system automation
+/// - Correspondent banking account monitoring
+/// - Regulatory reporting data collection
+/// - Liquidity management and planning
 ///
-/// ## Conditional Rules
-/// - **C1**: If Field 12 = '942', Field 34F for debit or debit/credit must be present
-/// - **C2**: When both Field 34F fields are present: first must have sign 'D', second must have sign 'C'
-/// - **C3**: Currency code must be same across all Field 34F entries in a message
+/// ## Message Structure
+/// ### Header Section
+/// - **20**: Transaction Reference (mandatory) - Unique reference for this request
+///
+/// ### Repetitive Sequence (MT920Sequence)
+/// Each sequence represents a request for a specific account and contains:
+/// - **12**: Message Type Requested (mandatory) - MT940, MT941, MT942, or MT950
+/// - **25**: Account Identification (mandatory) - Account for which information is requested
+/// - **34F**: Amount Fields (optional) - Specific balance or amount requirements
+///
+/// ## Field 12 - Message Types Requested
+/// Valid message types that can be requested:
+/// - **940**: Customer Statement Message (detailed transaction statement)
+/// - **941**: Balance Report Message (balance information with summary)
+/// - **942**: Interim Transaction Report (interim statement with real-time updates)
+/// - **950**: Statement Message (balance statement with transaction summary)
+///
+/// ## Field 34F - Amount Requirements
+/// Optional field that can specify:
+/// - **Debit Information**: When requesting debit balance details
+/// - **Credit Information**: When requesting credit balance details
+/// - **Currency Specification**: Specific currency for balance reporting
+/// - **Threshold Amounts**: Minimum amounts for transaction reporting
+///
+/// ## Network Validation Rules
+/// - **C1 Rule**: If message requested is 942, field 34F for debit must be present
+/// - **C2 Rule**: When both 34F fields present, first must be 'D' (debit), second must be 'C' (credit)
+/// - **C3 Rule**: Currency code must be consistent across all 34F entries
+/// - **Message Type Validation**: Field 12 must contain valid SWIFT MT type (940, 941, 942, 950)
+/// - **Reference Format**: Transaction references must follow SWIFT formatting standards
+/// - **Required Fields**: All mandatory fields must be present and properly formatted
+///
+/// ## Processing Workflow
+/// ### Request Processing
+/// 1. MT920 sent with specific account and message type requests
+/// 2. Receiving institution validates request parameters
+/// 3. Requested information extracted from account systems
+/// 4. Appropriate response message(s) generated and sent
+/// 5. Requesting institution processes received information
+///
+/// ### Automated Integration
+/// - Integration with cash management systems
+/// - Scheduled automated requests for regular reporting
+/// - Real-time balance monitoring capabilities
+/// - Exception-based reporting triggers
+///
+/// ## SRG2025 Status
+/// - **No Structural Changes**: MT920 format remains unchanged in SRG2025
+/// - **Enhanced Validation**: Additional validation for request accuracy and completeness
+/// - **Digital Integration**: Improved support for digital banking and API integration
+/// - **Real-time Capabilities**: Enhanced support for real-time information requests
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Direct integration with account management and core banking systems
+/// - **Cash Management**: Essential component of comprehensive cash management solutions
+/// - **API Gateway**: Often used in conjunction with modern API-based banking services
+/// - **Reporting Systems**: Critical input for automated reporting and compliance systems
+///
+/// ## Relationship to Other Messages
+/// - **Triggers**: MT940, MT941, MT942, MT950 response messages
+/// - **Supports**: Account monitoring, cash management, and reconciliation processes
+/// - **Complements**: Confirmation messages (MT900, MT910) for complete account visibility
+/// - **Integrates with**: Broader cash management and treasury operation workflows
+
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT920_VALIDATION_RULES)]
 pub struct MT920 {
-    /// **Transaction Reference Number** - Field 20
-    ///
-    /// Unique sender's reference identifying this specific request message.
-    /// Used throughout the request lifecycle for tracking, correlation with
-    /// response messages, and audit purposes.
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField,
+    #[field("20")]
+    pub field_20: Field20,
 
-    /// **Message Requested** - Field 12
-    ///
-    /// Specifies the type of SWIFT message being requested. This determines
-    /// the format and content of the response message that will be generated.
-    /// Valid values: 940, 941, 942, 950
-    #[field("12", mandatory)]
-    pub field_12: GenericTextField,
+    #[field("#")]
+    pub sequence: Vec<MT920Sequence>, // Sequence of Fields
+}
 
-    /// **Account Identification** - Field 25
-    ///
-    /// Identifies the specific account for which the statement or report
-    /// is being requested. Must be a valid account identifier that the
-    /// receiver can process and generate reports for.
-    #[field("25", mandatory)]
-    pub field_25: GenericTextField,
+#[serde_swift_fields]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+pub struct MT920Sequence {
+    #[field("12")]
+    pub field_12: Field12,
 
-    /// **Debit or Debit/Credit Floor Limit** - Field 34F (Optional, Conditional C1)
-    ///
-    /// Specifies the floor limit for debit transactions or combined debit/credit
-    /// transactions when requesting MT942 interim transaction reports. Transactions
-    /// above this limit will be included in the report.
-    #[field("34F_DEBIT", optional)]
+    #[field("25")]
+    pub field_25: Field25A,
+
+    #[field("34F#1")]
     pub field_34f_debit: Option<Field34F>,
 
-    /// **Credit Floor Limit Indicator** - Field 34F (Optional, Conditional C2)
-    ///
-    /// Specifies the floor limit for credit transactions when requesting MT942
-    /// interim transaction reports. Used in conjunction with debit floor limit
-    /// to provide comprehensive transaction filtering.
-    #[field("34F_CREDIT", optional)]
+    #[field("34F#2")]
     pub field_34f_credit: Option<Field34F>,
 }
 
-/// Enhanced validation rules for MT920
+/// Validation rules for MT920 - Request Message
 const MT920_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "If message requested is 942, Field 34F for debit must be present",
+      "description": "If field 12 = 942, at least one occurrence of field 34F (Debit or Debit and Credit Floor Limit Indicator) must be present",
       "condition": {
-        "if": [
-          {"==": [{"var": "field_12.value"}, "942"]},
-          {"var": "field_34f_debit.is_some"},
-          true
+        "all": [
+          {"var": "fields.#"},
+          {
+            "if": [
+              {"==": [{"var": "12.value"}, "942"]},
+              {
+                "or": [
+                  {"!!": {"var": "34F#1"}},
+                  {"!!": {"var": "34F#2"}}
+                ]
+              },
+              true
+            ]
+          }
         ]
       }
     },
     {
       "id": "C2",
-      "description": "When both 34F fields present: first must be 'D', second must be 'C'",
+      "description": "When both 34F fields are present: subfield 2 of the first must be D, subfield 2 of the second must be C. If only one 34F is present, subfield 2 must be omitted",
       "condition": {
-        "if": [
+        "all": [
+          {"var": "fields.#"},
           {
-            "and": [
-              {"var": "field_34f_debit.is_some"},
-              {"var": "field_34f_credit.is_some"}
+            "if": [
+              {
+                "and": [
+                  {"!!": {"var": "34F#1"}},
+                  {"!!": {"var": "34F#2"}}
+                ]
+              },
+              {
+                "and": [
+                  {"==": [{"var": "34F#1.indicator"}, "D"]},
+                  {"==": [{"var": "34F#2.indicator"}, "C"]}
+                ]
+              },
+              {
+                "if": [
+                  {
+                    "or": [
+                      {
+                        "and": [
+                          {"!!": {"var": "34F#1"}},
+                          {"!": {"!!": {"var": "34F#2"}}}
+                        ]
+                      },
+                      {
+                        "and": [
+                          {"!": {"!!": {"var": "34F#1"}}},
+                          {"!!": {"var": "34F#2"}}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "or": [
+                      {
+                        "and": [
+                          {"!!": {"var": "34F#1"}},
+                          {"!": {"!!": {"var": "34F#1.indicator"}}}
+                        ]
+                      },
+                      {
+                        "and": [
+                          {"!!": {"var": "34F#2"}},
+                          {"!": {"!!": {"var": "34F#2.indicator"}}}
+                        ]
+                      }
+                    ]
+                  },
+                  true
+                ]
+              }
             ]
-          },
-          {
-            "and": [
-              {"==": [{"var": "field_34f_debit.sign"}, "D"]},
-              {"==": [{"var": "field_34f_credit.sign"}, "C"]}
-            ]
-          },
-          true
+          }
         ]
       }
     },
     {
       "id": "C3",
-      "description": "Currency code must be same across all 34F entries",
+      "description": "Currency code must be the same in each occurrence of field 34F within a sequence",
       "condition": {
-        "if": [
+        "all": [
+          {"var": "fields.#"},
           {
-            "and": [
-              {"var": "field_34f_debit.is_some"},
-              {"var": "field_34f_credit.is_some"}
+            "if": [
+              {
+                "and": [
+                  {"!!": {"var": "34F#1"}},
+                  {"!!": {"var": "34F#2"}}
+                ]
+              },
+              {"==": [
+                {"var": "34F#1.currency"},
+                {"var": "34F#2.currency"}
+              ]},
+              true
             ]
-          },
-          {"==": [
-            {"var": "field_34f_debit.currency"},
-            {"var": "field_34f_credit.currency"}
-          ]},
-          true
-        ]
-      }
-    },
-    {
-      "id": "REF_FORMAT",
-      "description": "Transaction reference must not have invalid slash patterns",
-      "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
-        ]
-      }
-    },
-    {
-      "id": "MESSAGE_TYPE_VALID",
-      "description": "Message requested must be valid SWIFT MT type",
-      "condition": {
-        "in": [
-          {"var": "field_12.value"},
-          ["940", "941", "942", "950"]
-        ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_12.value"}, ""]},
-          {"!=": [{"var": "field_25.value"}, ""]}
+          }
         ]
       }
     }

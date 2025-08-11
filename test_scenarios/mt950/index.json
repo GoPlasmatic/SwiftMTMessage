@@ -1,0 +1,18 @@
+{
+    "message_type": "MT950",
+    "description": "Statement Message",
+    "scenarios": [
+        {
+            "file": "simplified_statement.json",
+            "description": "Simplified statement message"
+        },
+        {
+            "file": "high_volume_batch.json",
+            "description": "High volume batch statement"
+        },
+        {
+            "file": "correspondent_banking.json",
+            "description": "Correspondent banking statement"
+        }
+    ]
+}

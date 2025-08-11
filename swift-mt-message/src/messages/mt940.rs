@@ -1,169 +1,189 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
 
-/// # MT940: Customer Statement Message
+/// MT940: Customer Statement Message
 ///
-/// This message is used by financial institutions to send customer account statements
-/// containing transaction details and balance information. This message provides
-/// a detailed view of account activity over a specific period.
+/// ## Purpose
+/// Used to transmit detailed account statement information from an account servicing institution
+/// to the account holder. This message provides a complete transaction-by-transaction record
+/// of account activity with opening and closing balances for a specific period.
+///
+/// ## Scope
+/// This message is:
+/// - Sent by account servicing institutions to account holders
+/// - Used for regular account statement transmission (daily, weekly, monthly)
+/// - Applied to various account types including current, savings, and foreign currency accounts
+/// - Essential for account reconciliation and cash management
+/// - Part of automated statement delivery and cash management systems
 ///
 /// ## Key Features
-/// - **Account statements**: Detailed transaction history for customer accounts
-/// - **Balance information**: Opening and closing balance details
-/// - **Transaction details**: Individual transaction lines with narrative
-/// - **Multi-part statements**: Support for statement sequencing
-/// - **Available balance**: Optional closing available balance reporting
-/// - **Reconciliation support**: Comprehensive data for account reconciliation
+/// - **Complete Transaction Detail**: Full transaction-by-transaction statement
+/// - **Balance Information**: Opening and closing balances with currency consistency
+/// - **Statement Line Details**: Individual transaction entries with references and descriptions
+/// - **Value Dating**: Precise value dates for each transaction
+/// - **Available Balance**: Optional available balance information for credit management
+/// - **Information Lines**: Additional transaction details and narrative information
 ///
-/// ## Field Structure
-/// All fields follow the enhanced macro system with proper validation rules.
-/// The message supports repetitive statement lines for multiple transactions.
+/// ## Common Use Cases
+/// - Daily account statement delivery
+/// - End-of-month statement transmission
+/// - Real-time account activity reporting
+/// - Cash management system integration
+/// - Account reconciliation support
+/// - Regulatory reporting and compliance
+/// - Customer self-service portal integration
+/// - Treasury management system feeds
 ///
-/// ## Business Rules
-/// - Opening balance (60F) and closing balance (62F) must be in consistent currency
-/// - Each Field 61 (transaction line) may be followed by optional Field 86
-/// - Balances use comma as decimal separator
-/// - Statement supports multi-part statements via Field 28C
+/// ## Message Structure
+/// ### Header Information
+/// - **20**: Transaction Reference (mandatory) - Unique statement reference
+/// - **21**: Related Reference (optional) - Reference to related statement or period
+/// - **25**: Account Identification (mandatory) - Account being reported
+/// - **28C**: Statement Number/Sequence (mandatory) - Statement numbering
+/// - **60**: Opening Balance (mandatory) - Starting balance for statement period
+///
+/// ### Transaction Details
+/// - **Statement Lines**: Repetitive sequence of individual transactions
+/// - **62**: Closing Balance (mandatory) - Ending balance for statement period
+/// - **64**: Available Balance (optional) - Available credit or debit balance
+/// - **65**: Forward Available Balance (optional, repetitive) - Future available balances
+/// - **86**: Information to Account Owner (optional) - Additional statement information
+///
+/// ### Statement Line Structure (MT940StatementLine)
+/// Each statement line contains:
+/// - **61**: Statement Line (optional) - Individual transaction details
+/// - **86**: Information to Account Owner (optional) - Additional transaction information
+///
+/// ## Field Details
+/// ### Field 60/62 - Balance Information
+/// - **Currency**: ISO 4217 3-character currency code
+/// - **Amount**: Balance amount with appropriate precision
+/// - **Date**: Balance date (YYMMDD format)
+/// - **Credit/Debit Indicator**: C (Credit) or D (Debit) balance
+///
+/// ### Field 61 - Statement Line
+/// - **Value Date**: Date when transaction becomes effective
+/// - **Entry Date**: Date when transaction was posted (optional)
+/// - **Credit/Debit Mark**: C (Credit) or D (Debit) entry
+/// - **Amount**: Transaction amount
+/// - **Transaction Type**: SWIFT transaction type identification
+/// - **Reference**: Transaction reference number
+/// - **Account Servicing Institution Reference**: Bank's internal reference
+///
+/// ## Network Validation Rules
+/// - **Currency Consistency**: Opening and closing balances must use the same currency
+/// - **Reference Format**: Transaction references must follow SWIFT formatting standards
+/// - **Required Fields**: All mandatory fields must be present and properly formatted
+/// - **Balance Logic**: Closing balance should reflect opening balance plus/minus transactions
+/// - **Date Validation**: All dates must be valid and in proper sequence
+/// - **Amount Validation**: All amounts must be properly formatted with currency precision
+///
+/// ## Processing Context
+/// ### Statement Generation
+/// 1. Account activity accumulated over statement period
+/// 2. Transactions sorted by value date and sequence
+/// 3. Opening balance carried forward from previous statement
+/// 4. MT940 generated with complete transaction detail
+/// 5. Closing balance calculated and validated
+///
+/// ### Cash Management Integration
+/// - Real-time balance updating
+/// - Transaction categorization and analysis
+/// - Cash flow forecasting input
+/// - Reconciliation automation
+/// - Exception reporting and investigation
+///
+/// ## SRG2025 Status
+/// - **No Structural Changes**: MT940 format remains unchanged in SRG2025
+/// - **Enhanced Validation**: Additional validation for statement accuracy and completeness
+/// - **Digital Integration**: Improved support for digital banking and API integration
+/// - **Real-time Capabilities**: Enhanced support for real-time statement delivery
+///
+/// ## Integration Considerations
+/// - **Banking Systems**: Core component of account management and customer communication
+/// - **Cash Management**: Primary input for automated cash management and forecasting
+/// - **ERP Integration**: Critical for enterprise financial management and reconciliation
+/// - **Regulatory Reporting**: Essential for compliance and audit trail requirements
+///
+/// ## Relationship to Other Messages
+/// - **Triggered by**: MT920 (Request Message) for on-demand statement delivery
+/// - **Complements**: MT900/MT910 confirmation messages for real-time transaction notification
+/// - **Supports**: Complete account management and cash management workflows
+/// - **Integrates with**: Customer communication and digital banking platforms
+
 #[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
 #[validation_rules(MT940_VALIDATION_RULES)]
 pub struct MT940 {
-    /// **Transaction Reference Number** - Field 20
-    ///
-    /// Unique ID for this statement, no leading/trailing slashes.
-    /// Used for tracking and referencing this specific statement.
-    #[field("20", mandatory)]
-    pub field_20: GenericReferenceField,
+    #[field("20")]
+    pub field_20: Field20,
 
-    /// **Related Reference** - Field 21 (Optional)
-    ///
-    /// Links to MT920 if applicable.
-    /// Provides connection to statement request that triggered this response.
-    #[field("21", optional)]
-    pub field_21: Option<GenericReferenceField>,
+    #[field("21")]
+    pub field_21: Option<Field21NoOption>,
 
-    /// **Account Identification** - Field 25
-    ///
-    /// IBAN or account identifier, BIC optional.
-    /// Identifies the account for which this statement is provided.
-    #[field("25", mandatory)]
-    pub field_25: GenericTextField,
+    #[field("25")]
+    pub field_25: Field25AccountIdentification,
 
-    /// **Statement/Sequence Number** - Field 28C
-    ///
-    /// Statement and sub-sequence numbers for multi-part statements.
-    /// Enables tracking of statement parts and sequencing.
-    #[field("28C", mandatory)]
+    #[field("28C")]
     pub field_28c: Field28C,
 
-    /// **Opening Balance** - Field 60F
-    ///
-    /// Booked opening balance at start of statement period.
-    /// Must be consistent with currency used in closing balance.
-    #[field("60F", mandatory)]
-    pub field_60f: GenericBalanceField,
+    #[field("60")]
+    pub field_60: Field60,
 
-    /// **Statement Lines** (Repetitive)
-    ///
-    /// Transaction lines with optional accompanying Field 86.
-    /// Each statement line represents one transaction with optional narrative.
-    #[field("STATEMENT_LINES", repetitive)]
+    #[field("#")]
     pub statement_lines: Vec<MT940StatementLine>,
 
-    /// **Closing Balance** - Field 62F
-    ///
-    /// Booked closing balance at end of statement period.
-    /// Must be consistent with currency used in opening balance.
-    #[field("62F", mandatory)]
-    pub field_62f: GenericBalanceField,
+    #[field("62")]
+    pub field_62: Field62,
 
-    /// **Closing Available Balance** - Field 64 (Optional)
-    ///
-    /// Cash availability balance showing funds available for use.
-    /// Provides additional liquidity information beyond booked balance.
-    #[field("64", optional)]
-    pub field_64: Option<GenericBalanceField>,
+    #[field("64")]
+    pub field_64: Option<Field64>,
 
-    /// **Forward Available Balance** - Field 65 (Optional)
-    ///
-    /// Value-dated available funds for future periods.
-    /// Shows expected available balance considering future value dates.
-    #[field("65", optional)]
-    pub field_65: Option<GenericBalanceField>,
+    #[field("65")]
+    pub field_65: Option<Vec<Field65>>,
+
+    #[field("86")]
+    pub field_86: Option<Field86>,
 }
 
-/// # MT940 Statement Line
-///
-/// Represents a single transaction line (Field 61) with optional
-/// accompanying information (Field 86).
-/// Enhanced with SwiftMessage derive for automatic parsing and validation.
+#[serde_swift_fields]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT940_STATEMENT_LINE_VALIDATION_RULES)]
 pub struct MT940StatementLine {
-    /// **Statement Line** - Field 61
-    ///
-    /// Transaction details including value date, amount, and transaction type.
-    /// Contains the core transaction information.
-    #[field("61", mandatory)]
-    pub field_61: Field61,
+    #[field("61")]
+    pub field_61: Option<Field61>,
 
-    /// **Info to Account Owner** - Field 86 (Optional)
-    ///
-    /// Narrative details for the transaction.
-    /// Provides additional context and description for the transaction.
-    #[field("86", optional)]
-    pub field_86: Option<GenericMultiLineTextField<6, 65>>,
+    #[field("86")]
+    pub field_86: Option<Field86>,
 }
 
-/// Enhanced validation rules for MT940
+/// Validation rules for MT940 - Customer Statement Message
 const MT940_VALIDATION_RULES: &str = r#"{
   "rules": [
     {
-      "id": "CURRENCY_CONSISTENCY",
-      "description": "Opening and closing balances must have consistent currency",
+      "id": "C1",
+      "description": "The repetitive sequence starting with field 61 must appear at least once and no more than 500 times",
       "condition": {
-        "==": [
-          {"var": "field_60f.currency"},
-          {"var": "field_62f.currency"}
+        "and": [
+          {">=": [{"length": {"var": "fields.#"}}, 1]},
+          {"<=": [{"length": {"var": "fields.#"}}, 500]}
         ]
       }
     },
     {
-      "id": "REF_FORMAT",
-      "description": "Transaction reference must not have invalid slash patterns",
+      "id": "C2",
+      "description": "If field 64 is present, field 60F must also be present, and field 62F must also be present",
       "condition": {
-        "and": [
-          {"!": {"startsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"endsWith": [{"var": "field_20.value"}, "/"]}},
-          {"!": {"includes": [{"var": "field_20.value"}, "//"]}}
+        "if": [
+          {"!!": {"var": "fields.64"}},
+          {
+            "and": [
+              {"!!": {"var": "fields.60"}},
+              {"!!": {"var": "fields.62"}}
+            ]
+          },
+          true
         ]
-      }
-    },
-    {
-      "id": "REQUIRED_FIELDS",
-      "description": "All mandatory fields must be present and non-empty",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "field_20.value"}, ""]},
-          {"!=": [{"var": "field_25.value"}, ""]},
-          {"var": "field_28c.is_valid"},
-          {"var": "field_60f.is_valid"},
-          {"var": "field_62f.is_valid"}
-        ]
-      }
-    }
-  ]
-}"#;
-
-/// Validation rules specific to MT940 statement lines
-const MT940_STATEMENT_LINE_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "STATEMENT_LINE_VALID",
-      "description": "Statement line must be valid",
-      "condition": {
-        "var": "field_61.is_valid"
       }
     }
   ]

@@ -1,0 +1,18 @@
+{
+    "message_type": "MT941",
+    "description": "Balance Report",
+    "scenarios": [
+        {
+            "file": "daily_balance_report.json",
+            "description": "Daily balance report"
+        },
+        {
+            "file": "multi_currency_balance.json",
+            "description": "Multi-currency balance report"
+        },
+        {
+            "file": "negative_balance_report.json",
+            "description": "Negative balance report"
+        }
+    ]
+}

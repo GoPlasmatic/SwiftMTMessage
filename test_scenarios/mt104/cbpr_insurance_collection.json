@@ -1,0 +1,163 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "msg_id": {"cat": ["INSU", {"fake": ["i64", 100000, 999999]}]},
+        "total_amount": 2500.0,
+        "exec_date": "2024-12-27",
+        "currency": "CHF",
+        "account_id": {"cat": ["CH9300762", {"fake": ["i64", 10000000000, 99999999999]}]},
+        "amount1": 850.0,
+        "amount2": 1200.0,
+        "amount3": 450.0,
+        "lei_insurance": "INSURERLEICODE123456",
+        "session_num": "0001",
+        "sequence_num": "004567",
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "104",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
+        "message_type": "104",
+        "fields": {
+            "20": {"reference": {"var": "msg_id"}},
+            "23E": {"instruction_code": "CORT"},
+            "28D": {"message_index": 1, "total": 1},
+            "30": {"execution_date": {"var": "exec_date"}},
+            "#": [
+                {
+                    "21": {"reference": "HEALTH001"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount1"}},
+                    "50#2": {
+                        "K": {
+                            "account": "CH1234567890123456789",
+                            "name_and_address": ["MUELLER, HANS", "BAHNHOFSTRASSE 123", "8001 ZURICH", "SWITZERLAND"]
+                        }
+                    },
+                    "52": {"A": {"bic": {"var": "sender_bic"}}},
+                    "57": {"A": {"bic": "UBSWCHZHXXX"}},
+                    "59": {
+                        "NoOption": {
+                            "account": {"var": "account_id"},
+                            "name_and_address": [
+                                "SWISS HEALTH INSURANCE AG",
+                                "PREMIUM COLLECTION DEPT",
+                                "3000 BERN",
+                                "SWITZERLAND"
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "/PURP/INSU",
+                            "/ULTB/MUELLER, HANS",
+                            "/ULTD/SWISS HEALTH INSURANCE",
+                            "/PERIOD/JANUARY 2025"
+                        ]
+                    },
+                    "71A": {"code": "SHA"},
+                    "77B": {
+                        "narrative": [
+                            "/ORDERRES/MUELLER, HANS",
+                            "/BENEFRES/SWISS HEALTH INSURANCE",
+                            "/PURPOSE/HEALTH INS JAN-2025"
+                        ]
+                    }
+                },
+                {
+                    "21": {"reference": "AUTO002"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount2"}},
+                    "50#2": {
+                        "K": {
+                            "account": "CH9876543210987654321",
+                            "name_and_address": ["SCHMID, ANNA", "HAUPTSTRASSE 45", "4051 BASEL", "SWITZERLAND"]
+                        }
+                    },
+                    "52": {"A": {"bic": {"var": "sender_bic"}}},
+                    "57": {"A": {"bic": "CRESCHZHXXX"}},
+                    "59": {
+                        "NoOption": {
+                            "account": {"var": "account_id"},
+                            "name_and_address": [
+                                "HELVETIA INSURANCE GROUP",
+                                "AUTO INSURANCE DIVISION",
+                                "9001 ST GALLEN",
+                                "SWITZERLAND"
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "/PURP/INSU",
+                            "/ULTB/SCHMID, ANNA",
+                            "/ULTD/HELVETIA INSURANCE",
+                            "/PERIOD/Q1 2025"
+                        ]
+                    },
+                    "71A": {"code": "SHA"},
+                    "77B": {
+                        "narrative": [
+                            "/ORDERRES/SCHMID, ANNA",
+                            "/BENEFRES/HELVETIA INSURANCE",
+                            "/PURPOSE/AUTO INS Q1-2025"
+                        ]
+                    }
+                },
+                {
+                    "21": {"reference": "HOME003"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount3"}},
+                    "50#2": {
+                        "K": {
+                            "account": "CH1122334455667788990",
+                            "name_and_address": ["WEBER, PETER", "SEESTRASSE 78", "6005 LUCERNE", "SWITZERLAND"]
+                        }
+                    },
+                    "52": {"A": {"bic": {"var": "sender_bic"}}},
+                    "57": {"A": {"bic": "ZKBKCHZZXXX"}},
+                    "59": {
+                        "NoOption": {
+                            "account": {"var": "account_id"},
+                            "name_and_address": [
+                                "ZURICH INSURANCE COMPANY LTD",
+                                "HOME INSURANCE DEPT",
+                                "8002 ZURICH",
+                                "SWITZERLAND"
+                            ]
+                        }
+                    },
+                    "70": {
+                        "narrative": [
+                            "/PURP/INSU",
+                            "/ULTB/WEBER, PETER",
+                            "/ULTD/ZURICH INSURANCE",
+                            "/PERIOD/JANUARY 2025"
+                        ]
+                    },
+                    "71A": {"code": "SHA"},
+                    "77B": {
+                        "narrative": [
+                            "/ORDERRES/WEBER, PETER",
+                            "/BENEFRES/ZURICH INSURANCE LTD",
+                            "/PURPOSE/HOME INS JAN-2025"
+                        ]
+                    }
+                }
+            ],
+            "32B": {"currency": {"var": "currency"}, "amount": {"var": "total_amount"}}
+        }
+    }
+}

@@ -1,6 +1,6 @@
 [package]
 name = "swift-mt-message-macros"
-version = "3.0.0"
+version = "3.0.1"
 edition = "2021"
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
 license = "Apache-2.0"

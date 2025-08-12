@@ -1,6 +1,6 @@
 [package]
 name = "swift-mt-message"
-version = "3.0.0"
+version = "3.0.1"
 edition = "2021"
 exclude = [".DS_Store", "/target", ".vscode", ".github"]
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]

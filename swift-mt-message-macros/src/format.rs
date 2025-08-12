@@ -457,17 +457,23 @@ fn parse_swift_format_to_description(pattern: &str) -> String {
 /// Build decimal pattern without format! macro
 fn build_decimal_pattern(length: usize) -> String {
     // Use string literals for common cases
+    // Pattern allows: digits, optionally followed by comma/period and optionally followed by more digits
+    // This generic pattern supports: "5000", "5000,", "5000,00", "5000.50"
+    // 
+    // IMPORTANT: This is a GENERIC pattern used by multiple decimal fields (Field32, Field33, Field36, etc.)
+    // Some fields (like Field32A) require mandatory decimal separators per SWIFT specification,
+    // but this is enforced at the field level using custom validation, not in this generic pattern
     match length {
-        1 => "(\\d{1}(?:[.,]\\d+)?)".to_string(),
-        2 => "(\\d{1,2}(?:[.,]\\d+)?)".to_string(),
-        3 => "(\\d{1,3}(?:[.,]\\d+)?)".to_string(),
-        6 => "(\\d{1,6}(?:[.,]\\d+)?)".to_string(),
-        12 => "(\\d{1,12}(?:[.,]\\d+)?)".to_string(),
-        15 => "(\\d{1,15}(?:[.,]\\d+)?)".to_string(),
-        18 => "(\\d{1,18}(?:[.,]\\d+)?)".to_string(),
+        1 => "(\\d{1}(?:[.,]\\d*)?)".to_string(),
+        2 => "(\\d{1,2}(?:[.,]\\d*)?)".to_string(),
+        3 => "(\\d{1,3}(?:[.,]\\d*)?)".to_string(),
+        6 => "(\\d{1,6}(?:[.,]\\d*)?)".to_string(),
+        12 => "(\\d{1,12}(?:[.,]\\d*)?)".to_string(),
+        15 => "(\\d{1,15}(?:[.,]\\d*)?)".to_string(),
+        18 => "(\\d{1,18}(?:[.,]\\d*)?)".to_string(),
         _ => {
             // Only fallback to format! for uncommon lengths
-            format!(r"(\d{{1,{length}}}(?:[.,]\d+)?)")
+            format!(r"(\d{{1,{length}}}(?:[.,]\d*)?)")
         }
     }
 }
@@ -1035,26 +1041,42 @@ pub fn generate_type_conversion_expr(
     match type_str.as_str() {
         "String" => Ok(quote! { #value_expr.to_string() }),
         "f64" => Ok(quote! {
-            #value_expr.replace(',', ".").parse::<f64>()
-                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
-                    field_tag: "type_conversion".to_string(),
-                    component_name: "decimal".to_string(),
-                    value: #value_expr.to_string(),
-                    format_spec: "decimal number".to_string(),
-                    position: None,
-                    inner_error: e.to_string(),
-                })))?
+            {
+                // Handle trailing comma without digits (e.g., "5000," -> "5000.00")
+                let normalized = if #value_expr.ends_with(',') {
+                    format!("{}00", #value_expr.replace(',', "."))
+                } else {
+                    #value_expr.replace(',', ".")
+                };
+                normalized.parse::<f64>()
+                    .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
+                        field_tag: "type_conversion".to_string(),
+                        component_name: "decimal".to_string(),
+                        value: #value_expr.to_string(),
+                        format_spec: "decimal number".to_string(),
+                        position: None,
+                        inner_error: e.to_string(),
+                    })))?
+            }
         }),
         "f32" => Ok(quote! {
-            #value_expr.replace(',', ".").parse::<f32>()
-                .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
-                    field_tag: "type_conversion".to_string(),
-                    component_name: "decimal".to_string(),
-                    value: #value_expr.to_string(),
-                    format_spec: "decimal number".to_string(),
-                    position: None,
-                    inner_error: e.to_string(),
-                })))?
+            {
+                // Handle trailing comma without digits (e.g., "5000," -> "5000.00")
+                let normalized = if #value_expr.ends_with(',') {
+                    format!("{}00", #value_expr.replace(',', "."))
+                } else {
+                    #value_expr.replace(',', ".")
+                };
+                normalized.parse::<f32>()
+                    .map_err(|e| crate::errors::ParseError::InvalidFieldFormat(Box::new(crate::errors::InvalidFieldFormatError {
+                        field_tag: "type_conversion".to_string(),
+                        component_name: "decimal".to_string(),
+                        value: #value_expr.to_string(),
+                        format_spec: "decimal number".to_string(),
+                        position: None,
+                        inner_error: e.to_string(),
+                    })))?
+            }
         }),
         "u32" => Ok(quote! {
             #value_expr.parse::<u32>()

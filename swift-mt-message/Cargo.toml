@@ -1,6 +1,6 @@
 [package]
 name = "swift-mt-message"
-version = "3.0.1"
+version = "3.0.2"
 edition = "2021"
 exclude = [".DS_Store", "/target", ".vscode", ".github"]
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
@@ -14,7 +14,7 @@ categories = ["data-structures", "development-tools", "parsing"]
 
 [dependencies]
 # Macro crate
-swift-mt-message-macros = { version = "3.0", path = "../swift-mt-message-macros" }
+swift-mt-message-macros = { version = "3.0.2", path = "../swift-mt-message-macros" }
 
 datafake-rs = "0.1"
 

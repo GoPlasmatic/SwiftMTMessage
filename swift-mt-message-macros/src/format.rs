@@ -459,7 +459,7 @@ fn build_decimal_pattern(length: usize) -> String {
     // Use string literals for common cases
     // Pattern allows: digits, optionally followed by comma/period and optionally followed by more digits
     // This generic pattern supports: "5000", "5000,", "5000,00", "5000.50"
-    // 
+    //
     // IMPORTANT: This is a GENERIC pattern used by multiple decimal fields (Field32, Field33, Field36, etc.)
     // Some fields (like Field32A) require mandatory decimal separators per SWIFT specification,
     // but this is enforced at the field level using custom validation, not in this generic pattern

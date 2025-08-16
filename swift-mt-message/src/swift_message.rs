@@ -140,7 +140,9 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             "110" => messages::MT110::validate(),
             "111" => messages::MT111::validate(),
             "112" => messages::MT112::validate(),
+            "200" => messages::MT200::validate(),
             "202" => messages::MT202::validate(),
+            "204" => messages::MT204::validate(),
             "205" => messages::MT205::validate(),
             "210" => messages::MT210::validate(),
             "900" => messages::MT900::validate(),
@@ -199,7 +201,17 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
 
         // Create comprehensive data context with headers and fields
         let context_value = match self.create_validation_context(&constants) {
-            Ok(context) => context,
+            Ok(context) => {
+                // Debug: Always show validation context in debug mode
+                if std::env::var("TEST_DEBUG").is_ok() {
+                    if let Ok(context_str) = serde_json::to_string_pretty(&context) {
+                        eprintln!("\n=== VALIDATION CONTEXT for {} ===", T::message_type());
+                        eprintln!("{}", context_str);
+                        eprintln!("=== END VALIDATION CONTEXT ===\n");
+                    }
+                }
+                context
+            }
             Err(e) => {
                 return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
                     rule_name: "CONTEXT_CREATION".to_string(),

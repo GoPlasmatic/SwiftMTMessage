@@ -1,0 +1,57 @@
+{
+    "message_type": "MT204",
+    "description": "Financial Markets Direct Debit Message",
+    "scenarios": [
+        {
+            "file": "securities_settlement.json",
+            "name": "Securities Settlement Collection",
+            "description": "Collection of funds for securities trade settlements from multiple counterparties"
+        },
+        {
+            "file": "margin_call.json",
+            "name": "Margin Call Collection",
+            "description": "Collection of margin requirements from derivatives trading members"
+        },
+        {
+            "file": "clearing_house.json",
+            "name": "Clearing House Collections",
+            "description": "Collection of clearing house fees and obligations from members"
+        }
+    ],
+    "validation_rules": [
+        {
+            "id": "C1",
+            "description": "The amount in field 19 must equal the sum of the amounts in all occurrences of field 32B",
+            "error_code": "C01"
+        },
+        {
+            "id": "C2",
+            "description": "The currency code in the amount field 32B must be the same for all occurrences of this field in the message",
+            "error_code": "C02"
+        },
+        {
+            "id": "C3",
+            "description": "The repetitive sequence must not appear more than ten times",
+            "error_code": "T10"
+        }
+    ],
+    "usage_notes": [
+        "MT204 is used for direct debit transactions in financial markets",
+        "Supports bulk processing with up to 10 transactions per message",
+        "All transactions must use the same currency (validation rule C2)",
+        "The sum of all transaction amounts must equal field 19 (validation rule C1)",
+        "Commonly used for securities settlements, margin calls, and clearing obligations"
+    ],
+    "sequence_structure": {
+        "sequence_a": {
+            "name": "Common Elements - Reimbursement Details",
+            "occurrence": "Single, Mandatory",
+            "fields": ["20", "19", "30", "57", "58", "72"]
+        },
+        "sequence_b": {
+            "name": "Transaction Details",
+            "occurrence": "Repetitive, Mandatory (Max 10)",
+            "fields": ["20", "21", "32B", "53", "72"]
+        }
+    }
+}

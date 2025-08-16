@@ -87,10 +87,31 @@ pub fn split_into_sequences(fields: &FieldMap, config: &SequenceConfig) -> Resul
 
     // Simpler approach: find all sequence B boundaries
     // Sequence B starts at first field 21 and includes all fields until sequence C
-    let sequence_b_start_idx = all_fields.iter().position(|(tag, _)| {
-        is_sequence_b_marker(tag, &config.sequence_b_marker)
-            || (secondary_marker.is_some() && *tag == secondary_marker.unwrap())
-    });
+    // Special handling for MT204 where field 20 appears in both sequences
+    let is_mt204 = config.sequence_b_marker == "20"
+        && all_fields.iter().filter(|(tag, _)| *tag == "20").count() > 1;
+
+    let sequence_b_start_idx = if is_mt204 {
+        // For MT204: skip the first field 20 (which is in sequence A)
+        let mut found_first_20 = false;
+        all_fields.iter().position(|(tag, _)| {
+            if *tag == "20" {
+                if found_first_20 {
+                    true // This is the second field 20, which starts sequence B
+                } else {
+                    found_first_20 = true;
+                    false // Skip the first field 20
+                }
+            } else {
+                false
+            }
+        })
+    } else {
+        all_fields.iter().position(|(tag, _)| {
+            is_sequence_b_marker(tag, &config.sequence_b_marker)
+                || (secondary_marker.is_some() && *tag == secondary_marker.unwrap())
+        })
+    };
 
     // Find where sequence C would start (if it exists)
     // This is tricky: sequence C fields appear after ALL transactions
@@ -294,6 +315,13 @@ pub fn get_sequence_config(message_type: &str) -> SequenceConfig {
         },
         "MT107" => SequenceConfig {
             sequence_b_marker: "21".to_string(),
+            sequence_c_fields: vec![],
+            has_sequence_c: false,
+        },
+        "MT204" => SequenceConfig {
+            // Note: MT204 has special handling since field 20 appears in both sequences
+            // The first 20 is for sequence A, subsequent 20s are for sequence B transactions
+            sequence_b_marker: "20".to_string(),
             sequence_c_fields: vec![],
             has_sequence_c: false,
         },

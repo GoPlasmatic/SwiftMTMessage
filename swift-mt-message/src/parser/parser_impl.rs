@@ -47,8 +47,8 @@ use std::collections::{HashMap, HashSet};
 use crate::errors::{ParseError, ParserConfig, Result, SwiftValidationError};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 use crate::messages::{
-    MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT199, MT202, MT205, MT210,
-    MT292, MT296, MT299, MT900, MT910, MT920, MT935, MT940, MT941, MT942, MT950,
+    MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT192, MT196, MT199, MT200, MT202, MT204,
+    MT205, MT210, MT292, MT296, MT299, MT900, MT910, MT920, MT935, MT940, MT941, MT942, MT950,
 };
 use crate::swift_error_codes::t_series;
 use crate::{ParsedSwiftMessage, SwiftMessage, SwiftMessageBody};
@@ -501,9 +501,17 @@ impl SwiftParser {
                 let parsed = self.parse_message::<MT112>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT112(Box::new(parsed)))
             }
+            "200" => {
+                let parsed = self.parse_message::<MT200>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT200(Box::new(parsed)))
+            }
             "202" => {
                 let parsed = self.parse_message::<MT202>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT202(Box::new(parsed)))
+            }
+            "204" => {
+                let parsed = self.parse_message::<MT204>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT204(Box::new(parsed)))
             }
             "205" => {
                 let parsed = self.parse_message::<MT205>(raw_message)?;
@@ -734,6 +742,73 @@ where
         return parse_sequence_b_items::<T>(&parsed_sequences.sequence_b, tracker);
     }
 
+    if message_type.contains("MT204Transaction") {
+        // MT204 has a special structure where fields are grouped by type, not by transaction
+        // We need to reconstruct transactions from the grouped fields
+
+        // Count how many transactions we have (based on field 20 occurrences, excluding the first one)
+        let field_20_count = fields.get("20").map(|v| v.len()).unwrap_or(0);
+        if field_20_count <= 1 {
+            return Ok(Vec::new()); // No transactions if only one or zero field 20s
+        }
+
+        let num_transactions = field_20_count - 1; // First field 20 is for sequence A
+
+        // Build transactions by distributing fields
+        let mut transactions = Vec::new();
+
+        for i in 0..num_transactions {
+            let mut tx_fields = HashMap::new();
+
+            // Get field 20 (skip the first one which is for sequence A)
+            if let Some(field_20_values) = fields.get("20") {
+                if i + 1 < field_20_values.len() {
+                    tx_fields.insert("20".to_string(), vec![field_20_values[i + 1].clone()]);
+                }
+            }
+
+            // Get field 21 if present (optional)
+            if let Some(field_21_values) = fields.get("21") {
+                if i < field_21_values.len() {
+                    tx_fields.insert("21".to_string(), vec![field_21_values[i].clone()]);
+                }
+            }
+
+            // Get field 32B
+            if let Some(field_32b_values) = fields.get("32B") {
+                if i < field_32b_values.len() {
+                    tx_fields.insert("32B".to_string(), vec![field_32b_values[i].clone()]);
+                }
+            }
+
+            // Get field 53 (various variants)
+            for variant in ["53", "53A", "53B", "53D"] {
+                if let Some(field_53_values) = fields.get(variant) {
+                    if i < field_53_values.len() {
+                        tx_fields.insert(variant.to_string(), vec![field_53_values[i].clone()]);
+                        break; // Only one variant per transaction
+                    }
+                }
+            }
+
+            // Get field 72 if present (optional)
+            if let Some(field_72_values) = fields.get("72") {
+                // Field 72 can appear multiple times, need to figure out which ones belong to transactions
+                // For now, skip the first two (which are for sequence A) and take one per transaction
+                if i + 2 < field_72_values.len() {
+                    tx_fields.insert("72".to_string(), vec![field_72_values[i + 2].clone()]);
+                }
+            }
+
+            // Parse the transaction
+            if let Ok(transaction) = T::from_fields(tx_fields) {
+                transactions.push(transaction);
+            }
+        }
+
+        return Ok(transactions);
+    }
+
     // Get all fields sorted by position
     let mut all_fields: Vec<(String, String, usize)> = Vec::new();
     for (tag, values) in fields {
@@ -834,7 +909,13 @@ where
     }
     all_fields.sort_by_key(|(_, _, pos)| *pos);
 
-    let sequence_start_tag = "21";
+    // Determine the sequence start tag based on message type
+    let message_type = std::any::type_name::<T>();
+    let sequence_start_tag = if message_type.contains("MT204Transaction") {
+        "20" // MT204 transactions start with field 20
+    } else {
+        "21" // Most other transactions start with field 21
+    };
     let mut current_sequence_fields: HashMap<String, Vec<(String, usize)>> = HashMap::new();
     let mut in_sequence = false;
 

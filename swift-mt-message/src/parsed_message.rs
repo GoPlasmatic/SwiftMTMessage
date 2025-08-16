@@ -21,8 +21,12 @@ pub enum ParsedSwiftMessage {
     MT111(Box<SwiftMessage<MT111>>),
     #[serde(rename = "112")]
     MT112(Box<SwiftMessage<MT112>>),
+    #[serde(rename = "200")]
+    MT200(Box<SwiftMessage<MT200>>),
     #[serde(rename = "202")]
     MT202(Box<SwiftMessage<MT202>>),
+    #[serde(rename = "204")]
+    MT204(Box<SwiftMessage<MT204>>),
     #[serde(rename = "205")]
     MT205(Box<SwiftMessage<MT205>>),
     #[serde(rename = "210")]
@@ -68,7 +72,9 @@ impl ParsedSwiftMessage {
             ParsedSwiftMessage::MT110(_) => "110",
             ParsedSwiftMessage::MT111(_) => "111",
             ParsedSwiftMessage::MT112(_) => "112",
+            ParsedSwiftMessage::MT200(_) => "200",
             ParsedSwiftMessage::MT202(_) => "202",
+            ParsedSwiftMessage::MT204(_) => "204",
             ParsedSwiftMessage::MT205(_) => "205",
             ParsedSwiftMessage::MT210(_) => "210",
             ParsedSwiftMessage::MT900(_) => "900",
@@ -131,9 +137,21 @@ impl ParsedSwiftMessage {
             _ => None,
         }
     }
+    pub fn as_mt200(&self) -> Option<&SwiftMessage<MT200>> {
+        match self {
+            ParsedSwiftMessage::MT200(msg) => Some(msg),
+            _ => None,
+        }
+    }
     pub fn as_mt202(&self) -> Option<&SwiftMessage<MT202>> {
         match self {
             ParsedSwiftMessage::MT202(msg) => Some(msg),
+            _ => None,
+        }
+    }
+    pub fn as_mt204(&self) -> Option<&SwiftMessage<MT204>> {
+        match self {
+            ParsedSwiftMessage::MT204(msg) => Some(msg),
             _ => None,
         }
     }
@@ -277,9 +295,21 @@ impl ParsedSwiftMessage {
             _ => None,
         }
     }
+    pub fn into_mt200(self) -> Option<SwiftMessage<MT200>> {
+        match self {
+            ParsedSwiftMessage::MT200(msg) => Some(*msg),
+            _ => None,
+        }
+    }
     pub fn into_mt202(self) -> Option<SwiftMessage<MT202>> {
         match self {
             ParsedSwiftMessage::MT202(msg) => Some(*msg),
+            _ => None,
+        }
+    }
+    pub fn into_mt204(self) -> Option<SwiftMessage<MT204>> {
+        match self {
+            ParsedSwiftMessage::MT204(msg) => Some(*msg),
             _ => None,
         }
     }
@@ -392,7 +422,9 @@ impl ParsedSwiftMessage {
             ParsedSwiftMessage::MT192(mt192) => mt192.validate(),
             ParsedSwiftMessage::MT196(mt196) => mt196.validate(),
             ParsedSwiftMessage::MT199(mt199) => mt199.validate(),
+            ParsedSwiftMessage::MT200(mt200) => mt200.validate(),
             ParsedSwiftMessage::MT202(mt202) => mt202.validate(),
+            ParsedSwiftMessage::MT204(mt204) => mt204.validate(),
             ParsedSwiftMessage::MT205(mt205) => mt205.validate(),
             ParsedSwiftMessage::MT210(mt210) => mt210.validate(),
             ParsedSwiftMessage::MT900(mt900) => mt900.validate(),

@@ -2,15 +2,12 @@
     "variables": {
         "sender_bic": {"fake": ["bic"]},
         "receiver_bic": {"fake": ["bic"]},
-        "beneficiary_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["FI", {"fake": ["i64", 1000000000, 9999999999]}]},
-        "related_ref": {"cat": ["REL", {"fake": ["i64", 1000000000, 9999999999]}]},
-        "currency": "USD",
-        "amount": {"fake": ["f64", 10000.0, 1000000.0]},
-        "value_date": "2024-12-20",
+        "transaction_ref": {"cat": ["LIQ", {"fake": ["i64", 10000000, 99999999]}]},
+        "currency": {"fake": ["currency_code"]},
+        "amount": {"fake": ["f64", 5000000.0, 100000000.0]},
+        "value_date": "2025-01-15",
         "session_num": "0001",
-        "sequence_num": "000001",
-        "uetr": {"fake": ["uuid"]}
+        "sequence_num": "234567"
     },
     "schema": {
         "basic_header": {
@@ -23,22 +20,32 @@
         },
         "application_header": {
             "direction": "I",
-            "message_type": "202",
+            "message_type": "200",
             "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
             "receiver_bic": {"var": "receiver_bic"},
-            "priority": "N"
+            "priority": "U"
         },
-        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
-        "message_type": "202",
+        "message_type": "200",
         "fields": {
             "20": {"reference": {"var": "transaction_ref"}},
-            "21": {"reference": {"var": "related_ref"}},
             "32A": {
                 "value_date": {"var": "value_date"},
                 "currency": {"var": "currency"},
                 "amount": {"var": "amount"}
             },
-            "58": {"A": {"bic": {"var": "beneficiary_bic"}}}
+            "56": {"A": {"party_identifier": "/LIQUIDITY", "bic": {"fake": ["bic"]}}},
+            "57": {
+                "D": {
+                    "party_identifier": "/POOL001",
+                    "name_and_address": [
+                        "LIQUIDITY MANAGEMENT",
+                        "TREASURY OPERATIONS",
+                        "LONDON EC2V 7HN",
+                        "UNITED KINGDOM"
+                    ]
+                }
+            },
+            "72": {"information": ["/INS/LIQUIDITY MANAGEMENT", "/REF/DAILY SWEEP"]}
         }
     }
 }

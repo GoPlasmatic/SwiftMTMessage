@@ -6,18 +6,9 @@
             "file": "bank_transfer_non_cover.json",
             "description": "Bank transfer without cover"
         },
-        {
-            "file": "bank_transfer_cover.json",
-            "description": "Bank transfer with cover"
-        },
-        {
-            "file": "return_payment.json",
-            "description": "Payment return"
-        },
-        {
-            "file": "rejection_payment.json",
-            "description": "Payment rejection"
-        },
+        {"file": "bank_transfer_cover.json", "description": "Bank transfer with cover"},
+        {"file": "return_payment.json", "description": "Payment return"},
+        {"file": "rejection_payment.json", "description": "Payment rejection"},
         {
             "file": "urgent_liquidity_transfer.json",
             "description": "Urgent liquidity transfer"

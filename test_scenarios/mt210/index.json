@@ -6,14 +6,8 @@
             "file": "expected_incoming_funds.json",
             "description": "Notice of expected incoming funds"
         },
-        {
-            "file": "single_payment_notice.json",
-            "description": "Single payment notice"
-        },
-        {
-            "file": "fx_settlement_notice.json",
-            "description": "FX settlement notice"
-        },
+        {"file": "single_payment_notice.json", "description": "Single payment notice"},
+        {"file": "fx_settlement_notice.json", "description": "FX settlement notice"},
         {
             "file": "securities_settlement_notice.json",
             "description": "Securities settlement notice"

@@ -2,10 +2,7 @@
     "message_type": "MT111",
     "description": "Stop Cheque",
     "scenarios": [
-        {
-            "file": "lost_cheque_stop.json",
-            "description": "Stop payment for lost cheque"
-        },
+        {"file": "lost_cheque_stop.json", "description": "Stop payment for lost cheque"},
         {
             "file": "fraud_prevention_stop.json",
             "description": "Stop payment for fraud prevention"

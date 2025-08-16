@@ -6,22 +6,10 @@
             "file": "basic_credit_confirmation.json",
             "description": "Basic credit confirmation"
         },
-        {
-            "file": "incoming_wire_transfer.json",
-            "description": "Incoming wire transfer"
-        },
-        {
-            "file": "interest_credit.json",
-            "description": "Interest credit"
-        },
-        {
-            "file": "dividend_payment.json",
-            "description": "Dividend payment credit"
-        },
-        {
-            "file": "refund_credit.json",
-            "description": "Refund credit"
-        },
+        {"file": "incoming_wire_transfer.json", "description": "Incoming wire transfer"},
+        {"file": "interest_credit.json", "description": "Interest credit"},
+        {"file": "dividend_payment.json", "description": "Dividend payment credit"},
+        {"file": "refund_credit.json", "description": "Refund credit"},
         {
             "file": "cbpr_credit_confirmation.json",
             "description": "CBPR+ credit confirmation"

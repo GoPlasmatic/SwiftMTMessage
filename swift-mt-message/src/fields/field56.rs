@@ -167,3 +167,9 @@ pub enum Field56Intermediary {
     C(Field56C),
     D(Field56D),
 }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+pub enum Field56IntermediaryAD {
+    A(Field56A),
+    D(Field56D),
+}

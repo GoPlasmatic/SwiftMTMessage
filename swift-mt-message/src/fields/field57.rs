@@ -208,3 +208,10 @@ pub enum Field57DebtorBank {
     C(Field57C),
     D(Field57D),
 }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+pub enum Field57DebtInstitution {
+    A(Field57A),
+    B(Field57B),
+    D(Field57D),
+}

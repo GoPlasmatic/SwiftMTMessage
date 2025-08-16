@@ -10,9 +10,6 @@
             "file": "real_time_position_update.json",
             "description": "Real-time position update"
         },
-        {
-            "file": "treasury_cash_sweep.json",
-            "description": "Treasury cash sweep report"
-        }
+        {"file": "treasury_cash_sweep.json", "description": "Treasury cash sweep report"}
     ]
 }

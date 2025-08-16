@@ -6,10 +6,7 @@
             "file": "deposit_rate_change.json",
             "description": "Deposit rate change notification"
         },
-        {
-            "file": "fx_rate_update.json",
-            "description": "FX rate update notification"
-        },
+        {"file": "fx_rate_update.json", "description": "FX rate update notification"},
         {
             "file": "loan_rate_adjustment.json",
             "description": "Loan rate adjustment notification"

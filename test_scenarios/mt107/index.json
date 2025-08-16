@@ -14,9 +14,6 @@
             "file": "unauthorized_debit_processing.json",
             "description": "Unauthorized debit processing"
         },
-        {
-            "file": "return_processing.json",
-            "description": "Direct debit return processing"
-        }
+        {"file": "return_processing.json", "description": "Direct debit return processing"}
     ]
 }

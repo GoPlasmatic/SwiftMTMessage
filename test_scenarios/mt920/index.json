@@ -2,10 +2,7 @@
     "message_type": "MT920",
     "description": "Request Message",
     "scenarios": [
-        {
-            "file": "statement_request_basic.json",
-            "description": "Basic statement request"
-        },
+        {"file": "statement_request_basic.json", "description": "Basic statement request"},
         {
             "file": "multi_account_request.json",
             "description": "Multi-account statement request"

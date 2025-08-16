@@ -2,10 +2,7 @@
     "message_type": "MT292",
     "description": "Request for Cancellation",
     "scenarios": [
-        {
-            "file": "fi_cancellation_request.json",
-            "description": "FI cancellation request"
-        },
+        {"file": "fi_cancellation_request.json", "description": "FI cancellation request"},
         {
             "file": "compliance_hold_cancellation.json",
             "description": "Compliance hold cancellation request"

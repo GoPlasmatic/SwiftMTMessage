@@ -6,25 +6,13 @@
             "file": "basic_debit_confirmation.json",
             "description": "Basic debit confirmation"
         },
-        {
-            "file": "fee_debit_confirmation.json",
-            "description": "Fee debit confirmation"
-        },
-        {
-            "file": "fx_transaction_debit.json",
-            "description": "FX transaction debit"
-        },
+        {"file": "fee_debit_confirmation.json", "description": "Fee debit confirmation"},
+        {"file": "fx_transaction_debit.json", "description": "FX transaction debit"},
         {
             "file": "direct_debit_confirmation.json",
             "description": "Direct debit confirmation"
         },
-        {
-            "file": "standing_order_debit.json",
-            "description": "Standing order debit"
-        },
-        {
-            "file": "cbpr_debit_confirmation.json",
-            "description": "CBPR+ debit confirmation"
-        }
+        {"file": "standing_order_debit.json", "description": "Standing order debit"},
+        {"file": "cbpr_debit_confirmation.json", "description": "CBPR+ debit confirmation"}
     ]
 }

@@ -2,10 +2,7 @@
     "message_type": "MT202",
     "description": "General Financial Institution Transfer",
     "scenarios": [
-        {
-            "file": "cbpr_cov_standard.json",
-            "description": "CBPR+ standard COV payment"
-        },
+        {"file": "cbpr_cov_standard.json", "description": "CBPR+ standard COV payment"},
         {
             "file": "cbpr_cov_complex_routing.json",
             "description": "CBPR+ COV with complex routing"
@@ -14,41 +11,14 @@
             "file": "cbpr_cov_compliance_enhanced.json",
             "description": "CBPR+ COV with enhanced compliance"
         },
-        {
-            "file": "cov_mismatch.json",
-            "description": "COV payment with mismatch"
-        },
-        {
-            "file": "fi_to_fi_transparency.json",
-            "description": "FI to FI with transparency"
-        },
-        {
-            "file": "return.json",
-            "description": "Return payment"
-        },
-        {
-            "file": "return_simple.json",
-            "description": "Simple return payment"
-        },
-        {
-            "file": "minimal_return.json",
-            "description": "Minimal return message"
-        },
-        {
-            "file": "cbpr_cov_return.json",
-            "description": "CBPR+ COV return"
-        },
-        {
-            "file": "cbpr_cov_rejection.json",
-            "description": "CBPR+ COV rejection"
-        },
-        {
-            "file": "cbpr_serial_payment.json",
-            "description": "CBPR+ serial payment"
-        },
-        {
-            "file": "standard.json",
-            "description": "Standard FI to FI transfer"
-        }
+        {"file": "cov_mismatch.json", "description": "COV payment with mismatch"},
+        {"file": "fi_to_fi_transparency.json", "description": "FI to FI with transparency"},
+        {"file": "return.json", "description": "Return payment"},
+        {"file": "return_simple.json", "description": "Simple return payment"},
+        {"file": "minimal_return.json", "description": "Minimal return message"},
+        {"file": "cbpr_cov_return.json", "description": "CBPR+ COV return"},
+        {"file": "cbpr_cov_rejection.json", "description": "CBPR+ COV rejection"},
+        {"file": "cbpr_serial_payment.json", "description": "CBPR+ serial payment"},
+        {"file": "standard.json", "description": "Standard FI to FI transfer"}
     ]
 }

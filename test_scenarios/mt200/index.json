@@ -1,0 +1,28 @@
+{
+    "message_type": "MT200",
+    "description": "Financial Institution Transfer for its Own Account",
+    "scenarios": [
+        {
+            "file": "nostro_funding.json",
+            "name": "Nostro Account Funding",
+            "description": "Funding transfers to nostro accounts at correspondent banks"
+        },
+        {
+            "file": "liquidity_transfer.json",
+            "name": "Liquidity Management Transfer",
+            "description": "Internal liquidity transfers between branches or entities"
+        },
+        {
+            "file": "fx_position.json",
+            "name": "FX Position Management",
+            "description": "Foreign exchange position adjustment transfers"
+        }
+    ],
+    "validation_rules": [],
+    "usage_notes": [
+        "MT200 is used exclusively for transfers where the financial institution acts for its own account",
+        "Not to be used for customer-initiated transfers",
+        "Field 57 (Account With Institution) is mandatory",
+        "No specific network validation rules apply to MT200"
+    ]
+}

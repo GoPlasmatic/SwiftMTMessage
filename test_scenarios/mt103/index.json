@@ -14,10 +14,7 @@
             "file": "high_value.json",
             "description": "High value payment requiring special processing"
         },
-        {
-            "file": "cover_payment.json",
-            "description": "Payment with cover method"
-        },
+        {"file": "cover_payment.json", "description": "Payment with cover method"},
         {
             "file": "fx_conversion.json",
             "description": "Payment with foreign exchange conversion"
@@ -26,10 +23,7 @@
             "file": "remittance_enhanced.json",
             "description": "Enhanced remittance information payment"
         },
-        {
-            "file": "treasury_payment.json",
-            "description": "Treasury intercompany payment"
-        },
+        {"file": "treasury_payment.json", "description": "Treasury intercompany payment"},
         {
             "file": "correspondent_banking.json",
             "description": "Correspondent banking transfer"
@@ -42,14 +36,8 @@
             "file": "minimal.json",
             "description": "Minimal payment with only required fields"
         },
-        {
-            "file": "rejection.json",
-            "description": "Payment rejection scenario"
-        },
-        {
-            "file": "return.json",
-            "description": "Payment return scenario"
-        },
+        {"file": "rejection.json", "description": "Payment rejection scenario"},
+        {"file": "return.json", "description": "Payment return scenario"},
         {
             "file": "cbpr_business_payment.json",
             "description": "CBPR+ business-to-business payment"
@@ -66,18 +54,9 @@
             "file": "cbpr_real_estate.json",
             "description": "CBPR+ real estate transaction payment"
         },
-        {
-            "file": "cbpr_trade_finance.json",
-            "description": "CBPR+ trade finance payment"
-        },
-        {
-            "file": "cbpr_tax_payment.json",
-            "description": "CBPR+ tax payment to government"
-        },
-        {
-            "file": "cbpr_salary_payment.json",
-            "description": "CBPR+ salary payment"
-        },
+        {"file": "cbpr_trade_finance.json", "description": "CBPR+ trade finance payment"},
+        {"file": "cbpr_tax_payment.json", "description": "CBPR+ tax payment to government"},
+        {"file": "cbpr_salary_payment.json", "description": "CBPR+ salary payment"},
         {
             "file": "cbpr_supplier_payment.json",
             "description": "CBPR+ supplier/vendor payment"
@@ -90,94 +69,43 @@
             "file": "cbpr_charity_donation.json",
             "description": "CBPR+ charity donation payment"
         },
-        {
-            "file": "cbpr_pension_payment.json",
-            "description": "CBPR+ pension payment"
-        },
-        {
-            "file": "cbpr_interest_payment.json",
-            "description": "CBPR+ interest payment"
-        },
-        {
-            "file": "cbpr_healthcare_payment.json",
-            "description": "CBPR+ healthcare payment"
-        },
+        {"file": "cbpr_pension_payment.json", "description": "CBPR+ pension payment"},
+        {"file": "cbpr_interest_payment.json", "description": "CBPR+ interest payment"},
+        {"file": "cbpr_healthcare_payment.json", "description": "CBPR+ healthcare payment"},
         {
             "file": "cbpr_government_disbursement.json",
             "description": "CBPR+ government disbursement"
         },
-        {
-            "file": "cbpr_stp_compliant.json",
-            "description": "CBPR+ STP compliant payment"
-        },
-        {
-            "file": "cbpr_stp_enhanced.json",
-            "description": "CBPR+ enhanced STP payment"
-        },
-        {
-            "file": "remit_basic.json",
-            "description": "Basic remittance payment"
-        },
-        {
-            "file": "remit_structured.json",
-            "description": "Structured remittance payment"
-        },
+        {"file": "cbpr_stp_compliant.json", "description": "CBPR+ STP compliant payment"},
+        {"file": "cbpr_stp_enhanced.json", "description": "CBPR+ enhanced STP payment"},
+        {"file": "remit_basic.json", "description": "Basic remittance payment"},
+        {"file": "remit_structured.json", "description": "Structured remittance payment"},
         {
             "file": "invalid_purpose_code.json",
             "description": "Payment with invalid purpose code"
         },
-        {
-            "file": "missing_lei_entity.json",
-            "description": "Entity payment missing LEI"
-        },
+        {"file": "missing_lei_entity.json", "description": "Entity payment missing LEI"},
         {
             "file": "unresolved_intermediary.json",
             "description": "Payment with unresolved intermediary"
         },
-        {
-            "file": "duplicate_uetr.json",
-            "description": "Payment with duplicate UETR"
-        },
-        {
-            "file": "cbpr_loan_disbursement.json",
-            "description": "CBPR+ loan disbursement"
-        },
-        {
-            "file": "cbpr_dividend_payment.json",
-            "description": "CBPR+ dividend payment"
-        },
-        {
-            "file": "cbpr_commission_payment.json",
-            "description": "CBPR+ commission payment"
-        },
-        {
-            "file": "cbpr_utility_payment.json",
-            "description": "CBPR+ utility bill payment"
-        },
+        {"file": "duplicate_uetr.json", "description": "Payment with duplicate UETR"},
+        {"file": "cbpr_loan_disbursement.json", "description": "CBPR+ loan disbursement"},
+        {"file": "cbpr_dividend_payment.json", "description": "CBPR+ dividend payment"},
+        {"file": "cbpr_commission_payment.json", "description": "CBPR+ commission payment"},
+        {"file": "cbpr_utility_payment.json", "description": "CBPR+ utility bill payment"},
         {
             "file": "cbpr_education_payment.json",
             "description": "CBPR+ education fee payment"
         },
-        {
-            "file": "cbpr_fees_payment.json",
-            "description": "CBPR+ fees payment"
-        },
-        {
-            "file": "cbpr_rent_payment.json",
-            "description": "CBPR+ rent payment"
-        },
+        {"file": "cbpr_fees_payment.json", "description": "CBPR+ fees payment"},
+        {"file": "cbpr_rent_payment.json", "description": "CBPR+ rent payment"},
         {
             "file": "cbpr_insurance_payment.json",
             "description": "CBPR+ insurance premium payment"
         },
-        {
-            "file": "cbpr_investment_payment.json",
-            "description": "CBPR+ investment payment"
-        },
-        {
-            "file": "cbpr_royalty_payment.json",
-            "description": "CBPR+ royalty payment"
-        },
+        {"file": "cbpr_investment_payment.json", "description": "CBPR+ investment payment"},
+        {"file": "cbpr_royalty_payment.json", "description": "CBPR+ royalty payment"},
         {
             "file": "cbpr_treasury_intercompany.json",
             "description": "CBPR+ treasury intercompany transfer"
@@ -206,14 +134,8 @@
             "file": "cbpr_crypto_settlement.json",
             "description": "CBPR+ crypto settlement payment"
         },
-        {
-            "file": "cbpr_ecommerce_b2c.json",
-            "description": "CBPR+ e-commerce B2C payment"
-        },
-        {
-            "file": "cbpr_gig_economy.json",
-            "description": "CBPR+ gig economy payment"
-        },
+        {"file": "cbpr_ecommerce_b2c.json", "description": "CBPR+ e-commerce B2C payment"},
+        {"file": "cbpr_gig_economy.json", "description": "CBPR+ gig economy payment"},
         {
             "file": "cbpr_remittance_corridor.json",
             "description": "CBPR+ remittance corridor payment"

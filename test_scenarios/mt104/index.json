@@ -2,10 +2,7 @@
     "message_type": "MT104",
     "description": "Direct Debit and Request for Debit Transfer",
     "scenarios": [
-        {
-            "file": "fi_direct_debit_basic.json",
-            "description": "Basic FI direct debit"
-        },
+        {"file": "fi_direct_debit_basic.json", "description": "Basic FI direct debit"},
         {
             "file": "fi_direct_debit_multiple.json",
             "description": "Multiple FI direct debits"
@@ -18,10 +15,7 @@
             "file": "fi_direct_debit_cbpr.json",
             "description": "CBPR+ compliant FI direct debit"
         },
-        {
-            "file": "fi_direct_debit_return.json",
-            "description": "FI direct debit return"
-        },
+        {"file": "fi_direct_debit_return.json", "description": "FI direct debit return"},
         {
             "file": "cbpr_utility_collection.json",
             "description": "CBPR+ utility bill collection"

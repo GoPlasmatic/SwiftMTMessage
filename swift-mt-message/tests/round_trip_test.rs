@@ -110,11 +110,21 @@ fn test_single_scenario(
             Some(scenario_name),
         )
         .map(|msg| ParsedSwiftMessage::MT110(Box::new(msg))),
+        "MT200" => generate_sample::<swift_mt_message::messages::mt200::MT200>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT200(Box::new(msg))),
         "MT202" => generate_sample::<swift_mt_message::messages::mt202::MT202>(
             message_type,
             Some(scenario_name),
         )
         .map(|msg| ParsedSwiftMessage::MT202(Box::new(msg))),
+        "MT204" => generate_sample::<swift_mt_message::messages::mt204::MT204>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT204(Box::new(msg))),
         "MT205" => generate_sample::<swift_mt_message::messages::mt205::MT205>(
             message_type,
             Some(scenario_name),
@@ -252,6 +262,7 @@ fn test_single_scenario(
 
                                 // Try to deserialize just to see the exact error
                                 eprintln!("\nAttempting to deserialize generated JSON...");
+
                                 if message_type == "MT935" {
                                     // First try to extract the fields from the JSON
                                     if let Ok(value) =
@@ -346,7 +357,9 @@ fn test_single_scenario(
         ParsedSwiftMessage::MT110(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT111(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT112(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT200(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT202(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT204(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT205(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT210(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT900(msg) => msg.to_mt_message(),

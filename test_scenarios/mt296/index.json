@@ -14,13 +14,7 @@
             "file": "partial_cancellation.json",
             "description": "Partial cancellation accepted"
         },
-        {
-            "file": "no_payment_found.json",
-            "description": "No payment found response"
-        },
-        {
-            "file": "inquiry_response.json",
-            "description": "Response to inquiry"
-        }
+        {"file": "no_payment_found.json", "description": "No payment found response"},
+        {"file": "inquiry_response.json", "description": "Response to inquiry"}
     ]
 }

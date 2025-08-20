@@ -5,7 +5,7 @@
 
 use crate::errors::{self, Result};
 use crate::scenario_config::{
-    find_scenario_by_name_with_config, find_scenario_for_message_type_with_config, ScenarioConfig,
+    ScenarioConfig, find_scenario_by_name_with_config, find_scenario_for_message_type_with_config,
 };
 use crate::swift_message::SwiftMessage;
 use crate::traits::SwiftMessageBody;

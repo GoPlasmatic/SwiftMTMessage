@@ -204,11 +204,11 @@ pub fn find_field_with_variant_sequential_constrained(
     valid_variants: Option<&[&str]>,
 ) -> Option<(String, Option<String>, usize)> {
     // First try to find exact match (for non-variant fields)
-    if let Some(values) = fields.get(base_tag) {
-        if let Some((value, pos)) = tracker.get_next_available(base_tag, values) {
-            tracker.mark_consumed(base_tag, pos);
-            return Some((value.to_string(), None, pos));
-        }
+    if let Some(values) = fields.get(base_tag)
+        && let Some((value, pos)) = tracker.get_next_available(base_tag, values)
+    {
+        tracker.mark_consumed(base_tag, pos);
+        return Some((value.to_string(), None, pos));
     }
 
     // For enum fields, look for variant tags (50A, 50F, 50K, etc.)
@@ -245,10 +245,10 @@ pub fn find_field_with_variant_sequential_constrained(
         let variant_str = variant_char.to_string();
 
         // Check if this variant is allowed (if constraints are provided)
-        if let Some(valid) = valid_variants {
-            if !valid.contains(&variant_str.as_str()) {
-                continue; // Skip variants that aren't in the valid list
-            }
+        if let Some(valid) = valid_variants
+            && !valid.contains(&variant_str.as_str())
+        {
+            continue; // Skip variants that aren't in the valid list
         }
 
         if let Some((value, pos)) = tracker.get_next_available(tag, values) {
@@ -699,17 +699,17 @@ pub fn parse_swift_message_from_string(value: &str) -> Result<HashMap<String, Ve
         }
 
         // Look for field pattern :XX:value
-        if let Some(colon_pos) = line.find(':') {
-            if let Some(second_colon) = line[colon_pos + 1..].find(':') {
-                let second_colon_pos = colon_pos + 1 + second_colon;
-                let field_tag = line[colon_pos + 1..second_colon_pos].to_string();
-                let _field_value = line[second_colon_pos + 1..].to_string();
+        if let Some(colon_pos) = line.find(':')
+            && let Some(second_colon) = line[colon_pos + 1..].find(':')
+        {
+            let second_colon_pos = colon_pos + 1 + second_colon;
+            let field_tag = line[colon_pos + 1..second_colon_pos].to_string();
+            let _field_value = line[second_colon_pos + 1..].to_string();
 
-                field_map
-                    .entry(field_tag)
-                    .or_insert_with(Vec::new)
-                    .push(format!(":{}", &line[colon_pos + 1..]));
-            }
+            field_map
+                .entry(field_tag)
+                .or_insert_with(Vec::new)
+                .push(format!(":{}", &line[colon_pos + 1..]));
         }
     }
 
@@ -761,33 +761,33 @@ where
             let mut tx_fields = HashMap::new();
 
             // Get field 20 (skip the first one which is for sequence A)
-            if let Some(field_20_values) = fields.get("20") {
-                if i + 1 < field_20_values.len() {
-                    tx_fields.insert("20".to_string(), vec![field_20_values[i + 1].clone()]);
-                }
+            if let Some(field_20_values) = fields.get("20")
+                && i + 1 < field_20_values.len()
+            {
+                tx_fields.insert("20".to_string(), vec![field_20_values[i + 1].clone()]);
             }
 
             // Get field 21 if present (optional)
-            if let Some(field_21_values) = fields.get("21") {
-                if i < field_21_values.len() {
-                    tx_fields.insert("21".to_string(), vec![field_21_values[i].clone()]);
-                }
+            if let Some(field_21_values) = fields.get("21")
+                && i < field_21_values.len()
+            {
+                tx_fields.insert("21".to_string(), vec![field_21_values[i].clone()]);
             }
 
             // Get field 32B
-            if let Some(field_32b_values) = fields.get("32B") {
-                if i < field_32b_values.len() {
-                    tx_fields.insert("32B".to_string(), vec![field_32b_values[i].clone()]);
-                }
+            if let Some(field_32b_values) = fields.get("32B")
+                && i < field_32b_values.len()
+            {
+                tx_fields.insert("32B".to_string(), vec![field_32b_values[i].clone()]);
             }
 
             // Get field 53 (various variants)
             for variant in ["53", "53A", "53B", "53D"] {
-                if let Some(field_53_values) = fields.get(variant) {
-                    if i < field_53_values.len() {
-                        tx_fields.insert(variant.to_string(), vec![field_53_values[i].clone()]);
-                        break; // Only one variant per transaction
-                    }
+                if let Some(field_53_values) = fields.get(variant)
+                    && i < field_53_values.len()
+                {
+                    tx_fields.insert(variant.to_string(), vec![field_53_values[i].clone()]);
+                    break; // Only one variant per transaction
                 }
             }
 

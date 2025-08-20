@@ -4,7 +4,7 @@
 //! eliminating code duplication and improving maintainability.
 
 use crate::ast::Component;
-use crate::utils::types::{categorize_type, matchers, TypeCategory, TypeMatcher};
+use crate::utils::types::{TypeCategory, TypeMatcher, categorize_type, matchers};
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::Type;

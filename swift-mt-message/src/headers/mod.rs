@@ -731,122 +731,101 @@ impl UserHeader {
 
         // Parse nested tags in format {tag:value}
         // Simple parsing for now - more sophisticated regex parsing can be added later
-        if block3.contains("{103:") {
-            if let Some(start) = block3.find("{103:") {
-                if let Some(end) = block3[start..].find('}') {
-                    user_header.service_identifier =
-                        Some(block3[start + 5..start + end].to_string());
-                }
-            }
+        if block3.contains("{103:")
+            && let Some(start) = block3.find("{103:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            user_header.service_identifier = Some(block3[start + 5..start + end].to_string());
         }
 
-        if block3.contains("{113:") {
-            if let Some(start) = block3.find("{113:") {
-                if let Some(end) = block3[start..].find('}') {
-                    user_header.banking_priority = Some(block3[start + 5..start + end].to_string());
-                }
-            }
+        if block3.contains("{113:")
+            && let Some(start) = block3.find("{113:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            user_header.banking_priority = Some(block3[start + 5..start + end].to_string());
         }
 
-        if block3.contains("{108:") {
-            if let Some(start) = block3.find("{108:") {
-                if let Some(end) = block3[start..].find('}') {
-                    user_header.message_user_reference =
-                        Some(block3[start + 5..start + end].to_string());
-                }
-            }
+        if block3.contains("{108:")
+            && let Some(start) = block3.find("{108:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            user_header.message_user_reference = Some(block3[start + 5..start + end].to_string());
         }
 
-        if block3.contains("{119:") {
-            if let Some(start) = block3.find("{119:") {
-                if let Some(end) = block3[start..].find('}') {
-                    user_header.validation_flag = Some(block3[start + 5..start + end].to_string());
-                }
-            }
+        if block3.contains("{119:")
+            && let Some(start) = block3.find("{119:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            user_header.validation_flag = Some(block3[start + 5..start + end].to_string());
         }
 
-        if block3.contains("{423:") {
-            if let Some(start) = block3.find("{423:") {
-                if let Some(end) = block3[start..].find('}') {
-                    let value = &block3[start + 5..start + end];
-                    user_header.balance_checkpoint = Self::parse_balance_checkpoint(value);
-                }
-            }
+        if block3.contains("{423:")
+            && let Some(start) = block3.find("{423:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            let value = &block3[start + 5..start + end];
+            user_header.balance_checkpoint = Self::parse_balance_checkpoint(value);
         }
 
-        if block3.contains("{106:") {
-            if let Some(start) = block3.find("{106:") {
-                if let Some(end) = block3[start..].find('}') {
-                    let value = &block3[start + 5..start + end];
-                    user_header.message_input_reference =
-                        Self::parse_message_input_reference(value);
-                }
-            }
+        if block3.contains("{106:")
+            && let Some(start) = block3.find("{106:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            let value = &block3[start + 5..start + end];
+            user_header.message_input_reference = Self::parse_message_input_reference(value);
         }
 
-        if block3.contains("{424:") {
-            if let Some(start) = block3.find("{424:") {
-                if let Some(end) = block3[start..].find('}') {
-                    user_header.related_reference =
-                        Some(block3[start + 5..start + end].to_string());
-                }
-            }
+        if block3.contains("{424:")
+            && let Some(start) = block3.find("{424:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            user_header.related_reference = Some(block3[start + 5..start + end].to_string());
         }
 
-        if block3.contains("{111:") {
-            if let Some(start) = block3.find("{111:") {
-                if let Some(end) = block3[start..].find('}') {
-                    user_header.service_type_identifier =
-                        Some(block3[start + 5..start + end].to_string());
-                }
-            }
+        if block3.contains("{111:")
+            && let Some(start) = block3.find("{111:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            user_header.service_type_identifier = Some(block3[start + 5..start + end].to_string());
         }
 
-        if block3.contains("{121:") {
-            if let Some(start) = block3.find("{121:") {
-                if let Some(end) = block3[start..].find('}') {
-                    user_header.unique_end_to_end_reference =
-                        Some(block3[start + 5..start + end].to_string());
-                }
-            }
+        if block3.contains("{121:")
+            && let Some(start) = block3.find("{121:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            user_header.unique_end_to_end_reference =
+                Some(block3[start + 5..start + end].to_string());
         }
 
-        if block3.contains("{115:") {
-            if let Some(start) = block3.find("{115:") {
-                if let Some(end) = block3[start..].find('}') {
-                    user_header.addressee_information =
-                        Some(block3[start + 5..start + end].to_string());
-                }
-            }
+        if block3.contains("{115:")
+            && let Some(start) = block3.find("{115:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            user_header.addressee_information = Some(block3[start + 5..start + end].to_string());
         }
 
-        if block3.contains("{165:") {
-            if let Some(start) = block3.find("{165:") {
-                if let Some(end) = block3[start..].find('}') {
-                    let value = &block3[start + 5..start + end];
-                    user_header.payment_release_information =
-                        Self::parse_payment_release_info(value);
-                }
-            }
+        if block3.contains("{165:")
+            && let Some(start) = block3.find("{165:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            let value = &block3[start + 5..start + end];
+            user_header.payment_release_information = Self::parse_payment_release_info(value);
         }
 
-        if block3.contains("{433:") {
-            if let Some(start) = block3.find("{433:") {
-                if let Some(end) = block3[start..].find('}') {
-                    let value = &block3[start + 5..start + end];
-                    user_header.sanctions_screening_info =
-                        Self::parse_sanctions_screening_info(value);
-                }
-            }
+        if block3.contains("{433:")
+            && let Some(start) = block3.find("{433:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            let value = &block3[start + 5..start + end];
+            user_header.sanctions_screening_info = Self::parse_sanctions_screening_info(value);
         }
 
-        if block3.contains("{434:") {
-            if let Some(start) = block3.find("{434:") {
-                if let Some(end) = block3[start..].find('}') {
-                    let value = &block3[start + 5..start + end];
-                    user_header.payment_controls_info = Self::parse_payment_controls_info(value);
-                }
-            }
+        if block3.contains("{434:")
+            && let Some(start) = block3.find("{434:")
+            && let Some(end) = block3[start..].find('}')
+        {
+            let value = &block3[start + 5..start + end];
+            user_header.payment_controls_info = Self::parse_payment_controls_info(value);
         }
 
         Ok(user_header)
@@ -1263,12 +1242,11 @@ impl Trailer {
         let mut trailer = Trailer::default();
 
         // Extract common tags if present
-        if block5.contains("{CHK:") {
-            if let Some(start) = block5.find("{CHK:") {
-                if let Some(end) = block5[start..].find('}') {
-                    trailer.checksum = Some(block5[start + 5..start + end].to_string());
-                }
-            }
+        if block5.contains("{CHK:")
+            && let Some(start) = block5.find("{CHK:")
+            && let Some(end) = block5[start..].find('}')
+        {
+            trailer.checksum = Some(block5[start + 5..start + end].to_string());
         }
 
         if block5.contains("{TNG}") {
@@ -1279,12 +1257,11 @@ impl Trailer {
             trailer.delayed_message = Some(true);
         }
 
-        if block5.contains("{MAC:") {
-            if let Some(start) = block5.find("{MAC:") {
-                if let Some(end) = block5[start..].find('}') {
-                    trailer.mac = Some(block5[start + 5..start + end].to_string());
-                }
-            }
+        if block5.contains("{MAC:")
+            && let Some(start) = block5.find("{MAC:")
+            && let Some(end) = block5[start..].find('}')
+        {
+            trailer.mac = Some(block5[start + 5..start + end].to_string());
         }
 
         // More complex parsing for structured tags can be added here

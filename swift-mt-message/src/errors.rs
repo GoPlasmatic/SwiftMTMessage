@@ -202,7 +202,9 @@ pub enum ParseError {
     },
 
     /// Field parsing failed with detailed context
-    #[error("Failed to parse field {field_tag} of type {field_type} at line {position}: {original_error}")]
+    #[error(
+        "Failed to parse field {field_tag} of type {field_type} at line {position}: {original_error}"
+    )]
     FieldParsingFailed {
         /// SWIFT field tag
         field_tag: String,
@@ -631,7 +633,7 @@ pub mod error_codes {
         pub const T52: &str = "T52"; // Invalid currency code
         pub const T56: &str = "T56"; // Invalid structured address
         pub const T73: &str = "T73"; // Invalid country code
-                                     // Additional T-series codes will be added as needed
+        // Additional T-series codes will be added as needed
     }
 
     /// C-Series: Conditional/Business Rules Error Codes (57 codes)
@@ -640,7 +642,7 @@ pub mod error_codes {
         pub const C03: &str = "C03"; // Amount format validation
         pub const C08: &str = "C08"; // Commodity currency not allowed
         pub const C81: &str = "C81"; // Conditional field dependency
-                                     // Additional C-series codes will be added as needed
+        // Additional C-series codes will be added as needed
     }
 
     /// D-Series: Data/Content Validation Error Codes (77 codes)
@@ -656,7 +658,7 @@ pub mod error_codes {
         pub const D75: &str = "D75"; // Exchange rate mandatory
         pub const D79: &str = "D79"; // Field 71G dependency
         pub const D93: &str = "D93"; // Account restrictions by code
-                                     // Additional D-series codes will be added as needed
+        // Additional D-series codes will be added as needed
     }
 
     /// E-Series: Enhanced/Field Relation Validation Error Codes (86 codes)
@@ -677,7 +679,7 @@ pub mod error_codes {
         pub const E18: &str = "E18"; // Account restrictions CHQB
         pub const E44: &str = "E44"; // Instruction code dependencies
         pub const E45: &str = "E45"; // Instruction code field dependencies
-                                     // Additional E-series codes will be added as needed
+        // Additional E-series codes will be added as needed
     }
 
     /// G-Series: General/Field Validation Error Codes (823 codes)
@@ -685,7 +687,7 @@ pub mod error_codes {
         pub const G001: &str = "G001"; // Field format violation
         pub const G050: &str = "G050"; // Field content validation
         pub const G100: &str = "G100"; // Sequence validation
-                                       // Additional G-series codes will be added as needed
+        // Additional G-series codes will be added as needed
     }
 }
 

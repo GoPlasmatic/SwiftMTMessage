@@ -1,12 +1,12 @@
 //! Complete SWIFT message with headers and body
 
 use crate::{
+    Result, ValidationError, ValidationResult,
     errors::ParseError,
     headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader},
     messages,
     parser::extract_base_tag,
     traits::SwiftMessageBody,
-    Result, ValidationError, ValidationResult,
 };
 use serde::{Deserialize, Serialize};
 use std::any::Any;
@@ -44,12 +44,11 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
     /// 3. Field 72 (Sender to Receiver Information) containing `/REJT/` code
     pub fn has_reject_codes(&self) -> bool {
         // Check Block 3 field 108 (MUR - Message User Reference)
-        if let Some(ref user_header) = self.user_header {
-            if let Some(ref mur) = user_header.message_user_reference {
-                if mur.to_uppercase().contains("REJT") {
-                    return true;
-                }
-            }
+        if let Some(ref user_header) = self.user_header
+            && let Some(ref mur) = user_header.message_user_reference
+            && mur.to_uppercase().contains("REJT")
+        {
+            return true;
         }
 
         if let Some(mt103_fields) =
@@ -77,12 +76,11 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
     /// 3. Field 72 (Sender to Receiver Information) containing `/RETN/` code
     pub fn has_return_codes(&self) -> bool {
         // Check Block 3 field 108 (MUR - Message User Reference)
-        if let Some(ref user_header) = self.user_header {
-            if let Some(ref mur) = user_header.message_user_reference {
-                if mur.to_uppercase().contains("RETN") {
-                    return true;
-                }
-            }
+        if let Some(ref user_header) = self.user_header
+            && let Some(ref mur) = user_header.message_user_reference
+            && mur.to_uppercase().contains("RETN")
+        {
+            return true;
         }
 
         if let Some(mt103_fields) =
@@ -203,12 +201,12 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         let context_value = match self.create_validation_context(&constants) {
             Ok(context) => {
                 // Debug: Always show validation context in debug mode
-                if std::env::var("TEST_DEBUG").is_ok() {
-                    if let Ok(context_str) = serde_json::to_string_pretty(&context) {
-                        eprintln!("\n=== VALIDATION CONTEXT for {} ===", T::message_type());
-                        eprintln!("{}", context_str);
-                        eprintln!("=== END VALIDATION CONTEXT ===\n");
-                    }
+                if std::env::var("TEST_DEBUG").is_ok()
+                    && let Ok(context_str) = serde_json::to_string_pretty(&context)
+                {
+                    eprintln!("\n=== VALIDATION CONTEXT for {} ===", T::message_type());
+                    eprintln!("{}", context_str);
+                    eprintln!("=== END VALIDATION CONTEXT ===\n");
                 }
                 context
             }

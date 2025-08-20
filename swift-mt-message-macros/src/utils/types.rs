@@ -62,10 +62,10 @@ pub fn categorize_type(ty: &Type) -> TypeCategory {
     let type_string = ty.to_token_stream().to_string().replace(" ", "");
 
     // Check cache first
-    if let Ok(cache) = get_type_cache().lock() {
-        if let Some(category) = cache.get(&type_string) {
-            return category.clone();
-        }
+    if let Ok(cache) = get_type_cache().lock()
+        && let Some(category) = cache.get(&type_string)
+    {
+        return category.clone();
     }
 
     // Analyze the type
@@ -81,67 +81,66 @@ pub fn categorize_type(ty: &Type) -> TypeCategory {
 
 /// Analyze the type category without caching
 fn analyze_type_category(ty: &Type) -> TypeCategory {
-    if let Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            let ident = &segment.ident.to_string();
+    if let Type::Path(type_path) = ty
+        && let Some(segment) = type_path.path.segments.last()
+    {
+        let ident = &segment.ident.to_string();
 
-            match ident.as_str() {
-                "String" => return TypeCategory::String,
-                "NaiveDate" => return TypeCategory::NaiveDate,
-                "NaiveTime" => return TypeCategory::NaiveTime,
-                "f64" => return TypeCategory::F64,
-                "u32" => return TypeCategory::U32,
-                "u8" => return TypeCategory::U8,
-                "bool" => return TypeCategory::Bool,
-                "char" => return TypeCategory::Char,
-                "Vec" => {
-                    if let PathArguments::AngleBracketed(args) = &segment.arguments {
-                        if let Some(GenericArgument::Type(inner_ty)) = args.args.first() {
-                            if matches!(analyze_type_category(inner_ty), TypeCategory::String) {
-                                return TypeCategory::VecString;
-                            }
-                        }
-                    }
-                    return TypeCategory::Vec;
+        match ident.as_str() {
+            "String" => return TypeCategory::String,
+            "NaiveDate" => return TypeCategory::NaiveDate,
+            "NaiveTime" => return TypeCategory::NaiveTime,
+            "f64" => return TypeCategory::F64,
+            "u32" => return TypeCategory::U32,
+            "u8" => return TypeCategory::U8,
+            "bool" => return TypeCategory::Bool,
+            "char" => return TypeCategory::Char,
+            "Vec" => {
+                if let PathArguments::AngleBracketed(args) = &segment.arguments
+                    && let Some(GenericArgument::Type(inner_ty)) = args.args.first()
+                    && matches!(analyze_type_category(inner_ty), TypeCategory::String)
+                {
+                    return TypeCategory::VecString;
                 }
-                "Option" => {
-                    if let PathArguments::AngleBracketed(args) = &segment.arguments {
-                        if let Some(GenericArgument::Type(inner_ty)) = args.args.first() {
-                            match analyze_type_category(inner_ty) {
-                                TypeCategory::String => return TypeCategory::OptionString,
-                                TypeCategory::NaiveDate => return TypeCategory::OptionNaiveDate,
-                                TypeCategory::NaiveTime => return TypeCategory::OptionNaiveTime,
-                                TypeCategory::F64 => return TypeCategory::OptionF64,
-                                TypeCategory::U32 => return TypeCategory::OptionU32,
-                                TypeCategory::U8 => return TypeCategory::OptionU8,
-                                TypeCategory::Bool => return TypeCategory::OptionBool,
-                                TypeCategory::Char => return TypeCategory::OptionChar,
-                                TypeCategory::Vec | TypeCategory::VecString => {
-                                    return TypeCategory::OptionVec
-                                }
-                                TypeCategory::Field => return TypeCategory::OptionField,
-                                _ => return TypeCategory::OptionField, // Assume unknown Option<T> is a field
-                            }
+                return TypeCategory::Vec;
+            }
+            "Option" => {
+                if let PathArguments::AngleBracketed(args) = &segment.arguments
+                    && let Some(GenericArgument::Type(inner_ty)) = args.args.first()
+                {
+                    match analyze_type_category(inner_ty) {
+                        TypeCategory::String => return TypeCategory::OptionString,
+                        TypeCategory::NaiveDate => return TypeCategory::OptionNaiveDate,
+                        TypeCategory::NaiveTime => return TypeCategory::OptionNaiveTime,
+                        TypeCategory::F64 => return TypeCategory::OptionF64,
+                        TypeCategory::U32 => return TypeCategory::OptionU32,
+                        TypeCategory::U8 => return TypeCategory::OptionU8,
+                        TypeCategory::Bool => return TypeCategory::OptionBool,
+                        TypeCategory::Char => return TypeCategory::OptionChar,
+                        TypeCategory::Vec | TypeCategory::VecString => {
+                            return TypeCategory::OptionVec;
                         }
+                        TypeCategory::Field => return TypeCategory::OptionField,
+                        _ => return TypeCategory::OptionField, // Assume unknown Option<T> is a field
                     }
                 }
-                _ => {
-                    // Check if it's a field type (not a basic type)
-                    if !matches!(
-                        ident.as_str(),
-                        "String"
-                            | "NaiveDate"
-                            | "NaiveTime"
-                            | "f64"
-                            | "u32"
-                            | "u8"
-                            | "bool"
-                            | "char"
-                            | "Vec"
-                            | "Option"
-                    ) {
-                        return TypeCategory::Field;
-                    }
+            }
+            _ => {
+                // Check if it's a field type (not a basic type)
+                if !matches!(
+                    ident.as_str(),
+                    "String"
+                        | "NaiveDate"
+                        | "NaiveTime"
+                        | "f64"
+                        | "u32"
+                        | "u8"
+                        | "bool"
+                        | "char"
+                        | "Vec"
+                        | "Option"
+                ) {
+                    return TypeCategory::Field;
                 }
             }
         }
@@ -155,16 +154,13 @@ fn analyze_type_category(ty: &Type) -> TypeCategory {
 
 /// Extract inner type from Option<T>, Vec<T>, or return the type as-is
 pub fn extract_inner_type(ty: &Type, is_optional: bool, is_repetitive: bool) -> Type {
-    if is_optional || is_repetitive {
-        if let Type::Path(type_path) = ty {
-            if let Some(segment) = type_path.path.segments.last() {
-                if let PathArguments::AngleBracketed(args) = &segment.arguments {
-                    if let Some(GenericArgument::Type(inner_type)) = args.args.first() {
-                        return inner_type.clone();
-                    }
-                }
-            }
-        }
+    if (is_optional || is_repetitive)
+        && let Type::Path(type_path) = ty
+        && let Some(segment) = type_path.path.segments.last()
+        && let PathArguments::AngleBracketed(args) = &segment.arguments
+        && let Some(GenericArgument::Type(inner_type)) = args.args.first()
+    {
+        return inner_type.clone();
     }
     ty.clone()
 }
@@ -172,44 +168,29 @@ pub fn extract_inner_type(ty: &Type, is_optional: bool, is_repetitive: bool) -> 
 /// Extract the inner type from Option<T> or Vec<T>
 #[allow(dead_code)]
 pub fn extract_generic_inner_type(ty: &Type) -> Option<Type> {
-    if let Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            if let PathArguments::AngleBracketed(args) = &segment.arguments {
-                if let Some(GenericArgument::Type(inner_type)) = args.args.first() {
-                    return Some(inner_type.clone());
-                }
-            }
-        }
+    if let Type::Path(type_path) = ty
+        && let Some(segment) = type_path.path.segments.last()
+        && let PathArguments::AngleBracketed(args) = &segment.arguments
+        && let Some(GenericArgument::Type(inner_type)) = args.args.first()
+    {
+        return Some(inner_type.clone());
     }
     None
 }
 
 /// Extract the inner type T from Option<Vec<T>>
 pub fn extract_option_vec_inner_type(ty: &Type) -> Type {
-    if let Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            if segment.ident == "Option" {
-                if let PathArguments::AngleBracketed(args) = &segment.arguments {
-                    if let Some(GenericArgument::Type(Type::Path(vec_type_path))) =
-                        args.args.first()
-                    {
-                        if let Some(vec_segment) = vec_type_path.path.segments.last() {
-                            if vec_segment.ident == "Vec" {
-                                if let PathArguments::AngleBracketed(vec_args) =
-                                    &vec_segment.arguments
-                                {
-                                    if let Some(GenericArgument::Type(inner_type)) =
-                                        vec_args.args.first()
-                                    {
-                                        return inner_type.clone();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    if let Type::Path(type_path) = ty
+        && let Some(segment) = type_path.path.segments.last()
+        && segment.ident == "Option"
+        && let PathArguments::AngleBracketed(args) = &segment.arguments
+        && let Some(GenericArgument::Type(Type::Path(vec_type_path))) = args.args.first()
+        && let Some(vec_segment) = vec_type_path.path.segments.last()
+        && vec_segment.ident == "Vec"
+        && let PathArguments::AngleBracketed(vec_args) = &vec_segment.arguments
+        && let Some(GenericArgument::Type(inner_type)) = vec_args.args.first()
+    {
+        return inner_type.clone();
     }
     ty.clone()
 }
@@ -254,16 +235,13 @@ impl<T: TypeMatcher> OptionTypeMatcher<T> {
 
 impl<T: TypeMatcher> TypeMatcher for OptionTypeMatcher<T> {
     fn matches(&self, ty: &Type) -> bool {
-        if let Type::Path(type_path) = ty {
-            if let Some(segment) = type_path.path.segments.last() {
-                if segment.ident == "Option" {
-                    if let PathArguments::AngleBracketed(args) = &segment.arguments {
-                        if let Some(GenericArgument::Type(inner_ty)) = args.args.first() {
-                            return self.inner.matches(inner_ty);
-                        }
-                    }
-                }
-            }
+        if let Type::Path(type_path) = ty
+            && let Some(segment) = type_path.path.segments.last()
+            && segment.ident == "Option"
+            && let PathArguments::AngleBracketed(args) = &segment.arguments
+            && let Some(GenericArgument::Type(inner_ty)) = args.args.first()
+        {
+            return self.inner.matches(inner_ty);
         }
         false
     }
@@ -283,16 +261,13 @@ impl<T: TypeMatcher> VecTypeMatcher<T> {
 
 impl<T: TypeMatcher> TypeMatcher for VecTypeMatcher<T> {
     fn matches(&self, ty: &Type) -> bool {
-        if let Type::Path(type_path) = ty {
-            if let Some(segment) = type_path.path.segments.last() {
-                if segment.ident == "Vec" {
-                    if let PathArguments::AngleBracketed(args) = &segment.arguments {
-                        if let Some(GenericArgument::Type(inner_ty)) = args.args.first() {
-                            return self.inner.matches(inner_ty);
-                        }
-                    }
-                }
-            }
+        if let Type::Path(type_path) = ty
+            && let Some(segment) = type_path.path.segments.last()
+            && segment.ident == "Vec"
+            && let PathArguments::AngleBracketed(args) = &segment.arguments
+            && let Some(GenericArgument::Type(inner_ty)) = args.args.first()
+        {
+            return self.inner.matches(inner_ty);
         }
         false
     }

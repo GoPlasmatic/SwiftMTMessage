@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
 use std::path::Path;
-use swift_mt_message::{generate_sample, ParsedSwiftMessage, SwiftParser};
+use swift_mt_message::{ParsedSwiftMessage, SwiftParser, generate_sample};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ScenarioInfo {
@@ -269,7 +269,9 @@ fn test_single_scenario(
                                         serde_json::from_str::<serde_json::Value>(&json_str)
                                     {
                                         if let Some(fields) = value.get("fields") {
-                                            eprintln!("\nFound fields object. Attempting to deserialize just the fields...");
+                                            eprintln!(
+                                                "\nFound fields object. Attempting to deserialize just the fields..."
+                                            );
                                             match serde_json::from_value::<
                                                 swift_mt_message::messages::mt935::MT935,
                                             >(
@@ -746,7 +748,9 @@ fn test_round_trip_scenarios() {
         }
         _ => {
             // Invalid combination
-            panic!("Invalid test parameters. Use TEST_MESSAGE_TYPE and TEST_SCENARIO environment variables.");
+            panic!(
+                "Invalid test parameters. Use TEST_MESSAGE_TYPE and TEST_SCENARIO environment variables."
+            );
         }
     }
 
@@ -802,8 +806,10 @@ fn test_round_trip_scenarios() {
         if debug_mode && failed_results.len() <= 10 {
             println!("\n💡 Tip: To debug a specific failure, run:");
             let (_, first_failure) = &failed_results[0];
-            println!("   TEST_MESSAGE_TYPE={} TEST_SCENARIO={} TEST_DEBUG=1 TEST_SAMPLE_COUNT=1 cargo test round_trip_scenarios -- --nocapture",
-                first_failure.message_type, first_failure.scenario);
+            println!(
+                "   TEST_MESSAGE_TYPE={} TEST_SCENARIO={} TEST_DEBUG=1 TEST_SAMPLE_COUNT=1 cargo test round_trip_scenarios -- --nocapture",
+                first_failure.message_type, first_failure.scenario
+            );
         }
 
         panic!(

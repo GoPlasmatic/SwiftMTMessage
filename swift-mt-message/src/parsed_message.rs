@@ -1,6 +1,6 @@
 //! ParsedSwiftMessage enum for automatic message type detection and parsing
 
-use crate::{messages::*, swift_message::SwiftMessage, ValidationResult};
+use crate::{ValidationResult, messages::*, swift_message::SwiftMessage};
 use serde::{Deserialize, Serialize};
 
 /// Enumeration of all supported SWIFT message types for automatic parsing

@@ -350,50 +350,49 @@ fn parse_swift_format_to_description(pattern: &str) -> String {
 
         _ => {
             // Try to parse dynamic patterns
-            if pattern.contains('*') {
-                if let Some(captures) = regex::Regex::new(r"(\d+)\*(\d+)([a-zA-Z])")
+            if pattern.contains('*')
+                && let Some(captures) = regex::Regex::new(r"(\d+)\*(\d+)([a-zA-Z])")
                     .unwrap()
                     .captures(pattern)
-                {
-                    let lines = captures.get(1).map_or("", |m| m.as_str());
-                    let chars = captures.get(2).map_or("", |m| m.as_str());
-                    let format_type = captures.get(3).map_or("", |m| m.as_str());
+            {
+                let lines = captures.get(1).map_or("", |m| m.as_str());
+                let chars = captures.get(2).map_or("", |m| m.as_str());
+                let format_type = captures.get(3).map_or("", |m| m.as_str());
 
-                    let char_type = match format_type {
-                        "a" => "letters",
-                        "n" => "digits",
-                        "c" => "alphanumeric characters",
-                        "x" => "characters",
-                        _ => "characters",
-                    };
+                let char_type = match format_type {
+                    "a" => "letters",
+                    "n" => "digits",
+                    "c" => "alphanumeric characters",
+                    "x" => "characters",
+                    _ => "characters",
+                };
 
-                    return format!("Up to {lines} lines of {chars} {char_type} each");
-                }
+                return format!("Up to {lines} lines of {chars} {char_type} each");
             }
 
             // Try to parse simple patterns with regex
-            if let Ok(re) = regex::Regex::new(r"^(\d+)(!?)([a-zA-Z])$") {
-                if let Some(captures) = re.captures(pattern) {
-                    let length = captures.get(1).map_or("", |m| m.as_str());
-                    let is_fixed = captures.get(2).map_or("", |m| m.as_str()) == "!";
-                    let format_type = captures.get(3).map_or("", |m| m.as_str());
+            if let Ok(re) = regex::Regex::new(r"^(\d+)(!?)([a-zA-Z])$")
+                && let Some(captures) = re.captures(pattern)
+            {
+                let length = captures.get(1).map_or("", |m| m.as_str());
+                let is_fixed = captures.get(2).map_or("", |m| m.as_str()) == "!";
+                let format_type = captures.get(3).map_or("", |m| m.as_str());
 
-                    let type_desc = match format_type {
-                        "a" => "uppercase letters",
-                        "n" => "digits",
-                        "c" => "characters (letters/digits)",
-                        "x" => "characters",
-                        "d" => "decimal digits",
-                        _ => "characters",
-                    };
+                let type_desc = match format_type {
+                    "a" => "uppercase letters",
+                    "n" => "digits",
+                    "c" => "characters (letters/digits)",
+                    "x" => "characters",
+                    "d" => "decimal digits",
+                    _ => "characters",
+                };
 
-                    if is_fixed {
-                        return format!("Exactly {length} {type_desc}");
-                    } else if format_type == "d" {
-                        return format!("Decimal amount up to {length} digits");
-                    } else {
-                        return format!("Up to {length} {type_desc}");
-                    }
+                if is_fixed {
+                    return format!("Exactly {length} {type_desc}");
+                } else if format_type == "d" {
+                    return format!("Decimal amount up to {length} digits");
+                } else {
+                    return format!("Up to {length} {type_desc}");
                 }
             }
 
@@ -708,11 +707,11 @@ impl FormatSpec {
             if let Some(captures) = re.captures(working_str) {
                 // Extract length
                 let length_str = captures.get(1).map_or("", |m| m.as_str());
-                if !length_str.is_empty() {
-                    if let Ok(length) = length_str.parse() {
-                        spec.length = Some(length);
-                        spec.max_length = spec.length;
-                    }
+                if !length_str.is_empty()
+                    && let Ok(length) = length_str.parse()
+                {
+                    spec.length = Some(length);
+                    spec.max_length = spec.length;
                 }
 
                 // Check if fixed length (!)
@@ -777,46 +776,45 @@ fn extract_next_pattern(remaining: &mut &str) -> MacroResult<Option<String>> {
     let start = *remaining;
 
     // Handle optional patterns [...]
-    if start.starts_with('[') {
-        if let Some(end_pos) = start.find(']') {
-            let pattern = start[..=end_pos].to_string();
-            *remaining = &start[end_pos + 1..];
+    if start.starts_with('[')
+        && let Some(end_pos) = start.find(']')
+    {
+        let pattern = start[..=end_pos].to_string();
+        *remaining = &start[end_pos + 1..];
 
-            // Check if the next pattern is also optional and should be combined
-            if remaining.starts_with('[') {
-                // This is a compound optional pattern like [/1!a][/34x]
-                // We need to combine them into a single pattern
-                if let Some(second_end) = remaining.find(']') {
-                    let second_pattern = &remaining[..=second_end];
-                    let combined_pattern =
-                        build_combined_optional_pattern(&pattern, second_pattern);
-                    *remaining = &remaining[second_end + 1..];
-                    return Ok(Some(combined_pattern));
-                }
+        // Check if the next pattern is also optional and should be combined
+        if remaining.starts_with('[') {
+            // This is a compound optional pattern like [/1!a][/34x]
+            // We need to combine them into a single pattern
+            if let Some(second_end) = remaining.find(']') {
+                let second_pattern = &remaining[..=second_end];
+                let combined_pattern = build_combined_optional_pattern(&pattern, second_pattern);
+                *remaining = &remaining[second_end + 1..];
+                return Ok(Some(combined_pattern));
             }
-
-            return Ok(Some(pattern));
         }
+
+        return Ok(Some(pattern));
     }
 
     // Handle repetitive patterns like 4*35x
-    if let Ok(re) = Regex::new(r"^(\d+)\*(\d+)([a-zA-Z])") {
-        if let Some(captures) = re.captures(start) {
-            let full_match = captures.get(0).unwrap();
-            let pattern = full_match.as_str().to_string();
-            *remaining = &start[full_match.end()..];
-            return Ok(Some(pattern));
-        }
+    if let Ok(re) = Regex::new(r"^(\d+)\*(\d+)([a-zA-Z])")
+        && let Some(captures) = re.captures(start)
+    {
+        let full_match = captures.get(0).unwrap();
+        let pattern = full_match.as_str().to_string();
+        *remaining = &start[full_match.end()..];
+        return Ok(Some(pattern));
     }
 
     // Handle simple patterns like 6!n, 3!a, 15d
-    if let Ok(re) = Regex::new(r"^(\d*)(!?)([a-zA-Z])") {
-        if let Some(captures) = re.captures(start) {
-            let full_match = captures.get(0).unwrap();
-            let pattern = full_match.as_str().to_string();
-            *remaining = &start[full_match.end()..];
-            return Ok(Some(pattern));
-        }
+    if let Ok(re) = Regex::new(r"^(\d*)(!?)([a-zA-Z])")
+        && let Some(captures) = re.captures(start)
+    {
+        let full_match = captures.get(0).unwrap();
+        let pattern = full_match.as_str().to_string();
+        *remaining = &start[full_match.end()..];
+        return Ok(Some(pattern));
     }
 
     // Handle prefix characters like '/'
@@ -907,71 +905,71 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
     }
 
     // Handle repetitive patterns like 4*35x
-    if let Ok(re) = Regex::new(r"^(\d+)\*(\d+)([a-zA-Z])") {
-        if let Some(captures) = re.captures(pattern) {
-            let count: usize = captures.get(1).unwrap().as_str().parse().unwrap_or(1);
-            let length: usize = captures.get(2).unwrap().as_str().parse().unwrap_or(35);
-            let format_char = captures.get(3).unwrap().as_str();
+    if let Ok(re) = Regex::new(r"^(\d+)\*(\d+)([a-zA-Z])")
+        && let Some(captures) = re.captures(pattern)
+    {
+        let count: usize = captures.get(1).unwrap().as_str().parse().unwrap_or(1);
+        let length: usize = captures.get(2).unwrap().as_str().parse().unwrap_or(35);
+        let format_char = captures.get(3).unwrap().as_str();
 
-            let char_class = match format_char {
-                "a" => "[A-Z]",
-                "n" => "\\d",
-                "c" => "[A-Z0-9 /.,()-]",
-                "x" => ".",
-                _ => ".",
-            };
+        let char_class = match format_char {
+            "a" => "[A-Z]",
+            "n" => "\\d",
+            "c" => "[A-Z0-9 /.,()-]",
+            "x" => ".",
+            _ => ".",
+        };
 
-            // Pattern for multiple lines: first line + optional additional lines
-            return Ok(format!(
-                "({}{{{},{}}}(?:\\n{}{{{},{}}}){{{},{}}})",
-                char_class,
-                0,
-                length,
-                char_class,
-                0,
-                length,
-                0,
-                count.saturating_sub(1)
-            ));
-        }
+        // Pattern for multiple lines: first line + optional additional lines
+        return Ok(format!(
+            "({}{{{},{}}}(?:\\n{}{{{},{}}}){{{},{}}})",
+            char_class,
+            0,
+            length,
+            char_class,
+            0,
+            length,
+            0,
+            count.saturating_sub(1)
+        ));
     }
 
     // Handle simple patterns like 6!n, 3!a, 15d
-    if let Ok(re) = Regex::new(r"^(\d*)(!?)([a-zA-Z])") {
-        if let Some(captures) = re.captures(pattern) {
-            let length_str = captures.get(1).map_or("", |m| m.as_str());
-            let is_fixed = captures.get(2).is_some_and(|m| m.as_str() == "!");
-            let format_char = captures.get(3).map_or("", |m| m.as_str());
+    if let Ok(re) = Regex::new(r"^(\d*)(!?)([a-zA-Z])")
+        && let Some(captures) = re.captures(pattern)
+    {
+        let length_str = captures.get(1).map_or("", |m| m.as_str());
+        let is_fixed = captures.get(2).is_some_and(|m| m.as_str() == "!");
+        let format_char = captures.get(3).map_or("", |m| m.as_str());
 
-            let char_class = match format_char {
-                "a" => "[A-Z]",
-                "n" => "\\d",
-                "c" => "[A-Z0-9]", // BIC codes should only contain letters and numbers
-                "x" => ".",
-                "d" => "\\d", // Will be handled specially for decimals
-                _ => ".",
-            };
+        let char_class = match format_char {
+            "a" => "[A-Z]",
+            "n" => "\\d",
+            "c" => "[A-Z0-9]", // BIC codes should only contain letters and numbers
+            "x" => ".",
+            "d" => "\\d", // Will be handled specially for decimals
+            _ => ".",
+        };
 
-            if format_char == "d" {
-                // Decimal number with optional fractional part
-                let length = if !length_str.is_empty() {
-                    length_str.parse().unwrap_or(15)
-                } else {
-                    15
-                };
-                return Ok(build_decimal_pattern(length));
-            }
-
-            if !length_str.is_empty() {
-                let length: usize = length_str.parse().unwrap_or(1);
-                if is_fixed {
-                    return Ok(build_fixed_pattern(char_class, length));
-                } else {
-                    return Ok(build_variable_pattern(char_class, length));
-                }
+        if format_char == "d" {
+            // Decimal number with optional fractional part
+            let length = if !length_str.is_empty() {
+                length_str.parse().unwrap_or(15)
             } else {
-                return Ok(build_unlimited_pattern(char_class));
+                15
+            };
+            return Ok(build_decimal_pattern(length));
+        }
+
+        if !length_str.is_empty() {
+            let length: usize = length_str.parse().unwrap_or(1);
+            if is_fixed {
+                return Ok(build_fixed_pattern(char_class, length));
+            } else {
+                return Ok(build_variable_pattern(char_class, length));
             }
+        } else {
+            return Ok(build_unlimited_pattern(char_class));
         }
     }
 

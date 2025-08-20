@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
+use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
 /// MT103: Single Customer Credit Transfer
 ///
@@ -210,10 +210,10 @@ impl MT103 {
             }
 
             // C5: If field 53a is option B, Party Identifier must be present
-            if let Field53SenderCorrespondent::B(field_53b) = field_53 {
-                if field_53b.party_identifier.is_none() {
-                    return false;
-                }
+            if let Field53SenderCorrespondent::B(field_53b) = field_53
+                && field_53b.party_identifier.is_none()
+            {
+                return false;
             }
         }
 
@@ -239,12 +239,12 @@ impl MT103 {
             if self.field_56.is_some() {
                 return false;
             }
-        } else if ["SSTD", "SPAY"].contains(&bank_op_code.as_str()) {
-            if let Some(ref field_56) = self.field_56 {
-                match field_56 {
-                    Field56Intermediary::A(_) | Field56Intermediary::C(_) => {}
-                    _ => return false,
-                }
+        } else if ["SSTD", "SPAY"].contains(&bank_op_code.as_str())
+            && let Some(ref field_56) = self.field_56
+        {
+            match field_56 {
+                Field56Intermediary::A(_) | Field56Intermediary::C(_) => {}
+                _ => return false,
             }
         }
 

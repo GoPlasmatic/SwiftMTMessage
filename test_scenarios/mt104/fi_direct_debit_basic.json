@@ -78,8 +78,7 @@
                             "/PURP/SUPP",
                             "/CD/RECURRING PAYMENT"
                         ]
-                    },
-                    "71A": {"code": {"var": "charges"}}
+                    }
                 }
             ],
             "32B": {"currency": {"var": "currency"}, "amount": {"var": "debit_amount"}}

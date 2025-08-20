@@ -38,7 +38,7 @@ pub use mt196::MT196;
 pub use mt199::MT199;
 pub use mt200::MT200;
 pub use mt202::MT202;
-pub use mt204::{MT204Transaction, MT204};
+pub use mt204::{MT204, MT204Transaction};
 pub use mt205::MT205;
 pub use mt210::MT210;
 pub use mt292::MT292;

@@ -411,8 +411,8 @@ pub mod g_series {
     pub const G700: &str = "G700"; // Method validation
     pub const G750: &str = "G750"; // Procedure validation
     pub const G800: &str = "G800"; // Process validation
-                                   // Note: In practice, this module would contain all 823 G-series codes
-                                   // This is a representative sample showing the naming convention
+    // Note: In practice, this module would contain all 823 G-series codes
+    // This is a representative sample showing the naming convention
 }
 
 /// Error code lookup and metadata

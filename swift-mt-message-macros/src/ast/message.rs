@@ -3,7 +3,7 @@
 use crate::error::{MacroError, MacroResult};
 use crate::utils::attributes::extract_field_attribute;
 use crate::utils::types::{
-    categorize_type, extract_inner_type, extract_option_vec_inner_type, TypeCategory,
+    TypeCategory, categorize_type, extract_inner_type, extract_option_vec_inner_type,
 };
 use proc_macro2::Span;
 use syn::spanned::Spanned;
@@ -203,16 +203,16 @@ impl MessageField {
 /// Extract validation rules constant name from attributes
 fn extract_validation_rules_attribute(attrs: &[Attribute]) -> MacroResult<Option<String>> {
     for attr in attrs {
-        if attr.path().is_ident("validation_rules") {
-            if let Meta::List(meta_list) = &attr.meta {
-                // Parse #[validation_rules(CONSTANT_NAME)]
-                if let Ok(Lit::Str(lit_str)) = meta_list.parse_args::<Lit>() {
-                    return Ok(Some(lit_str.value()));
-                }
-                // Try parsing as identifier for #[validation_rules(CONSTANT_NAME)]
-                if let Ok(ident) = meta_list.parse_args::<Ident>() {
-                    return Ok(Some(ident.to_string()));
-                }
+        if attr.path().is_ident("validation_rules")
+            && let Meta::List(meta_list) = &attr.meta
+        {
+            // Parse #[validation_rules(CONSTANT_NAME)]
+            if let Ok(Lit::Str(lit_str)) = meta_list.parse_args::<Lit>() {
+                return Ok(Some(lit_str.value()));
+            }
+            // Try parsing as identifier for #[validation_rules(CONSTANT_NAME)]
+            if let Ok(ident) = meta_list.parse_args::<Ident>() {
+                return Ok(Some(ident.to_string()));
             }
         }
     }

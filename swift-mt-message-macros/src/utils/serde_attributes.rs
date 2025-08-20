@@ -4,7 +4,7 @@
 //! to structs and enums for clean JSON serialization without enum wrappers.
 
 use crate::error::MacroError;
-use crate::utils::types::{categorize_type, TypeCategory};
+use crate::utils::types::{TypeCategory, categorize_type};
 use syn::DeriveInput;
 
 /// Add serde attributes to optional and vector fields, and enum flattening
@@ -13,13 +13,13 @@ pub fn add_serde_attributes_to_optional_fields(input: &mut DeriveInput) -> Resul
     if let syn::Data::Enum(_) = input.data {
         // Check if it already has serde attributes for enums
         let has_enum_serde_attr = input.attrs.iter().any(|attr| {
-            if attr.path().is_ident("serde") {
-                if let Ok(tokens) = attr.parse_args::<proc_macro2::TokenStream>() {
-                    let tokens_str = tokens.to_string();
-                    return tokens_str.contains("tag")
-                        || tokens_str.contains("content")
-                        || tokens_str.contains("untagged");
-                }
+            if attr.path().is_ident("serde")
+                && let Ok(tokens) = attr.parse_args::<proc_macro2::TokenStream>()
+            {
+                let tokens_str = tokens.to_string();
+                return tokens_str.contains("tag")
+                    || tokens_str.contains("content")
+                    || tokens_str.contains("untagged");
             }
             false
         });
@@ -35,49 +35,49 @@ pub fn add_serde_attributes_to_optional_fields(input: &mut DeriveInput) -> Resul
     }
 
     // Handle struct types
-    if let syn::Data::Struct(ref mut data_struct) = input.data {
-        if let syn::Fields::Named(ref mut fields) = data_struct.fields {
-            for field in &mut fields.named {
-                // Check if it already has a serde skip_serializing_if attribute
-                let has_skip_attr = field.attrs.iter().any(|attr| {
-                    if attr.path().is_ident("serde") {
-                        if let Ok(tokens) = attr.parse_args::<proc_macro2::TokenStream>() {
-                            return tokens.to_string().contains("skip_serializing_if");
-                        }
-                    }
-                    false
-                });
-
-                // Skip if attribute already exists
-                if has_skip_attr {
-                    continue;
+    if let syn::Data::Struct(ref mut data_struct) = input.data
+        && let syn::Fields::Named(ref mut fields) = data_struct.fields
+    {
+        for field in &mut fields.named {
+            // Check if it already has a serde skip_serializing_if attribute
+            let has_skip_attr = field.attrs.iter().any(|attr| {
+                if attr.path().is_ident("serde")
+                    && let Ok(tokens) = attr.parse_args::<proc_macro2::TokenStream>()
+                {
+                    return tokens.to_string().contains("skip_serializing_if");
                 }
+                false
+            });
 
-                // Check if field type is Option<T> or Vec<T>
-                match categorize_type(&field.ty) {
-                    TypeCategory::OptionString
-                    | TypeCategory::OptionNaiveDate
-                    | TypeCategory::OptionNaiveTime
-                    | TypeCategory::OptionF64
-                    | TypeCategory::OptionU32
-                    | TypeCategory::OptionU8
-                    | TypeCategory::OptionBool
-                    | TypeCategory::OptionChar
-                    | TypeCategory::OptionField
-                    | TypeCategory::OptionVec => {
-                        let skip_attr = syn::parse_quote! {
-                            #[serde(skip_serializing_if = "Option::is_none")]
-                        };
-                        field.attrs.push(skip_attr);
-                    }
-                    TypeCategory::Vec | TypeCategory::VecString => {
-                        let skip_attr = syn::parse_quote! {
-                            #[serde(skip_serializing_if = "Vec::is_empty")]
-                        };
-                        field.attrs.push(skip_attr);
-                    }
-                    _ => {} // No action for other types
+            // Skip if attribute already exists
+            if has_skip_attr {
+                continue;
+            }
+
+            // Check if field type is Option<T> or Vec<T>
+            match categorize_type(&field.ty) {
+                TypeCategory::OptionString
+                | TypeCategory::OptionNaiveDate
+                | TypeCategory::OptionNaiveTime
+                | TypeCategory::OptionF64
+                | TypeCategory::OptionU32
+                | TypeCategory::OptionU8
+                | TypeCategory::OptionBool
+                | TypeCategory::OptionChar
+                | TypeCategory::OptionField
+                | TypeCategory::OptionVec => {
+                    let skip_attr = syn::parse_quote! {
+                        #[serde(skip_serializing_if = "Option::is_none")]
+                    };
+                    field.attrs.push(skip_attr);
                 }
+                TypeCategory::Vec | TypeCategory::VecString => {
+                    let skip_attr = syn::parse_quote! {
+                        #[serde(skip_serializing_if = "Vec::is_empty")]
+                    };
+                    field.attrs.push(skip_attr);
+                }
+                _ => {} // No action for other types
             }
         }
     }

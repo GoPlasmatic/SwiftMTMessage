@@ -1,6 +1,6 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{serde_swift_fields, SwiftMessage};
+use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
 /// MT107: General Direct Debit Message
 ///

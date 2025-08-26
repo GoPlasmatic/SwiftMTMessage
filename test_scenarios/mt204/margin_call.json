@@ -35,7 +35,7 @@
             "30": {"execution_date": {"var": "value_date"}},
             "58": {
                 "D": {
-                    "party_identifier": "/CLEARING",
+                    "party_identifier": "CLEARING",
                     "name_and_address": [
                         "DERIVATIVES CLEARING HOUSE",
                         "100 WALL STREET",

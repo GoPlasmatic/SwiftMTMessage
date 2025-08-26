@@ -40,28 +40,33 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"D": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "interest_amount"}
-            }},
+            "32": {
+                "D": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "interest_amount"}
+                }
+            },
             "52": {"A": {"bic": {"var": "ordering_bic"}}},
             "71B": {
                 "details": [
                     "CANCELLATION INTEREST CREDIT",
                     {"cat": ["REF: ", {"var": "related_ref"}]},
                     {"cat": ["REASON: ", {"var": "cancellation_reason"}]},
-                    {"cat": ["AMOUNT: ", {"var": "currency"}, " ", {"var": "interest_amount"}]},
+                    {
+                        "cat": [
+                            "AMOUNT: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "interest_amount"}
+                        ]
+                    },
                     "DEBIT TO YOUR ACCOUNT",
                     "REVERSAL OF PREVIOUS CREDIT"
                 ]
             },
             "72": {
-                "information": [
-                    "/CAN/INTEREST REVERSAL",
-                    "/REF/ORIGINAL MT190",
-                    "/ACT/CORRECTIVE ACTION TAKEN"
-                ]
+                "information": ["/CAN/INTEREST REVERSAL", "/REF/ORIGINAL MT190", "/ACT/CORRECTIVE ACTION TAKEN"]
             }
         }
     }

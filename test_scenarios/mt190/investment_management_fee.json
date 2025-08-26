@@ -41,27 +41,46 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"D": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "management_fee"}
-            }},
+            "32": {
+                "D": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "management_fee"}
+                }
+            },
             "71B": {
                 "details": [
                     "QUARTERLY INVESTMENT FEE",
-                    {"cat": ["PORTFOLIO: ", {"var": "currency"}, " ", {"var": "portfolio_value"}]},
+                    {
+                        "cat": [
+                            "PORTFOLIO: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "portfolio_value"}
+                        ]
+                    },
                     {"cat": ["RATE: ", {"var": "fee_rate"}, "% PA"]},
-                    {"cat": ["BASE: ", {"var": "currency"}, " ", {"var": "management_fee"}]},
-                    {"cat": ["PERF: ", {"var": "currency"}, " ", {"var": "performance_fee"}]},
+                    {
+                        "cat": [
+                            "BASE: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "management_fee"}
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "PERF: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "performance_fee"}
+                        ]
+                    },
                     "DEBIT TO YOUR ACCOUNT"
                 ]
             },
             "72": {
-                "information": [
-                    "/ACC/INVESTMENT ACCOUNT",
-                    "/PER/Q4 2024",
-                    "/SVC/PORTFOLIO MANAGEMENT"
-                ]
+                "information": ["/ACC/INVESTMENT ACCOUNT", "/PER/Q4 2024", "/SVC/PORTFOLIO MANAGEMENT"]
             }
         }
     }

@@ -40,28 +40,33 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"C": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "duplicate_amount"}
-            }},
+            "32": {
+                "C": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "duplicate_amount"}
+                }
+            },
             "52": {"A": {"bic": {"var": "ordering_bic"}}},
             "71B": {
                 "details": [
                     "CANCELLATION DUPLICATE ADJ",
                     {"cat": ["REF: ", {"var": "related_ref"}]},
                     {"cat": ["DATE: ", {"var": "original_date"}]},
-                    {"cat": ["AMOUNT: ", {"var": "currency"}, " ", {"var": "duplicate_amount"}]},
+                    {
+                        "cat": [
+                            "AMOUNT: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "duplicate_amount"}
+                        ]
+                    },
                     "DUPLICATE CHARGE POSTED",
                     "CREDIT TO YOUR ACCOUNT"
                 ]
             },
             "72": {
-                "information": [
-                    "/DUP/DUPLICATE POSTING",
-                    "/CAN/CANCELLATION",
-                    "/SYS/SYSTEM DUPLICATE"
-                ]
+                "information": ["/DUP/DUPLICATE POSTING", "/CAN/CANCELLATION", "/SYS/SYSTEM DUPLICATE"]
             }
         }
     }

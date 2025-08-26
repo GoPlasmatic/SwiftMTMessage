@@ -39,27 +39,39 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"C": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "incorrect_fee"}
-            }},
+            "32": {
+                "C": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "incorrect_fee"}
+                }
+            },
             "71B": {
                 "details": [
                     "FEE CORRECTION NOTICE",
                     {"cat": ["REF: ", {"var": "related_ref"}]},
-                    {"cat": ["INCORRECT: ", {"var": "currency"}, " ", {"var": "incorrect_fee"}]},
-                    {"cat": ["CORRECT: ", {"var": "currency"}, " ", {"var": "correct_fee"}]},
+                    {
+                        "cat": [
+                            "INCORRECT: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "incorrect_fee"}
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "CORRECT: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "correct_fee"}
+                        ]
+                    },
                     "FULL REVERSAL",
                     "NEW MT190 TO FOLLOW"
                 ]
             },
             "72": {
-                "information": [
-                    "/COR/FEE CORRECTION",
-                    "/NEW/CORRECTED MT190 FOLLOWS",
-                    "/REF/PRICING ERROR"
-                ]
+                "information": ["/COR/FEE CORRECTION", "/NEW/CORRECTED MT190 FOLLOWS", "/REF/PRICING ERROR"]
             }
         }
     }

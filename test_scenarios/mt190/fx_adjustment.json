@@ -42,11 +42,13 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"C": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "adjustment_amount"}
-            }},
+            "32": {
+                "C": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "adjustment_amount"}
+                }
+            },
             "52": {"A": {"bic": {"var": "ordering_bic"}}},
             "71B": {
                 "details": [
@@ -54,16 +56,19 @@
                     {"cat": ["ORIG RATE: ", {"var": "original_rate"}]},
                     {"cat": ["NEW RATE: ", {"var": "adjusted_rate"}]},
                     {"cat": ["ORIG AMT: EUR ", {"var": "original_amount"}]},
-                    {"cat": ["ADJ: ", {"var": "currency"}, " ", {"var": "adjustment_amount"}]},
+                    {
+                        "cat": [
+                            "ADJ: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "adjustment_amount"}
+                        ]
+                    },
                     "CREDIT TO YOUR ACCOUNT"
                 ]
             },
             "72": {
-                "information": [
-                    "/FX/RATE ADJUSTMENT",
-                    "/REF/ORIGINAL DEAL",
-                    "/VAL/SAME DAY VALUE"
-                ]
+                "information": ["/FX/RATE ADJUSTMENT", "/REF/ORIGINAL DEAL", "/VAL/SAME DAY VALUE"]
             }
         }
     }

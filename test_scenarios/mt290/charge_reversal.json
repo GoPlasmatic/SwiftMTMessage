@@ -39,28 +39,31 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"C": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "charge_amount"}
-            }},
+            "32": {
+                "C": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "charge_amount"}
+                }
+            },
             "71B": {
                 "details": [
                     "REVERSAL OF BANK CHARGES",
                     {"cat": ["REF: ", {"var": "related_ref"}]},
                     {"cat": ["ERROR: ", {"var": "error_type"}]},
-                    {"cat": ["AMOUNT: ", {"var": "currency"}, " ", {"var": "charge_amount"}]},
+                    {
+                        "cat": [
+                            "AMOUNT: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "charge_amount"}
+                        ]
+                    },
                     "CREDIT TO YOUR ACCOUNT",
                     "CORRECTION APPLIED"
                 ]
             },
-            "72": {
-                "information": [
-                    "/REV/CHARGE REVERSAL",
-                    "/ERR/BANK ERROR",
-                    "/COR/CORRECTED"
-                ]
-            }
+            "72": {"information": ["/REV/CHARGE REVERSAL", "/ERR/BANK ERROR", "/COR/CORRECTED"]}
         }
     }
 }

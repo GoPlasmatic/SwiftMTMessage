@@ -42,19 +42,35 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"C": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "interest_amount"}
-            }},
+            "32": {
+                "C": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "interest_amount"}
+                }
+            },
             "52": {"A": {"bic": {"var": "ordering_bic"}}},
             "71B": {
                 "details": [
                     "INTEREST CREDIT Q4 2024",
                     {"cat": ["RATE: ", {"var": "interest_rate"}, "% PA"]},
                     {"cat": ["PERIOD: ", {"var": "period_days"}, " DAYS"]},
-                    {"cat": ["PRINCIPAL: ", {"var": "currency"}, " ", {"var": "principal_amount"}]},
-                    {"cat": ["INTEREST: ", {"var": "currency"}, " ", {"var": "interest_amount"}]},
+                    {
+                        "cat": [
+                            "PRINCIPAL: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "principal_amount"}
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "INTEREST: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "interest_amount"}
+                        ]
+                    },
                     "CREDIT TO YOUR ACCOUNT"
                 ]
             },

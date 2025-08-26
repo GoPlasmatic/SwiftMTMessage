@@ -41,27 +41,53 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"D": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "total_charges"}
-            }},
+            "32": {
+                "D": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "total_charges"}
+                }
+            },
             "71B": {
                 "details": [
                     "MONTHLY BANK CHARGES DEC 2024",
-                    {"cat": ["WIRE FEES: ", {"var": "currency"}, " ", {"var": "wire_fee"}]},
-                    {"cat": ["SERVICE: ", {"var": "currency"}, " ", {"var": "service_fee"}]},
-                    {"cat": ["PROCESSING: ", {"var": "currency"}, " ", {"var": "processing_fee"}]},
-                    {"cat": ["TOTAL: ", {"var": "currency"}, " ", {"var": "total_charges"}]},
+                    {
+                        "cat": [
+                            "WIRE FEES: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "wire_fee"}
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "SERVICE: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "service_fee"}
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "PROCESSING: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "processing_fee"}
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "TOTAL: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "total_charges"}
+                        ]
+                    },
                     "DEBIT TO YOUR ACCOUNT"
                 ]
             },
             "72": {
-                "information": [
-                    "/ACC/CURRENT ACCOUNT",
-                    "/PER/01DEC2024-31DEC2024",
-                    "/REF/MONTHLY STATEMENT"
-                ]
+                "information": ["/ACC/CURRENT ACCOUNT", "/PER/01DEC2024-31DEC2024", "/REF/MONTHLY STATEMENT"]
             }
         }
     }

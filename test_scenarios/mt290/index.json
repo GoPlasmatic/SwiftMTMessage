@@ -6,14 +6,8 @@
             "file": "interest_cancellation.json",
             "description": "Interest credit cancellation"
         },
-        {
-            "file": "charge_reversal.json",
-            "description": "Bank charges reversal"
-        },
-        {
-            "file": "fee_correction.json",
-            "description": "Fee charge correction"
-        },
+        {"file": "charge_reversal.json", "description": "Bank charges reversal"},
+        {"file": "fee_correction.json", "description": "Fee charge correction"},
         {
             "file": "duplicate_adjustment_cancel.json",
             "description": "Duplicate adjustment cancellation"

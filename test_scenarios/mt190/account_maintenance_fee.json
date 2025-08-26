@@ -39,28 +39,31 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"D": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "maintenance_fee"}
-            }},
+            "32": {
+                "D": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "maintenance_fee"}
+                }
+            },
             "71B": {
                 "details": [
                     "QUARTERLY MAINTENANCE FEE",
                     {"cat": ["TYPE: ", {"var": "account_type"}]},
                     "PERIOD: Q4 2024",
-                    {"cat": ["FEE: ", {"var": "currency"}, " ", {"var": "maintenance_fee"}]},
+                    {
+                        "cat": [
+                            "FEE: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "maintenance_fee"}
+                        ]
+                    },
                     "ONLINE BANKING INCLUDED",
                     "DEBIT TO YOUR ACCOUNT"
                 ]
             },
-            "72": {
-                "information": [
-                    "/ACC/PREMIUM ACCOUNT",
-                    "/FEE/QUARTERLY",
-                    "/SVC/FULL SERVICE"
-                ]
-            }
+            "72": {"information": ["/ACC/PREMIUM ACCOUNT", "/FEE/QUARTERLY", "/SVC/FULL SERVICE"]}
         }
     }
 }

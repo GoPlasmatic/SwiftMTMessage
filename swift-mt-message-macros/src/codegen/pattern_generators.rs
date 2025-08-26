@@ -308,6 +308,7 @@ impl FieldPatternGenerator for PartyAddressPatternGenerator {
             "Field52D",
             "Field56D",
             "Field57D",
+            "Field58D",
             "Field59F",
         ];
         party_fields.contains(&name.to_string().as_str())

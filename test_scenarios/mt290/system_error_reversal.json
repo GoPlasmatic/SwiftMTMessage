@@ -40,28 +40,31 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"C": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "error_amount"}
-            }},
+            "32": {
+                "C": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "error_amount"}
+                }
+            },
             "71B": {
                 "details": [
                     "SYSTEM ERROR REVERSAL",
                     {"cat": ["REF: ", {"var": "related_ref"}]},
                     {"cat": ["ERROR: ", {"var": "system_error_code"}]},
                     {"cat": ["TIME: ", {"var": "error_timestamp"}]},
-                    {"cat": ["AMOUNT: ", {"var": "currency"}, " ", {"var": "error_amount"}]},
+                    {
+                        "cat": [
+                            "AMOUNT: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "error_amount"}
+                        ]
+                    },
                     "CREDIT TO YOUR ACCOUNT"
                 ]
             },
-            "72": {
-                "information": [
-                    "/SYS/SYSTEM ERROR",
-                    "/REV/FULL REVERSAL",
-                    "/RES/ERROR RESOLVED"
-                ]
-            }
+            "72": {"information": ["/SYS/SYSTEM ERROR", "/REV/FULL REVERSAL", "/RES/ERROR RESOLVED"]}
         }
     }
 }

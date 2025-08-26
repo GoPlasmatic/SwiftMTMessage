@@ -41,27 +41,39 @@
             "20": {"reference": {"var": "transaction_ref"}},
             "21": {"reference": {"var": "related_ref"}},
             "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "32": {"D": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "overdraft_interest"}
-            }},
+            "32": {
+                "D": {
+                    "value_date": {"var": "value_date"},
+                    "currency": {"var": "currency"},
+                    "amount": {"var": "overdraft_interest"}
+                }
+            },
             "71B": {
                 "details": [
                     "OVERDRAFT INTEREST CHARGE",
-                    {"cat": ["OD AMT: ", {"var": "currency"}, " ", {"var": "overdraft_amount"}]},
+                    {
+                        "cat": [
+                            "OD AMT: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "overdraft_amount"}
+                        ]
+                    },
                     {"cat": ["DAYS: ", {"var": "overdraft_days"}]},
                     {"cat": ["RATE: ", {"var": "interest_rate"}, "% PA"]},
-                    {"cat": ["INTEREST: ", {"var": "currency"}, " ", {"var": "overdraft_interest"}]},
+                    {
+                        "cat": [
+                            "INTEREST: ",
+                            {"var": "currency"},
+                            " ",
+                            {"var": "overdraft_interest"}
+                        ]
+                    },
                     "DEBIT TO YOUR ACCOUNT"
                 ]
             },
             "72": {
-                "information": [
-                    "/ACC/BUSINESS ACCOUNT",
-                    "/OVD/AUTHORIZED OVERDRAFT",
-                    "/PER/DECEMBER 2024"
-                ]
+                "information": ["/ACC/BUSINESS ACCOUNT", "/OVD/AUTHORIZED OVERDRAFT", "/PER/DECEMBER 2024"]
             }
         }
     }

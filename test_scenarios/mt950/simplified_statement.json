@@ -50,7 +50,7 @@
                 "F": {
                     "debit_credit_mark": "C",
                     "value_date": "2024-12-20",
-                    "currency": {"fake": ["currency_code"]},
+                    "currency": {"var": "currency"},
                     "amount": 250000.0
                 }
             },
@@ -58,7 +58,7 @@
                 {
                     "value_date": "2024-12-20",
                     "debit_credit_mark": "C",
-                    "currency": {"fake": ["currency_code"]},
+                    "currency": {"var": "currency"},
                     "amount": 15000.0,
                     "transaction_type": "NMSC",
                     "customer_reference": "INV123456",
@@ -67,7 +67,7 @@
                 {
                     "value_date": "2024-12-20",
                     "debit_credit_mark": "D",
-                    "currency": {"fake": ["currency_code"]},
+                    "currency": {"var": "currency"},
                     "amount": 25000.0,
                     "transaction_type": "NMSC",
                     "customer_reference": "SAL789012",
@@ -76,7 +76,7 @@
                 {
                     "value_date": "2024-12-20",
                     "debit_credit_mark": "D",
-                    "currency": {"fake": ["currency_code"]},
+                    "currency": {"var": "currency"},
                     "amount": 8000.0,
                     "transaction_type": "NCHG",
                     "customer_reference": "FEE345678",
@@ -87,14 +87,14 @@
                 "F": {
                     "debit_credit_mark": "C",
                     "value_date": "2024-12-20",
-                    "currency": {"fake": ["currency_code"]},
+                    "currency": {"var": "currency"},
                     "amount": 258000.0
                 }
             },
             "64": {
                 "debit_credit_mark": "C",
                 "value_date": "2024-12-20",
-                "currency": {"fake": ["currency_code"]},
+                "currency": {"var": "currency"},
                 "amount": 495000.0
             }
         }

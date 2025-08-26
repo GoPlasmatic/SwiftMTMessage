@@ -3,7 +3,7 @@
         "sender_bic": {"fake": ["bic"]},
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["DDCBPR", {"fake": ["i64", 1000000000, 9999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "loan_payment": {"fake": ["f64", 1000.0, 10000.0]},
         "execution_date": "2024-12-15",
         "charges": "SHA",

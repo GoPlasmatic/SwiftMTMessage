@@ -1,0 +1,65 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["ERR", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["FXC", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": {"fake": ["currency_code"]},
+        "wrong_amount": {"fake": ["f64", 200.0, 500.0]},
+        "ordering_bic": {"fake": ["bic"]},
+        "account_bic": {"fake": ["bic"]},
+        "session_num": "0001",
+        "sequence_num": {"cat": ["", {"fake": ["i64", 100000, 999999]}]},
+        "uetr": {"fake": ["uuid"]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "291",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "291",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "32B": {
+                "currency": {"var": "currency"},
+                "amount": {"var": "wrong_amount"}
+            },
+            "52": {"A": {"bic": {"var": "ordering_bic"}}},
+            "57": {"A": {"bic": {"var": "account_bic"}}},
+            "71B": {
+                "details": [
+                    "ERROR CORRECTION CANCEL",
+                    {"cat": ["ORIG MT191: ", {"var": "related_ref"}]},
+                    "REASON: CALC ERROR",
+                    {"cat": ["WRONG AMT: ", {"var": "wrong_amount"}]},
+                    "BILATERAL AGREEMENT",
+                    "CHARGES NOT APPLICABLE"
+                ]
+            },
+            "72": {
+                "information": [
+                    "/ERR/BILLING ERROR",
+                    "/CAN/FULL CANCELLATION",
+                    "/RES/RESOLVED BILATERALLY"
+                ]
+            }
+        }
+    }
+}

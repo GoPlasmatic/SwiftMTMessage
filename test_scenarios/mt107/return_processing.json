@@ -4,7 +4,7 @@
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["RTNDD", {"fake": ["i64", 10000000000, 99999999999]}]},
         "original_ref": {"cat": ["GDDBT", {"fake": ["i64", 10000000000, 99999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "execution_date": "2024-12-29",
         "charges": "SHA",
         "uetr": {"fake": ["uuid"]},

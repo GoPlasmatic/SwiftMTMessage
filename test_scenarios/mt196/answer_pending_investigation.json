@@ -11,7 +11,7 @@
         "response_code": "PENDING",
         "reason_code": "INVS",
         "amount": {"fake": ["f64", 50000.0, 250000.0]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "session_num": "0002",
         "sequence_num": "000789",
         "uetr": {"fake": ["uuid"]}

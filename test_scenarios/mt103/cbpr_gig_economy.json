@@ -3,7 +3,7 @@
         "sender_bic": {"fake": ["bic"]},
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["SALA", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "payment_amount": {"fake": ["f64", 50.0, 5000.0]},
         "platform_fee": {"fake": ["f64", 5.0, 500.0]},
         "net_amount": {"fake": ["f64", 45.0, 4500.0]},

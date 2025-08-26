@@ -5,7 +5,7 @@
         "transaction_ref": {"cat": ["FSTOP", {"fake": ["i64", 100000, 999999]}]},
         "cheque_number": {"fake": ["i64", 100000, 999999]},
         "issue_date": "2024-12-20",
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "amount": {"fake": ["f64", 5000.0, 100000.0]},
         "session_num": "0001",
         "sequence_num": "000123",

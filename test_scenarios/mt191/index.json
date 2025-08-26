@@ -1,0 +1,26 @@
+{
+    "message_type": "MT191",
+    "description": "Request for Payment of Charges, Interest and Other Expenses",
+    "scenarios": [
+        {
+            "file": "correspondent_charges.json",
+            "description": "Correspondent banking service charges request"
+        },
+        {
+            "file": "interest_payment_request.json",
+            "description": "Interest payment request on nostro account"
+        },
+        {
+            "file": "investigation_fees.json",
+            "description": "Investigation and inquiry fee recovery"
+        },
+        {
+            "file": "fx_handling_charges.json",
+            "description": "Foreign exchange handling charges request"
+        },
+        {
+            "file": "compliance_costs.json",
+            "description": "Compliance and regulatory cost recovery"
+        }
+    ]
+}

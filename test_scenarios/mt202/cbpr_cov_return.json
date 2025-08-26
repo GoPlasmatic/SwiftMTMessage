@@ -5,7 +5,7 @@
         "reference": {"cat": ["COVRET", {"fake": ["i64", 100000, 999999]}]},
         "related_ref": {"cat": ["COVORG", {"fake": ["i64", 100000, 999999]}]},
         "amount": 2500000.0,
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "value_date": "2024-12-23",
         "uetr_original": {"fake": ["uuid"]},
         "uetr_return": {"fake": ["uuid"]},

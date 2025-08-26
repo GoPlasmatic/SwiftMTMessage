@@ -11,7 +11,7 @@
         "response_code": "ACCEPTED",
         "reason_code": "CUST",
         "amount": {"fake": ["f64", 10000.0, 100000.0]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "session_num": "0001",
         "sequence_num": "000123",
         "uetr": {"fake": ["uuid"]}

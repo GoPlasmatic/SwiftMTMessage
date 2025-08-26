@@ -1,0 +1,73 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["CMP", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["REG-", {"fake": ["i64", 10000, 99999]}]},
+        "currency": {"fake": ["currency_code"]},
+        "cost_amount": {"fake": ["f64", 150.0, 750.0]},
+        "ordering_bic": {"fake": ["bic"]},
+        "session_num": "0001",
+        "sequence_num": {"cat": ["", {"fake": ["i64", 100000, 999999]}]},
+        "uetr": {"fake": ["uuid"]},
+        "screening_count": {"fake": ["i64", 20, 200]},
+        "investigation_hours": {"fake": ["i64", 2, 10]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "191",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "191",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "32B": {
+                "currency": {"var": "currency"},
+                "amount": {"var": "cost_amount"}
+            },
+            "52": {"D": {
+                "party_identifier": "/COMPLIANCE DEPT",
+                "name_and_address": [
+                    "REGULATORY COMPLIANCE",
+                    "FINANCIAL CRIMES UNIT",
+                    "NEW YORK",
+                    "UNITED STATES"
+                ]
+            }},
+            "71B": {
+                "details": [
+                    "COMPLIANCE AND REGULATORY COSTS",
+                    {"cat": ["SCREENINGS: ", {"var": "screening_count"}]},
+                    {"cat": ["INVESTIGATION: ", {"var": "investigation_hours"}, " HOURS"]},
+                    "ENHANCED DUE DILIGENCE",
+                    {"cat": ["TOTAL COST: ", {"var": "currency"}, " ", {"var": "cost_amount"}]},
+                    "AS PER COMPLIANCE AGREEMENT"
+                ]
+            },
+            "72": {
+                "information": [
+                    "/REG/COMPLIANCE SERVICES",
+                    "/KYC/ENHANCED DUE DILIGENCE",
+                    "/AML/SCREENING CHARGES"
+                ]
+            }
+        }
+    }
+}

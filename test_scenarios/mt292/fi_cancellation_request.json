@@ -10,7 +10,7 @@
         "sequence": "567890",
         "reason_code": "AGNT",
         "amount": {"fake": ["f64", 1000000.0, 10000000.0]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "session_num": "0001",
         "sequence_num": "000123",
         "uetr": {"fake": ["uuid"]}

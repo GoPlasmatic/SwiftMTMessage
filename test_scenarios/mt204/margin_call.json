@@ -5,7 +5,7 @@
         "main_ref": {"cat": ["MARG", {"fake": ["i64", 10000000, 99999999]}]},
         "transaction_ref1": {"cat": ["MC", {"fake": ["i64", 10000, 99999]}]},
         "transaction_ref2": {"cat": ["MC", {"fake": ["i64", 10000, 99999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "total_amount": 200000.0,
         "transaction_amount": 100000.0,
         "value_date": "2025-01-20",

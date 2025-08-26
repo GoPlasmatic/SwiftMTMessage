@@ -47,8 +47,8 @@ use std::collections::{HashMap, HashSet};
 use crate::errors::{ParseError, ParserConfig, Result, SwiftValidationError};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 use crate::messages::{
-    MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT190, MT192, MT196, MT199, MT200, MT202,
-    MT204, MT205, MT210, MT290, MT292, MT296, MT299, MT900, MT910, MT920, MT935, MT940, MT941,
+    MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT190, MT191, MT192, MT196, MT199, MT200, MT202,
+    MT204, MT205, MT210, MT290, MT291, MT292, MT296, MT299, MT900, MT910, MT920, MT935, MT940, MT941,
     MT942, MT950,
 };
 use crate::swift_error_codes::t_series;
@@ -506,6 +506,10 @@ impl SwiftParser {
                 let parsed = self.parse_message::<MT190>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT190(Box::new(parsed)))
             }
+            "191" => {
+                let parsed = self.parse_message::<MT191>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT191(Box::new(parsed)))
+            }
             "200" => {
                 let parsed = self.parse_message::<MT200>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT200(Box::new(parsed)))
@@ -529,6 +533,10 @@ impl SwiftParser {
             "290" => {
                 let parsed = self.parse_message::<MT290>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT290(Box::new(parsed)))
+            }
+            "291" => {
+                let parsed = self.parse_message::<MT291>(raw_message)?;
+                Ok(ParsedSwiftMessage::MT291(Box::new(parsed)))
             }
             "900" => {
                 let parsed = self.parse_message::<MT900>(raw_message)?;

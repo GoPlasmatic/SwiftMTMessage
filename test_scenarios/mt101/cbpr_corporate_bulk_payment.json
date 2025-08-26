@@ -4,7 +4,7 @@
         "receiver_bic": {"fake": ["bic"]},
         "msg_id": {"cat": ["CBPR", {"fake": ["i64", 100000, 999999]}]},
         "exec_date": "2024-12-23",
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "account_id": {"cat": ["US64SVBK", {"fake": ["i64", 10000000000000, 99999999999999]}]},
         "session_num": "0001",
         "sequence_num": "000456",

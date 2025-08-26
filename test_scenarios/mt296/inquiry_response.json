@@ -6,7 +6,7 @@
         "related_ref": {"cat": ["INQ", {"fake": ["i64", 100000000000, 999999999999]}]},
         "payment_ref": {"cat": ["PMT", {"fake": ["i64", 100000000000, 999999999999]}]},
         "amount": {"fake": ["f64", 10000.0, 500000.0]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "value_date": "2024-12-18",
         "beneficiary_bic": {"fake": ["bic"]},
         "intermediary_bic": {"fake": ["bic"]},

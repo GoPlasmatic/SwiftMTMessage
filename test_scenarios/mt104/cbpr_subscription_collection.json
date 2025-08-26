@@ -5,7 +5,7 @@
         "msg_id": {"cat": ["SUBS", {"fake": ["i64", 100000, 999999]}]},
         "total_amount": 184,
         "exec_date": "2024-12-25",
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "account_id": {"cat": ["US33CITI", {"fake": ["i64", 10000000000000, 99999999999999]}]},
         "amount1": 20,
         "amount2": 50,

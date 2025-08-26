@@ -4,7 +4,7 @@
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["INT", {"fake": ["i64", 100000000, 999999999]}]},
         "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "debit_floor": "0001",
         "credit_floor": "0001",
         "session_num": "0001",

@@ -5,7 +5,7 @@
         "beneficiary_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["FI", {"fake": ["i64", 1000000000, 9999999999]}]},
         "related_ref": {"cat": ["REL", {"fake": ["i64", 1000000000, 9999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "amount": {"fake": ["f64", 10000.0, 1000000.0]},
         "value_date": "2024-12-20",
         "session_num": "0001",

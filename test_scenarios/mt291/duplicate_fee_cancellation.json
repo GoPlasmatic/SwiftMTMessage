@@ -1,0 +1,64 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["DUP", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["INV", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": {"fake": ["currency_code"]},
+        "fee_amount": {"fake": ["f64", 50.0, 250.0]},
+        "ordering_bic": {"fake": ["bic"]},
+        "session_num": "0001",
+        "sequence_num": {"cat": ["", {"fake": ["i64", 100000, 999999]}]},
+        "uetr": {"fake": ["uuid"]},
+        "original_ref": {"cat": ["INV", {"fake": ["i64", 100000000000, 999999999999]}]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "291",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "291",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "32B": {
+                "currency": {"var": "currency"},
+                "amount": {"var": "fee_amount"}
+            },
+            "52": {"A": {"bic": {"var": "ordering_bic"}}},
+            "71B": {
+                "details": [
+                    "CANCELLATION - DUPLICATE REQUEST",
+                    {"cat": ["DUPLICATE OF: ", {"var": "original_ref"}]},
+                    {"cat": ["CANCELLING: ", {"var": "related_ref"}]},
+                    "REASON: SYSTEM ERROR",
+                    {"cat": ["AMOUNT: ", {"var": "currency"}, " ", {"var": "fee_amount"}]},
+                    "PLEASE PROCESS ONLY FIRST REQUEST"
+                ]
+            },
+            "72": {
+                "information": [
+                    "/DUP/DUPLICATE REQUEST",
+                    "/ERR/SYSTEM PROCESSING ERROR",
+                    "/IGN/PLEASE IGNORE THIS REQUEST"
+                ]
+            }
+        }
+    }
+}

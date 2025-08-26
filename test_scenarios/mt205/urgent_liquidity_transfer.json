@@ -6,7 +6,7 @@
         "intermediary_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["LIQ", {"fake": ["i64", 1000000000, 9999999999]}]},
         "related_ref": {"cat": ["URGNT", {"fake": ["i64", 1000000000, 9999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "amount": {"fake": ["f64", 10000000.0, 100000000.0]},
         "value_date": "2024-12-20",
         "time_code": "CLSTIME",

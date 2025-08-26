@@ -5,7 +5,7 @@
         "transaction_ref": {"cat": ["DSTOP", {"fake": ["i64", 100000, 999999]}]},
         "cheque_number": {"fake": ["i64", 100000, 999999]},
         "issue_date": "2024-12-10",
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "amount": {"fake": ["f64", 1000.0, 25000.0]},
         "drawer_bic": {"fake": ["bic"]},
         "payee_name": {"fake": ["company_name"]},

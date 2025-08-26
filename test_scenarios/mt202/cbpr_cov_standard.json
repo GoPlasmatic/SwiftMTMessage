@@ -6,7 +6,7 @@
         "account_with_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["COV", {"fake": ["i64", 100000000000, 999999999999]}]},
         "related_ref": {"cat": ["REF", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "amount": {"fake": ["f64", 25000.0, 250000.0]},
         "instructed_amount": {"fake": ["f64", 25000.0, 250000.0]},
         "value_date": "2024-12-20",

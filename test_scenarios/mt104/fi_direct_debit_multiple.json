@@ -3,7 +3,7 @@
         "sender_bic": {"fake": ["bic"]},
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["DDMULTI", {"fake": ["i64", 10000000, 99999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "execution_date": "2024-12-26",
         "charges": "SHA",
         "sender_lei": "LEIXG8HWVXGGR1B2V5K893",

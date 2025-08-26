@@ -4,7 +4,7 @@
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["NEG", {"fake": ["i64", 100000000, 999999999]}]},
         "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "opening_balance": {"fake": ["f64", 100.0, 9999.99]},
         "closing_balance": {"fake": ["f64", 10000.0, 99999.99]},
         "available_balance": {"fake": ["f64", 50000.0, 150000.0]},

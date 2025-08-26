@@ -9,7 +9,7 @@
         "effective_date": "2025-01-01",
         "old_account": "GB82WEST12345698765432",
         "new_account": "GB33BNBK20123456789012",
-        "currency": "USD"
+        "currency": {"fake": ["currency_code"]}
     },
     "schema": {
         "basic_header": {

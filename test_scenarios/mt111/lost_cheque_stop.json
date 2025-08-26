@@ -5,7 +5,7 @@
         "transaction_ref": {"cat": ["STOP", {"fake": ["i64", 100000, 999999]}]},
         "cheque_number": {"fake": ["i64", 100000, 999999]},
         "issue_date": "2024-12-15",
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "amount": {"fake": ["f64", 100.0, 50000.0]},
         "drawer_bic": {"fake": ["bic"]},
         "payee_name": {"fake": ["name"]},

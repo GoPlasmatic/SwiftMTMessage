@@ -4,7 +4,7 @@
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["DBT", {"fake": ["i64", 100000000000, 999999999999]}]},
         "related_ref": {"cat": ["PMT", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "debit_amount": {"fake": ["f64", 100.0, 50000.0]},
         "value_date": "2024-12-20",
         "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},

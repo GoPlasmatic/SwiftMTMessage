@@ -1,0 +1,22 @@
+{
+    "message_type": "MT291",
+    "description": "Request for Payment of Charges, Interest and Other Expenses Cancellation",
+    "scenarios": [
+        {
+            "file": "charge_request_cancellation.json",
+            "description": "Cancellation of correspondent banking charges request"
+        },
+        {
+            "file": "interest_claim_withdrawal.json",
+            "description": "Withdrawal of interest payment claim"
+        },
+        {
+            "file": "duplicate_fee_cancellation.json",
+            "description": "Cancellation of duplicate fee request"
+        },
+        {
+            "file": "error_correction.json",
+            "description": "Cancellation due to calculation error"
+        }
+    ]
+}

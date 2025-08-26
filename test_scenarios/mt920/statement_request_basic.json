@@ -4,7 +4,7 @@
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["REQ", {"fake": ["i64", 100000000000, 999999999999]}]},
         "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "session_num": "0001",
         "sequence_num": "000123",
         "uetr": {"fake": ["uuid"]}

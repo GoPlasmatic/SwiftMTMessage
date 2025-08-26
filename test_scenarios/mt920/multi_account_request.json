@@ -6,7 +6,7 @@
         "account1": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
         "account2": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
         "account3": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "session_num": "0001",
         "sequence_num": "000123",
         "uetr": {"fake": ["uuid"]}

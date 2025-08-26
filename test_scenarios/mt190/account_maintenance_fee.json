@@ -4,7 +4,7 @@
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref": {"cat": ["AMF", {"fake": ["i64", 100000000000, 999999999999]}]},
         "related_ref": {"cat": ["MAINT-", {"fake": ["i64", 10000, 99999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "maintenance_fee": {"fake": ["f64", 10.0, 100.0]},
         "value_date": "2024-12-31",
         "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},

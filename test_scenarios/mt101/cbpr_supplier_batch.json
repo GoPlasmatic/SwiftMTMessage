@@ -4,7 +4,7 @@
         "receiver_bic": {"fake": ["bic"]},
         "msg_id": {"cat": ["SUPPBATCH", {"fake": ["i64", 100000, 999999]}]},
         "exec_date": "2024-12-24",
-        "currency": "GBP",
+        "currency": {"fake": ["currency_code"]},
         "account_id": {"cat": ["GB29NWBK", {"fake": ["i64", 10000000000000, 99999999999999]}]},
         "supplier1_amount": {"fake": ["f64", 100000.0, 150000.0]},
         "supplier2_amount": {"fake": ["f64", 75000.0, 100000.0]},

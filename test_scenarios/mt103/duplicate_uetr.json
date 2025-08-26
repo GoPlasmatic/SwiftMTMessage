@@ -4,7 +4,7 @@
         "receiver_bic": {"fake": ["bic"]},
         "transaction_ref1": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
         "transaction_ref2": {"cat": ["PAY", {"fake": ["i64", 200000000000, 299999999999]}]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "amount1": {"fake": ["f64", 50000.0, 100000.0]},
         "amount2": {"fake": ["f64", 75000.0, 150000.0]},
         "value_date": "2024-12-20",

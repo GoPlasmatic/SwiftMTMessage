@@ -5,7 +5,7 @@
         "transaction_ref": {"cat": ["ANS", {"fake": ["i64", 100000000000, 999999999999]}]},
         "related_ref": {"cat": ["CANC", {"fake": ["i64", 100000000000, 999999999999]}]},
         "original_amount": {"fake": ["f64", 1000.0, 100000.0]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "cancellation_time": "14:30:00",
         "original_value_date": "2024-12-20",
         "session_num": "0001",

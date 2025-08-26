@@ -6,7 +6,7 @@
         "related_ref": {"cat": ["STMT", {"fake": ["i64", 1000, 9999]}]},
         "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
         "statement_num": {"fake": ["i64", 1, 999]},
-        "currency": "USD",
+        "currency": {"fake": ["currency_code"]},
         "debit_limit": {"fake": ["f64", 100000.0, 1000000.0]},
         "credit_limit": {"fake": ["f64", 500000.0, 5000000.0]},
         "report_date": "241220",

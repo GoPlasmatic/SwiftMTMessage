@@ -1,0 +1,66 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["REV", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["CHG", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": "EUR",
+        "charge_amount": {"fake": ["f64", 25.0, 500.0]},
+        "value_date": "2024-12-31",
+        "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "session_num": "0001",
+        "sequence_num": {"cat": ["", {"fake": ["i64", 100000, 999999]}]},
+        "uetr": {"fake": ["uuid"]},
+        "error_type": "INCORRECT RATE"
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "290",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "290",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
+            "32": {"C": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "charge_amount"}
+            }},
+            "71B": {
+                "details": [
+                    "REVERSAL OF BANK CHARGES",
+                    {"cat": ["REF: ", {"var": "related_ref"}]},
+                    {"cat": ["ERROR: ", {"var": "error_type"}]},
+                    {"cat": ["AMOUNT: ", {"var": "currency"}, " ", {"var": "charge_amount"}]},
+                    "CREDIT TO YOUR ACCOUNT",
+                    "CORRECTION APPLIED"
+                ]
+            },
+            "72": {
+                "information": [
+                    "/REV/CHARGE REVERSAL",
+                    "/ERR/BANK ERROR",
+                    "/COR/CORRECTED"
+                ]
+            }
+        }
+    }
+}

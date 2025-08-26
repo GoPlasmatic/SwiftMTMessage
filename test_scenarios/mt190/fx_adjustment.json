@@ -1,0 +1,70 @@
+{
+    "variables": {
+        "sender_bic": {"fake": ["bic"]},
+        "receiver_bic": {"fake": ["bic"]},
+        "transaction_ref": {"cat": ["FXA", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "related_ref": {"cat": ["FX", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "currency": "USD",
+        "adjustment_amount": {"fake": ["f64", 10.0, 1000.0]},
+        "value_date": "2024-12-20",
+        "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "ordering_bic": {"fake": ["bic"]},
+        "session_num": "0001",
+        "sequence_num": {"cat": ["", {"fake": ["i64", 100000, 999999]}]},
+        "uetr": {"fake": ["uuid"]},
+        "original_rate": {"fake": ["f64", 1.0, 2.0]},
+        "adjusted_rate": {"fake": ["f64", 1.0, 2.0]},
+        "original_amount": {"fake": ["f64", 10000.0, 100000.0]}
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
+        },
+        "application_header": {
+            "direction": "I",
+            "message_type": "190",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "190",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
+            "32": {"C": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "adjustment_amount"}
+            }},
+            "52": {"A": {"bic": {"var": "ordering_bic"}}},
+            "71B": {
+                "details": [
+                    "FX RATE ADJUSTMENT",
+                    {"cat": ["ORIG RATE: ", {"var": "original_rate"}]},
+                    {"cat": ["NEW RATE: ", {"var": "adjusted_rate"}]},
+                    {"cat": ["ORIG AMT: EUR ", {"var": "original_amount"}]},
+                    {"cat": ["ADJ: ", {"var": "currency"}, " ", {"var": "adjustment_amount"}]},
+                    "CREDIT TO YOUR ACCOUNT"
+                ]
+            },
+            "72": {
+                "information": [
+                    "/FX/RATE ADJUSTMENT",
+                    "/REF/ORIGINAL DEAL",
+                    "/VAL/SAME DAY VALUE"
+                ]
+            }
+        }
+    }
+}

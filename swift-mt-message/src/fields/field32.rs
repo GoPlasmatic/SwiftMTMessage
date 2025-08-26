@@ -159,6 +159,72 @@ pub struct Field32B {
     pub amount: f64,
 }
 
+/// **Field 32C: Value Date, Currency Code, Amount (Credit)**
+///
+/// Credit variant of [Field 32 module](index.html). Specifies the value date,
+/// currency, and amount credited. Used in MT n90 messages (MT190, MT290, etc.)
+/// to indicate credit adjustments.
+///
+/// **Components:**
+/// - Value date (6!n, YYMMDD format)
+/// - Currency code (3!a, ISO 4217)
+/// - Amount (15d, decimal with comma separator)
+///
+/// For complete documentation, see the [Field 32 module](index.html).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+pub struct Field32C {
+    /// Value date when the credit becomes effective
+    ///
+    /// Format: 6!n (YYMMDD) - Must be valid calendar date
+    #[component("6!n")]
+    pub value_date: Option<NaiveDate>,
+
+    /// ISO 4217 three-letter currency code
+    ///
+    /// Format: 3!a - Must be valid, active currency
+    #[component("3!a")]
+    pub currency: String,
+
+    /// Credit amount in the specified currency
+    ///
+    /// Format: 15d - Up to 15 digits, comma decimal separator
+    #[component("15d")]
+    pub amount: f64,
+}
+
+/// **Field 32D: Value Date, Currency Code, Amount (Debit)**
+///
+/// Debit variant of [Field 32 module](index.html). Specifies the value date,
+/// currency, and amount debited. Used in MT n90 messages (MT190, MT290, etc.)
+/// to indicate debit adjustments.
+///
+/// **Components:**
+/// - Value date (6!n, YYMMDD format)
+/// - Currency code (3!a, ISO 4217)
+/// - Amount (15d, decimal with comma separator)
+///
+/// For complete documentation, see the [Field 32 module](index.html).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+pub struct Field32D {
+    /// Value date when the debit becomes effective
+    ///
+    /// Format: 6!n (YYMMDD) - Must be valid calendar date
+    #[component("6!n")]
+    pub value_date: Option<NaiveDate>,
+
+    /// ISO 4217 three-letter currency code
+    ///
+    /// Format: 3!a - Must be valid, active currency
+    #[component("3!a")]
+    pub currency: String,
+
+    /// Debit amount in the specified currency
+    ///
+    /// Format: 15d - Up to 15 digits, comma decimal separator
+    #[component("15d")]
+    pub amount: f64,
+}
+
 /// **Field 32 Enum: Value Date, Currency, Amount Variants**
 ///
 /// Enum wrapper for [Field 32 module](index.html) variants providing different
@@ -169,4 +235,6 @@ pub struct Field32B {
 pub enum Field32 {
     A(Field32A),
     B(Field32B),
+    C(Field32C),
+    D(Field32D),
 }

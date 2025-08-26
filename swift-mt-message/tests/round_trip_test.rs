@@ -135,6 +135,11 @@ fn test_single_scenario(
             Some(scenario_name),
         )
         .map(|msg| ParsedSwiftMessage::MT210(Box::new(msg))),
+        "MT290" => generate_sample::<swift_mt_message::messages::mt290::MT290>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT290(Box::new(msg))),
         "MT192" => generate_sample::<swift_mt_message::messages::mt192::MT192>(
             message_type,
             Some(scenario_name),
@@ -175,6 +180,11 @@ fn test_single_scenario(
             Some(scenario_name),
         )
         .map(|msg| ParsedSwiftMessage::MT112(Box::new(msg))),
+        "MT190" => generate_sample::<swift_mt_message::messages::mt190::MT190>(
+            message_type,
+            Some(scenario_name),
+        )
+        .map(|msg| ParsedSwiftMessage::MT190(Box::new(msg))),
         "MT900" => generate_sample::<swift_mt_message::messages::mt900::MT900>(
             message_type,
             Some(scenario_name),
@@ -359,11 +369,13 @@ fn test_single_scenario(
         ParsedSwiftMessage::MT110(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT111(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT112(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT190(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT200(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT202(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT204(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT205(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT210(msg) => msg.to_mt_message(),
+        ParsedSwiftMessage::MT290(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT900(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT910(msg) => msg.to_mt_message(),
         ParsedSwiftMessage::MT920(msg) => msg.to_mt_message(),

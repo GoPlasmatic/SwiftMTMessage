@@ -1,0 +1,30 @@
+{
+    "message_type": "MT190",
+    "description": "Advice of Charges, Interest and Other Adjustments",
+    "scenarios": [
+        {
+            "file": "interest_credit_advice.json",
+            "description": "Interest credit advice"
+        },
+        {
+            "file": "bank_charges_debit.json",
+            "description": "Bank charges debit advice"
+        },
+        {
+            "file": "overdraft_interest.json",
+            "description": "Overdraft interest charge"
+        },
+        {
+            "file": "account_maintenance_fee.json",
+            "description": "Account maintenance fee"
+        },
+        {
+            "file": "fx_adjustment.json",
+            "description": "Foreign exchange adjustment"
+        },
+        {
+            "file": "investment_management_fee.json",
+            "description": "Investment management fee"
+        }
+    ]
+}

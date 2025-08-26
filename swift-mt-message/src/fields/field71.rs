@@ -118,3 +118,17 @@ pub struct Field71G {
     #[component("15d")]
     pub amount: f64,
 }
+
+///   **Field 71B: Details of Charges**
+///
+/// Specifies detailed information about charges, interest and other adjustments.
+/// Used in MT n90 messages (MT190, MT290, etc.) to provide comprehensive charge details.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+pub struct Field71B {
+    /// Details of charges
+    ///
+    /// Format: 6*35x - Up to 6 lines of 35 characters each
+    /// Contains detailed breakdown of charges, interest and other adjustments
+    #[component("6*35x")]
+    pub details: Vec<String>,
+}

@@ -241,7 +241,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             if let Some(condition) = rule.get("condition") {
                 // Create DataLogic instance for evaluation
                 let dl = datalogic_rs::DataLogic::new();
-                match dl.evaluate_json(condition, &context_value, None) {
+                match dl.evaluate_json(condition, &context_value) {
                     Ok(result) => {
                         match result.as_bool() {
                             Some(true) => {

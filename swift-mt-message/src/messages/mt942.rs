@@ -129,10 +129,10 @@ const MT942_VALIDATION_RULES: &str = r#"{
       "description": "The first two characters of the three-character currency code in fields 34F, 61, 90D, and 90C must be the same for all occurrences",
       "condition": {
         "and": [
-          {"!!": {"var": "fields.34F#1"}},
+          {"exists": ["fields", "34F#1"]},
           {
             "if": [
-              {"!!": {"var": "fields.34F#2"}},
+              {"exists": ["fields", "34F#2"]},
               {"==": [
                 {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
                 {"substr": [{"var": "fields.34F#2.currency"}, 0, 2]}
@@ -142,7 +142,7 @@ const MT942_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.90D"}},
+              {"exists": ["fields", "90D"]},
               {"==": [
                 {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
                 {"substr": [{"var": "fields.90D.currency"}, 0, 2]}
@@ -152,7 +152,7 @@ const MT942_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.90C"}},
+              {"exists": ["fields", "90C"]},
               {"==": [
                 {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
                 {"substr": [{"var": "fields.90C.currency"}, 0, 2]}
@@ -168,7 +168,7 @@ const MT942_VALIDATION_RULES: &str = r#"{
                   {"var": "fields.#"},
                   {
                     "if": [
-                      {"!!": {"var": "61"}},
+                      {"exists": ["fields", "61"]},
                       {"==": [
                         {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
                         {"substr": [{"var": "61.currency"}, 0, 2]}

@@ -363,15 +363,15 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "If field 33B is present and the currency code is different from the currency code in field 32A, field 36 must be present, otherwise field 36 is not allowed",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.33B"}},
+          {"exists": ["fields", "33B"]},
           {
             "if": [
               {"!=": [{"var": "fields.33B.currency"}, {"var": "fields.32A.currency"}]},
-              {"!!": {"var": "fields.36"}},
-              {"!": {"var": "fields.36"}}
+              {"exists": ["fields", "36"]},
+              {"!": {"exists": ["fields", "36"]}}
             ]
           },
-          {"!": {"var": "fields.36"}}
+          {"!": {"exists": ["fields", "36"]}}
         ]
       }
     },
@@ -384,7 +384,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
             {"in": [{"var": "basic_header.sender_bic.country_code"}, {"var": "EU_EEA_COUNTRIES"}]},
             {"in": [{"var": "application_header.receiver_bic.country_code"}, {"var": "EU_EEA_COUNTRIES"}]}
           ]},
-          {"!!": {"var": "fields.33B"}},
+          {"exists": ["fields", "33B"]},
           true
         ]
       }
@@ -399,7 +399,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
               {"==": [{"var": "fields.23B.instruction_code"}, "SPRI"]},
               {
                 "if": [
-                  {"!!": {"var": "fields.23E"}},
+                  {"exists": ["fields", "23E"]},
                   {
                     "all": [
                       {"var": "fields.23E"},
@@ -417,7 +417,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
           {
             "if": [
               {"in": [{"var": "fields.23B.instruction_code"}, ["SSTD", "SPAY"]]},
-              {"!": {"var": "fields.23E"}},
+              {"!": {"exists": ["fields", "23E"]}},
               true
             ]
           }
@@ -432,8 +432,8 @@ const MT103_VALIDATION_RULES: &str = r#"{
           {"in": [{"var": "fields.23B.instruction_code"}, ["SPRI", "SSTD", "SPAY"]]},
           {
             "if": [
-              {"!!": {"var": "fields.53"}},
-              {"!=": [{"var": "fields.53.option"}, "D"]},
+              {"exists": ["fields", "53", "D"]},
+              false,
               true
             ]
           },
@@ -448,10 +448,9 @@ const MT103_VALIDATION_RULES: &str = r#"{
         "if": [
           {"and": [
             {"in": [{"var": "fields.23B.instruction_code"}, ["SPRI", "SSTD", "SPAY"]]},
-            {"!!": {"var": "fields.53"}},
-            {"==": [{"var": "fields.53.option"}, "B"]}
+            {"exists": ["fields", "53", "B"]}
           ]},
-          {"!!": {"var": "fields.53.party_identifier"}},
+          {"exists": ["fields", "53", "B", "party_identifier"]},
           true
         ]
       }
@@ -464,9 +463,12 @@ const MT103_VALIDATION_RULES: &str = r#"{
           {"in": [{"var": "fields.23B.instruction_code"}, ["SPRI", "SSTD", "SPAY"]]},
           {
             "if": [
-              {"!!": {"var": "fields.54"}},
-              {"==": [{"var": "fields.54.option"}, "A"]},
-              true
+              {"or": [
+                {"exists": ["fields", "54", "A"]},
+                {"!": {"exists": ["fields", "54"]}}
+              ]},
+              true,
+              false
             ]
           },
           true
@@ -478,10 +480,10 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "If field 55a is present, then both fields 53a and 54a must also be present",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.55"}},
+          {"exists": ["fields", "55"]},
           {"and": [
-            {"!!": {"var": "fields.53"}},
-            {"!!": {"var": "fields.54"}}
+            {"exists": ["fields", "53"]},
+            {"exists": ["fields", "54"]}
           ]},
           true
         ]
@@ -495,9 +497,12 @@ const MT103_VALIDATION_RULES: &str = r#"{
           {"in": [{"var": "fields.23B.instruction_code"}, ["SPRI", "SSTD", "SPAY"]]},
           {
             "if": [
-              {"!!": {"var": "fields.55"}},
-              {"==": [{"var": "fields.55.option"}, "A"]},
-              true
+              {"or": [
+                {"exists": ["fields", "55", "A"]},
+                {"!": {"exists": ["fields", "55"]}}
+              ]},
+              true,
+              false
             ]
           },
           true
@@ -509,8 +514,8 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "If field 56a is present, field 57a must also be present",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.56"}},
-          {"!!": {"var": "fields.57"}},
+          {"exists": ["fields", "56"]},
+          {"exists": ["fields", "57"]},
           true
         ]
       }
@@ -523,7 +528,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
           {
             "if": [
               {"==": [{"var": "fields.23B.instruction_code"}, "SPRI"]},
-              {"!": {"var": "fields.56"}},
+              {"!": {"exists": ["fields", "56"]}},
               true
             ]
           },
@@ -531,9 +536,16 @@ const MT103_VALIDATION_RULES: &str = r#"{
             "if": [
               {"and": [
                 {"in": [{"var": "fields.23B.instruction_code"}, ["SSTD", "SPAY"]]},
-                {"!!": {"var": "fields.56"}}
+                {"or": [
+                  {"exists": ["fields", "56", "A"]},
+                  {"exists": ["fields", "56", "C"]},
+                  {"exists": ["fields", "56", "D"]}
+                ]}
               ]},
-              {"in": [{"var": "fields.56.option"}, ["A", "C"]]},
+              {"or": [
+                {"exists": ["fields", "56", "A"]},
+                {"exists": ["fields", "56", "C"]}
+              ]},
               true
             ]
           }
@@ -547,14 +559,23 @@ const MT103_VALIDATION_RULES: &str = r#"{
         "if": [
           {"and": [
             {"in": [{"var": "fields.23B.instruction_code"}, ["SPRI", "SSTD", "SPAY"]]},
-            {"!!": {"var": "fields.57"}}
+            {"or": [
+              {"exists": ["fields", "57", "A"]},
+              {"exists": ["fields", "57", "B"]},
+              {"exists": ["fields", "57", "C"]},
+              {"exists": ["fields", "57", "D"]}
+            ]}
           ]},
           {"and": [
-            {"in": [{"var": "fields.57.option"}, ["A", "C", "D"]]},
+            {"or": [
+              {"exists": ["fields", "57", "A"]},
+              {"exists": ["fields", "57", "C"]},
+              {"exists": ["fields", "57", "D"]}
+            ]},
             {
               "if": [
-                {"==": [{"var": "fields.57.option"}, "D"]},
-                {"!!": {"var": "fields.57.party_identifier"}},
+                {"exists": ["fields", "57", "D"]},
+                {"exists": ["fields", "57", "D", "party_identifier"]},
                 true
               ]
             }
@@ -569,7 +590,11 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"in": [{"var": "fields.23B.instruction_code"}, ["SPRI", "SSTD", "SPAY"]]},
-          {"!!": {"var": "fields.59.account"}},
+          {"or": [
+            {"exists": ["fields", "59", "A", "account"]},
+            {"exists": ["fields", "59", "NoOption", "account"]},
+            {"exists": ["fields", "59", "F", "party_identifier"]}
+          ]},
           true
         ]
       }
@@ -580,7 +605,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"and": [
-            {"!!": {"var": "fields.23E"}},
+            {"exists": ["fields", "23E"]},
             {
               "some": [
                 {"var": "fields.23E"},
@@ -588,7 +613,10 @@ const MT103_VALIDATION_RULES: &str = r#"{
               ]
             }
           ]},
-          {"!": {"var": "fields.59.account"}},
+          {"and": [
+            {"!": {"exists": ["fields", "59", "A", "account"]}},
+            {"!": {"exists": ["fields", "59", "NoOption", "account"]}}
+          ]},
           true
         ]
       }
@@ -601,14 +629,14 @@ const MT103_VALIDATION_RULES: &str = r#"{
           {
             "if": [
               {"==": [{"var": "fields.71A.code"}, "OUR"]},
-              {"!": {"var": "fields.71F"}},
+              {"!": {"exists": ["fields", "71F"]}},
               true
             ]
           },
           {
             "if": [
               {"==": [{"var": "fields.71A.code"}, "SHA"]},
-              {"!": {"var": "fields.71G"}},
+              {"!": {"exists": ["fields", "71G"]}},
               true
             ]
           },
@@ -616,9 +644,9 @@ const MT103_VALIDATION_RULES: &str = r#"{
             "if": [
               {"==": [{"var": "fields.71A.code"}, "BEN"]},
               {"and": [
-                {"!!": {"var": "fields.71F"}},
+                {"exists": ["fields", "71F"]},
                 {">": [{"var": "fields.71F.length"}, 0]},
-                {"!": {"var": "fields.71G"}}
+                {"!": {"exists": ["fields", "71G"]}}
               ]},
               true
             ]
@@ -632,10 +660,10 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"or": [
-            {"!!": {"var": "fields.71F"}},
-            {"!!": {"var": "fields.71G"}}
+            {"exists": ["fields", "71F"]},
+            {"exists": ["fields", "71G"]}
           ]},
-          {"!!": {"var": "fields.33B"}},
+          {"exists": ["fields", "33B"]},
           true
         ]
       }
@@ -645,10 +673,10 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "If field 56a is not present, no field 23E may contain TELI or PHOI",
       "condition": {
         "if": [
-          {"!": {"var": "fields.56"}},
+          {"!": {"exists": ["fields", "56"]}},
           {
             "if": [
-              {"!!": {"var": "fields.23E"}},
+              {"exists": ["fields", "23E"]},
               {
                 "none": [
                   {"var": "fields.23E"},
@@ -667,10 +695,10 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "If field 57a is not present, no field 23E may contain TELE or PHON",
       "condition": {
         "if": [
-          {"!": {"var": "fields.57"}},
+          {"!": {"exists": ["fields", "57"]}},
           {
             "if": [
-              {"!!": {"var": "fields.23E"}},
+              {"exists": ["fields", "23E"]},
               {
                 "none": [
                   {"var": "fields.23E"},
@@ -689,7 +717,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "The currency code in the fields 71G and 32A must be the same",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.71G"}},
+          {"exists": ["fields", "71G"]},
           {"==": [{"var": "fields.71G.currency"}, {"var": "fields.32A.currency"}]},
           true
         ]
@@ -700,7 +728,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "23E instruction codes must be valid when present",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.23E"}},
+          {"exists": ["fields", "23E"]},
           {
             "all": [
               {"var": "fields.23E"},
@@ -719,14 +747,14 @@ const MT103_VALIDATION_RULES: &str = r#"{
           {">": [{"var": "fields.32A.amount"}, 0]},
           {
             "if": [
-              {"!!": {"var": "fields.33B"}},
+              {"exists": ["fields", "33B"]},
               {">": [{"var": "fields.33B.amount"}, 0]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71F"}},
+              {"exists": ["fields", "71F"]},
               {
                 "all": [
                   {"var": "fields.71F"},
@@ -738,7 +766,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.71G"}},
+              {"exists": ["fields", "71G"]},
               {">": [{"var": "fields.71G.amount"}, 0]},
               true
             ]
@@ -754,14 +782,14 @@ const MT103_VALIDATION_RULES: &str = r#"{
           {"!=": [{"var": "fields.32A.currency"}, ""]},
           {
             "if": [
-              {"!!": {"var": "fields.33B"}},
+              {"exists": ["fields", "33B"]},
               {"!=": [{"var": "fields.33B.currency"}, ""]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71F"}},
+              {"exists": ["fields", "71F"]},
               {
                 "all": [
                   {"var": "fields.71F"},
@@ -773,7 +801,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.71G"}},
+              {"exists": ["fields", "71G"]},
               {"!=": [{"var": "fields.71G.currency"}, ""]},
               true
             ]
@@ -800,21 +828,42 @@ const MT103_VALIDATION_RULES: &str = r#"{
           {"!=": [{"var": "application_header.receiver_bic"}, ""]},
           {
             "if": [
-              {"!!": {"var": "fields.52.A"}},
+              {"exists": ["fields", "52", "A"]},
               {"!=": [{"var": "fields.52.A.bic"}, ""]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.53.A"}},
+              {"exists": ["fields", "53", "A"]},
               {"!=": [{"var": "fields.53.A.bic"}, ""]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.57.A"}},
+              {"exists": ["fields", "54", "A"]},
+              {"!=": [{"var": "fields.54.A.bic"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"exists": ["fields", "55", "A"]},
+              {"!=": [{"var": "fields.55.A.bic"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"exists": ["fields", "56", "A"]},
+              {"!=": [{"var": "fields.56.A.bic"}, ""]},
+              true
+            ]
+          },
+          {
+            "if": [
+              {"exists": ["fields", "57", "A"]},
               {"!=": [{"var": "fields.57.A.bic"}, ""]},
               true
             ]
@@ -827,7 +876,7 @@ const MT103_VALIDATION_RULES: &str = r#"{
       "description": "REMIT: If 77T is present, it must contain valid structured remittance information",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.77T"}},
+          {"exists": ["fields", "77T"]},
           {"and": [
             {"!=": [{"var": "fields.77T.envelope_content"}, ""]}
           ]},

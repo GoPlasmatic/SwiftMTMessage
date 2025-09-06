@@ -140,8 +140,8 @@ const MT920_VALIDATION_RULES: &str = r#"{
               {"==": [{"var": "12.value"}, "942"]},
               {
                 "or": [
-                  {"!!": {"var": "34F#1"}},
-                  {"!!": {"var": "34F#2"}}
+                  {"exists": ["fields", "34F#1"]},
+                  {"exists": ["fields", "34F#2"]}
                 ]
               },
               true
@@ -160,8 +160,8 @@ const MT920_VALIDATION_RULES: &str = r#"{
             "if": [
               {
                 "and": [
-                  {"!!": {"var": "34F#1"}},
-                  {"!!": {"var": "34F#2"}}
+                  {"exists": ["fields", "34F#1"]},
+                  {"exists": ["fields", "34F#2"]}
                 ]
               },
               {
@@ -176,14 +176,14 @@ const MT920_VALIDATION_RULES: &str = r#"{
                     "or": [
                       {
                         "and": [
-                          {"!!": {"var": "34F#1"}},
-                          {"!": {"!!": {"var": "34F#2"}}}
+                          {"exists": ["fields", "34F#1"]},
+                          {"!": {"exists": ["fields", "34F#2"]}}
                         ]
                       },
                       {
                         "and": [
-                          {"!": {"!!": {"var": "34F#1"}}},
-                          {"!!": {"var": "34F#2"}}
+                          {"!": {"exists": ["fields", "34F#1"]}},
+                          {"exists": ["fields", "34F#2"]}
                         ]
                       }
                     ]
@@ -192,14 +192,14 @@ const MT920_VALIDATION_RULES: &str = r#"{
                     "or": [
                       {
                         "and": [
-                          {"!!": {"var": "34F#1"}},
-                          {"!": {"!!": {"var": "34F#1.indicator"}}}
+                          {"exists": ["fields", "34F#1"]},
+                          {"!": {"exists": ["fields", "34F#1", "indicator"]}}
                         ]
                       },
                       {
                         "and": [
-                          {"!!": {"var": "34F#2"}},
-                          {"!": {"!!": {"var": "34F#2.indicator"}}}
+                          {"exists": ["fields", "34F#2"]},
+                          {"!": {"exists": ["fields", "34F#2", "indicator"]}}
                         ]
                       }
                     ]
@@ -222,8 +222,8 @@ const MT920_VALIDATION_RULES: &str = r#"{
             "if": [
               {
                 "and": [
-                  {"!!": {"var": "34F#1"}},
-                  {"!!": {"var": "34F#2"}}
+                  {"exists": ["fields", "34F#1"]},
+                  {"exists": ["fields", "34F#2"]}
                 ]
               },
               {"==": [

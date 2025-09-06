@@ -156,8 +156,8 @@ const MT935_VALIDATION_RULES: &str = r#"{
           {"var": "fields.#"},
           {
             "and": [
-              {"!!": {"var": "23"}},
-              {"!!": {"var": "25"}}
+              {"exists": ["fields", "23"]},
+              {"exists": ["fields", "25"]}
             ]
           }
         ]

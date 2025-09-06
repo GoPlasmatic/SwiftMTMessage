@@ -175,11 +175,11 @@ const MT940_VALIDATION_RULES: &str = r#"{
       "description": "If field 64 is present, field 60F must also be present, and field 62F must also be present",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.64"}},
+          {"exists": ["fields", "64"]},
           {
             "and": [
-              {"!!": {"var": "fields.60"}},
-              {"!!": {"var": "fields.62"}}
+              {"exists": ["fields", "60"]},
+              {"exists": ["fields", "62"]}
             ]
           },
           true

@@ -136,8 +136,8 @@ const MT910_VALIDATION_RULES: &str = r#"{
       "description": "Either field 50a or field 52a must be present",
       "condition": {
         "or": [
-          {"!!": {"var": "fields.50"}},
-          {"!!": {"var": "fields.52"}}
+          {"exists": ["fields", "50"]},
+          {"exists": ["fields", "52"]}
         ]
       }
     }

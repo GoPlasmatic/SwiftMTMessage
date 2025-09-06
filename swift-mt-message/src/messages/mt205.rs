@@ -218,8 +218,8 @@ const MT205_VALIDATION_RULES: &str = r#"{
 			"description": "If field 56a is present, then field 57a must also be present",
 			"condition": {
 				"if": [
-					{"!!": {"var": "fields.56"}},
-					{"!!": {"var": "fields.57"}},
+					{"exists": ["fields", "56"]},
+					{"exists": ["fields", "57"]},
 					true
 				]
 			}
@@ -229,8 +229,8 @@ const MT205_VALIDATION_RULES: &str = r#"{
 			"description": "If field 56a is present in Sequence B, then field 57a must also be present",
 			"condition": {
 				"if": [
-					{"!!": {"var": "fields.56#b"}},
-					{"!!": {"var": "fields.57#b"}},
+					{"exists": ["fields", "56#b"]},
+					{"exists": ["fields", "57#b"]},
 					true
 				]
 			}
@@ -241,12 +241,12 @@ const MT205_VALIDATION_RULES: &str = r#"{
 			"condition": {
 				"if": [
 					{"or": [
-						{"!!": {"var": "fields.50#b"}},
-						{"!!": {"var": "fields.59#b"}}
+						{"exists": ["fields", "50#b"]},
+						{"exists": ["fields", "59#b"]}
 					]},
 					{"and": [
-						{"!!": {"var": "fields.50#b"}},
-						{"!!": {"var": "fields.59#b"}}
+						{"exists": ["fields", "50#b"]},
+						{"exists": ["fields", "59#b"]}
 					]},
 					true
 				]

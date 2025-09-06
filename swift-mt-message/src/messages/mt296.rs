@@ -137,7 +137,7 @@ const MT296_VALIDATION_RULES: &str = r#"{
       "id": "C1",
       "description": "Only one of the following may be present: Field 79, or a copy of mandatory fields of the original message",
       "condition": {
-        "!": {"!!": {"var": "fields.79"}}
+        "!": {"exists": ["fields", "79"]}
       }
     }
   ]

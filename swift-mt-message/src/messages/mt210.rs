@@ -126,24 +126,24 @@ pub struct MT210Sequence {
 }
 
 /// Validation rules for MT210 - Notice to Receive
-const MT210_VALIDATION_RULES: &str = r#"{
+const MT210_VALIDATION_RULES: &str = r##"{
   "rules": [
     {
       "id": "C1",
       "description": "The repetitive sequence (fields 50a-32B) must not appear more than 10 times",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.#"}},
+          {"exists": ["fields", "#"]},
           {"<=": [{"length": {"var": "fields.#"}}, 10]},
           true
         ]
       }
     }
   ]
-}"#;
+}"##;
 
 /// Validation rules for MT210Sequence - Individual sequence validation
-const MT210_SEQUENCE_VALIDATION_RULES: &str = r#"{
+const MT210_SEQUENCE_VALIDATION_RULES: &str = r##"{
   "rules": [
     {
       "id": "C2",
@@ -152,18 +152,18 @@ const MT210_SEQUENCE_VALIDATION_RULES: &str = r#"{
         "or": [
           {
             "and": [
-              {"!!": {"var": "fields.50"}},
-              {"!": {"!!": {"var": "fields.52"}}}
+              {"exists": ["fields", "50"]},
+              {"!": {"exists": ["fields", "52"]}}
             ]
           },
           {
             "and": [
-              {"!": {"!!": {"var": "fields.50"}}},
-              {"!!": {"var": "fields.52"}}
+              {"!": {"exists": ["fields", "50"]}},
+              {"exists": ["fields", "52"]}
             ]
           }
         ]
       }
     }
   ]
-}"#;
+}"##;

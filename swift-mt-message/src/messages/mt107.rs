@@ -248,11 +248,11 @@ const MT107_VALIDATION_RULES: &str = r#"{
         "and": [
           {
             "if": [
-              {"!!": {"var": "fields.23E"}},
+              {"exists": ["fields", "23E"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!": {"var": "23E"}}
+                  {"!": {"exists": ["fields", "23E"]}}
                 ]
               },
               true
@@ -260,11 +260,11 @@ const MT107_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.50#2"}},
+              {"exists": ["fields", "50#2"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!": {"var": "50#2"}}
+                  {"!": {"exists": ["fields", "50#2"]}}
                 ]
               },
               true
@@ -280,43 +280,43 @@ const MT107_VALIDATION_RULES: &str = r#"{
         "and": [
           {
             "if": [
-              {"!!": {"var": "fields.21E"}},
-              {"all": [{"var": "fields.#"}, {"!": {"var": "21E"}}]},
+              {"exists": ["fields", "21E"]},
+              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "21E"]}}]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.26T"}},
-              {"all": [{"var": "fields.#"}, {"!": {"var": "26T"}}]},
+              {"exists": ["fields", "26T"]},
+              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "26T"]}}]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.77B"}},
-              {"all": [{"var": "fields.#"}, {"!": {"var": "77B"}}]},
+              {"exists": ["fields", "77B"]},
+              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "77B"]}}]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71A"}},
-              {"all": [{"var": "fields.#"}, {"!": {"var": "71A"}}]},
+              {"exists": ["fields", "71A"]},
+              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "71A"]}}]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.52"}},
-              {"all": [{"var": "fields.#"}, {"!": {"var": "52"}}]},
+              {"exists": ["fields", "52"]},
+              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "52"]}}]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.50#1"}},
-              {"all": [{"var": "fields.#"}, {"!": {"var": "50#1"}}]},
+              {"exists": ["fields", "50#1"]},
+              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "50#1"]}}]},
               true
             ]
           }
@@ -330,8 +330,8 @@ const MT107_VALIDATION_RULES: &str = r#"{
         "and": [
           {
             "if": [
-              {"!!": {"var": "fields.21E"}},
-              {"!!": {"var": "fields.50#2"}},
+              {"exists": ["fields", "21E"]},
+              {"exists": ["fields", "50#2"]},
               true
             ]
           },
@@ -340,8 +340,8 @@ const MT107_VALIDATION_RULES: &str = r#"{
               {"var": "fields.#"},
               {
                 "if": [
-                  {"!!": {"var": "21E"}},
-                  {"!!": {"var": "50#2"}},
+                  {"exists": ["fields", "21E"]},
+                  {"exists": ["fields", "50#2"]},
                   true
                 ]
               }
@@ -356,11 +356,11 @@ const MT107_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"and": [
-            {"!!": {"var": "fields.23E"}},
+            {"exists": ["fields", "23E"]},
             {"==": [{"var": "fields.23E.instruction_code"}, "RTND"]}
           ]},
-          {"!!": {"var": "fields.72"}},
-          {"!": {"var": "fields.72"}}
+          {"exists": ["fields", "72"]},
+          {"!": {"exists": ["fields", "72"]}}
         ]
       }
     },
@@ -371,29 +371,29 @@ const MT107_VALIDATION_RULES: &str = r#"{
         "and": [
           {
             "if": [
-              {"some": [{"var": "fields.#"}, {"!!": {"var": "71F"}}]},
-              {"!!": {"var": "fields.71F"}},
+              {"some": [{"var": "fields.#"}, {"exists": ["fields", "71F"]}]},
+              {"exists": ["fields", "71F"]},
               true
             ]
           },
           {
             "if": [
-              {"some": [{"var": "fields.#"}, {"!!": {"var": "71G"}}]},
-              {"!!": {"var": "fields.71G"}},
+              {"some": [{"var": "fields.#"}, {"exists": ["fields", "71G"]}]},
+              {"exists": ["fields", "71G"]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71F"}},
-              {"some": [{"var": "fields.#"}, {"!!": {"var": "71F"}}]},
+              {"exists": ["fields", "71F"]},
+              {"some": [{"var": "fields.#"}, {"exists": ["fields", "71F"]}]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71G"}},
-              {"some": [{"var": "fields.#"}, {"!!": {"var": "71G"}}]},
+              {"exists": ["fields", "71G"]},
+              {"some": [{"var": "fields.#"}, {"exists": ["fields", "71G"]}]},
               true
             ]
           }
@@ -408,7 +408,7 @@ const MT107_VALIDATION_RULES: &str = r#"{
           {"var": "fields.#"},
           {
             "if": [
-              {"!!": {"var": "33B"}},
+              {"exists": ["fields", "33B"]},
               {
                 "or": [
                   {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
@@ -429,12 +429,12 @@ const MT107_VALIDATION_RULES: &str = r#"{
           {"var": "fields.#"},
           {
             "if": [
-              {"!!": {"var": "33B"}},
+              {"exists": ["fields", "33B"]},
               {
                 "if": [
                   {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
-                  {"!!": {"var": "36"}},
-                  {"!": {"var": "36"}}
+                  {"exists": ["fields", "36"]},
+                  {"!": {"exists": ["fields", "36"]}}
                 ]
               },
               true
@@ -450,8 +450,8 @@ const MT107_VALIDATION_RULES: &str = r#"{
         "or": [
           {
             "and": [
-              {"!!": {"var": "fields.32B"}},
-              {"!": {"var": "fields.19"}},
+              {"exists": ["fields", "32B"]},
+              {"!": {"exists": ["fields", "19"]}},
               {
                 "==": [
                   {"var": "fields.32B.amount"},
@@ -468,8 +468,8 @@ const MT107_VALIDATION_RULES: &str = r#"{
           },
           {
             "and": [
-              {"!!": {"var": "fields.19"}},
-              {"!": {"var": "fields.32B"}},
+              {"exists": ["fields", "19"]},
+              {"!": {"exists": ["fields", "32B"]}},
               {
                 "==": [
                   {"var": "fields.19.amount"},
@@ -486,8 +486,8 @@ const MT107_VALIDATION_RULES: &str = r#"{
           },
           {
             "and": [
-              {"!": {"var": "fields.32B"}},
-              {"!": {"var": "fields.19"}}
+              {"!": {"exists": ["fields", "32B"]}},
+              {"!": {"exists": ["fields", "19"]}}
             ]
           }
         ]
@@ -500,7 +500,7 @@ const MT107_VALIDATION_RULES: &str = r#"{
         "and": [
           {
             "if": [
-              {"and": [{"!!": {"var": "fields.32B"}}, {">=": [{"length": {"var": "fields.#"}}, 1]}]},
+              {"and": [{"exists": ["fields", "32B"]}, {">=": [{"length": {"var": "fields.#"}}, 1]}]},
               {
                 "all": [
                   {"var": "fields.#"},
@@ -512,13 +512,13 @@ const MT107_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"and": [{"!!": {"var": "fields.71F"}}, {"some": [{"var": "fields.#"}, {"!!": {"var": "71F"}}]}]},
+              {"and": [{"exists": ["fields", "71F"]}, {"some": [{"var": "fields.#"}, {"exists": ["fields", "71F"]}]}]},
               {
                 "all": [
                   {"var": "fields.#"},
                   {
                     "if": [
-                      {"!!": {"var": "71F"}},
+                      {"exists": ["fields", "71F"]},
                       {"==": [{"var": "71F.currency"}, {"var": "fields.71F.currency"}]},
                       true
                     ]
@@ -530,13 +530,13 @@ const MT107_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"and": [{"!!": {"var": "fields.71G"}}, {"some": [{"var": "fields.#"}, {"!!": {"var": "71G"}}]}]},
+              {"and": [{"exists": ["fields", "71G"]}, {"some": [{"var": "fields.#"}, {"exists": ["fields", "71G"]}]}]},
               {
                 "all": [
                   {"var": "fields.#"},
                   {
                     "if": [
-                      {"!!": {"var": "71G"}},
+                      {"exists": ["fields", "71G"]},
                       {"==": [{"var": "71G.currency"}, {"var": "fields.71G.currency"}]},
                       true
                     ]
@@ -590,21 +590,21 @@ const MT107_VALIDATION_RULES: &str = r#"{
                   {"!=": [{"var": "32B.currency"}, ""]},
                   {
                     "if": [
-                      {"!!": {"var": "33B"}},
+                      {"exists": ["fields", "33B"]},
                       {"!=": [{"var": "33B.currency"}, ""]},
                       true
                     ]
                   },
                   {
                     "if": [
-                      {"!!": {"var": "71F"}},
+                      {"exists": ["fields", "71F"]},
                       {"!=": [{"var": "71F.currency"}, ""]},
                       true
                     ]
                   },
                   {
                     "if": [
-                      {"!!": {"var": "71G"}},
+                      {"exists": ["fields", "71G"]},
                       {"!=": [{"var": "71G.currency"}, ""]},
                       true
                     ]
@@ -615,21 +615,21 @@ const MT107_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.32B"}},
+              {"exists": ["fields", "32B"]},
               {"!=": [{"var": "fields.32B.currency"}, ""]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71F"}},
+              {"exists": ["fields", "71F"]},
               {"!=": [{"var": "fields.71F.currency"}, ""]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71G"}},
+              {"exists": ["fields", "71G"]},
               {"!=": [{"var": "fields.71G.currency"}, ""]},
               true
             ]
@@ -650,21 +650,21 @@ const MT107_VALIDATION_RULES: &str = r#"{
                   {">": [{"var": "32B.amount"}, -1]},
                   {
                     "if": [
-                      {"!!": {"var": "33B"}},
+                      {"exists": ["fields", "33B"]},
                       {">": [{"var": "33B.amount"}, -1]},
                       true
                     ]
                   },
                   {
                     "if": [
-                      {"!!": {"var": "71F"}},
+                      {"exists": ["fields", "71F"]},
                       {">": [{"var": "71F.amount"}, -1]},
                       true
                     ]
                   },
                   {
                     "if": [
-                      {"!!": {"var": "71G"}},
+                      {"exists": ["fields", "71G"]},
                       {">": [{"var": "71G.amount"}, -1]},
                       true
                     ]
@@ -675,28 +675,28 @@ const MT107_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.32B"}},
+              {"exists": ["fields", "32B"]},
               {">": [{"var": "fields.32B.amount"}, -1]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.19"}},
+              {"exists": ["fields", "19"]},
               {">": [{"var": "fields.19.amount"}, -1]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71F"}},
+              {"exists": ["fields", "71F"]},
               {">": [{"var": "fields.71F.amount"}, -1]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71G"}},
+              {"exists": ["fields", "71G"]},
               {">": [{"var": "fields.71G.amount"}, -1]},
               true
             ]
@@ -709,7 +709,7 @@ const MT107_VALIDATION_RULES: &str = r#"{
       "description": "Requested execution date must be valid",
       "condition": {
         "and": [
-          {"!!": {"var": "fields.30"}},
+          {"exists": ["fields", "30"]},
           {"!=": [{"var": "fields.30.execution_date"}, ""]}
         ]
       }

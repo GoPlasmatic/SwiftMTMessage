@@ -133,24 +133,24 @@ const MT950_VALIDATION_RULES: &str = r#"{
           {"==": [
             {"substr": [
               {"if": [
-                {"!!": {"var": "fields.60.F"}},
+                {"exists": ["fields", "60", "F"]},
                 {"var": "fields.60.F.currency"},
                 {"var": "fields.60.M.currency"}
               ]}, 0, 2]},
             {"substr": [
               {"if": [
-                {"!!": {"var": "fields.62.F"}},
+                {"exists": ["fields", "62", "F"]},
                 {"var": "fields.62.F.currency"},
                 {"var": "fields.62.M.currency"}
               ]}, 0, 2]}
           ]},
           {
             "if": [
-              {"!!": {"var": "fields.64"}},
+              {"exists": ["fields", "64"]},
               {"==": [
                 {"substr": [
                   {"if": [
-                    {"!!": {"var": "fields.60.F"}},
+                    {"exists": ["fields", "60", "F"]},
                     {"var": "fields.60.F.currency"},
                     {"var": "fields.60.M.currency"}
                   ]}, 0, 2]},

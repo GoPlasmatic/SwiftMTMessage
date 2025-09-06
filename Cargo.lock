@@ -565,7 +565,7 @@ checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 
 [[package]]
 name = "swift-mt-message"
-version = "3.0.8"
+version = "3.0.9"
 dependencies = [
  "chrono",
  "datafake-rs",
@@ -582,7 +582,7 @@ dependencies = [
 
 [[package]]
 name = "swift-mt-message-macros"
-version = "3.0.8"
+version = "3.0.9"
 dependencies = [
  "datalogic-rs",
  "once_cell",

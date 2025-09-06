@@ -217,14 +217,14 @@ const MT104_VALIDATION_RULES: &str = r#"{
       "description": "If field 23E is present in sequence A and contains RFDD then field 23E must be present in all occurrences of sequence B. If field 23E is present in sequence A and does not contain RFDD then field 23E must not be present in any occurrence of sequence B. If field 23E is not present in sequence A then field 23E must be present in all occurrences of sequence B",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.23E"}},
+          {"exists": ["fields", "23E"]},
           {
             "if": [
               {"==": [{"var": "fields.23E.instruction_code"}, "RFDD"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!!": {"var": "23E"}}
+                  {"var": "23E"}
                 ]
               },
               {
@@ -238,7 +238,7 @@ const MT104_VALIDATION_RULES: &str = r#"{
           {
             "all": [
               {"var": "fields.#"},
-              {"!!": {"var": "23E"}}
+              {"var": "23E"}
             ]
           }
         ]
@@ -252,8 +252,8 @@ const MT104_VALIDATION_RULES: &str = r#"{
           {
             "and": [
               {"or": [
-                {"!!": {"var": "fields.50#2.A"}},
-                {"!!": {"var": "fields.50#2.K"}}
+                {"exists": ["fields", "50", "A"]},
+                {"exists": ["fields", "50", "K"]}
               ]},
               {
                 "all": [
@@ -272,8 +272,8 @@ const MT104_VALIDATION_RULES: &str = r#"{
             "and": [
               {
                 "and": [
-                  {"!": {"var": "fields.50#2.A"}},
-                  {"!": {"var": "fields.50#2.K"}}
+                  {"!": {"exists": ["fields", "50", "A"]}},
+                  {"!": {"exists": ["fields", "50", "K"]}}
                 ]
               },
               {
@@ -281,8 +281,8 @@ const MT104_VALIDATION_RULES: &str = r#"{
                   {"var": "fields.#"},
                   {
                     "or": [
-                      {"!!": {"var": "50#2.A"}},
-                      {"!!": {"var": "50#2.K"}}
+                      {"var": "50#2.A"},
+                      {"var": "50#2.K"}
                     ]
                   }
                 ]
@@ -299,11 +299,11 @@ const MT104_VALIDATION_RULES: &str = r#"{
         "and": [
           {
             "if": [
-              {"!!": {"var": "fields.21E"}},
+              {"exists": ["fields", "21E"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!": {"var": "21E"}}
+                  {"!": {"exists": ["fields", "21E"]}}
                 ]
               },
               true
@@ -311,11 +311,11 @@ const MT104_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.26T"}},
+              {"exists": ["fields", "26T"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!": {"var": "26T"}}
+                  {"!": {"exists": ["fields", "26T"]}}
                 ]
               },
               true
@@ -323,11 +323,11 @@ const MT104_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.52"}},
+              {"exists": ["fields", "52"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!": {"var": "52"}}
+                  {"!": {"exists": ["fields", "52"]}}
                 ]
               },
               true
@@ -335,11 +335,11 @@ const MT104_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.71A"}},
+              {"exists": ["fields", "71A"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!": {"var": "71A"}}
+                  {"!": {"exists": ["fields", "71A"]}}
                 ]
               },
               true
@@ -347,11 +347,11 @@ const MT104_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.77B"}},
+              {"exists": ["fields", "77B"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!": {"var": "77B"}}
+                  {"!": {"exists": ["fields", "77B"]}}
                 ]
               },
               true
@@ -360,16 +360,16 @@ const MT104_VALIDATION_RULES: &str = r#"{
           {
             "if": [
               {"or": [
-                {"!!": {"var": "fields.50#1.C"}},
-                {"!!": {"var": "fields.50#1.L"}}
+                {"exists": ["fields", "50#1", "C"]},
+                {"exists": ["fields", "50#1", "L"]}
               ]},
               {
                 "all": [
                   {"var": "fields.#"},
                   {
                     "and": [
-                      {"!": {"var": "50#1.C"}},
-                      {"!": {"var": "50#1.L"}}
+                      {"!": {"exists": ["fields", "50#1", "C"]}},
+                      {"!": {"exists": ["fields", "50#1", "L"]}}
                     ]
                   }
                 ]
@@ -387,11 +387,11 @@ const MT104_VALIDATION_RULES: &str = r#"{
         "and": [
           {
             "if": [
-              {"!!": {"var": "fields.21E"}},
+              {"exists": ["fields", "21E"]},
               {
                 "or": [
-                  {"!!": {"var": "fields.50#2.A"}},
-                  {"!!": {"var": "fields.50#2.K"}}
+                  {"exists": ["fields", "50#2", "A"]},
+                  {"exists": ["fields", "50#2", "K"]}
                 ]
               },
               true
@@ -402,11 +402,11 @@ const MT104_VALIDATION_RULES: &str = r#"{
               {"var": "fields.#"},
               {
                 "if": [
-                  {"!!": {"var": "21E"}},
+                  {"exists": ["fields", "21E"]},
                   {
                     "or": [
-                      {"!!": {"var": "50#2.A"}},
-                      {"!!": {"var": "50#2.K"}}
+                      {"exists": ["fields", "50#2", "A"]},
+                      {"exists": ["fields", "50#2", "K"]}
                     ]
                   },
                   true
@@ -423,15 +423,15 @@ const MT104_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"and": [
-            {"!!": {"var": "fields.23E"}},
+            {"exists": ["fields", "23E"]},
             {"==": [{"var": "fields.23E.instruction_code"}, "RTND"]}
           ]},
-          {"!!": {"var": "fields.72"}},
+          {"exists": ["fields", "72"]},
           {
             "if": [
-              {"!!": {"var": "fields.23E"}},
-              {"!": {"var": "fields.72"}},
-              {"!": {"var": "fields.72"}}
+              {"exists": ["fields", "23E"]},
+              {"!": {"exists": ["fields", "72"]}},
+              {"!": {"exists": ["fields", "72"]}}
             ]
           }
         ]
@@ -447,17 +447,17 @@ const MT104_VALIDATION_RULES: &str = r#"{
               {
                 "some": [
                   {"var": "fields.#"},
-                  {"!!": {"var": "71F"}}
+                  {"exists": ["fields", "71F"]}
                 ]
               },
-              {"!!": {"var": "fields.71F"}},
+              {"exists": ["fields", "71F"]},
               {
                 "if": [
-                  {"!!": {"var": "fields.71F"}},
+                  {"exists": ["fields", "71F"]},
                   {
                     "some": [
                       {"var": "fields.#"},
-                      {"!!": {"var": "71F"}}
+                      {"exists": ["fields", "71F"]}
                     ]
                   },
                   true
@@ -470,17 +470,17 @@ const MT104_VALIDATION_RULES: &str = r#"{
               {
                 "some": [
                   {"var": "fields.#"},
-                  {"!!": {"var": "71G"}}
+                  {"exists": ["fields", "71G"]}
                 ]
               },
-              {"!!": {"var": "fields.71G"}},
+              {"exists": ["fields", "71G"]},
               {
                 "if": [
-                  {"!!": {"var": "fields.71G"}},
+                  {"exists": ["fields", "71G"]},
                   {
                     "some": [
                       {"var": "fields.#"},
-                      {"!!": {"var": "71G"}}
+                      {"exists": ["fields", "71G"]}
                     ]
                   },
                   true
@@ -499,7 +499,7 @@ const MT104_VALIDATION_RULES: &str = r#"{
           {"var": "fields.#"},
           {
             "if": [
-              {"!!": {"var": "33B"}},
+              {"exists": ["fields", "33B"]},
               {
                 "or": [
                   {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
@@ -520,15 +520,15 @@ const MT104_VALIDATION_RULES: &str = r#"{
           {"var": "fields.#"},
           {
             "if": [
-              {"!!": {"var": "33B"}},
+              {"exists": ["fields", "33B"]},
               {
                 "if": [
                   {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
-                  {"!!": {"var": "36"}},
+                  {"exists": ["fields", "36"]},
                   {
                     "if": [
                       {"==": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
-                      {"!": {"var": "36"}},
+                      {"!": {"exists": ["fields", "36"]}},
                       true
                     ]
                   }
@@ -545,7 +545,7 @@ const MT104_VALIDATION_RULES: &str = r#"{
       "description": "If sequence C is present and if the amount in field 32B of sequence C is equal to the sum of the amounts of the fields 32B of sequence B, then field 19 must not be present",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.32B"}},
+          {"exists": ["fields", "32B"]},
           {
             "if": [
               {"==": [
@@ -558,8 +558,8 @@ const MT104_VALIDATION_RULES: &str = r#"{
                   ]
                 }
               ]},
-              {"!": {"var": "fields.19"}},
-              {"!!": {"var": "fields.19"}}
+              {"!": {"exists": ["fields", "19"]}},
+              {"exists": ["fields", "19"]}
             ]
           },
           true
@@ -571,7 +571,7 @@ const MT104_VALIDATION_RULES: &str = r#"{
       "description": "If field 19 is present in sequence C then it must be equal to the sum of the amounts in all occurrences of field 32B in sequence B",
       "condition": {
         "if": [
-          {"!!": {"var": "fields.19"}},
+          {"exists": ["fields", "19"]},
           {"==": [
             {"var": "fields.19.amount"}, 
             {
@@ -597,7 +597,7 @@ const MT104_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"and": [
-            {"!!": {"var": "fields.23E"}},
+            {"exists": ["fields", "23E"]},
             {"==": [{"var": "fields.23E.instruction_code"}, "RFDD"]}
           ]},
           {
@@ -607,33 +607,33 @@ const MT104_VALIDATION_RULES: &str = r#"{
                   {"var": "fields.#"},
                   {
                     "and": [
-                      {"!": {"var": "21E"}},
-                      {"!": {"var": "50#2.A"}},
-                      {"!": {"var": "50#2.K"}},
-                      {"!": {"var": "52"}},
-                      {"!": {"var": "71F"}},
-                      {"!": {"var": "71G"}}
+                      {"!": {"exists": ["fields", "21E"]}},
+                      {"!": {"exists": ["fields", "50#2", "A"]}},
+                      {"!": {"exists": ["fields", "50#2", "K"]}},
+                      {"!": {"exists": ["fields", "52"]}},
+                      {"!": {"exists": ["fields", "71F"]}},
+                      {"!": {"exists": ["fields", "71G"]}}
                     ]
                   }
                 ]
               },
-              {"!": {"var": "fields.32B"}},
-              {"!": {"var": "fields.19"}},
-              {"!": {"var": "fields.71F"}},
-              {"!": {"var": "fields.71G"}},
-              {"!": {"var": "fields.53"}}
+              {"!": {"exists": ["fields", "32B"]}},
+              {"!": {"exists": ["fields", "19"]}},
+              {"!": {"exists": ["fields", "71F"]}},
+              {"!": {"exists": ["fields", "71G"]}},
+              {"!": {"exists": ["fields", "53"]}}
             ]
           },
           {
             "and": [
-              {"!": {"var": "fields.21R"}},
+              {"!": {"exists": ["fields", "21R"]}},
               {
                 "or": [
-                  {"!!": {"var": "fields.32B"}},
-                  {"!!": {"var": "fields.19"}},
-                  {"!!": {"var": "fields.71F"}},
-                  {"!!": {"var": "fields.71G"}},
-                  {"!!": {"var": "fields.53"}}
+                  {"exists": ["fields", "32B"]},
+                  {"exists": ["fields", "19"]},
+                  {"exists": ["fields", "71F"]},
+                  {"exists": ["fields", "71G"]},
+                  {"exists": ["fields", "53"]}
                 ]
               }
             ]
@@ -647,14 +647,14 @@ const MT104_VALIDATION_RULES: &str = r#"{
       "condition": {
         "if": [
           {"and": [
-            {"!!": {"var": "fields.23E"}},
+            {"exists": ["fields", "23E"]},
             {"==": [{"var": "fields.23E.instruction_code"}, "RFDD"]}
           ]},
           {"and": [
-            {"!!": {"var": "user_header.validation_flag"}},
+            {"exists": ["user_header", "validation_flag"]},
             {"==": [{"var": "user_header.validation_flag"}, "RFDD"]}
           ]},
-          {"!": {"var": "user_header.validation_flag"}}
+          {"!": {"exists": ["user_header", "validation_flag"]}}
         ]
       }
     },
@@ -676,21 +676,21 @@ const MT104_VALIDATION_RULES: &str = r#"{
                   {"!=": [{"var": "32B.currency"}, ""]},
                   {
                     "if": [
-                      {"!!": {"var": "33B"}},
+                      {"exists": ["fields", "33B"]},
                       {"!=": [{"var": "33B.currency"}, ""]},
                       true
                     ]
                   },
                   {
                     "if": [
-                      {"!!": {"var": "71F"}},
+                      {"exists": ["fields", "71F"]},
                       {"!=": [{"var": "71F.currency"}, ""]},
                       true
                     ]
                   },
                   {
                     "if": [
-                      {"!!": {"var": "71G"}},
+                      {"exists": ["fields", "71G"]},
                       {"!=": [{"var": "71G.currency"}, ""]},
                       true
                     ]
@@ -701,21 +701,21 @@ const MT104_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.32B"}},
+              {"exists": ["fields", "32B"]},
               {"!=": [{"var": "fields.32B.currency"}, ""]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71F"}},
+              {"exists": ["fields", "71F"]},
               {"!=": [{"var": "fields.71F.currency"}, ""]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71G"}},
+              {"exists": ["fields", "71G"]},
               {"!=": [{"var": "fields.71G.currency"}, ""]},
               true
             ]
@@ -736,21 +736,21 @@ const MT104_VALIDATION_RULES: &str = r#"{
                   {">": [{"var": "32B.amount"}, -1]},
                   {
                     "if": [
-                      {"!!": {"var": "33B"}},
+                      {"exists": ["fields", "33B"]},
                       {">": [{"var": "33B.amount"}, -1]},
                       true
                     ]
                   },
                   {
                     "if": [
-                      {"!!": {"var": "71F"}},
+                      {"exists": ["fields", "71F"]},
                       {">": [{"var": "71F.amount"}, -1]},
                       true
                     ]
                   },
                   {
                     "if": [
-                      {"!!": {"var": "71G"}},
+                      {"exists": ["fields", "71G"]},
                       {">": [{"var": "71G.amount"}, -1]},
                       true
                     ]
@@ -761,28 +761,28 @@ const MT104_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"!!": {"var": "fields.32B"}},
+              {"exists": ["fields", "32B"]},
               {">": [{"var": "fields.32B.amount"}, -1]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.19"}},
+              {"exists": ["fields", "19"]},
               {">": [{"var": "fields.19.amount"}, -1]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71F"}},
+              {"exists": ["fields", "71F"]},
               {">": [{"var": "fields.71F.amount"}, -1]},
               true
             ]
           },
           {
             "if": [
-              {"!!": {"var": "fields.71G"}},
+              {"exists": ["fields", "71G"]},
               {">": [{"var": "fields.71G.amount"}, -1]},
               true
             ]
@@ -816,7 +816,7 @@ const MT104_VALIDATION_RULES: &str = r#"{
       "description": "Requested execution date must be valid",
       "condition": {
         "and": [
-          {"!!": {"var": "fields.30"}},
+          {"exists": ["fields", "30"]},
           {"!=": [{"var": "fields.30.execution_date"}, ""]}
         ]
       }

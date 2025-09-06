@@ -153,7 +153,7 @@ pub const MT204_VALIDATION_RULES: &str = r##"{
             "description": "The repetitive sequence must not appear more than ten times",
             "condition": {
                 "if": [
-                    {"!!": {"var": "fields.#"}},
+                    {"exists": ["fields", "#"]},
                     {"<=": [{"length": {"var": "fields.#"}}, 10]},
                     true
                 ]

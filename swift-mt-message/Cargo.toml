@@ -1,6 +1,6 @@
 [package]
 name = "swift-mt-message"
-version = "3.0.10"
+version = "3.1.0"
 edition = "2024"
 exclude = [".DS_Store", "/target", ".vscode", ".github"]
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
@@ -16,7 +16,7 @@ categories = ["data-structures", "development-tools", "parsing"]
 # Macro crate
 swift-mt-message-macros = { version = "3.0.4", path = "../swift-mt-message-macros" }
 
-datafake-rs = "0.1"
+datafake-rs = "0.2"
 
 # Core serialization and parsing
 serde = { workspace = true }
@@ -33,4 +33,4 @@ datalogic-rs = { workspace = true }
 
 [dev-dependencies]
 pretty_assertions = "1.4"
-tempfile = "3.21"
+tempfile = "3.22"

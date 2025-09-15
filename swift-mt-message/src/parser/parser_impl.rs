@@ -327,7 +327,7 @@ impl SwiftParser {
         let trailer = block5.map(|b| Trailer::parse(&b)).transpose()?;
 
         // Extract message type from application header
-        let message_type = application_header.message_type.clone();
+        let message_type = application_header.message_type().to_string();
 
         // Validate message type matches expected type using SWIFT error codes
         if message_type != T::message_type() {
@@ -401,7 +401,7 @@ impl SwiftParser {
         let trailer = block5.map(|b| Trailer::parse(&b)).transpose()?;
 
         // Extract message type from application header
-        let message_type = application_header.message_type.clone();
+        let message_type = application_header.message_type().to_string();
 
         // Validate message type matches expected type using SWIFT error codes
         if message_type != T::message_type() {
@@ -470,10 +470,10 @@ impl SwiftParser {
 
         // Parse application header to get message type
         let application_header = ApplicationHeader::parse(&block2.unwrap_or_default())?;
-        let message_type = &application_header.message_type;
+        let message_type = application_header.message_type();
 
         // Route to appropriate parser based on message type
-        match message_type.as_str() {
+        match message_type {
             "101" => {
                 let parsed = self.parse_message::<MT101>(raw_message)?;
                 Ok(ParsedSwiftMessage::MT101(Box::new(parsed)))
@@ -595,7 +595,7 @@ impl SwiftParser {
                 Ok(ParsedSwiftMessage::MT299(Box::new(parsed)))
             }
             _ => Err(ParseError::UnsupportedMessageType {
-                message_type: message_type.clone(),
+                message_type: message_type.to_string(),
             }),
         }
     }

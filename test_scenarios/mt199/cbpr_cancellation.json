@@ -63,16 +63,16 @@
                     {"substr": [{"cat": ["CANCELLATION REASON CODE: ", {"var": "cancel_reason"}]}, 0, 50]},
                     "DETAILED REASON:",
                     { "if": [
-                        {"eq": [{"var": "cancel_reason"}, "CUST"]},
+                        {"==": [{"var": "cancel_reason"}, "CUST"]},
                         "CUSTOMER REQUESTED CANCELLATION",
                         { "if": [
-                            {"eq": [{"var": "cancel_reason"}, "DUPL"]},
+                            {"==": [{"var": "cancel_reason"}, "DUPL"]},
                             "DUPLICATE PAYMENT - PAYMENT SENT IN ERROR",
                             { "if": [
-                                {"eq": [{"var": "cancel_reason"}, "FRAD"]},
+                                {"==": [{"var": "cancel_reason"}, "FRAD"]},
                                 "SUSPECTED FRAUD - FLAGGED",
                                 { "if": [
-                                    {"eq": [{"var": "cancel_reason"}, "TECH"]},
+                                    {"==": [{"var": "cancel_reason"}, "TECH"]},
                                     "TECHNICAL ERROR - SYSTEM FAILURE",
                                     "AGENT ERROR - INCORRECT ROUTING OR PROCESSING"
                                 ]}

@@ -209,6 +209,102 @@ impl std::fmt::Display for BasicHeader {
     }
 }
 
+/// **Input Application Header: Message Sent to SWIFT Network**
+///
+/// ## Purpose
+/// Represents messages being sent to the SWIFT network for processing and delivery.
+/// Contains routing information, priority settings, and delivery monitoring options.
+///
+/// ## Format Specification
+/// - **Format**: `{2:I103DDDDDDDDDDDDP[M][OOO]}`
+/// - **Length**: 17-21 characters
+/// - **Components**: Direction (I) + Type + Destination + Priority + Optional monitoring/obsolescence
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct InputApplicationHeader {
+    /// Message type
+    ///
+    /// Format: 3!n - Three numeric digits
+    /// Examples: 103 (Customer Transfer), 202 (Bank Transfer), 940 (Statement)
+    pub message_type: String,
+
+    /// Destination address
+    ///
+    /// Format: 12!c - 12 alphanumeric characters
+    /// Structure: 8-char BIC + 1-char terminal + 3-char branch
+    pub destination_address: String,
+
+    /// Receiver BIC extracted from destination address
+    ///
+    /// Format: 8!c - First 8 characters of destination
+    pub receiver_bic: String,
+
+    /// Message priority
+    ///
+    /// Format: 1!a - Single alphabetic character
+    /// Values: U (Urgent), N (Normal), S (System)
+    pub priority: String,
+
+    /// Delivery monitoring option
+    ///
+    /// Format: 1!n - Single numeric digit
+    /// Values: 1 (Non-delivery warning), 2 (Delivery notification), 3 (Both)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub delivery_monitoring: Option<String>,
+
+    /// Obsolescence period
+    ///
+    /// Format: 3!n - Three numeric digits
+    /// Range: 003-999 (units of 5 minutes)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub obsolescence_period: Option<String>,
+}
+
+/// **Output Application Header: Message Delivered from SWIFT Network**
+///
+/// ## Purpose
+/// Represents messages delivered from the SWIFT network to the receiver.
+/// Contains complete Message Input Reference (MIR), timing information, and delivery confirmation.
+///
+/// ## Format Specification
+/// - **Format**: `{2:O103HHMMYYYYMMDDDDDDDDDDDDDDNNNNSSSSSSYYYYMMDDHHMMP}`
+/// - **Length**: 46-47 characters
+/// - **Components**: Direction (O) + Type + Input time + MIR + Output date/time + Priority
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct OutputApplicationHeader {
+    /// Message type
+    ///
+    /// Format: 3!n - Three numeric digits
+    /// Examples: 103 (Customer Transfer), 202 (Bank Transfer), 940 (Statement)
+    pub message_type: String,
+
+    /// Input time
+    ///
+    /// Format: HHMM - The hour and minute when the sender sent the message
+    pub input_time: String,
+
+    /// MIR (Message Input Reference)
+    ///
+    /// Complete MIR structure including date, LT address, session, and sequence
+    pub mir: MessageInputReference,
+
+    /// Output date
+    ///
+    /// Format: YYMMDD - The output date local to the receiver
+    pub output_date: String,
+
+    /// Output time
+    ///
+    /// Format: HHMM - The output time local to the receiver
+    pub output_time: String,
+
+    /// Message priority
+    ///
+    /// Format: 1!a - Single alphabetic character
+    /// Values: U (Urgent), N (Normal), S (System)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub priority: Option<String>,
+}
+
 /// **Application Header (Block 2): Message Type and Routing Information**
 ///
 /// ## Purpose
@@ -219,9 +315,9 @@ impl std::fmt::Display for BasicHeader {
 ///
 /// ## Format Specification
 /// - **Input Format**: `{2:I103DDDDDDDDDDDDP[M][OOO]}`
-/// - **Output Format**: `{2:O103HHMMDDDDDDDDDDDDYYYYMMDDHHMMNNNNNN}`
+/// - **Output Format**: `{2:O103HHMMYYYYMMDDDDDDDDDDDDDDNNNNSSSSSSYYYYMMDDHHMMP}`
 /// - **Direction Dependent**: Structure varies for input (I) vs output (O)
-/// - **Variable Length**: 18-21 characters for input, fixed for output
+/// - **Variable Length**: 17-21 characters for input, 46-47 for output
 ///
 /// ## Business Context Applications
 /// - **Message Classification**: Determines processing rules by message type
@@ -348,107 +444,206 @@ impl std::fmt::Display for BasicHeader {
 /// - Priority Guidelines: Best Practices for Priority Selection
 /// - Delivery Monitoring: Service Options and Usage
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct ApplicationHeader {
-    /// Message direction indicator
-    ///
-    /// Format: 1!a - Single alphabetic character
-    /// Values: I (Input to SWIFT), O (Output from SWIFT)
-    /// Determines message format and processing perspective
-    pub direction: String,
+#[serde(tag = "direction")]
+pub enum ApplicationHeader {
+    /// Input message sent to SWIFT network
+    #[serde(rename = "I")]
+    Input(InputApplicationHeader),
 
-    /// Message type
-    ///
-    /// Format: 3!n - Three numeric digits
-    /// Examples: 103 (Customer Transfer), 202 (Bank Transfer), 940 (Statement)
-    /// Determines validation rules and processing requirements
-    pub message_type: String,
-
-    /// Destination address
-    ///
-    /// Format: 12!c - 12 alphanumeric characters  
-    /// Structure: 8-char BIC + 1-char terminal + 3-char branch
-    /// Identifies the receiving terminal in SWIFT network
-    pub destination_address: String,
-
-    /// Receiver BIC extracted from destination address
-    ///
-    /// Format: 8!c - First 8 characters of destination
-    /// The receiving institution's Bank Identifier Code
-    pub receiver_bic: String,
-
-    /// Message priority
-    ///
-    /// Format: 1!a - Single alphabetic character
-    /// Values: U (Urgent), N (Normal), S (System)
-    /// Determines processing priority and delivery speed
-    pub priority: String,
-
-    /// Delivery monitoring option
-    ///
-    /// Format: 1!n - Single numeric digit (optional)
-    /// Values: 1 (Non-delivery warning), 3 (Delivery notification)
-    /// Specifies delivery confirmation requirements
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub delivery_monitoring: Option<String>,
-
-    /// Obsolescence period
-    ///
-    /// Format: 3!n - Three numeric digits (optional)
-    /// Range: 003-999 (units of 5 minutes)
-    /// Message validity timeout for automatic cancellation
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub obsolescence_period: Option<String>,
+    /// Output message delivered from SWIFT network
+    #[serde(rename = "O")]
+    Output(OutputApplicationHeader),
 }
 
 impl ApplicationHeader {
     /// Parse application header from block 2 string
     pub fn parse(block2: &str) -> Result<Self> {
-        if block2.len() < 17 {
+        if block2.len() < 4 {
             return Err(ParseError::InvalidBlockStructure {
                 block: "2".to_string(),
                 message: format!(
-                    "Block 2 too short: expected at least 18 characters, got {}",
+                    "Block 2 too short: expected at least 4 characters, got {}",
                     block2.len()
                 ),
             });
         }
 
-        let direction = block2[0..1].to_string();
+        let direction = &block2[0..1];
         let message_type = block2[1..4].to_string();
-        let destination_address = block2[4..16].to_string();
-        let priority = block2[16..17].to_string();
 
-        let delivery_monitoring = if block2.len() >= 18 {
-            Some(block2[17..18].to_string())
-        } else {
-            None
-        };
+        match direction {
+            "I" => {
+                // Input format: {2:I103DDDDDDDDDDDDP[M][OOO]}
+                // I + 103 + 12-char destination + priority + optional monitoring + optional obsolescence
+                if block2.len() < 17 {
+                    return Err(ParseError::InvalidBlockStructure {
+                        block: "2".to_string(),
+                        message: format!(
+                            "Input Block 2 too short: expected at least 17 characters, got {}",
+                            block2.len()
+                        ),
+                    });
+                }
 
-        let obsolescence_period = if block2.len() >= 21 {
-            Some(block2[18..21].to_string())
-        } else {
-            None
-        };
+                let destination_address = block2[4..16].to_string();
+                let priority = block2[16..17].to_string();
+                let receiver_bic = destination_address[0..8].to_string();
 
-        let receiver_bic = destination_address[0..8].to_string();
+                let delivery_monitoring = if block2.len() >= 18 {
+                    Some(block2[17..18].to_string())
+                } else {
+                    None
+                };
 
-        Ok(ApplicationHeader {
-            direction,
-            message_type,
-            destination_address,
-            receiver_bic,
-            priority,
-            delivery_monitoring,
-            obsolescence_period,
-        })
+                let obsolescence_period = if block2.len() >= 21 {
+                    Some(block2[18..21].to_string())
+                } else {
+                    None
+                };
+
+                Ok(ApplicationHeader::Input(InputApplicationHeader {
+                    message_type,
+                    destination_address,
+                    receiver_bic,
+                    priority,
+                    delivery_monitoring,
+                    obsolescence_period,
+                }))
+            }
+            "O" => {
+                // Output format: {2:O103HHMMYYYYMMDDDDDDDDDDDDDDNNNNSSSSSSYYYYMMDDHHMMP}
+                // Components:
+                // O (1) + message_type (3) + input_time (4) + mir (28) + output_date (6) + output_time (4) + priority (1)
+                // MIR consists of: date (6) + lt_address (12) + session (4) + sequence (6) = 28 chars
+                // Total: 1 + 3 + 4 + 28 + 6 + 4 = 46 characters minimum (priority optional)
+
+                if block2.len() < 46 {
+                    return Err(ParseError::InvalidBlockStructure {
+                        block: "2".to_string(),
+                        message: format!(
+                            "Output Block 2 too short: expected at least 46 characters, got {}",
+                            block2.len()
+                        ),
+                    });
+                }
+
+                // Parse Output format components according to SWIFT specification:
+                let input_time = block2[4..8].to_string(); // HHMM
+
+                // MIR (Message Input Reference) components
+                let mir_date = block2[8..14].to_string(); // YYMMDD
+                let mir_lt_address = block2[14..26].to_string(); // 12 characters (BIC8 + LT + Branch)
+                let mir_session = block2[26..30].to_string(); // 4 digits
+                let mir_sequence = block2[30..36].to_string(); // 6 digits
+
+                let output_date = block2[36..42].to_string(); // YYMMDD
+                let output_time = block2[42..46].to_string(); // HHMM
+
+                let priority = if block2.len() >= 47 {
+                    Some(block2[46..47].to_string())
+                } else {
+                    None
+                };
+
+                // Create MIR structure
+                let mir = MessageInputReference {
+                    date: mir_date,
+                    lt_identifier: mir_lt_address.clone(),
+                    branch_code: if mir_lt_address.len() >= 12 {
+                        mir_lt_address[9..12].to_string()
+                    } else {
+                        "XXX".to_string()
+                    },
+                    session_number: mir_session,
+                    sequence_number: mir_sequence,
+                };
+
+                Ok(ApplicationHeader::Output(OutputApplicationHeader {
+                    message_type,
+                    input_time,
+                    mir,
+                    output_date,
+                    output_time,
+                    priority,
+                }))
+            }
+            _ => Err(ParseError::InvalidBlockStructure {
+                block: "2".to_string(),
+                message: format!(
+                    "Invalid direction indicator: expected 'I' or 'O', got '{}'",
+                    direction
+                ),
+            }),
+        }
+    }
+
+    /// Get the message type regardless of direction
+    pub fn message_type(&self) -> &str {
+        match self {
+            ApplicationHeader::Input(header) => &header.message_type,
+            ApplicationHeader::Output(header) => &header.message_type,
+        }
+    }
+
+    /// Get the priority if available
+    pub fn priority(&self) -> Option<&str> {
+        match self {
+            ApplicationHeader::Input(header) => Some(&header.priority),
+            ApplicationHeader::Output(header) => header.priority.as_deref(),
+        }
     }
 }
 
 impl std::fmt::Display for ApplicationHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ApplicationHeader::Input(header) => {
+                // Input format: I + message_type + destination_address + priority [+ monitoring] [+ obsolescence]
+                let mut result = format!(
+                    "I{}{}{}",
+                    header.message_type, header.destination_address, header.priority
+                );
+
+                if let Some(ref delivery_monitoring) = header.delivery_monitoring {
+                    result.push_str(delivery_monitoring);
+                }
+
+                if let Some(ref obsolescence_period) = header.obsolescence_period {
+                    result.push_str(obsolescence_period);
+                }
+
+                write!(f, "{result}")
+            }
+            ApplicationHeader::Output(header) => {
+                // Output format: O + message_type + input_time + MIR + output_date + output_time + priority
+                // MIR = date + lt_address + session + sequence
+                let mut result = format!(
+                    "O{}{}{}{}{}{}{}{}",
+                    header.message_type,
+                    header.input_time,
+                    header.mir.date,
+                    header.mir.lt_identifier,
+                    header.mir.session_number,
+                    header.mir.sequence_number,
+                    header.output_date,
+                    header.output_time,
+                );
+
+                if let Some(ref priority) = header.priority {
+                    result.push_str(priority);
+                }
+
+                write!(f, "{result}")
+            }
+        }
+    }
+}
+
+impl std::fmt::Display for InputApplicationHeader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = format!(
-            "{}{}{}{}",
-            self.direction, self.message_type, self.destination_address, self.priority
+            "I{}{}{}",
+            self.message_type, self.destination_address, self.priority
         );
 
         if let Some(ref delivery_monitoring) = self.delivery_monitoring {
@@ -457,6 +652,28 @@ impl std::fmt::Display for ApplicationHeader {
 
         if let Some(ref obsolescence_period) = self.obsolescence_period {
             result.push_str(obsolescence_period);
+        }
+
+        write!(f, "{result}")
+    }
+}
+
+impl std::fmt::Display for OutputApplicationHeader {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut result = format!(
+            "O{}{}{}{}{}{}{}{}",
+            self.message_type,
+            self.input_time,
+            self.mir.date,
+            self.mir.lt_identifier,
+            self.mir.session_number,
+            self.mir.sequence_number,
+            self.output_date,
+            self.output_time,
+        );
+
+        if let Some(ref priority) = self.priority {
+            result.push_str(priority);
         }
 
         write!(f, "{result}")
@@ -1303,5 +1520,225 @@ impl std::fmt::Display for Trailer {
         }
 
         write!(f, "{result}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_application_header_input_parsing() {
+        // Test Input message format parsing
+        let block2 = "I103DEUTDEFFAXXXN";
+        let header = ApplicationHeader::parse(block2).unwrap();
+
+        match header {
+            ApplicationHeader::Input(input) => {
+                assert_eq!(input.message_type, "103");
+                assert_eq!(input.destination_address, "DEUTDEFFAXXX");
+                assert_eq!(input.receiver_bic, "DEUTDEFF");
+                assert_eq!(input.priority, "N");
+                assert_eq!(input.delivery_monitoring, None);
+                assert_eq!(input.obsolescence_period, None);
+            }
+            ApplicationHeader::Output(_) => panic!("Expected Input header, got Output"),
+        }
+    }
+
+    #[test]
+    fn test_application_header_input_parsing_with_monitoring() {
+        // Test Input message with delivery monitoring
+        let block2 = "I103DEUTDEFFAXXXU3003";
+        let header = ApplicationHeader::parse(block2).unwrap();
+
+        match header {
+            ApplicationHeader::Input(input) => {
+                assert_eq!(input.message_type, "103");
+                assert_eq!(input.destination_address, "DEUTDEFFAXXX");
+                assert_eq!(input.receiver_bic, "DEUTDEFF");
+                assert_eq!(input.priority, "U");
+                assert_eq!(input.delivery_monitoring, Some("3".to_string()));
+                assert_eq!(input.obsolescence_period, Some("003".to_string()));
+            }
+            ApplicationHeader::Output(_) => panic!("Expected Input header, got Output"),
+        }
+    }
+
+    #[test]
+    fn test_application_header_output_parsing() {
+        // Test Output message format parsing - the exact case from the issue
+        let block2 = "O1031535051028DEUTDEFFAXXX08264556280510281535N";
+        let header = ApplicationHeader::parse(block2).unwrap();
+
+        match header {
+            ApplicationHeader::Output(output) => {
+                assert_eq!(output.message_type, "103");
+                assert_eq!(output.input_time, "1535");
+                assert_eq!(output.output_date, "051028");
+                assert_eq!(output.output_time, "1535");
+                assert_eq!(output.priority, Some("N".to_string()));
+
+                // Check MIR structure
+                assert_eq!(output.mir.date, "051028");
+                assert_eq!(output.mir.lt_identifier, "DEUTDEFFAXXX");
+                assert_eq!(output.mir.branch_code, "XXX");
+                assert_eq!(output.mir.session_number, "0826");
+                assert_eq!(output.mir.sequence_number, "455628");
+            }
+            ApplicationHeader::Input(_) => panic!("Expected Output header, got Input"),
+        }
+    }
+
+    #[test]
+    fn test_application_header_output_parsing_different_message_type() {
+        // Test another Output message format
+        let block2 = "O2021245051028CHASUS33AXXX08264556280510281245U";
+        let header = ApplicationHeader::parse(block2).unwrap();
+
+        match header {
+            ApplicationHeader::Output(output) => {
+                assert_eq!(output.message_type, "202");
+                assert_eq!(output.mir.lt_identifier, "CHASUS33AXXX");
+                assert_eq!(output.priority, Some("U".to_string()));
+            }
+            ApplicationHeader::Input(_) => panic!("Expected Output header, got Input"),
+        }
+    }
+
+    #[test]
+    fn test_application_header_invalid_direction() {
+        let block2 = "X103DEUTDEFFAXXXN";
+        let result = ApplicationHeader::parse(block2);
+
+        assert!(result.is_err());
+        if let Err(ParseError::InvalidBlockStructure { message, .. }) = result {
+            assert!(message.contains("Invalid direction indicator"));
+        } else {
+            panic!("Expected InvalidBlockStructure error");
+        }
+    }
+
+    #[test]
+    fn test_application_header_input_too_short() {
+        let block2 = "I103DEUTDEF"; // Too short for Input format
+        let result = ApplicationHeader::parse(block2);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_application_header_output_too_short() {
+        let block2 = "O103153505102"; // Too short for Output format (13 characters)
+        let result = ApplicationHeader::parse(block2);
+
+        assert!(result.is_err());
+        if let Err(ParseError::InvalidBlockStructure { message, .. }) = result {
+            // This will now hit the Output-specific check since initial check is for 4 chars
+            assert!(message.contains("Output Block 2 too short: expected at least 46 characters"));
+        } else {
+            panic!("Expected InvalidBlockStructure error");
+        }
+    }
+
+    #[test]
+    fn test_application_header_output_minimum_length_but_still_too_short() {
+        // This has 17 characters so it passes initial check but fails Output-specific check
+        let block2 = "O10315350510280DE"; // 17 characters, but Output needs 46
+        let result = ApplicationHeader::parse(block2);
+
+        assert!(result.is_err());
+        if let Err(ParseError::InvalidBlockStructure { message, .. }) = result {
+            assert!(message.contains("Output Block 2 too short: expected at least 46 characters"));
+        } else {
+            panic!("Expected InvalidBlockStructure error");
+        }
+    }
+
+    #[test]
+    fn test_basic_header_parsing() {
+        let block1 = "F01DEUTDEFFAXXX0000123456";
+        let header = BasicHeader::parse(block1).unwrap();
+
+        assert_eq!(header.application_id, "F");
+        assert_eq!(header.service_id, "01");
+        assert_eq!(header.logical_terminal, "DEUTDEFFAXXX");
+        assert_eq!(header.sender_bic, "DEUTDEFF");
+        assert_eq!(header.session_number, "0000");
+        assert_eq!(header.sequence_number, "123456");
+    }
+
+    #[test]
+    fn test_application_header_input_display() {
+        let header = ApplicationHeader::Input(InputApplicationHeader {
+            message_type: "103".to_string(),
+            destination_address: "DEUTDEFFAXXX".to_string(),
+            receiver_bic: "DEUTDEFF".to_string(),
+            priority: "U".to_string(),
+            delivery_monitoring: Some("3".to_string()),
+            obsolescence_period: Some("003".to_string()),
+        });
+
+        assert_eq!(header.to_string(), "I103DEUTDEFFAXXXU3003");
+    }
+
+    #[test]
+    fn test_application_header_output_display() {
+        let mir = MessageInputReference {
+            date: "051028".to_string(),
+            lt_identifier: "DEUTDEFFAXXX".to_string(),
+            branch_code: "XXX".to_string(),
+            session_number: "0826".to_string(),
+            sequence_number: "455628".to_string(),
+        };
+
+        let header = ApplicationHeader::Output(OutputApplicationHeader {
+            message_type: "103".to_string(),
+            input_time: "1535".to_string(),
+            mir,
+            output_date: "051028".to_string(),
+            output_time: "1535".to_string(),
+            priority: Some("N".to_string()),
+        });
+
+        assert_eq!(
+            header.to_string(),
+            "O1031535051028DEUTDEFFAXXX08264556280510281535N"
+        );
+    }
+
+    #[test]
+    fn test_application_header_helper_methods() {
+        let input_header = ApplicationHeader::Input(InputApplicationHeader {
+            message_type: "103".to_string(),
+            destination_address: "DEUTDEFFAXXX".to_string(),
+            receiver_bic: "DEUTDEFF".to_string(),
+            priority: "U".to_string(),
+            delivery_monitoring: None,
+            obsolescence_period: None,
+        });
+
+        assert_eq!(input_header.message_type(), "103");
+        assert_eq!(input_header.priority(), Some("U"));
+
+        let mir = MessageInputReference {
+            date: "051028".to_string(),
+            lt_identifier: "DEUTDEFFAXXX".to_string(),
+            branch_code: "XXX".to_string(),
+            session_number: "0826".to_string(),
+            sequence_number: "455628".to_string(),
+        };
+
+        let output_header = ApplicationHeader::Output(OutputApplicationHeader {
+            message_type: "202".to_string(),
+            input_time: "1535".to_string(),
+            mir,
+            output_date: "051028".to_string(),
+            output_time: "1535".to_string(),
+            priority: Some("N".to_string()),
+        });
+
+        assert_eq!(output_header.message_type(), "202");
+        assert_eq!(output_header.priority(), Some("N"));
     }
 }

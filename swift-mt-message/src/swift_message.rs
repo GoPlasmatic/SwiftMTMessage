@@ -319,15 +319,38 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         let (sender_country, receiver_country) = self.extract_country_codes_from_bics();
 
         // Add enhanced message context including BIC-derived information
-        data_context.insert("message_context".to_string(), serde_json::json!({
-            "message_type": self.message_type,
-            "sender_country": sender_country,
-            "receiver_country": receiver_country,
-            "sender_bic": self.basic_header.logical_terminal,
-            "receiver_bic": &self.application_header.destination_address,
-            "message_priority": &self.application_header.priority,
-            "delivery_monitoring": self.application_header.delivery_monitoring.as_ref().unwrap_or(&"3".to_string()),
-        }));
+        let (receiver_bic, priority, delivery_monitoring) = match &self.application_header {
+            ApplicationHeader::Input(input) => (
+                input.destination_address.clone(),
+                input.priority.clone(),
+                input
+                    .delivery_monitoring
+                    .as_ref()
+                    .unwrap_or(&"3".to_string())
+                    .clone(),
+            ),
+            ApplicationHeader::Output(_) => (
+                String::new(), // No receiver BIC for output messages
+                self.application_header
+                    .priority()
+                    .unwrap_or("N")
+                    .to_string(),
+                String::new(), // No delivery monitoring for output messages
+            ),
+        };
+
+        data_context.insert(
+            "message_context".to_string(),
+            serde_json::json!({
+                "message_type": self.message_type,
+                "sender_country": sender_country,
+                "receiver_country": receiver_country,
+                "sender_bic": self.basic_header.logical_terminal,
+                "receiver_bic": receiver_bic,
+                "message_priority": priority,
+                "delivery_monitoring": delivery_monitoring,
+            }),
+        );
 
         Ok(serde_json::Value::Object(data_context))
     }
@@ -342,10 +365,15 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         };
 
         // Extract receiver country from application header destination BIC
-        let receiver_country = if self.application_header.destination_address.len() >= 6 {
-            self.application_header.destination_address[4..6].to_string()
-        } else {
-            "XX".to_string()
+        let receiver_country = match &self.application_header {
+            ApplicationHeader::Input(input) => {
+                if input.destination_address.len() >= 6 {
+                    input.destination_address[4..6].to_string()
+                } else {
+                    "XX".to_string()
+                }
+            }
+            ApplicationHeader::Output(_) => "XX".to_string(), // No receiver for output messages
         };
 
         (sender_country, receiver_country)

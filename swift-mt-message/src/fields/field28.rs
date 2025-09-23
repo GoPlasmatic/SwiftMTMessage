@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -124,7 +125,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Basic statement numbering with optional sequence for account statements
 /// and transaction reports.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field28 {
     /// Statement number
     ///
@@ -145,7 +147,8 @@ pub struct Field28 {
 ///
 /// Extended statement numbering with larger sequence capacity for
 /// complex statement structures and detailed transaction reports.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field28C {
     /// Statement number
     ///
@@ -166,7 +169,8 @@ pub struct Field28C {
 ///
 /// Message indexing for batch operations enabling completeness verification
 /// and proper sequencing of related messages.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field28D {
     /// Message index (current position)
     ///

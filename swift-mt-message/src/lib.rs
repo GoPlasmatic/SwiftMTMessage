@@ -52,11 +52,16 @@ pub mod parsed_message;
 pub mod parser;
 pub mod sample;
 pub mod scenario_config;
+pub mod slash_handler;
 pub mod swift_error_codes;
 pub mod swift_message;
 pub mod traits;
 pub mod utils;
 pub mod validation_result;
+pub mod serde_helpers;
+
+// Plugin module for dataflow-rs integration
+pub mod plugin;
 
 // Re-export all message types
 pub use messages::*;
@@ -72,7 +77,7 @@ pub use parser::{SwiftParser, extract_base_tag};
 pub use swift_error_codes as swift_codes;
 pub use swift_message::SwiftMessage;
 pub use traits::{SwiftField, SwiftMessageBody};
-pub use utils::{get_field_tag_for_mt, get_field_tag_with_variant};
+pub use utils::{get_field_tag_for_mt, get_field_tag_with_variant, is_numbered_field, map_variant_to_numbered};
 pub use validation_result::ValidationResult;
 
 // Re-export derive macros

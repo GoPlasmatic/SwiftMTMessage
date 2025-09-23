@@ -96,6 +96,7 @@
 //! - Network Rules: Message Identification Standards
 
 use chrono::NaiveDate;
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -111,7 +112,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Input sequence number (optional, \[6!n\])
 ///
 /// For complete documentation, see the [Field 11 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field11R {
     /// Message type of the original message being referenced
     ///
@@ -154,7 +156,8 @@ pub struct Field11R {
 /// - Input sequence number (optional, \[6!n\])
 ///
 /// For complete documentation, see the [Field 11 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field11S {
     /// Message type of the original message being referenced
     ///
@@ -191,7 +194,8 @@ pub struct Field11S {
 /// capability for acknowledgment, cancellation, and status inquiry scenarios.
 ///
 /// For complete documentation, see the [Field 11 module](index.html).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field11 {
     /// Option R: Used in acknowledgment and response contexts
     /// Common in confirmation messages and status responses

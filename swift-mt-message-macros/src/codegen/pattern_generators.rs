@@ -252,13 +252,16 @@ impl FieldPatternGenerator for Field53B57BPatternGenerator {
             let lines: Vec<&str> = value.trim().lines().collect();
 
             let (#first_field_name, #second_field_name) = if lines.len() == 2 {
-                // Two lines: first is party identifier, second is location
+                // Two lines: typically party identifier then location
                 let first_line = lines[0];
                 let second_line = lines[1];
 
-                // Parse party identifier (remove leading slash)
-                let party_id = if first_line.starts_with('/') {
-                    Some(first_line.trim_start_matches('/').to_string())
+                // For Field53B/57B, when we have two lines:
+                // - First line is party_identifier (with or without slash)
+                // - Second line is location
+                // This matches the SWIFT standard where party_identifier comes first
+                let party_id = if !first_line.is_empty() {
+                    Some(first_line.to_string())
                 } else {
                     None
                 };
@@ -276,8 +279,8 @@ impl FieldPatternGenerator for Field53B57BPatternGenerator {
                 let line = lines[0];
 
                 if line.starts_with('/') {
-                    // This is a party identifier only
-                    (Some(line.trim_start_matches('/').to_string()), None)
+                    // This is a party identifier only (keep the slash)
+                    (Some(line.to_string()), None)
                 } else {
                     // This is a location only
                     (None, Some(line.to_string()))
@@ -641,7 +644,31 @@ impl FieldParserGenerator {
                         }
                     }
                 } else {
-                    generate_type_conversion_expr(&inner_type, quote! { raw_value })?
+                    // Apply the same slash stripping logic for optional fields as for required fields
+                    let component_pattern = &component.format.pattern;
+
+                    // Check if this component has a double slash prefix that needs stripping (e.g., [//16x])
+                    // Note: The format parser strips brackets AND the first slash, so [//16x] becomes /16x
+                    let needs_double_slash_stripping = component_pattern == "/16x"  // This is what [//16x] becomes
+                        || component_pattern == "//16x"  // In case format parsing changes
+                        || component_pattern == "[//16x]"  // Keep for backwards compatibility
+                        || (component_pattern.starts_with("//") && !component_pattern.starts_with('['));
+
+                    // Check if this component has a single slash prefix that needs stripping
+                    let needs_slash_stripping = !needs_double_slash_stripping
+                        && component_pattern.starts_with('/')
+                        && !component_pattern.starts_with("//")
+                        && !component_pattern.ends_with('/');
+
+                    let raw_value_expr = if needs_slash_stripping {
+                        quote! { raw_value.strip_prefix('/').unwrap_or(raw_value) }
+                    } else if needs_double_slash_stripping {
+                        quote! { raw_value.strip_prefix("//").unwrap_or(raw_value) }
+                    } else {
+                        quote! { raw_value }
+                    };
+
+                    generate_type_conversion_expr(&inner_type, raw_value_expr)?
                 };
 
                 field_assignments.push(quote! {
@@ -658,8 +685,32 @@ impl FieldParserGenerator {
                 });
             } else {
                 let component_pattern = &component.format.pattern;
+
+                // Check if this component has a double slash prefix that needs stripping (e.g., [//16x])
+                // Note: The format parser strips brackets AND the first slash, so [//16x] becomes /16x
+                // We need to check for double slash BEFORE single slash
+                let needs_double_slash_stripping = component_pattern == "/16x"  // This is what [//16x] becomes after format parsing
+                    || component_pattern == "//16x"  // In case format parsing changes
+                    || component_pattern == "[//16x]"  // Keep for backwards compatibility
+                    || (component_pattern.starts_with("//") && !component_pattern.starts_with('['));
+
+                // Check if this component has a single slash prefix that needs stripping
+                // Exclude patterns that need double slash stripping
+                let needs_slash_stripping = !needs_double_slash_stripping
+                    && component_pattern.starts_with('/')
+                    && !component_pattern.starts_with("//")
+                    && !component_pattern.ends_with('/');
+
+                let raw_value_expr = if needs_slash_stripping {
+                    quote! { raw_value.strip_prefix('/').unwrap_or(raw_value) }
+                } else if needs_double_slash_stripping {
+                    quote! { raw_value.strip_prefix("//").unwrap_or(raw_value) }
+                } else {
+                    quote! { raw_value }
+                };
+
                 let conversion_expr =
-                    generate_type_conversion_expr(&component.field_type, quote! { raw_value })?;
+                    generate_type_conversion_expr(&component.field_type, raw_value_expr)?;
                 field_assignments.push(quote! {
                     let raw_value = captures.get(#capture_index)
                         .ok_or_else(|| crate::errors::ParseError::ComponentParseError {

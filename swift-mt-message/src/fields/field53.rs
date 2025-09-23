@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -102,7 +103,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Structured correspondent identification using BIC code with optional party identifier.
 /// Preferred option for automated correspondent banking processing.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field53A {
     /// Optional party identifier for correspondent account reference
     ///
@@ -123,7 +125,8 @@ pub struct Field53A {
 ///
 /// Domestic correspondent routing using party identifier and location details.
 /// Used when multiple correspondent accounts exist and location-based routing is required.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field53B {
     /// Optional party identifier for correspondent account reference
     ///
@@ -144,7 +147,8 @@ pub struct Field53B {
 ///
 /// Detailed correspondent identification with full name and address information.
 /// Used when structured BIC identification is not available for correspondent.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field53D {
     /// Optional party identifier for correspondent account reference
     ///
@@ -161,7 +165,8 @@ pub struct Field53D {
     pub name_and_address: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field53SenderCorrespondent {
     A(Field53A),
     B(Field53B),

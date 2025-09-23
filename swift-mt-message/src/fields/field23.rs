@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -93,7 +94,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Swift FIN User Handbook: Further Identification Field Specifications
 /// - Money Market Standards: Function Code Classifications
 /// - Treasury Operations Guide: Transaction Identification Best Practices
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field23 {
     /// Function code (3!a format: BASE, CALL, COMMERCIAL, CURRENT, DEPOSIT, NOTICE, PRIME)
     #[component("3!a")]
@@ -176,7 +178,8 @@ pub struct Field23 {
 /// - Swift FIN User Handbook: Service Level Definitions
 /// - MT103 Usage Rules: Bank Operation Code Guidelines
 /// - STP Implementation Guide: Service Level Requirements
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field23B {
     /// Bank operation code indicating service level and processing type
     ///
@@ -294,7 +297,8 @@ pub struct Field23B {
 /// - Swift FIN User Handbook: Instruction Code Specifications
 /// - MT103 Usage Rules: Field 23E Implementation Guidelines
 /// - Service Level Guide: Instruction Code Compatibility Matrix
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field23E {
     /// Instruction code
     #[component("4!c")]

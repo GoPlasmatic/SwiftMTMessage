@@ -120,7 +120,7 @@ use serde::{Deserialize, Serialize};
 /// - BIC Directory: Valid SWIFT Participant Codes
 /// - Session Management Guide: Best Practices
 /// - Message Sequencing: Control and Recovery Procedures
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BasicHeader {
     /// Application identifier
     ///
@@ -164,14 +164,85 @@ pub struct BasicHeader {
     pub sequence_number: String,
 }
 
+// Custom Serialize/Deserialize to normalize BIC padding
+impl serde::Serialize for BasicHeader {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        // Normalize logical_terminal to exactly 12 characters for JSON
+        let normalized_logical_terminal = if self.logical_terminal.len() > 12 {
+            self.logical_terminal[..12].to_string()
+        } else if self.logical_terminal.len() < 12 {
+            format!("{:X<12}", self.logical_terminal)
+        } else {
+            self.logical_terminal.clone()
+        };
+
+        let mut state = serializer.serialize_struct("BasicHeader", 5)?;
+        state.serialize_field("application_id", &self.application_id)?;
+        state.serialize_field("service_id", &self.service_id)?;
+        state.serialize_field("logical_terminal", &normalized_logical_terminal)?;
+        state.serialize_field("sender_bic", &self.sender_bic)?;
+        state.serialize_field("session_number", &self.session_number)?;
+        state.serialize_field("sequence_number", &self.sequence_number)?;
+        state.end()
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for BasicHeader {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct BasicHeaderHelper {
+            application_id: String,
+            service_id: String,
+            logical_terminal: String,
+            sender_bic: String,
+            session_number: String,
+            sequence_number: String,
+        }
+
+        let helper = BasicHeaderHelper::deserialize(deserializer)?;
+
+        // Normalize logical_terminal to exactly 12 characters
+        let normalized_logical_terminal = if helper.logical_terminal.len() > 12 {
+            helper.logical_terminal[..12].to_string()
+        } else if helper.logical_terminal.len() < 12 {
+            format!("{:X<12}", helper.logical_terminal)
+        } else {
+            helper.logical_terminal.clone()
+        };
+
+        // Use the original sender_bic from the JSON
+        // It should match what's in the first part of logical_terminal
+        let sender_bic = helper.sender_bic;
+
+        Ok(BasicHeader {
+            application_id: helper.application_id,
+            service_id: helper.service_id,
+            logical_terminal: normalized_logical_terminal,
+            sender_bic,
+            session_number: helper.session_number,
+            sequence_number: helper.sequence_number,
+        })
+    }
+}
+
 impl BasicHeader {
     /// Parse basic header from block 1 string
     pub fn parse(block1: &str) -> Result<Self> {
-        if block1.len() < 21 {
+        // Expected format: F01SSSSSSSSSCCC0000NNNNNN (exactly 25 characters)
+        // Where: F=app_id, 01=service_id, SSSSSSSSSCCC=logical_terminal(12), 0000=session(4), NNNNNN=sequence(6)
+        if block1.len() != 25 {
             return Err(ParseError::InvalidBlockStructure {
                 block: "1".to_string(),
                 message: format!(
-                    "Block 1 too short: expected at least 21 characters, got {}",
+                    "Block 1 must be exactly 25 characters, got {}",
                     block1.len()
                 ),
             });
@@ -179,10 +250,33 @@ impl BasicHeader {
 
         let application_id = block1[0..1].to_string();
         let service_id = block1[1..3].to_string();
-        let logical_terminal = block1[3..15].to_string();
+        let raw_logical_terminal = block1[3..15].to_string();
         let session_number = block1[15..19].to_string();
-        let sequence_number = block1[19..].to_string();
-        let sender_bic = logical_terminal[0..8].to_string();
+        let sequence_number = block1[19..25].to_string();
+
+        // Keep the full 12-character logical terminal as stored in the MT format
+        // The padding is necessary for the MT format and we handle normalization in tests
+        let logical_terminal = raw_logical_terminal;
+
+        // Extract BIC from logical_terminal
+        // SWIFT BICs are either 8 or 11 characters
+        // If the logical_terminal ends with XXX or XXXX, it's likely padding
+        let sender_bic = if logical_terminal.ends_with("XXXX") {
+            // Padding detected, original BIC is 8 characters
+            logical_terminal[0..8].to_string()
+        } else if logical_terminal.ends_with("XXX") && !logical_terminal.ends_with("XXXX") {
+            // Less common: 9-char padded to 12 with XXX
+            logical_terminal[0..9].to_string()
+        } else if logical_terminal.len() >= 11 {
+            // Has full 11-character BIC, preserve it entirely
+            logical_terminal[0..11].to_string()
+        } else if logical_terminal.len() >= 8 {
+            // Standard 8-character BIC
+            logical_terminal[0..8].to_string()
+        } else {
+            // Should not happen with valid SWIFT messages
+            logical_terminal.clone()
+        };
 
         Ok(BasicHeader {
             application_id,
@@ -197,14 +291,35 @@ impl BasicHeader {
 
 impl std::fmt::Display for BasicHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Ensure consistent formatting:
+        // - logical_terminal must be exactly 12 characters (8-char BIC + 1-char LT + 3-char branch)
+        // - session_number must be exactly 4 digits
+        // - sequence_number must be exactly 6 digits
+
+        // Pad or truncate logical_terminal to exactly 12 characters
+        let logical_terminal = if self.logical_terminal.len() > 12 {
+            self.logical_terminal[..12].to_string()
+        } else if self.logical_terminal.len() < 12 {
+            // Pad with 'X' to reach 12 characters (standard for missing branch codes)
+            format!("{:X<12}", self.logical_terminal)
+        } else {
+            self.logical_terminal.clone()
+        };
+
+        // Ensure session_number is exactly 4 digits, left-padded with zeros
+        let session_number = format!("{:0>4}", &self.session_number[..self.session_number.len().min(4)]);
+
+        // Ensure sequence_number is exactly 6 digits, left-padded with zeros
+        let sequence_number = format!("{:0>6}", &self.sequence_number[..self.sequence_number.len().min(6)]);
+
         write!(
             f,
             "{}{}{}{}{}",
             self.application_id,
             self.service_id,
-            self.logical_terminal,
-            self.session_number,
-            self.sequence_number
+            logical_terminal,
+            session_number,
+            sequence_number
         )
     }
 }
@@ -219,7 +334,7 @@ impl std::fmt::Display for BasicHeader {
 /// - **Format**: `{2:I103DDDDDDDDDDDDP[M][OOO]}`
 /// - **Length**: 17-21 characters
 /// - **Components**: Direction (I) + Type + Destination + Priority + Optional monitoring/obsolescence
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct InputApplicationHeader {
     /// Message type
     ///
@@ -248,15 +363,87 @@ pub struct InputApplicationHeader {
     ///
     /// Format: 1!n - Single numeric digit
     /// Values: 1 (Non-delivery warning), 2 (Delivery notification), 3 (Both)
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub delivery_monitoring: Option<String>,
 
     /// Obsolescence period
     ///
     /// Format: 3!n - Three numeric digits
     /// Range: 003-999 (units of 5 minutes)
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub obsolescence_period: Option<String>,
+}
+
+// Custom Serialize/Deserialize to normalize destination_address BIC padding
+impl serde::Serialize for InputApplicationHeader {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        // Normalize destination_address to exactly 12 characters for JSON
+        let normalized_destination_address = if self.destination_address.len() > 12 {
+            self.destination_address[..12].to_string()
+        } else if self.destination_address.len() < 12 {
+            format!("{:X<12}", self.destination_address)
+        } else {
+            self.destination_address.clone()
+        };
+
+        let field_count = 4 + self.delivery_monitoring.is_some() as usize + self.obsolescence_period.is_some() as usize;
+        let mut state = serializer.serialize_struct("InputApplicationHeader", field_count)?;
+        state.serialize_field("message_type", &self.message_type)?;
+        state.serialize_field("destination_address", &normalized_destination_address)?;
+        state.serialize_field("receiver_bic", &self.receiver_bic)?;
+        state.serialize_field("priority", &self.priority)?;
+        if let Some(ref dm) = self.delivery_monitoring {
+            state.serialize_field("delivery_monitoring", dm)?;
+        }
+        if let Some(ref op) = self.obsolescence_period {
+            state.serialize_field("obsolescence_period", op)?;
+        }
+        state.end()
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for InputApplicationHeader {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct InputApplicationHeaderHelper {
+            message_type: String,
+            destination_address: String,
+            receiver_bic: String,
+            priority: String,
+            delivery_monitoring: Option<String>,
+            obsolescence_period: Option<String>,
+        }
+
+        let helper = InputApplicationHeaderHelper::deserialize(deserializer)?;
+
+        // Normalize destination_address to exactly 12 characters
+        let normalized_destination_address = if helper.destination_address.len() > 12 {
+            helper.destination_address[..12].to_string()
+        } else if helper.destination_address.len() < 12 {
+            format!("{:X<12}", helper.destination_address)
+        } else {
+            helper.destination_address.clone()
+        };
+
+        // Use the original receiver_bic from the JSON
+        // It should match what's in the first part of destination_address
+        let receiver_bic = helper.receiver_bic;
+
+        Ok(InputApplicationHeader {
+            message_type: helper.message_type,
+            destination_address: normalized_destination_address,
+            receiver_bic,
+            priority: helper.priority,
+            delivery_monitoring: helper.delivery_monitoring,
+            obsolescence_period: helper.obsolescence_period,
+        })
+    }
 }
 
 /// **Output Application Header: Message Delivered from SWIFT Network**
@@ -485,17 +672,48 @@ impl ApplicationHeader {
                     });
                 }
 
-                let destination_address = block2[4..16].to_string();
+                let raw_destination_address = block2[4..16].to_string();
                 let priority = block2[16..17].to_string();
-                let receiver_bic = destination_address[0..8].to_string();
 
+                // Keep the full 12-character destination address as stored in the MT format
+                // The padding is necessary for the MT format and we handle normalization in tests
+                let destination_address = raw_destination_address;
+
+                // Extract BIC from destination_address
+                // SWIFT BICs are either 8 or 11 characters
+                // If the destination_address ends with XXX or XXXX, it's likely padding
+                let receiver_bic = if destination_address.ends_with("XXXX") {
+                    // Padding detected, original BIC is 8 characters
+                    destination_address[0..8].to_string()
+                } else if destination_address.ends_with("XXX") && !destination_address.ends_with("XXXX") {
+                    // Less common: 9-char padded to 12 with XXX
+                    destination_address[0..9].to_string()
+                } else if destination_address.len() >= 11 {
+                    // Has full 11-character BIC, preserve it entirely
+                    destination_address[0..11].to_string()
+                } else if destination_address.len() >= 8 {
+                    // Standard 8-character BIC
+                    destination_address[0..8].to_string()
+                } else {
+                    // Should not happen with valid SWIFT messages
+                    destination_address.clone()
+                };
+
+                // Only parse delivery_monitoring if explicitly present
                 let delivery_monitoring = if block2.len() >= 18 {
-                    Some(block2[17..18].to_string())
+                    let monitoring = &block2[17..18];
+                    // Only set if it's a valid monitoring code (not a space or other character)
+                    if monitoring.chars().all(|c| c.is_ascii_alphabetic() || c.is_ascii_digit()) {
+                        Some(monitoring.to_string())
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 };
 
-                let obsolescence_period = if block2.len() >= 21 {
+                // Only parse obsolescence_period if explicitly present and delivery_monitoring exists
+                let obsolescence_period = if delivery_monitoring.is_some() && block2.len() >= 21 {
                     Some(block2[18..21].to_string())
                 } else {
                     None
@@ -598,21 +816,8 @@ impl std::fmt::Display for ApplicationHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ApplicationHeader::Input(header) => {
-                // Input format: I + message_type + destination_address + priority [+ monitoring] [+ obsolescence]
-                let mut result = format!(
-                    "I{}{}{}",
-                    header.message_type, header.destination_address, header.priority
-                );
-
-                if let Some(ref delivery_monitoring) = header.delivery_monitoring {
-                    result.push_str(delivery_monitoring);
-                }
-
-                if let Some(ref obsolescence_period) = header.obsolescence_period {
-                    result.push_str(obsolescence_period);
-                }
-
-                write!(f, "{result}")
+                // Delegate to InputApplicationHeader's Display implementation
+                write!(f, "{}", header)
             }
             ApplicationHeader::Output(header) => {
                 // Output format: O + message_type + input_time + MIR + output_date + output_time + priority
@@ -641,9 +846,26 @@ impl std::fmt::Display for ApplicationHeader {
 
 impl std::fmt::Display for InputApplicationHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Ensure consistent formatting:
+        // - message_type is always 3 digits
+        // - destination_address must be exactly 12 characters
+        // - priority is always 1 character
+
+        // Ensure message_type is exactly 3 characters
+        let message_type = format!("{:0>3}", &self.message_type[..self.message_type.len().min(3)]);
+
+        // Pad or truncate destination_address to exactly 12 characters
+        let destination_address = if self.destination_address.len() > 12 {
+            self.destination_address[..12].to_string()
+        } else if self.destination_address.len() < 12 {
+            format!("{:X<12}", self.destination_address)
+        } else {
+            self.destination_address.clone()
+        };
+
         let mut result = format!(
             "I{}{}{}",
-            self.message_type, self.destination_address, self.priority
+            message_type, destination_address, self.priority
         );
 
         if let Some(ref delivery_monitoring) = self.delivery_monitoring {
@@ -871,6 +1093,7 @@ pub struct UserHeader {
 
     /// Tag 111 - Service type identifier (3!n) - Optional
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "service_type_identifier")]
     pub service_type_identifier: Option<String>,
 
     /// Tag 121 - Unique end-to-end transaction reference (UUID format) - Mandatory for GPI
@@ -1159,8 +1382,8 @@ impl std::fmt::Display for UserHeader {
             result.push_str(&format!("{{121:{unique_end_to_end_ref}}}"));
         }
 
-        if let Some(ref service_type_id) = self.service_type_identifier {
-            result.push_str(&format!("{{111:{service_type_id}}}"));
+        if let Some(ref service_type_identifier) = self.service_type_identifier {
+            result.push_str(&format!("{{111:{service_type_identifier}}}"));
         }
 
         if let Some(ref payment_controls) = self.payment_controls_info {

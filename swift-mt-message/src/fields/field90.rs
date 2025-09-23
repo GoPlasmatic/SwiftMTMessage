@@ -65,6 +65,7 @@
 //! - Account Statement Standards: Control Total Requirements
 //! - Audit Guidelines: Financial Transaction Control
 
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -78,7 +79,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Total sum of debit amounts (15d)
 ///
 /// For complete documentation, see the [Field 90 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field90D {
     /// Number of debit transactions
     ///
@@ -112,7 +114,8 @@ pub struct Field90D {
 /// - Total sum of credit amounts (15d)
 ///
 /// For complete documentation, see the [Field 90 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field90C {
     /// Number of credit transactions
     ///
@@ -134,4 +137,25 @@ pub struct Field90C {
     /// Sum of all credit transaction amounts
     #[component("15d")]
     pub amount: f64,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::SwiftField;
+
+    #[test]
+    fn test_field90d_parsing_basic() {
+        let value = "2GBP250050";
+        match Field90D::parse(value) {
+            Ok(field) => {
+                assert_eq!(field.number, 2);
+                assert_eq!(field.currency, "GBP");
+                assert_eq!(field.amount, 250050.0);
+            }
+            Err(e) => {
+                panic!("Failed to parse Field90D '{}': {:?}", value, e);
+            }
+        }
+    }
 }

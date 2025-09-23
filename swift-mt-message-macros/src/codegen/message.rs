@@ -36,7 +36,8 @@ pub fn generate_swift_message_impl(definition: &MessageDefinition) -> MacroResul
     let to_ordered_fields_impl = if definition.has_sequences {
         generate_to_ordered_fields_with_sequences_impl(definition)?
     } else {
-        quote! {} // Use default implementation
+        // Generate custom implementation for nested messages with enum fields
+        generate_to_ordered_fields_for_nested_messages(&definition.fields)?
     };
     let validation_rules_impl = generate_validation_rules_impl(definition)?;
 
@@ -249,15 +250,27 @@ fn generate_sequence_field_parser(
     } else if field.is_optional {
         Ok(quote! {
             let #field_name = {
-                let base_tag = crate::extract_base_tag(#tag);
-                let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                // For numbered fields (e.g., "50#1", "50#2"), use variant-based routing
+                let field_result = if #tag.contains('#') {
+                    // For numbered fields, we never look for the exact numbered tag in MT parsing
+                    // Instead, we use variant-based routing to determine which field to populate
+                    let base_tag = crate::extract_base_tag(#tag);
+                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
 
-                // Try to find field with tracker first (normal parsing flow)
-                let field_result = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice);
+                    // Find field with matching variant for this specific type
+                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
+                } else {
+                    // Non-numbered fields use normal variant logic
+                    let base_tag = crate::extract_base_tag(#tag);
+                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
+                };
 
                 if let Some((value, variant_tag, pos)) = field_result {
-                    Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                    let parse_base_tag = crate::extract_base_tag(#tag);
+                    Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(parse_base_tag))
                         .map_err(|e| {
                             let line_num = pos >> 16;
                             crate::errors::ParseError::FieldParsingFailed {
@@ -270,11 +283,14 @@ fn generate_sequence_field_parser(
                 } else {
                     // Fallback for sequence parsing where fields might have variant tags
                     let mut found = None;
+                    let fallback_base_tag = crate::extract_base_tag(#tag);
+                    let fallback_valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                    let fallback_valid_variants_slice = fallback_valid_variants.as_ref().map(|v| v.as_slice());
 
                     // If we have valid variants, try each one
-                    if let Some(variants) = valid_variants_slice {
+                    if let Some(variants) = fallback_valid_variants_slice {
                         for variant in variants {
-                            let variant_tag = format!("{}{}", base_tag, variant);
+                            let variant_tag = format!("{}{}", fallback_base_tag, variant);
 
                             if let Some(values) = #sequence_name.get(&variant_tag) {
                                 if let Some((value, pos)) = values.first() {
@@ -287,7 +303,7 @@ fn generate_sequence_field_parser(
 
                     // If no variants found, try the base tag directly
                     if found.is_none() {
-                        if let Some(values) = #sequence_name.get(base_tag) {
+                        if let Some(values) = #sequence_name.get(fallback_base_tag) {
                             if let Some((value, pos)) = values.first() {
                                 found = Some((value.clone(), None, *pos));
                             }
@@ -295,7 +311,7 @@ fn generate_sequence_field_parser(
                     }
 
                     if let Some((value, variant_tag, pos)) = found {
-                        Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                        Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(fallback_base_tag))
                             .map_err(|e| {
                                 let line_num = pos >> 16;
                                 crate::errors::ParseError::FieldParsingFailed {
@@ -353,12 +369,23 @@ fn generate_sequence_field_parser(
     } else {
         Ok(quote! {
             let #field_name = {
-                let base_tag = crate::extract_base_tag(#tag);
-                let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                // For numbered fields (e.g., "50#1", "50#2"), use variant-based routing
+                let field_result = if #tag.contains('#') {
+                    // For numbered fields, we never look for the exact numbered tag in MT parsing
+                    // Instead, we use variant-based routing to determine which field to populate
+                    let base_tag = crate::extract_base_tag(#tag);
+                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
 
-                // Try to find field with tracker first (normal parsing flow)
-                let field_result = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice);
+                    // Find field with matching variant for this specific type
+                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
+                } else {
+                    // Non-numbered fields use normal variant logic
+                    let base_tag = crate::extract_base_tag(#tag);
+                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
+                };
 
                 let (value, variant_tag, pos) = if let Some(result) = field_result {
                     result
@@ -366,10 +393,15 @@ fn generate_sequence_field_parser(
                     // Fallback for sequence parsing where fields might have variant tags
                     let mut found = None;
 
+                    // Define variables needed for fallback logic
+                    let fallback_base_tag = crate::extract_base_tag(#tag);
+                    let fallback_valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                    let fallback_valid_variants_slice = fallback_valid_variants.as_ref().map(|v| v.as_slice());
+
                     // If we have valid variants, try each one
-                    if let Some(variants) = valid_variants_slice {
+                    if let Some(variants) = fallback_valid_variants_slice {
                         for variant in variants {
-                            let variant_tag = format!("{}{}", base_tag, variant);
+                            let variant_tag = format!("{}{}", fallback_base_tag, variant);
 
                             if let Some(values) = #sequence_name.get(&variant_tag) {
                                 if let Some((value, pos)) = values.first() {
@@ -382,7 +414,7 @@ fn generate_sequence_field_parser(
 
                     // If no variants found, try the base tag directly
                     if found.is_none() {
-                        if let Some(values) = #sequence_name.get(base_tag) {
+                        if let Some(values) = #sequence_name.get(fallback_base_tag) {
                             if let Some((value, pos)) = values.first() {
                                 found = Some((value.clone(), None, *pos));
                             }
@@ -397,7 +429,8 @@ fn generate_sequence_field_parser(
                     })?
                 };
 
-                #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                let parse_base_tag = crate::extract_base_tag(#tag);
+                #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(parse_base_tag))
                     .map_err(|e| {
                         let line_num = pos >> 16;
                         crate::errors::ParseError::FieldParsingFailed {
@@ -471,16 +504,27 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                 // Optional T - use sequential consumption with enhanced error context
                 field_parsers.push(quote! {
                     #field_name: {
-                        let base_tag = crate::extract_base_tag(#tag);
-                        // Get valid variants for this field type if it's an enum
-                        let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                        let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                        // For numbered fields (e.g., "50#1", "50#2"), use variant-based routing
+                        let field_result = if #tag.contains('#') {
+                            // For numbered fields, we never look for the exact numbered tag in MT parsing
+                            // Instead, we use variant-based routing to determine which field to populate
+                            let base_tag = crate::extract_base_tag(#tag);
+                            let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                            let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
 
-                        // Try to find field with tracker first (normal parsing flow)
-                        let field_result = crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice);
+                            // Find field with matching variant for this specific type
+                            crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
+                        } else {
+                            // Non-numbered fields use normal variant logic
+                            let base_tag = crate::extract_base_tag(#tag);
+                            let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                            let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                            crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
+                        };
 
                         if let Some((value, variant_tag, pos)) = field_result {
-                            Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                            let parse_base_tag = crate::extract_base_tag(#tag);
+                            Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(parse_base_tag))
                                 .map_err(|e| {
                                     let line_num = pos >> 16;
                                     crate::errors::ParseError::FieldParsingFailed {
@@ -493,11 +537,14 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                         } else {
                             // Fallback for sequence parsing where fields might have variant tags
                             let mut found = None;
+                            let fallback_base_tag = crate::extract_base_tag(#tag);
+                            let fallback_valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                            let fallback_valid_variants_slice = fallback_valid_variants.as_ref().map(|v| v.as_slice());
 
                             // If we have valid variants, try each one
-                            if let Some(variants) = valid_variants_slice {
+                            if let Some(variants) = fallback_valid_variants_slice {
                                 for variant in variants {
-                                    let variant_tag = format!("{}{}", base_tag, variant);
+                                    let variant_tag = format!("{}{}", fallback_base_tag, variant);
 
                                     if let Some(values) = fields.get(&variant_tag) {
                                         if let Some((value, pos)) = values.first() {
@@ -508,9 +555,25 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                                 }
                             }
 
+                            // Debug: Check if there are any fields with this base tag but different variants
+                            #[cfg(debug_assertions)]
+                            {
+                                for (field_tag, _) in fields.iter() {
+                                    if field_tag.starts_with(fallback_base_tag) && field_tag != fallback_base_tag {
+                                        if let Some(variants) = fallback_valid_variants_slice {
+                                            let field_variant = &field_tag[fallback_base_tag.len()..];
+                                            if !variants.contains(&field_variant) {
+                                                eprintln!("DEBUG: Field {} exists but variant {} not in valid variants {:?} for {}",
+                                                    field_tag, field_variant, variants, #tag);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
                             // If no variants found, try the base tag directly
                             if found.is_none() {
-                                if let Some(values) = fields.get(base_tag) {
+                                if let Some(values) = fields.get(fallback_base_tag) {
                                     if let Some((value, pos)) = values.first() {
                                         found = Some((value.clone(), None, *pos));
                                     }
@@ -518,7 +581,7 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                             }
 
                             if let Some((value, variant_tag, pos)) = found {
-                                Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                                Some(#inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(fallback_base_tag))
                                     .map_err(|e| {
                                         let line_num = pos >> 16;
                                         crate::errors::ParseError::FieldParsingFailed {
@@ -565,13 +628,23 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
             // Required T - use sequential consumption with enhanced error context
             field_parsers.push(quote! {
                 #field_name: {
-                    let base_tag = crate::extract_base_tag(#tag);
-                    // Get valid variants for this field type if it's an enum
-                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                    // For numbered fields (e.g., "50#1", "50#2"), use variant-based routing
+                    let field_result = if #tag.contains('#') {
+                        // For numbered fields, we never look for the exact numbered tag in MT parsing
+                        // Instead, we use variant-based routing to determine which field to populate
+                        let base_tag = crate::extract_base_tag(#tag);
+                        let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                        let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
 
-                    // Try to find field with tracker first (normal parsing flow)
-                    let field_result = crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice);
+                        // Find field with matching variant for this specific type
+                        crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
+                    } else {
+                        // Non-numbered fields use normal variant logic
+                        let base_tag = crate::extract_base_tag(#tag);
+                        let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                        let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                        crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
+                    };
 
                     let (value, variant_tag, pos) = if let Some(result) = field_result {
                         result
@@ -579,11 +652,14 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                         // Fallback for sequence parsing where fields might have variant tags
                         // This handles the case where we're parsing from pre-collected sequence fields
                         let mut found = None;
+                        let fallback_base_tag = crate::extract_base_tag(#tag);
+                        let fallback_valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                        let fallback_valid_variants_slice = fallback_valid_variants.as_ref().map(|v| v.as_slice());
 
                         // If we have valid variants, try each one
-                        if let Some(variants) = valid_variants_slice {
+                        if let Some(variants) = fallback_valid_variants_slice {
                             for variant in variants {
-                                let variant_tag = format!("{}{}", base_tag, variant);
+                                let variant_tag = format!("{}{}", fallback_base_tag, variant);
                                 if let Some(values) = fields.get(&variant_tag) {
                                     if let Some((value, pos)) = values.first() {
                                         found = Some((value.clone(), Some(variant.to_string()), *pos));
@@ -595,7 +671,7 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
 
                         // If no variants found, try the base tag directly
                         if found.is_none() {
-                            if let Some(values) = fields.get(base_tag) {
+                            if let Some(values) = fields.get(fallback_base_tag) {
                                 if let Some((value, pos)) = values.first() {
                                     found = Some((value.clone(), None, *pos));
                                 }
@@ -610,7 +686,7 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                         })?
                     };
 
-                    #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
+                    #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(crate::extract_base_tag(#tag)))
                         .map_err(|e| {
                             let line_num = pos >> 16;
                             crate::errors::ParseError::FieldParsingFailed {
@@ -1015,7 +1091,22 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                 // Optional T - check if it's an enum field that needs variant handling
                 let field_type = &field.inner_type;
                 let base_tag = extract_base_tag(tag);
-                if is_enum_field_type(field_type) {
+                if tag.contains('#') && is_enum_field_type(field_type) {
+                    // For numbered enum fields (e.g., 50#1, 50#2), preserve the numbered tag in JSON
+                    // but include variant information for proper MT serialization
+                    field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
+                        }
+                    });
+                } else if tag.contains('#') {
+                    // For numbered non-enum fields, preserve the numbered tag in JSON
+                    field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
+                        }
+                    });
+                } else if is_enum_field_type(field_type) {
                     field_serializers.push(quote! {
                         if let Some(ref value) = self.#field_name {
                             let base_tag = crate::get_field_tag_for_mt(#tag);
@@ -1031,10 +1122,19 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                             fields.entry(mt_tag).or_insert_with(Vec::new).push(value.to_swift_string());
                         }
                     });
+                } else if tag.contains('#') {
+                    // For numbered fields, keep the full tag for JSON serialization
+                    // but use variant-based tag for MT serialization
+                    field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            // For JSON: use the numbered tag (e.g., "50#1", "50#2")
+                            fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
+                        }
+                    });
                 } else {
                     field_serializers.push(quote! {
                         if let Some(ref value) = self.#field_name {
-                            // Keep the full tag (including #1, #2 suffixes) to avoid overwriting
+                            // For regular fields, use the tag as-is
                             fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
                         }
                     });
@@ -1052,7 +1152,18 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
         } else {
             // Required T - check if it's an enum field that needs variant handling
             let field_type = &field.inner_type;
-            if is_enum_field_type(field_type) {
+            if tag.contains('#') && is_enum_field_type(field_type) {
+                // For numbered enum fields (e.g., 50#1, 50#2), preserve the numbered tag in JSON
+                // but include variant information for proper MT serialization
+                field_serializers.push(quote! {
+                    fields.insert(#tag.to_string(), vec![self.#field_name.to_swift_string()]);
+                });
+            } else if tag.contains('#') {
+                // For numbered non-enum fields, preserve the numbered tag in JSON
+                field_serializers.push(quote! {
+                    fields.insert(#tag.to_string(), vec![self.#field_name.to_swift_string()]);
+                });
+            } else if is_enum_field_type(field_type) {
                 field_serializers.push(quote! {
                     let base_tag = crate::get_field_tag_for_mt(#tag);
                     let field_tag_with_variant = crate::get_field_tag_with_variant(&base_tag, &self.#field_name);
@@ -1314,6 +1425,158 @@ fn generate_to_ordered_fields_with_sequences_impl(
 /// Extract message type from struct name (e.g., MT103 -> "103")
 fn extract_message_type_from_name(name: &str) -> &str {
     name.strip_prefix("MT").unwrap_or(name)
+}
+
+/// Generate to_ordered_fields implementation for nested messages with enum fields
+fn generate_to_ordered_fields_for_nested_messages(fields: &[MessageField]) -> MacroResult<TokenStream> {
+    // Check if any fields are numbered enum fields
+    let has_numbered_enum_fields = fields.iter().any(|f| {
+        f.tag.contains('#') && is_enum_field_type(&f.inner_type)
+    });
+
+    if !has_numbered_enum_fields {
+        // Use default implementation if no numbered enum fields
+        return Ok(quote! {});
+    }
+
+    // Generate custom implementation that handles enum variants
+    // We need to properly handle numbered enum fields by preserving their variants
+    let mut field_serializers = Vec::new();
+
+    for field in fields {
+        let field_name = &field.name;
+        let tag = &field.tag;
+        let base_tag = extract_base_tag(tag);
+        let field_type = &field.inner_type;
+
+        // Check if this is an enum field that needs variant handling
+        let is_enum = is_enum_field_type(field_type);
+        let is_numbered = tag.contains('#');
+
+        if field.is_optional {
+            if field.is_repetitive {
+                // Optional Vec<T>
+                if is_numbered && is_enum {
+                    field_serializers.push(quote! {
+                        if let Some(ref values) = self.#field_name {
+                            for value in values {
+                                let field_tag = crate::get_field_tag_with_variant(#base_tag, value);
+                                ordered_fields.push((field_tag, value.to_swift_string()));
+                            }
+                        }
+                    });
+                } else if is_enum {
+                    field_serializers.push(quote! {
+                        if let Some(ref values) = self.#field_name {
+                            for value in values {
+                                let field_tag = crate::get_field_tag_with_variant(#tag, value);
+                                ordered_fields.push((field_tag, value.to_swift_string()));
+                            }
+                        }
+                    });
+                } else {
+                    field_serializers.push(quote! {
+                        if let Some(ref values) = self.#field_name {
+                            for value in values {
+                                ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                            }
+                        }
+                    });
+                }
+            } else {
+                // Optional T
+                if is_numbered && is_enum {
+                    // Numbered enum field - need to extract variant and use base tag with variant
+                    field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            let field_tag = crate::get_field_tag_with_variant(#base_tag, value);
+                            ordered_fields.push((field_tag, value.to_swift_string()));
+                        }
+                    });
+                } else if is_enum {
+                    // Regular enum field - need variant
+                    field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            let field_tag = crate::get_field_tag_with_variant(#tag, value);
+                            ordered_fields.push((field_tag, value.to_swift_string()));
+                        }
+                    });
+                } else {
+                    // Non-enum field
+                    field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                        }
+                    });
+                }
+            }
+        } else if field.is_repetitive {
+            // Required Vec<T>
+            if is_numbered && is_enum {
+                field_serializers.push(quote! {
+                    for value in &self.#field_name {
+                        let field_tag = crate::get_field_tag_with_variant(#base_tag, value);
+                        ordered_fields.push((field_tag, value.to_swift_string()));
+                    }
+                });
+            } else if is_enum {
+                field_serializers.push(quote! {
+                    for value in &self.#field_name {
+                        let field_tag = crate::get_field_tag_with_variant(#tag, value);
+                        ordered_fields.push((field_tag, value.to_swift_string()));
+                    }
+                });
+            } else {
+                field_serializers.push(quote! {
+                    for value in &self.#field_name {
+                        ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                    }
+                });
+            }
+        } else {
+            // Required T
+            if is_numbered && is_enum {
+                // Required numbered enum field
+                field_serializers.push(quote! {
+                    let field_tag = crate::get_field_tag_with_variant(#base_tag, &self.#field_name);
+                    ordered_fields.push((field_tag, self.#field_name.to_swift_string()));
+                });
+            } else if is_enum {
+                // Required regular enum field
+                field_serializers.push(quote! {
+                    let field_tag = crate::get_field_tag_with_variant(#tag, &self.#field_name);
+                    ordered_fields.push((field_tag, self.#field_name.to_swift_string()));
+                });
+            } else {
+                // Required non-enum field
+                field_serializers.push(quote! {
+                    ordered_fields.push((#base_tag.to_string(), self.#field_name.to_swift_string()));
+                });
+            }
+        }
+    }
+
+    Ok(quote! {
+        fn to_ordered_fields(&self) -> Vec<(String, String)> {
+            use crate::SwiftField;
+            let mut ordered_fields = Vec::new();
+
+            #(#field_serializers)*
+
+            // Sort by field tag number for proper ordering
+            ordered_fields.sort_by(|(tag_a, _), (tag_b, _)| {
+                let num_a = tag_a.chars()
+                    .take_while(|c| c.is_ascii_digit())
+                    .fold(0u32, |acc, c| acc * 10 + (c as u32 - '0' as u32));
+                let num_b = tag_b.chars()
+                    .take_while(|c| c.is_ascii_digit())
+                    .fold(0u32, |acc, c| acc * 10 + (c as u32 - '0' as u32));
+                num_a.cmp(&num_b).then_with(|| tag_a.cmp(tag_b))
+            });
+
+            ordered_fields
+        }
+    })
 }
 
 /// Check if a message structure is nested (used as a field in other messages)

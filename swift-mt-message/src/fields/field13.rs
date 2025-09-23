@@ -96,6 +96,7 @@
 //! - Regional Payment Guides: Local Time Zone Considerations
 
 use chrono::{NaiveDate, NaiveTime};
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -111,7 +112,8 @@ use swift_mt_message_macros::SwiftField;
 /// - UTC offset amount (4!n, HHMM format)
 ///
 /// For complete documentation, see the [Field 13 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field13C {
     /// Time indication code with slashes
     ///
@@ -154,7 +156,8 @@ pub struct Field13C {
 /// - UTC offset amount (4!n)
 ///
 /// For complete documentation, see the [Field 13 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field13D {
     /// Date component in YYMMDD format
     ///

@@ -1,89 +1,183 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["SEC", {"fake": ["i64", 100000, 999999]}]},
-        "account_id": {"cat": ["CH93CRED", {"fake": ["i64", 10000000000000, 99999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "SEC",
+                100000
+            ]
+        },
+        "account_id": {
+            "cat": [
+                "CH93CRED",
+                10000000000000
+            ]
+        },
         "value_date": "2024-12-24",
-        "settlement1_ref": {"cat": ["DVP", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "settlement1_ref": {
+            "cat": [
+                "DVP",
+                100000000000
+            ]
+        },
         "settlement1_currency": "CHF",
-        "settlement1_amount": {"fake": ["f64", 1000000.0, 5000000.0]},
-        "settlement2_ref": {"cat": ["COUP", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "settlement1_amount": 10000,
+        "settlement2_ref": {
+            "cat": [
+                "COUP",
+                100000000000
+            ]
+        },
         "settlement2_currency": "CHF",
-        "settlement2_amount": {"fake": ["f64", 25000.0, 100000.0]},
-        "custodian_bic": {"fake": ["bic"]},
-        "clearinghouse_bic": {"fake": ["bic"]},
+        "settlement2_amount": 10000,
+        "custodian_bic": "DEUTDEFF",
+        "clearinghouse_bic": "DEUTDEFF",
         "session_num": "0002",
         "sequence_num": "001234",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "210",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "210",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "25": {"authorisation": {"var": "account_id"}},
-            "30": {"execution_date": {"var": "value_date"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "25": {
+                "authorisation": {
+                    "var": "account_id"
+                }
+            },
+            "30": {
+                "execution_date": {
+                    "var": "value_date"
+                }
+            },
             "#": [
                 {
-                    "21": {"reference": {"var": "settlement1_ref"}},
+                    "21": {
+                        "reference": {
+                            "var": "settlement1_ref"
+                        }
+                    },
                     "32B": {
-                        "currency": {"var": "settlement1_currency"},
-                        "amount": {"var": "settlement1_amount"}
+                        "currency": {
+                            "var": "settlement1_currency"
+                        },
+                        "amount": {
+                            "var": "settlement1_amount"
+                        }
                     },
                     "50": {
                         "F": {
-                            "account": "/CH9300762011623852957",
-                            "party_identifier": "/SEC/1234567890",
+                            "account": "CH9300762011623852957",
+                            "party_identifier": "SEC/1234567890",
                             "name_and_address": [
                                 "BONDS SETTLEMENT",
                                 "ISIN: CH0012345678",
                                 "NOMINAL: CHF 2,000,000",
                                 "TRADE DATE: 2024-12-21"
                             ],
-                            "bic": {"fake": ["bic"]}
+                            "bic": "DEUTDEFF"
                         }
                     },
-                    "52": {"A": {"bic": {"var": "custodian_bic"}}},
-                    "56": {"A": {"bic": {"var": "clearinghouse_bic"}}}
+                    "52": {
+                        "A": {
+                            "bic": {
+                                "var": "custodian_bic"
+                            }
+                        }
+                    },
+                    "56": {
+                        "A": {
+                            "bic": {
+                                "var": "clearinghouse_bic"
+                            }
+                        }
+                    }
                 },
                 {
-                    "21": {"reference": {"var": "settlement2_ref"}},
+                    "21": {
+                        "reference": {
+                            "var": "settlement2_ref"
+                        }
+                    },
                     "32B": {
-                        "currency": {"var": "settlement2_currency"},
-                        "amount": {"var": "settlement2_amount"}
+                        "currency": {
+                            "var": "settlement2_currency"
+                        },
+                        "amount": {
+                            "var": "settlement2_amount"
+                        }
                     },
                     "50": {
                         "F": {
-                            "account": "/CH9300762011623852958",
-                            "party_identifier": "/INCOME/COUPON",
-                            "name_and_address": ["COUPON PAYMENT", "BOND: CH0012345678", "RATE: 2.5% P.A.", "PERIOD: 2024H2"],
-                            "bic": {"fake": ["bic"]}
+                            "account": "CH9300762011623852958",
+                            "party_identifier": "INCOME/COUPON",
+                            "name_and_address": [
+                                "COUPON PAYMENT",
+                                "BOND: CH0012345678",
+                                "RATE: 2.5% P.A.",
+                                "PERIOD: 2024H2"
+                            ],
+                            "bic": "DEUTDEFF"
                         }
                     },
                     "52": {
                         "D": {
-                            "party_identifier": "//PAYING-AGENT",
-                            "name_and_address": ["SWISS PAYING AGENT", "BOND SERVICES", "ZURICH", "SWITZERLAND"]
+                            "party_identifier": "PAYING-AGENT",
+                            "name_and_address": [
+                                "SWISS PAYING AGENT",
+                                "BOND SERVICES",
+                                "ZURICH",
+                                "SWITZERLAND"
+                            ]
                         }
                     }
                 }

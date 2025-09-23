@@ -13,15 +13,15 @@ use syn::Type;
 pub fn generate_to_swift_string_for_component(component: &Component) -> TokenStream {
     let field_name = &component.name;
     let field_type = &component.field_type;
+    let pattern = &component.format.pattern;
+
+    // Check if this pattern has a slash prefix
+    use crate::slash_handler_utils;
+    let slash_type = slash_handler_utils::get_slash_type(pattern);
+    let has_slash = !matches!(slash_type, slash_handler_utils::SlashPrefixType::None);
 
     // Handle special format patterns that require delimiters or specific formatting
-    match component.format.pattern.as_str() {
-        "/8c/" => {
-            // For /8c/ format, wrap the value in slashes
-            quote! {
-                format!("/{}/", self.#field_name)
-            }
-        }
+    match pattern.as_str() {
         // Handle [1!a] format for negative indicator (Field37H)
         "[1!a]" if matches!(categorize_type(field_type), TypeCategory::OptionBool) => {
             quote! {
@@ -45,12 +45,17 @@ pub fn generate_to_swift_string_for_component(component: &Component) -> TokenStr
                 }
             }
         }
-        // Handle optional prefix patterns like [/34x], [/2n], [/5n]
-        pattern if pattern.starts_with("[/") && pattern.ends_with("]") => {
+        // Use slash handler for patterns with slash prefixes
+        _ if has_slash => {
+            let slash_type_expr = slash_handler_utils::generate_slash_type_expr(slash_type);
+
             if matchers::option(matchers::string()).matches(field_type) {
                 quote! {
                     self.#field_name.as_ref()
-                        .map(|value| format!("/{}", value))
+                        .map(|value| {
+                            use crate::slash_handler::SlashPrefixHandler;
+                            crate::slash_handler::SwiftSlashHandler::serialize_with_slash(value, #slash_type_expr)
+                        })
                         .unwrap_or_default()
                 }
             } else if matchers::option(matchers::u32()).matches(field_type)
@@ -58,11 +63,36 @@ pub fn generate_to_swift_string_for_component(component: &Component) -> TokenStr
             {
                 quote! {
                     self.#field_name
-                        .map(|value| format!("/{}", value))
+                        .map(|value| {
+                            use crate::slash_handler::SlashPrefixHandler;
+                            crate::slash_handler::SwiftSlashHandler::serialize_with_slash(&value.to_string(), #slash_type_expr)
+                        })
                         .unwrap_or_default()
                 }
+            } else if matchers::string().matches(field_type) {
+                // Required string field with slash prefix
+                let base_value = quote! { self.#field_name.as_str() };
+                quote! {
+                    {
+                        use crate::slash_handler::SlashPrefixHandler;
+                        crate::slash_handler::SwiftSlashHandler::serialize_with_slash(
+                            #base_value,
+                            #slash_type_expr
+                        )
+                    }
+                }
             } else {
-                generate_to_swift_string_for_type(field_name, field_type)
+                // Other types - convert to string first
+                let base_value = generate_to_swift_string_for_type(field_name, field_type);
+                quote! {
+                    {
+                        use crate::slash_handler::SlashPrefixHandler;
+                        crate::slash_handler::SwiftSlashHandler::serialize_with_slash(
+                            &(#base_value),
+                            #slash_type_expr
+                        )
+                    }
+                }
             }
         }
         // Handle multi-line with line numbering like 4*(1!n/33x)
@@ -79,11 +109,19 @@ pub fn generate_to_swift_string_for_component(component: &Component) -> TokenStr
                 generate_to_swift_string_for_type(field_name, field_type)
             }
         }
-        // Handle amount format (15d) - always show 2 decimal places with comma separator
+        // Handle amount format (15d) - format with appropriate precision
         "15d" => {
             if matchers::f64().matches(field_type) {
                 quote! {
-                    format!("{:.2}", self.#field_name).replace('.', ",")
+                    {
+                        // Format the amount preserving EXACT precision
+                        // SWIFT amounts use comma as decimal separator
+                        // Use Rust's default f64 Display which preserves the exact value
+                        let value = self.#field_name;
+                        // Use format! with no precision specifier to get exact representation
+                        let formatted = format!("{}", value);
+                        formatted.replace('.', ",")
+                    }
                 }
             } else {
                 generate_to_swift_string_for_type(field_name, field_type)
@@ -110,7 +148,7 @@ pub fn generate_to_swift_string_for_type(
             self.#field_name.to_string()
         },
         TypeCategory::F64 => quote! {
-            // For exchange rates, preserve original precision by using the format that removes trailing zeros
+            // Preserve EXACT precision by using Rust's default f64 Display
             format!("{}", self.#field_name).replace('.', ",")
         },
         TypeCategory::U32 | TypeCategory::U8 => quote! {

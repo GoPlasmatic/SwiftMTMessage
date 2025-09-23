@@ -1,85 +1,198 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["NOTICE", {"fake": ["i64", 100000, 999999]}]},
-        "account_id": {"cat": ["GB82WEST", {"fake": ["i64", 10000000000000, 99999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "NOTICE",
+                100000
+            ]
+        },
+        "account_id": {
+            "cat": [
+                "GB82WEST",
+                10000000000000
+            ]
+        },
         "value_date": "2024-12-20",
-        "payment1_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "payment1_ref": {
+            "cat": [
+                "PAY",
+                100000000000
+            ]
+        },
         "payment1_currency": "USD",
-        "payment1_amount": {"fake": ["f64", 100000.0, 1000000.0]},
-        "payment2_ref": {"cat": ["SETTLE", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "payment1_amount": 10000,
+        "payment2_ref": {
+            "cat": [
+                "SETTLE",
+                100000000000
+            ]
+        },
         "payment2_currency": "USD",
-        "payment2_amount": {"fake": ["f64", 500000.0, 5000000.0]},
-        "payment3_ref": {"cat": ["LIQ", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "payment2_amount": 10000,
+        "payment3_ref": {
+            "cat": [
+                "LIQ",
+                100000000000
+            ]
+        },
         "payment3_currency": "USD",
-        "payment3_amount": {"fake": ["f64", 250000.0, 2500000.0]},
-        "ordering_bic": {"fake": ["bic"]},
-        "intermediary_bic": {"fake": ["bic"]},
+        "payment3_amount": 10000,
+        "ordering_bic": "DEUTDEFF",
+        "intermediary_bic": "DEUTDEFF",
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "210",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "210",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "25": {"authorisation": {"var": "account_id"}},
-            "30": {"execution_date": {"var": "value_date"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "25": {
+                "authorisation": {
+                    "var": "account_id"
+                }
+            },
+            "30": {
+                "execution_date": {
+                    "var": "value_date"
+                }
+            },
             "#": [
                 {
-                    "21": {"reference": {"var": "payment1_ref"}},
-                    "32B": {"currency": {"var": "payment1_currency"}, "amount": {"var": "payment1_amount"}},
-                    "50": {"NoOption": {"name_and_address": ["ORDERING CUSTOMER NAME", "NEW YORK NY 10001"]}},
-                    "56": {"A": {"bic": {"var": "intermediary_bic"}}}
+                    "21": {
+                        "reference": {
+                            "var": "payment1_ref"
+                        }
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "payment1_currency"
+                        },
+                        "amount": {
+                            "var": "payment1_amount"
+                        }
+                    },
+                    "50": {
+                        "NoOption": {
+                            "name_and_address": [
+                                "ORDERING CUSTOMER NAME",
+                                "NEW YORK NY 10001"
+                            ]
+                        }
+                    },
+                    "56": {
+                        "A": {
+                            "bic": {
+                                "var": "intermediary_bic"
+                            }
+                        }
+                    }
                 },
                 {
-                    "21": {"reference": {"var": "payment2_ref"}},
-                    "32B": {"currency": {"var": "payment2_currency"}, "amount": {"var": "payment2_amount"}},
-                    "52": {"A": {"bic": {"var": "ordering_bic"}}},
+                    "21": {
+                        "reference": {
+                            "var": "payment2_ref"
+                        }
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "payment2_currency"
+                        },
+                        "amount": {
+                            "var": "payment2_amount"
+                        }
+                    },
+                    "52": {
+                        "A": {
+                            "bic": {
+                                "var": "ordering_bic"
+                            }
+                        }
+                    },
                     "56": {
                         "D": {
-                            "party_identifier": "//CLRHOUSE001",
+                            "party_identifier": "CLRHOUSE001",
                             "name_and_address": [
                                 "CLEARING HOUSE",
                                 "SETTLEMENT SYSTEM",
-                                {"fake": ["city_name"]},
-                                {"fake": ["country_name"]}
+                                "NEW YORK",
+                                "USA"
                             ]
                         }
                     }
                 },
                 {
-                    "21": {"reference": {"var": "payment3_ref"}},
-                    "32B": {"currency": {"var": "payment3_currency"}, "amount": {"var": "payment3_amount"}},
+                    "21": {
+                        "reference": {
+                            "var": "payment3_ref"
+                        }
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "payment3_currency"
+                        },
+                        "amount": {
+                            "var": "payment3_amount"
+                        }
+                    },
                     "52": {
                         "D": {
-                            "party_identifier": "//CB12345",
+                            "party_identifier": "CB12345",
                             "name_and_address": [
                                 "CENTRAL BANK",
                                 "LIQUIDITY OPERATIONS",
                                 "MONETARY DEPARTMENT",
-                                {"fake": ["country_name"]}
+                                "USA"
                             ]
                         }
                     }

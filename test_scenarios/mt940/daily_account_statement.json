@@ -1,63 +1,122 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "account_id": {"cat": ["US64SVBK", {"fake": ["i64", 10000000000000, 99999999999999]}]},
-        "statement_num": {"fake": ["i64", 1000, 9999]},
-        "opening_balance": {"fake": ["f64", 250000.0, 1000000.0]},
-        "closing_balance": {"fake": ["f64", 300000.0, 1200000.0]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "account_id": {
+            "cat": [
+                "US64SVBK",
+                10000000000000
+            ]
+        },
+        "statement_num": 1000,
+        "opening_balance": 10000,
+        "closing_balance": 10000,
         "currency": "EUR",
         "value_date": "2024-12-23",
         "entry_date": "1223",
         "session_num": "0001",
         "sequence_num": "000456",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "940",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "940",
         "fields": {
-            "20": {"reference": {"cat": ["STMT", {"var": "statement_num"}]}},
-            "21": {"reference": "DAILY"},
-            "25": {"NoOption": {"authorisation": {"var": "account_id"}}},
-            "28C": {"statement_number": {"var": "statement_num"}, "sequence_number": 1},
+            "20": {
+                "reference": {
+                    "cat": [
+                        "STMT",
+                        {
+                            "var": "statement_num"
+                        }
+                    ]
+                }
+            },
+            "21": {
+                "reference": "DAILY"
+            },
+            "25": {
+                "NoOption": {
+                    "authorisation": {
+                        "var": "account_id"
+                    }
+                }
+            },
+            "28C": {
+                "statement_number": {
+                    "var": "statement_num"
+                },
+                "sequence_number": 1
+            },
             "60": {
                 "F": {
                     "debit_credit_mark": "C",
-                    "value_date": {"var": "value_date"},
-                    "currency": {"var": "currency"},
-                    "amount": {"var": "opening_balance"}
+                    "value_date": {
+                        "var": "value_date"
+                    },
+                    "currency": {
+                        "var": "currency"
+                    },
+                    "amount": {
+                        "var": "opening_balance"
+                    }
                 }
             },
             "#": [
                 {
                     "61": {
                         "value_date": "2024-12-23",
-                        "entry_date": {"var": "entry_date"},
+                        "entry_date": {
+                            "var": "entry_date"
+                        },
                         "debit_credit_mark": "C",
-                        "amount": 150000.0,
+                        "amount": 150000,
                         "transaction_type": "NTRF",
-                        "customer_reference": "WIRE-IN-001",
-                        "bank_reference": "//BANK-REF-001"
+                        "customer_reference": "WIREIN0000000001",
+                        "bank_reference": "BA1-1234567890"
                     },
                     "86": {
                         "narrative": [
@@ -71,12 +130,14 @@
                 {
                     "61": {
                         "value_date": "2024-12-23",
-                        "entry_date": {"var": "entry_date"},
+                        "entry_date": {
+                            "var": "entry_date"
+                        },
                         "debit_credit_mark": "D",
-                        "amount": 75000.0,
+                        "amount": 75000,
                         "transaction_type": "NTRF",
-                        "customer_reference": "WIRE-OUT-001",
-                        "bank_reference": "//BANK-REF-002"
+                        "customer_reference": "WIREOUT000000001",
+                        "bank_reference": "BA2-1234567890"
                     },
                     "86": {
                         "narrative": [
@@ -90,45 +151,55 @@
                 {
                     "61": {
                         "value_date": "2024-12-23",
-                        "entry_date": {"var": "entry_date"},
+                        "entry_date": {
+                            "var": "entry_date"
+                        },
                         "debit_credit_mark": "D",
-                        "amount": 25000.0,
+                        "amount": 25000,
                         "transaction_type": "NCHK",
-                        "customer_reference": "CHK-001234",
-                        "bank_reference": "//BANK-REF-003"
-                    },
-                    "86": {
-                        "narrative": ["/CHK/001234", "/PAYEE/LOCAL VENDOR INC", "/PURPOSE/MONTHLY SERVICES"]
-                    }
-                },
-                {
-                    "61": {
-                        "value_date": "2024-12-23",
-                        "entry_date": {"var": "entry_date"},
-                        "debit_credit_mark": "C",
-                        "amount": 500.0,
-                        "transaction_type": "NINT",
-                        "customer_reference": "INT-DEC-2024",
-                        "bank_reference": "//BANK-REF-004"
+                        "customer_reference": "CHK0000000001234",
+                        "bank_reference": "BA3-1234567890"
                     },
                     "86": {
                         "narrative": [
-                            "/INT/CREDIT INTEREST",
-                            "/PERIOD/01-DEC TO 23-DEC",
-                            "/RATE/2.5% PA",
-                            "/BALANCE/AVERAGE 400000.00"
+                            "/CHK/001234",
+                            "/PAYEE/LOCAL VENDOR INC",
+                            "/PURPOSE/MONTHLY SERVICES"
                         ]
                     }
                 },
                 {
                     "61": {
                         "value_date": "2024-12-23",
-                        "entry_date": {"var": "entry_date"},
+                        "entry_date": {
+                            "var": "entry_date"
+                        },
+                        "debit_credit_mark": "C",
+                        "amount": 500,
+                        "transaction_type": "NINT",
+                        "customer_reference": "INT00000DEC-2024",
+                        "bank_reference": "BA4-1234567890"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/INT/CREDIT INTEREST",
+                            "/PERIOD/01-DEC TO 23-DEC",
+                            "/RATE/2.5% PA",
+                            "/BALANCE/AVERAGE 4000000"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-23",
+                        "entry_date": {
+                            "var": "entry_date"
+                        },
                         "debit_credit_mark": "D",
-                        "amount": 50.0,
+                        "amount": 50,
                         "transaction_type": "NCHG",
-                        "customer_reference": "FEE-WIRE-001",
-                        "bank_reference": "//BANK-REF-005"
+                        "customer_reference": "FEE-WIRE-0010000",
+                        "bank_reference": "BA5-1234567890"
                     },
                     "86": {
                         "narrative": [
@@ -143,15 +214,23 @@
                 "F": {
                     "debit_credit_mark": "C",
                     "value_date": "2024-12-23",
-                    "currency": {"var": "currency"},
-                    "amount": {"var": "closing_balance"}
+                    "currency": {
+                        "var": "currency"
+                    },
+                    "amount": {
+                        "var": "closing_balance"
+                    }
                 }
             },
             "64": {
                 "debit_credit_mark": "C",
                 "value_date": "2024-12-23",
-                "currency": {"var": "currency"},
-                "amount": {"var": "closing_balance"}
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "closing_balance"
+                }
             }
         }
     }

@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -109,7 +110,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Structured intermediary identification using BIC code with optional party identifier.
 /// Preferred option for automated payment routing and system integration.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field56A {
     /// Optional party identifier for routing and payment method codes
     ///
@@ -130,7 +132,8 @@ pub struct Field56A {
 ///
 /// Simplified intermediary reference using party identifier only.
 /// Used when BIC is not required or available for routing purposes.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field56C {
     /// Party identifier for intermediary routing
     ///
@@ -144,7 +147,8 @@ pub struct Field56C {
 ///
 /// Detailed intermediary identification with full name and address information.
 /// Used when structured BIC identification is not available for intermediary.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field56D {
     /// Optional party identifier for routing and payment method codes
     ///
@@ -161,14 +165,16 @@ pub struct Field56D {
     pub name_and_address: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field56Intermediary {
     A(Field56A),
     C(Field56C),
     D(Field56D),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field56IntermediaryAD {
     A(Field56A),
     D(Field56D),

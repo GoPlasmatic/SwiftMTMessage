@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -35,7 +36,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Contains structured envelope information with specific format requirements.
 /// Used for regulatory and compliance documentation with extensive content capacity.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field77T {
     /// Envelope content
     ///
@@ -49,7 +51,8 @@ pub struct Field77T {
 ///
 /// Provides extended narrative information with up to 20 lines of text.
 /// Used for detailed documentation and extensive information requirements.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field77A {
     /// Extended narrative content
     ///
@@ -63,7 +66,8 @@ pub struct Field77A {
 ///
 /// Provides shorter narrative information with up to 3 lines of text.
 /// Used for concise documentation and brief additional information.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field77B {
     /// Short narrative content
     ///

@@ -1,58 +1,128 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "reference": {"cat": ["COVREJ", {"fake": ["i64", 100000, 999999]}]},
-        "related_ref": {"cat": ["COVORG", {"fake": ["i64", 100000, 999999]}]},
-        "amount": 5000000.0,
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "reference": {
+            "cat": [
+                "COVREJ",
+                100000
+            ]
+        },
+        "related_ref": {
+            "cat": [
+                "COVORG",
+                100000
+            ]
+        },
+        "amount": 5000000,
         "currency": "EUR",
         "value_date": "2024-12-23",
-        "uetr_original": {"fake": ["uuid"]},
+        "uetr_original": "550e8400-e29b-41d4-a716-446655440000",
         "session_num": "0001",
         "sequence_num": "006789",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "202",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "202",
         "fields": {
-            "20": {"reference": {"var": "reference"}},
-            "21": {"reference": {"var": "related_ref"}},
-            "32A": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "amount"}
+            "20": {
+                "reference": {
+                    "var": "reference"
+                }
             },
-            "52A": {"bic": "DEUTDEFFXXX"},
-            "53A": {"bic": "BNPAFRPPXXX"},
-            "56A": {"bic": "SOGEFRPPXXX"},
-            "57A": {"bic": "BARCGB22XXX"},
-            "58": {"A": {"bic": {"var": "sender_bic"}}},
+            "21": {
+                "reference": {
+                    "var": "related_ref"
+                }
+            },
+            "32A": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "amount"
+                }
+            },
+            "52A": {
+                "bic": "DEUTDEFFXXX"
+            },
+            "53A": {
+                "bic": "BNPAFRPPXXX"
+            },
+            "56A": {
+                "bic": "SOGEFRPPXXX"
+            },
+            "57A": {
+                "bic": "BARCGB22XXX"
+            },
+            "58": {
+                "A": {
+                    "bic": {
+                        "var": "sender_bic"
+                    }
+                }
+            },
             "72": {
                 "information": [
                     "/REJ/COMPLIANCE REJECTION",
                     "/REJREAS/RC08",
                     "/ORGNL/",
-                    {"substr": [{"var": "uetr_original"}, 0, 35]},
+                    {
+                        "substr": [
+                            {
+                                "var": "uetr_original"
+                            },
+                            0,
+                            35
+                        ]
+                    },
                     "/COMPLIANCE/SANCTIONS FAIL",
                     "/CBPR/REJECTED COVER PAYMENT"
                 ]

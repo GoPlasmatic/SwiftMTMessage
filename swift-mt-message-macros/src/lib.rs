@@ -10,6 +10,7 @@ mod ast;
 mod codegen;
 mod error;
 mod format;
+mod slash_handler_utils;
 mod utils;
 
 use error::MacroError;

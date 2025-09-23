@@ -1,51 +1,93 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "answer_ref": {"cat": ["REJ", {"fake": ["i64", 100000, 999999]}]},
-        "cancel_ref": {"cat": ["URG", {"fake": ["i64", 100000, 999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "answer_ref": {
+            "cat": [
+                "REJ",
+                100000
+            ]
+        },
+        "cancel_ref": {
+            "cat": [
+                "URG",
+                100000
+            ]
+        },
         "original_mt": "192",
         "date": "2024-12-22",
         "session": "2345",
         "sequence": "234567",
         "response_code": "REJECTED",
         "reason_code": "LATE",
-        "amount": {"fake": ["f64", 100000.0, 500000.0]},
+        "amount": 10000,
         "currency": "EUR",
         "session_num": "0001",
         "sequence_num": "000456",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "196",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "196",
         "fields": {
-            "20": {"reference": {"var": "answer_ref"}},
-            "21": {"reference": {"var": "cancel_ref"}},
+            "20": {
+                "reference": {
+                    "var": "answer_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "var": "cancel_ref"
+                }
+            },
             "76": {
                 "information": [
                     "/RJCR/LATE/REJECTED",
                     "CANCELLATION REJECTED",
-                    "AMOUNT: EUR 250000.00",
+                    "AMOUNT: EUR 2500000",
                     "DATE: 2024-12-22",
                     "TIME: 09:15:00 UTC",
                     "PAYMENT ALREADY PROCESSED"
@@ -53,28 +95,31 @@
             },
             "11": {
                 "S": {
-                    "message_type": {"var": "original_mt"},
-                    "date": {"var": "date"},
-                    "session_number": {"var": "session"},
-                    "input_sequence_number": {"var": "sequence"}
+                    "message_type": {
+                        "var": "original_mt"
+                    },
+                    "date": {
+                        "var": "date"
+                    },
+                    "session_number": {
+                        "var": "session"
+                    },
+                    "input_sequence_number": {
+                        "var": "sequence"
+                    }
                 }
             },
             "79": {
                 "information": [
                     "RESPONSE TO CANCELLATION REQUEST",
-                    "",
                     "ORIGINAL MT192 REFERENCE: URG456789",
-                    "",
                     "CANCELLATION REQUEST REJECTED",
                     "REASON: PAYMENT ALREADY EXECUTED",
-                    "",
                     "PAYMENT WAS PROCESSED AT 08:30 UTC",
                     "BENEFICIARY ACCOUNT CREDITED",
                     "VALUE DATE: 2024-12-22",
-                    "",
                     "UNABLE TO REVERSE TRANSACTION",
                     "PLEASE INITIATE MT103 RETURN IF REQUIRED",
-                    "",
                     "TRANSACTION DETAILS AVAILABLE VIA MT950",
                     "CONTACT: settlements@bank.com"
                 ]

@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -128,7 +129,8 @@ use swift_mt_message_macros::SwiftField;
 ///   **Field 34F: Floor Limit Structure**
 ///
 /// Contains currency, optional indicator, and amount for processing threshold definition.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field34F {
     /// Currency code for floor limit
     ///

@@ -1,62 +1,144 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["WDR", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "related_ref": {"cat": ["INT", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "currency": {"fake": ["currency_code"]},
-        "interest_amount": {"fake": ["f64", 100.0, 10000.0]},
-        "ordering_bic": {"fake": ["bic"]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "WDR",
+                100000000000
+            ]
+        },
+        "related_ref": {
+            "cat": [
+                "INT",
+                100000000000
+            ]
+        },
+        "currency": "USD",
+        "interest_amount": 10000,
+        "ordering_bic": "DEUTDEFF",
         "session_num": "0001",
-        "sequence_num": {"cat": ["", {"fake": ["i64", 100000, 999999]}]},
-        "uetr": {"fake": ["uuid"]},
-        "correct_amount": {"fake": ["f64", 50.0, 5000.0]}
+        "sequence_num": {
+            "cat": [
+                "",
+                100000
+            ]
+        },
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "correct_amount": 10000
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "291",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "291",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "21": {"reference": {"var": "related_ref"}},
-            "32B": {
-                "currency": {"var": "currency"},
-                "amount": {"var": "interest_amount"}
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
             },
-            "52": {"D": {
-                "party_identifier": "/NOSTRO ACCOUNT",
-                "name_and_address": [
-                    "CORRESPONDENT BANK",
-                    "TREASURY DEPARTMENT",
-                    "LONDON",
-                    "UNITED KINGDOM"
-                ]
-            }},
+            "21": {
+                "reference": {
+                    "var": "related_ref"
+                }
+            },
+            "32B": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "interest_amount"
+                }
+            },
+            "52": {
+                "D": {
+                    "party_identifier": "NOSTRO ACCOUNT",
+                    "name_and_address": [
+                        "CORRESPONDENT BANK",
+                        "TREASURY DEPARTMENT",
+                        "LONDON",
+                        "UNITED KINGDOM"
+                    ]
+                }
+            },
             "71B": {
                 "details": [
                     "WITHDRAWAL OF INTEREST CLAIM",
-                    {"cat": ["ORIGINAL MT191: ", {"var": "related_ref"}]},
+                    {
+                        "cat": [
+                            "ORIGINAL MT191: ",
+                            {
+                                "var": "related_ref"
+                            }
+                        ]
+                    },
                     "REASON: CALCULATION ERROR",
-                    {"cat": ["CLAIMED: ", {"var": "currency"}, " ", {"var": "interest_amount"}]},
-                    {"cat": ["CORRECT: ", {"var": "currency"}, " ", {"var": "correct_amount"}]},
+                    {
+                        "cat": [
+                            "CLAIMED: ",
+                            {
+                                "var": "currency"
+                            },
+                            " ",
+                            {
+                                "var": "interest_amount"
+                            }
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "CORRECT: ",
+                            {
+                                "var": "currency"
+                            },
+                            " ",
+                            {
+                                "var": "correct_amount"
+                            }
+                        ]
+                    },
                     "NEW MT191 TO FOLLOW"
                 ]
             },

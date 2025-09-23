@@ -1,14 +1,24 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["RTNDD", {"fake": ["i64", 10000000000, 99999999999]}]},
-        "original_ref": {"cat": ["GDDBT", {"fake": ["i64", 10000000000, 99999999999]}]},
-        "currency": {"fake": ["currency_code"]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "RTNDD",
+                10000000000
+            ]
+        },
+        "original_ref": {
+            "cat": [
+                "GDDBT",
+                10000000000
+            ]
+        },
+        "currency": "USD",
         "execution_date": "2024-12-29",
         "charges": "SHA",
-        "uetr": {"fake": ["uuid"]},
-        "original_uetr": {"fake": ["uuid"]},
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "original_uetr": "550e8400-e29b-41d4-a716-446655440000",
         "session_num": "0001",
         "sequence_num": "000123"
     },
@@ -16,28 +26,69 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "107",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
-        "user_header": {"service_type_id": "gpi", "unique_end_to_end_reference": {"var": "uetr"}},
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            }
+        },
         "message_type": "107",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "23E": {"instruction_code": "RTND"},
-            "21E": {"reference": {"var": "original_ref"}},
-            "30": {"execution_date": {"var": "execution_date"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "23E": {
+                "instruction_code": "RTND"
+            },
+            "21E": {
+                "reference": {
+                    "var": "original_ref"
+                }
+            },
+            "30": {
+                "execution_date": {
+                    "var": "execution_date"
+                }
+            },
             "50#2": {
                 "K": {
-                    "account": "/RETURN-PROCESSOR",
+                    "account": "RETURN-PROCESSOR",
                     "name_and_address": [
                         "RETURNS DEPARTMENT",
                         "FINANCIAL INSTITUTION",
@@ -46,28 +97,67 @@
                     ]
                 }
             },
-            "51A": {"bic": {"var": "sender_bic"}},
-            "71A": {"code": {"var": "charges"}},
+            "51A": {
+                "bic": {
+                    "var": "sender_bic"
+                }
+            },
+            "71A": {
+                "code": {
+                    "var": "charges"
+                }
+            },
             "72": {
                 "information": [
                     "/RETN/DIRECT DEBIT RETURNS",
-                    {"substr": [{"cat": ["/ORGNL/", {"var": "original_ref"}]}, 0, 35]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "/ORGNL/",
+                                    {
+                                        "var": "original_ref"
+                                    }
+                                ]
+                            },
+                            0,
+                            35
+                        ]
+                    },
                     "/RSNCD/AC04",
                     "/DATE/2024-12-25"
                 ]
             },
             "#": [
                 {
-                    "21": {"reference": {"cat": ["RTN", {"fake": ["i64", 10000000, 99999999]}]}},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 100.0, 1000.0]}},
+                    "21": {
+                        "reference": {
+                            "cat": [
+                                "RTN",
+                                10000000
+                            ]
+                        }
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": 10000
+                    },
                     "59": {
                         "NoOption": {
-                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "account": "1000000000000000",
                             "name_and_address": [
-                                {"fake": ["company_name"]},
+                                "ACME CORPORATION",
                                 "ACCOUNT HOLDER",
-                                {"fake": ["street_address"]},
-                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                                "123 MAIN STREET",
+                                {
+                                    "cat": [
+                                        "NEW YORK",
+                                        ", ",
+                                        "US"
+                                    ]
+                                }
                             ]
                         }
                     },
@@ -75,22 +165,45 @@
                         "narrative": [
                             "/RFB/DD RETURN",
                             "/RETN/AC04",
-                            {"cat": ["/ORGNL/TXN", {"fake": ["i64", 10000000, 99999999]}]},
+                            {
+                                "cat": [
+                                    "/ORGNL/TXN",
+                                    10000000
+                                ]
+                            },
                             "/CD/ACCOUNT CLOSED"
                         ]
                     }
                 },
                 {
-                    "21": {"reference": {"cat": ["RTN", {"fake": ["i64", 10000000, 99999999]}]}},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 200.0, 2000.0]}},
+                    "21": {
+                        "reference": {
+                            "cat": [
+                                "RTN",
+                                10000000
+                            ]
+                        }
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": 10000
+                    },
                     "59": {
                         "NoOption": {
-                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "account": "1000000000000000",
                             "name_and_address": [
-                                {"fake": ["company_name"]},
+                                "ACME CORPORATION",
                                 "CUSTOMER",
-                                {"fake": ["street_address"]},
-                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                                "123 MAIN STREET",
+                                {
+                                    "cat": [
+                                        "NEW YORK",
+                                        ", ",
+                                        "US"
+                                    ]
+                                }
                             ]
                         }
                     },
@@ -98,22 +211,45 @@
                         "narrative": [
                             "/RFB/DD RETURN",
                             "/RETN/AM04",
-                            {"cat": ["/ORGNL/TXN", {"fake": ["i64", 10000000, 99999999]}]},
+                            {
+                                "cat": [
+                                    "/ORGNL/TXN",
+                                    10000000
+                                ]
+                            },
                             "/CD/INSUFFICIENT FUNDS"
                         ]
                     }
                 },
                 {
-                    "21": {"reference": {"cat": ["RTN", {"fake": ["i64", 10000000, 99999999]}]}},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 150.0, 1500.0]}},
+                    "21": {
+                        "reference": {
+                            "cat": [
+                                "RTN",
+                                10000000
+                            ]
+                        }
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": 10000
+                    },
                     "59": {
                         "NoOption": {
-                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "account": "1000000000000000",
                             "name_and_address": [
-                                {"fake": ["company_name"]},
+                                "ACME CORPORATION",
                                 "DEBTOR",
-                                {"fake": ["street_address"]},
-                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                                "123 MAIN STREET",
+                                {
+                                    "cat": [
+                                        "NEW YORK",
+                                        ", ",
+                                        "US"
+                                    ]
+                                }
                             ]
                         }
                     },
@@ -122,7 +258,12 @@
                             "/RFB/DD RETURN",
                             "/RETN/MD01",
                             "/CD/NO MANDATE",
-                            {"cat": ["/ORGNL/TXN", {"fake": ["i64", 10000000, 99999999]}]}
+                            {
+                                "cat": [
+                                    "/ORGNL/TXN",
+                                    10000000
+                                ]
+                            }
                         ]
                     }
                 }

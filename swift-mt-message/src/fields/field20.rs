@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -51,7 +52,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Swift FIN User Handbook: Message Structure and Field Specifications
 /// - MT103 Specification: Customer Credit Transfer requirements
 /// - Cover Payment Guidelines: Field 20/21 relationship rules
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field20 {
     /// The sender's reference string (max 16 characters)
     ///

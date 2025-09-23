@@ -1,4 +1,5 @@
 use chrono::NaiveDate;
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -73,7 +74,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Initial opening balance at the beginning of a statement period.
 /// Used when starting a new statement or account balance sequence.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field60F {
     /// Debit or Credit mark
     ///
@@ -108,7 +110,8 @@ pub struct Field60F {
 ///
 /// Opening balance after a sequence break within a statement period.
 /// Used to maintain balance continuity across statement sequences.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field60M {
     /// Debit or Credit mark
     ///
@@ -139,7 +142,8 @@ pub struct Field60M {
     pub amount: f64,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field60 {
     F(Field60F),
     M(Field60M),

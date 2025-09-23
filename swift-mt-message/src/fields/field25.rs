@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -124,7 +125,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Security authorization code or digital signature between ordering customer
 /// and account servicing financial institution.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field25NoOption {
     /// Authorization code or digital signature
     ///
@@ -137,7 +139,8 @@ pub struct Field25NoOption {
 ///   **Field 25A: Account Identifier**
 ///
 /// Simple account identification with slash prefix for basic account specification.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field25A {
     /// Account identifier with slash prefix
     ///
@@ -151,7 +154,8 @@ pub struct Field25A {
 ///
 /// Account identification with associated financial institution BIC code
 /// for complete account specification.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field25P {
     /// Account identifier
     ///
@@ -172,7 +176,8 @@ pub struct Field25P {
 ///
 /// Enumeration of account identification options providing flexibility
 /// for different account specification needs.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field25AccountIdentification {
     /// Authorization code without account specification
     NoOption(Field25NoOption),

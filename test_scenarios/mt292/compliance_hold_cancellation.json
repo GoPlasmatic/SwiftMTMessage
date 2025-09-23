@@ -1,79 +1,150 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "cancel_ref": {"cat": ["CHOLD", {"fake": ["i64", 100000, 999999]}]},
-        "original_ref": {"cat": ["CORP", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "cancel_ref": {
+            "cat": [
+                "CHOLD",
+                100000
+            ]
+        },
+        "original_ref": {
+            "cat": [
+                "CORP",
+                100000000000
+            ]
+        },
         "message_type": "103",
         "date": "2024-12-22",
         "session": "2345",
         "sequence": "678901",
         "reason_code": "LEGL",
-        "amount": {"fake": ["f64", 500000.0, 2500000.0]},
+        "amount": 10000,
         "currency": "EUR",
         "session_num": "0001",
         "sequence_num": "000456",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "292",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
-            "service_type_id": "fin",
+            "service_type_identifier": "fin",
             "banking_priority": "0001",
-            "unique_end_to_end_reference": {"var": "uetr"}
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            }
         },
         "message_type": "292",
         "fields": {
-            "20": {"reference": {"var": "cancel_ref"}},
-            "21": {"reference": {"var": "original_ref"}},
+            "20": {
+                "reference": {
+                    "var": "cancel_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "var": "original_ref"
+                }
+            },
             "11S": {
-                "message_type": {"var": "message_type"},
-                "date": {"var": "date"},
-                "session_number": {"var": "session"},
-                "input_sequence_number": {"var": "sequence"}
+                "message_type": {
+                    "var": "message_type"
+                },
+                "date": {
+                    "var": "date"
+                },
+                "session_number": {
+                    "var": "session"
+                },
+                "input_sequence_number": {
+                    "var": "sequence"
+                }
             },
             "79": {
                 "information": [
-                    {"cat": ["/", {"var": "reason_code"}, "/"]},
+                    {
+                        "cat": [
+                            "/",
+                            {
+                                "var": "reason_code"
+                            },
+                            "/"
+                        ]
+                    },
                     "COMPLIANCE HOLD - CANCELLATION REQUEST",
-                    "",
-                    {"cat": ["ORIGINAL MESSAGE: MT", {"var": "message_type"}]},
-                    {"cat": ["REFERENCE: ", {"var": "original_ref"}]},
+                    {
+                        "cat": [
+                            "ORIGINAL MESSAGE: MT",
+                            {
+                                "var": "message_type"
+                            }
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "REFERENCE: ",
+                            {
+                                "var": "original_ref"
+                            }
+                        ]
+                    },
                     {
                         "cat": [
                             "AMOUNT: ",
-                            {"var": "currency"},
+                            {
+                                "var": "currency"
+                            },
                             " ",
-                            {"var": "amount"}
+                            {
+                                "var": "amount"
+                            }
                         ]
                     },
-                    "",
                     "REGULATORY COMPLIANCE REQUIREMENT",
                     "ENHANCED DUE DILIGENCE TRIGGERED",
                     "HIGH RISK JURISDICTION DETECTED",
-                    "",
                     "COMPLIANCE DEPARTMENT DIRECTIVE:",
                     "- IMMEDIATE PAYMENT SUSPENSION",
                     "- ADDITIONAL DOCUMENTATION REQUIRED",
                     "- KYC/AML REVIEW PENDING",
-                    "",
                     "ESTIMATED REVIEW TIME: 48-72 HOURS",
                     "CASE REFERENCE: COMPL-2024-1234",
-                    "",
                     "DO NOT PROCESS UNTIL CLEARED",
                     "CONTACT: compliance@bank.com"
                 ]

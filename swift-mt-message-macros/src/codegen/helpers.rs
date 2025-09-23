@@ -41,12 +41,19 @@ pub fn generate_optional_prefix_field(
     let add_first = if first_is_optional {
         quote! {
             if let Some(ref value) = self.#first_field {
-                result.push(#prefix);
+                // Only add prefix if value doesn't already start with it
+                if !value.starts_with(#prefix) {
+                    result.push(#prefix);
+                }
                 result.push_str(value);
             }
         }
     } else {
         quote! {
+            // For non-optional fields, also check if prefix already exists
+            if !self.#first_field.starts_with(#prefix) {
+                result.push(#prefix);
+            }
             result.push_str(&self.#first_field);
         }
     };
@@ -111,7 +118,10 @@ pub fn generate_account_bic_field(
             let mut result = String::with_capacity(capacity);
 
             if let Some(ref account) = self.#account_field {
-                result.push('/');
+                // Only add slash if account doesn't already start with one
+                if !account.starts_with('/') {
+                    result.push('/');
+                }
                 result.push_str(account);
                 result.push_str("\n");
             }
@@ -138,7 +148,10 @@ pub fn generate_numbered_lines_field(
             let mut result = String::with_capacity(capacity);
 
             if let Some(ref party_id) = self.#party_field {
-                result.push('/');
+                // Only add slash if party_id doesn't already start with one
+                if !party_id.starts_with('/') {
+                    result.push('/');
+                }
                 result.push_str(party_id);
             }
 

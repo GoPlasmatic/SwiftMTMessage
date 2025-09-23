@@ -1,57 +1,140 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["SWP", {"fake": ["i64", 1000000000000, 9999999999999]}]},
-        "related_ref": {"cat": ["MSTR", {"fake": ["i64", 1000, 9999]}]},
-        "account_number": {"cat": ["SUB", {"fake": ["i64", 100000000, 999999999]}]},
-        "master_account": {"cat": ["MSTR", {"fake": ["i64", 100000000, 999999999]}]},
-        "statement_num": {"fake": ["i64", 1, 999]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "SWP",
+                1000000000000
+            ]
+        },
+        "related_ref": {
+            "cat": [
+                "MSTR",
+                1000
+            ]
+        },
+        "account_number": {
+            "cat": [
+                "SUB",
+                100000000
+            ]
+        },
+        "master_account": {
+            "cat": [
+                "MSTR",
+                100000000
+            ]
+        },
+        "statement_num": 1,
         "currency": "GBP",
-        "debit_limit": {"fake": ["f64", 50000.0, 500000.0]},
-        "credit_limit": {"fake": ["f64", 100000.0, 1000000.0]},
+        "debit_limit": 10000,
+        "credit_limit": 10000,
         "report_date": "241220",
         "report_time": "1700",
-        "sweep_amount": {"fake": ["f64", 75000.0, 250000.0]},
-        "fee_amount": {"fake": ["f64", 10.0, 50.0]},
-        "ref1": {"cat": ["SWEEP", {"fake": ["i64", 100000, 999999]}]},
-        "ref2": {"cat": ["FEE", {"fake": ["i64", 100000, 999999]}]},
+        "sweep_amount": 10000,
+        "fee_amount": 10000,
+        "ref1": {
+            "cat": [
+                "00000SWEEP",
+                100000
+            ]
+        },
+        "ref2": {
+            "cat": [
+                "0000000FEE",
+                100000
+            ]
+        },
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
             "session_number": "0001",
             "sequence_number": "000001"
         },
         "application_header": {
             "direction": "I",
             "message_type": "942",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "942",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "21": {"reference": {"var": "related_ref"}},
-            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "28C": {"statement_number": {"var": "statement_num"}, "sequence_number": 1},
-            "34F#1": {"currency": {"var": "currency"}, "amount": {"var": "debit_limit"}},
-            "34F#2": {"currency": {"var": "currency"}, "amount": {"var": "credit_limit"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "var": "related_ref"
+                }
+            },
+            "25": {
+                "NoOption": {
+                    "authorisation": {
+                        "var": "account_number"
+                    }
+                }
+            },
+            "28C": {
+                "statement_number": {
+                    "var": "statement_num"
+                },
+                "sequence_number": 1
+            },
+            "34F#1": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "debit_limit"
+                }
+            },
+            "34F#2": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "credit_limit"
+                }
+            },
             "13D": {
                 "date": "2024-12-20",
-                "time": "17:00",
+                "time": "17:00:00",
                 "offset_sign": "+",
                 "offset_seconds": "0000"
             },
@@ -61,18 +144,27 @@
                         "value_date": "2024-12-20",
                         "entry_date": "1220",
                         "debit_credit_mark": "D",
-                        "currency": {"var": "currency"},
-                        "amount": {"var": "sweep_amount"},
+                        "amount": {
+                            "var": "sweep_amount"
+                        },
                         "transaction_type": "NMSC",
-                        "customer_reference": {"var": "ref1"},
-                        "bank_reference": "//AUTOSWEEP",
-                        "supplementary_details": "EOD"
+                        "customer_reference": {
+                            "var": "ref1"
+                        },
+                        "bank_reference": "BA1-1234567890"
                     },
                     "86": {
                         "narrative": [
                             "/TYPE/AUTOMATED CASH SWEEP",
                             "/FROM/SUBSIDIARY ACCOUNT",
-                            {"cat": ["/TO/MASTER ACCOUNT ", {"var": "master_account"}]},
+                            {
+                                "cat": [
+                                    "/TO/MASTER ACCOUNT ",
+                                    {
+                                        "var": "master_account"
+                                    }
+                                ]
+                            },
                             "/TRIGGER/END OF DAY BALANCE"
                         ]
                     }
@@ -82,11 +174,14 @@
                         "value_date": "2024-12-20",
                         "entry_date": "1220",
                         "debit_credit_mark": "D",
-                        "currency": {"var": "currency"},
-                        "amount": {"var": "fee_amount"},
+                        "amount": {
+                            "var": "fee_amount"
+                        },
                         "transaction_type": "NCHG",
-                        "customer_reference": {"var": "ref2"},
-                        "bank_reference": "//SWEEPFEE"
+                        "customer_reference": {
+                            "var": "ref2"
+                        },
+                        "bank_reference": "BA2-1234567890"
                     },
                     "86": {
                         "narrative": [
@@ -97,7 +192,13 @@
                     }
                 }
             ],
-            "90D": {"number": 2, "currency": {"var": "currency"}, "amount": 250050.0},
+            "90D": {
+                "number": 2,
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": 250050
+            },
             "86": {
                 "narrative": [
                     "/SERVICE/TREASURY CASH MANAGEMENT",

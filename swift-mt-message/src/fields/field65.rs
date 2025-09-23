@@ -1,4 +1,5 @@
 use chrono::NaiveDate;
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -82,7 +83,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Contains the forward available balance with debit/credit indication, future value date,
 /// currency, and amount representing funds that will be available.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field65 {
     /// Debit or Credit mark
     ///

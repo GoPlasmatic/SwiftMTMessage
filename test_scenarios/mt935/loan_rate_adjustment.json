@@ -1,46 +1,100 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["LOAN", {"fake": ["i64", 100000, 999999]}]},
-        "loan_account": {"cat": ["LOAN", {"fake": ["i64", 1000000000, 9999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "LOAN",
+                100000
+            ]
+        },
+        "loan_account": {
+            "cat": [
+                "LOAN",
+                1000000000
+            ]
+        },
         "effective_date": "2025-02-01",
-        "base_rate": {"fake": ["f64", 3.0, 5.0]},
-        "spread": {"fake": ["f64", 1.0, 3.0]},
-        "total_rate": {"fake": ["f64", 4.0, 8.0]},
+        "base_rate": 10000,
+        "spread": 10000,
+        "total_rate": 10000,
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "935",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "935",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
             "#": [
                 {
-                    "25": {"authorisation": {"var": "loan_account"}},
-                    "30": {"execution_date": {"var": "effective_date"}},
-                    "37H": [{"rate_indicator": "D", "is_negative": false, "rate": {"var": "total_rate"}}]
+                    "25": {
+                        "authorisation": {
+                            "var": "loan_account"
+                        }
+                    },
+                    "30": {
+                        "execution_date": {
+                            "var": "effective_date"
+                        }
+                    },
+                    "37H": [
+                        {
+                            "rate_indicator": "D",
+                            "is_negative": false,
+                            "rate": {
+                                "var": "total_rate"
+                            }
+                        }
+                    ]
                 }
             ],
             "72": {

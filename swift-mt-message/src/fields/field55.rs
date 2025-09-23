@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -98,7 +99,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Structured third institution identification using BIC code with optional party identifier.
 /// Used for complex correspondent banking chains requiring additional institutional routing.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field55A {
     /// Optional party identifier for third institution account reference
     ///
@@ -119,7 +121,8 @@ pub struct Field55A {
 ///
 /// Domestic third institution routing using party identifier and location details.
 /// Used for location-based routing in complex domestic settlement arrangements.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field55B {
     /// Optional party identifier for third institution account reference
     ///
@@ -140,7 +143,8 @@ pub struct Field55B {
 ///
 /// Detailed third institution identification with full name and address information.
 /// Used when structured BIC identification is not available for third institution.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field55D {
     /// Optional party identifier for third institution account reference
     ///
@@ -157,7 +161,8 @@ pub struct Field55D {
     pub name_and_address: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field55ThirdReimbursementInstitution {
     A(Field55A),
     B(Field55B),

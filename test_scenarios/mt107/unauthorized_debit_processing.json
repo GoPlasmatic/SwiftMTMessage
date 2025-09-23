@@ -1,12 +1,17 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["NAUTDD", {"fake": ["i64", 100000000, 999999999]}]},
-        "currency": {"fake": ["currency_code"]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "NAUTDD",
+                100000000
+            ]
+        },
+        "currency": "USD",
         "execution_date": "2024-12-30",
         "charges": "OUR",
-        "uetr": {"fake": ["uuid"]},
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
         "session_num": "0001",
         "sequence_num": "000123"
     },
@@ -14,75 +19,184 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "107",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "U"
         },
-        "user_header": {"service_type_id": "gpi", "unique_end_to_end_reference": {"var": "uetr"}},
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            }
+        },
         "message_type": "107",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "23E": {"instruction_code": "NAUT"},
-            "21E": {"reference": {"cat": ["ORIG", {"fake": ["i64", 1000000000, 9999999999]}]}},
-            "30": {"execution_date": {"var": "execution_date"}},
-            "50#2": {
-                "K": {
-                    "account": "/COLLECTION-AGENCY",
-                    "name_and_address": [
-                        "DEBT COLLECTION AGENCY",
-                        "RECOVERY DEPARTMENT",
-                        {"fake": ["street_address"]},
-                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "23E": {
+                "instruction_code": "NAUT"
+            },
+            "21E": {
+                "reference": {
+                    "cat": [
+                        "ORIG",
+                        1000000000
                     ]
                 }
             },
-            "52": {"A": {"bic": {"var": "sender_bic"}}},
-            "71A": {"code": {"var": "charges"}},
+            "30": {
+                "execution_date": {
+                    "var": "execution_date"
+                }
+            },
+            "50#2": {
+                "K": {
+                    "account": "COLLECTION-AGENCY",
+                    "name_and_address": [
+                        "DEBT COLLECTION AGENCY",
+                        "RECOVERY DEPARTMENT",
+                        "123 MAIN STREET",
+                        {
+                            "cat": [
+                                "NEW YORK",
+                                ", ",
+                                "US"
+                            ]
+                        }
+                    ]
+                }
+            },
+            "52": {
+                "A": {
+                    "bic": {
+                        "var": "sender_bic"
+                    }
+                }
+            },
+            "71A": {
+                "code": {
+                    "var": "charges"
+                }
+            },
             "#": [
                 {
-                    "21": {"reference": {"cat": ["DEBT", {"fake": ["i64", 10000000, 99999999]}]}},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 1000.0, 10000.0]}},
-                    "59": {
-                        "NoOption": {
-                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
-                            "name_and_address": [
-                                {"fake": ["company_name"]},
-                                "DEFAULTED BORROWER",
-                                {"fake": ["street_address"]},
-                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                    "21": {
+                        "reference": {
+                            "cat": [
+                                "DEBT",
+                                10000000
                             ]
                         }
                     },
-                    "57": {"A": {"bic": {"var": "receiver_bic"}}},
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": 10000
+                    },
+                    "59": {
+                        "NoOption": {
+                            "account": "1000000000000000",
+                            "name_and_address": [
+                                "ACME CORPORATION",
+                                "DEFAULTED BORROWER",
+                                "123 MAIN STREET",
+                                {
+                                    "cat": [
+                                        "NEW YORK",
+                                        ", ",
+                                        "US"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    "57": {
+                        "A": {
+                            "bic": {
+                                "var": "receiver_bic"
+                            }
+                        }
+                    },
                     "70": {
                         "narrative": [
                             "/RFB/DEBT RECOVERY",
-                            {"cat": ["/ORIG/LOAN-", {"fake": ["i64", 100000, 999999]}]},
+                            {
+                                "cat": [
+                                    "/ORIG/LOAN-",
+                                    100000
+                                ]
+                            },
                             "/PURP/LOAN",
                             "/NAUT/COURT AUTHORIZED"
                         ]
                     }
                 },
                 {
-                    "21": {"reference": {"cat": ["DEBT", {"fake": ["i64", 10000000, 99999999]}]}},
-                    "26T": {"type_code": "DEB"},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"fake": ["f64", 2500.0, 15000.0]}},
+                    "21": {
+                        "reference": {
+                            "cat": [
+                                "DEBT",
+                                10000000
+                            ]
+                        }
+                    },
+                    "26T": {
+                        "type_code": "DEB"
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": 10000
+                    },
                     "59": {
                         "NoOption": {
-                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "account": "1000000000000000",
                             "name_and_address": [
                                 "COLLECTION AGENCY TRUST",
                                 "RECOVERY ACCOUNT",
-                                {"fake": ["street_address"]},
-                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                                "123 MAIN STREET",
+                                {
+                                    "cat": [
+                                        "NEW YORK",
+                                        ", ",
+                                        "US"
+                                    ]
+                                }
                             ]
                         }
                     },
@@ -91,8 +205,14 @@
                             "name_and_address": [
                                 "RECOVERY BANK INTERNATIONAL",
                                 "COLLECTIONS DIVISION",
-                                {"fake": ["street_address"]},
-                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                                "123 MAIN STREET",
+                                {
+                                    "cat": [
+                                        "NEW YORK",
+                                        ", ",
+                                        "US"
+                                    ]
+                                }
                             ]
                         }
                     },

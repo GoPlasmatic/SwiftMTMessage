@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -90,7 +91,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Structured institutional identification using BIC code with optional party identifier.
 /// Preferred option for automated processing and correspondent banking.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field52A {
     /// Optional party identifier for clearing system or account reference
     ///
@@ -111,7 +113,8 @@ pub struct Field52A {
 ///
 /// Domestic routing information using party identifier and location details.
 /// Used for national clearing systems requiring location-based routing.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field52B {
     /// Optional party identifier for clearing system or account reference
     ///
@@ -132,7 +135,8 @@ pub struct Field52B {
 ///
 /// Simplified institutional reference using party identifier only.
 /// Used when BIC is not required or available for institutional identification.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field52C {
     /// Party identifier for institutional reference
     ///
@@ -146,7 +150,8 @@ pub struct Field52C {
 ///
 /// Detailed institutional identification with full name and address information.
 /// Used when structured BIC identification is not available or sufficient.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field52D {
     /// Optional party identifier for clearing system or account reference
     ///
@@ -163,26 +168,30 @@ pub struct Field52D {
     pub name_and_address: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field52AccountServicingInstitution {
     A(Field52A),
     C(Field52C),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field52OrderingInstitution {
     A(Field52A),
     D(Field52D),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field52CreditorBank {
     A(Field52A),
     C(Field52C),
     D(Field52D),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field52DrawerBank {
     A(Field52A),
     B(Field52B),

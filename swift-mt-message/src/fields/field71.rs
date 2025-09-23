@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -66,7 +67,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Specifies which party will bear the charges for the transaction.
 /// Mandatory field in payment messages for charge allocation transparency.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field71A {
     /// Charge allocation code
     ///
@@ -81,7 +83,8 @@ pub struct Field71A {
 ///
 /// Specifies the currency and amount of charges to be borne by the sender.
 /// Used to detail specific charge amounts in sender's currency.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field71F {
     /// Currency of sender's charges
     ///
@@ -102,7 +105,8 @@ pub struct Field71F {
 ///
 /// Specifies the currency and amount of charges to be borne by the receiver.
 /// Used to detail specific charge amounts in receiver's currency.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field71G {
     /// Currency of receiver's charges
     ///
@@ -123,7 +127,8 @@ pub struct Field71G {
 ///
 /// Specifies detailed information about charges, interest and other adjustments.
 /// Used in MT n90 messages (MT190, MT290, etc.) to provide comprehensive charge details.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field71B {
     /// Details of charges
     ///

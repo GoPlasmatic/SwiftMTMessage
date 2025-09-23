@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -136,7 +137,8 @@ use swift_mt_message_macros::SwiftField;
 ///   **Field 37H: Interest Rate Structure**
 ///
 /// Contains interest rate with directional indicator and negative rate support.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field37H {
     /// Rate type indicator
     ///

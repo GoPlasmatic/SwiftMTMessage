@@ -1,14 +1,19 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["DDREC", {"fake": ["i64", 10000000000, 99999999999]}]},
-        "currency": {"fake": ["currency_code"]},
-        "subscription_amount": {"fake": ["f64", 9.99, 199.99]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "DDREC",
+                10000000000
+            ]
+        },
+        "currency": "USD",
+        "subscription_amount": 10000,
         "execution_date": "2024-12-01",
         "charges": "SHA",
         "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "uetr": {"fake": ["uuid"]},
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
         "service_name": "STREAMING PLUS",
         "session_num": "0001",
         "sequence_num": "000123"
@@ -17,39 +22,93 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "104",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
-            "service_type_id": "gpi",
-            "unique_end_to_end_reference": {"var": "uetr"},
-            "monetary_amount": {"cat": [{"var": "currency"}, {"var": "subscription_amount"}]}
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            }
         },
         "message_type": "104",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "28D": {"message_index": 1, "total_messages": 1},
-            "30": {"execution_date": {"var": "execution_date"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "30": {
+                "execution_date": {
+                    "var": "execution_date"
+                }
+            },
             "#": [
                 {
-                    "21": {"reference": {"cat": ["SUB", {"fake": ["i64", 10000000, 99999999]}]}},
-                    "23E": {"instruction_code": "SDVA", "additional_info": "RECURRING DEBIT"},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "subscription_amount"}},
+                    "21": {
+                        "reference": {
+                            "cat": [
+                                "SUB",
+                                10000000
+                            ]
+                        }
+                    },
+                    "23E": {
+                        "instruction_code": "SDVA",
+                        "additional_info": "RECURRING DEBIT"
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": {
+                            "var": "subscription_amount"
+                        }
+                    },
                     "50#2": {
                         "K": {
-                            "account": "/MERCHANT-SUB-001",
+                            "account": "MERCHANT-SUB-001",
                             "name_and_address": [
                                 "DIGITAL SERVICES CORP",
-                                {"cat": ["SUBSCRIPTION MERCHANT/", {"var": "sender_lei"}]},
+                                {
+                                    "cat": [
+                                        "SUBSCRIPTION MERCHANT/",
+                                        {
+                                            "var": "sender_lei"
+                                        }
+                                    ]
+                                },
                                 "500 TECH PARK DRIVE",
                                 "SAN FRANCISCO, CA US"
                             ]
@@ -57,31 +116,74 @@
                     },
                     "59": {
                         "NoOption": {
-                            "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                            "account": "1000000000000000",
                             "name_and_address": [
-                                {"fake": ["company_name"]},
-                                {"cat": ["SUBSCRIBER ID ", {"fake": ["i64", 1000000, 9999999]}]},
-                                {"fake": ["street_address"]},
-                                {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                                "ACME CORPORATION",
+                                {
+                                    "cat": [
+                                        "SUBSCRIBER ID ",
+                                        1000000
+                                    ]
+                                },
+                                "123 MAIN STREET",
+                                {
+                                    "cat": [
+                                        "NEW YORK",
+                                        ", ",
+                                        "US"
+                                    ]
+                                }
                             ]
                         }
                     },
-                    "57": {"A": {"bic": {"var": "receiver_bic"}}},
+                    "57": {
+                        "A": {
+                            "bic": {
+                                "var": "receiver_bic"
+                            }
+                        }
+                    },
                     "70": {
                         "narrative": [
                             "/RFB/SUBSCRIPTION PAYMENT",
-                            {"cat": ["/MREF/SUB-MND-", {"fake": ["i64", 1000000, 9999999]}]},
+                            {
+                                "cat": [
+                                    "/MREF/SUB-MND-",
+                                    1000000
+                                ]
+                            },
                             "/PURP/COMM",
-                            {"cat": ["/SERV/", {"var": "service_name"}]}
+                            {
+                                "cat": [
+                                    "/SERV/",
+                                    {
+                                        "var": "service_name"
+                                    }
+                                ]
+                            }
                         ]
                     },
-                    "71A": {"code": {"var": "charges"}},
+                    "71A": {
+                        "code": {
+                            "var": "charges"
+                        }
+                    },
                     "77B": {
-                        "narrative": ["/ORDERRES/BE//SUBSCRIPTION SERVICE", "/BENEFRES/US//DIGITAL CONTENT"]
+                        "narrative": [
+                            "/ORDERRES/BE//SUBSCRIPTION SERVICE",
+                            "/BENEFRES/US//DIGITAL CONTENT"
+                        ]
                     }
                 }
             ],
-            "32B": {"currency": {"var": "currency"}, "amount": {"var": "subscription_amount"}}
+            "32B": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "subscription_amount"
+                }
+            }
         }
     }
 }

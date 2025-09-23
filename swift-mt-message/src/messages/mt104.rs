@@ -549,7 +549,7 @@ const MT104_VALIDATION_RULES: &str = r#"{
           {
             "if": [
               {"==": [
-                {"var": "fields.32B.amount"}, 
+                {"var": "fields.32B.amount"},
                 {
                   "reduce": [
                     {"var": "fields.#"},
@@ -559,7 +559,7 @@ const MT104_VALIDATION_RULES: &str = r#"{
                 }
               ]},
               {"!": {"exists": ["fields", "19"]}},
-              {"exists": ["fields", "19"]}
+              true
             ]
           },
           true

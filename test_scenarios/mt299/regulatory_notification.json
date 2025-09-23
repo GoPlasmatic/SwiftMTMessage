@@ -1,73 +1,137 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "message_ref": {"cat": ["REG", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "message_ref": {
+            "cat": [
+                "REG",
+                100000000000
+            ]
+        },
         "session_num": "0001",
         "sequence_num": "007890",
-        "uetr": {"fake": ["uuid"]},
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
         "reporting_date": "2024-12-23",
-        "threshold_amount": "100000.00",
+        "threshold_amount": "1000000",
         "reporting_period": "2024Q4"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "299",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "299",
         "fields": {
-            "20": {"reference": {"var": "message_ref"}},
+            "20": {
+                "reference": {
+                    "var": "message_ref"
+                }
+            },
             "79": {
                 "information": [
                     "REGULATORY COMPLIANCE NOTIFICATION",
-                    {"substr": [{"cat": ["DATE: ", {"var": "reporting_date"}]}, 0, 50]},
-                    {"substr": [{"cat": ["PERIOD: ", {"var": "reporting_period"}]}, 0, 50]},
-                    "",
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "DATE: ",
+                                    {
+                                        "var": "reporting_date"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "PERIOD: ",
+                                    {
+                                        "var": "reporting_period"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "NEW REGULATORY REQUIREMENTS 2025-01-01:",
-                    "",
                     "1. REPORTING REQUIREMENTS:",
-                    {"substr": [{"cat": ["- TRANSACTIONS > EUR ", {"var": "threshold_amount"}]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "- TRANSACTIONS > EUR ",
+                                    {
+                                        "var": "threshold_amount"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "- PURPOSE CODE MANDATORY",
                     "- LEI FOR CORPORATES",
-                    "",
                     "2. CBPR+ COMPLIANCE:",
                     "- FEE TRANSPARENCY",
                     "- END-TO-END TRACKING",
-                    "",
                     "3. AML/CTF REQUIREMENTS:",
                     "- ENHANCED DUE DILIGENCE",
                     "- SANCTIONS SCREENING",
-                    "",
                     "4. DATA RETENTION:",
                     "- MINIMUM 7 YEARS",
                     "- ENCRYPTED STORAGE",
-                    "",
                     "ACTION REQUIRED:",
                     "- UPDATE SYSTEMS BY 2024-12-31",
                     "- CONFIRM VIA MT299",
-                    "",
                     "CONTACT:",
                     "REGULATORY AFFAIRS",
                     "regulations@bank.com",
                     "+44 20 7890 1234",
-                    "",
                     "COMPLIANCE DEPARTMENT"
                 ]
             }

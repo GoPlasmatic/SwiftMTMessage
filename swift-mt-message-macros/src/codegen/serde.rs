@@ -16,7 +16,7 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
         && let syn::Fields::Named(ref mut fields) = data_struct.fields
     {
         for field in &mut fields.named {
-            // Look for #[field("tag")] attributes
+            // Look for #[field("tag")] attributes (for message structs) or component attributes (for field structs)
             if let Some(field_tag) = extract_field_tag(&field.attrs) {
                 // Handle sequence fields marked with "#"
                 if field_tag == "#" {
@@ -67,6 +67,53 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
                     };
                     field.attrs.push(serde_rename_attr);
                 }
+            } else if has_component_attribute(&field.attrs) {
+                // This is a field struct with #[component(...)] attributes
+                let type_category = categorize_type(&field.ty);
+
+                // Check if this is an f64 field with "15d" or "17d" format (amount fields)
+                let is_amount_field = matches!(type_category, TypeCategory::F64) &&
+                    is_decimal_format_component(&field.attrs);
+
+                if is_amount_field {
+                    // Add custom amount serializer for f64 fields with decimal format
+                    let serde_attr = syn::parse_quote! {
+                        #[serde(with = "crate::serde_helpers::amount_serializer")]
+                    };
+                    field.attrs.push(serde_attr);
+                } else if matches!(type_category, TypeCategory::OptionF64) &&
+                    is_decimal_format_component(&field.attrs) {
+                    // Add custom amount serializer for optional f64 fields
+                    let serde_attr = syn::parse_quote! {
+                        #[serde(with = "crate::serde_helpers::optional_amount_serializer", skip_serializing_if = "Option::is_none")]
+                    };
+                    field.attrs.push(serde_attr);
+                } else if matches!(
+                    type_category,
+                    TypeCategory::OptionString
+                        | TypeCategory::OptionNaiveDate
+                        | TypeCategory::OptionNaiveTime
+                        | TypeCategory::OptionU32
+                        | TypeCategory::OptionU8
+                        | TypeCategory::OptionBool
+                        | TypeCategory::OptionChar
+                        | TypeCategory::OptionField
+                        | TypeCategory::OptionVec
+                ) {
+                    // Add serde(skip_serializing_if = "Option::is_none") attribute
+                    let serde_attr = syn::parse_quote! {
+                        #[serde(skip_serializing_if = "Option::is_none")]
+                    };
+                    field.attrs.push(serde_attr);
+                }
+                // Check if the field is a Vec type
+                else if matches!(type_category, TypeCategory::Vec | TypeCategory::VecString) {
+                    // Add serde(skip_serializing_if = "Vec::is_empty") attribute
+                    let serde_attr = syn::parse_quote! {
+                        #[serde(skip_serializing_if = "Vec::is_empty")]
+                    };
+                    field.attrs.push(serde_attr);
+                }
             }
         }
     }
@@ -88,4 +135,26 @@ fn extract_field_tag(attrs: &[syn::Attribute]) -> Option<String> {
         }
     }
     None
+}
+
+/// Check if field has a #[component(...)] attribute
+fn has_component_attribute(attrs: &[syn::Attribute]) -> bool {
+    attrs.iter().any(|attr| attr.path().is_ident("component"))
+}
+
+/// Check if field has a decimal format component attribute (15d, 17d, etc.)
+fn is_decimal_format_component(attrs: &[syn::Attribute]) -> bool {
+    for attr in attrs {
+        if attr.path().is_ident("component") {
+            if let syn::Meta::List(meta_list) = &attr.meta {
+                if let Ok(lit) = syn::parse2::<syn::LitStr>(meta_list.tokens.clone()) {
+                    let value = lit.value();
+                    // Check for decimal formats like "15d", "17d", etc.
+                    return value.ends_with('d') &&
+                           value[..value.len()-1].chars().all(|c| c.is_ascii_digit() || c == '!');
+                }
+            }
+        }
+    }
+    false
 }

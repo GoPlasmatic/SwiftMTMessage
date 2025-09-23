@@ -1,13 +1,18 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "intermediary_bic": {"fake": ["bic"]},
-        "beneficiary_bank_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["STPE", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "currency": {"fake": ["currency_code"]},
-        "instructed_amount": {"fake": ["f64", 10000.0, 500000.0]},
-        "settlement_amount": {"fake": ["f64", 9900.0, 499000.0]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "intermediary_bic": "DEUTDEFF",
+        "beneficiary_bank_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "STPE",
+                100000000000
+            ]
+        },
+        "currency": "USD",
+        "instructed_amount": 10000,
+        "settlement_amount": 10000,
         "exchange_rate": "0.05",
         "value_date": "2024-12-20",
         "bank_op_code": "CRED",
@@ -18,34 +23,72 @@
         "beneficiary_lei": "LEIXG8HWVXGGR1B2V6Y906",
         "creditor_ref": "RF72698321457896",
         "purpose_code": "TRAD",
-        "invoice_ref": {"cat": ["INV-", {"fake": ["i64", 100000000, 999999999]}]},
-        "lc_ref": {"cat": ["LC-", {"fake": ["i64", 10000000, 99999999]}]},
-        "uetr": {"fake": ["uuid"]}
+        "invoice_ref": {
+            "cat": [
+                "INV-",
+                100000000
+            ]
+        },
+        "lc_ref": {
+            "cat": [
+                "LC-",
+                10000000
+            ]
+        },
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "103",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
             "13C": [
                 {
                     "code": "SNDTIME",
@@ -54,52 +97,141 @@
                     "offset": "0100"
                 }
             ],
-            "23B": {"instruction_code": {"var": "bank_op_code"}},
-            "32A": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "settlement_amount"}
+            "23B": {
+                "instruction_code": {
+                    "var": "bank_op_code"
+                }
             },
-            "33B": {"currency": {"var": "currency"}, "amount": {"var": "instructed_amount"}},
+            "32A": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "settlement_amount"
+                }
+            },
+            "33B": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "instructed_amount"
+                }
+            },
             "50": {
                 "K": {
-                    "account": "/1234567890123456789012",
+                    "account": "1234567890123456789012",
                     "name_and_address": [
-                        {"fake": ["company_name"]},
-                        {"cat": ["/LEI/", {"var": "ordering_customer_lei"}]},
-                        {"fake": ["city_name"]},
-                        {"fake": ["country_code"]}
+                        "ACME CORPORATION",
+                        {
+                            "cat": [
+                                "/LEI/",
+                                {
+                                    "var": "ordering_customer_lei"
+                                }
+                            ]
+                        },
+                        "NEW YORK",
+                        "US"
                     ]
                 }
             },
-            "52": {"A": {"bic": {"var": "sender_bic"}}},
-            "56": {"A": {"bic": {"var": "intermediary_bic"}}},
-            "57": {"A": {"bic": {"var": "beneficiary_bank_bic"}}},
+            "52": {
+                "A": {
+                    "bic": {
+                        "var": "sender_bic"
+                    }
+                }
+            },
+            "56": {
+                "A": {
+                    "bic": {
+                        "var": "intermediary_bic"
+                    }
+                }
+            },
+            "57": {
+                "A": {
+                    "bic": {
+                        "var": "beneficiary_bank_bic"
+                    }
+                }
+            },
             "59": {
                 "NoOption": {
-                    "account": "/9876543210987654321098",
+                    "account": "9876543210987654321098",
                     "name_and_address": [
-                        {"fake": ["company_name"]},
-                        {"cat": ["/LEI/", {"var": "beneficiary_lei"}]},
-                        {"fake": ["city_name"]},
-                        {"fake": ["country_code"]}
+                        "ACME CORPORATION",
+                        {
+                            "cat": [
+                                "/LEI/",
+                                {
+                                    "var": "beneficiary_lei"
+                                }
+                            ]
+                        },
+                        "NEW YORK",
+                        "US"
                     ]
                 }
             },
             "70": {
                 "narrative": [
-                    {"var": "creditor_ref"},
-                    {"cat": ["/PURP/", {"var": "purpose_code"}]},
-                    {"cat": ["/ULTD/", {"var": "ordering_customer_lei"}]},
-                    {"cat": ["/ULTB/", {"var": "beneficiary_lei"}]}
+                    {
+                        "var": "creditor_ref"
+                    },
+                    {
+                        "cat": [
+                            "/PURP/",
+                            {
+                                "var": "purpose_code"
+                            }
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "/ULTD/",
+                            {
+                                "var": "ordering_customer_lei"
+                            }
+                        ]
+                    },
+                    {
+                        "cat": [
+                            "/ULTB/",
+                            {
+                                "var": "beneficiary_lei"
+                            }
+                        ]
+                    }
                 ]
             },
-            "71A": {"code": {"var": "charges"}},
-            "71F": [{"currency": {"var": "currency"}, "amount": 50.0}],
-            "72": {
-                "information": ["/ACC/CBPR+ COMPLIANT", "/INS/STP ENHANCED", "/REC/FULL TRANSPARENCY"]
+            "71A": {
+                "code": {
+                    "var": "charges"
+                }
             },
-            "77T": {"envelope_content": "EXTENDED REMITTANCE INFORMATION"}
+            "71F": [
+                {
+                    "currency": {
+                        "var": "currency"
+                    },
+                    "amount": 50
+                }
+            ],
+            "72": {
+                "information": [
+                    "/ACC/CBPR+ COMPLIANT",
+                    "/INS/STP ENHANCED",
+                    "/REC/FULL TRANSPARENCY"
+                ]
+            },
+            "77T": {
+                "envelope_content": "EXTENDED REMITTANCE INFORMATION"
+            }
         }
     }
 }

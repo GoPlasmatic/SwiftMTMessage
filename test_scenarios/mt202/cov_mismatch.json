@@ -1,59 +1,145 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "intermediary_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["COV", {"fake": ["i64", 1000000000, 9999999999]}]},
-        "related_ref": {"cat": ["MT103", {"fake": ["i64", 1000000000, 9999999999]}]},
-        "currency": {"fake": ["currency_code"]},
-        "mt103_amount": {"fake": ["f64", 50000.0, 500000.0]},
-        "mt202_amount": {"fake": ["f64", 50100.0, 500500.0]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "intermediary_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "COV",
+                1000000000
+            ]
+        },
+        "related_ref": {
+            "cat": [
+                "MT103",
+                1000000000
+            ]
+        },
+        "currency": "USD",
+        "mt103_amount": 10000,
+        "mt202_amount": 10000,
         "value_date": "2024-12-20",
         "ordering_name_mt103": "ACME CORPORATION",
         "ordering_name_mt202": "ACME INDUSTRIES LTD",
-        "beneficiary_acct_mt103": "/DE89370400440532013000",
-        "beneficiary_acct_mt202": "/DE89370400440532013001",
-        "invoice_mt103": {"cat": ["INV-2024-", {"fake": ["i64", 10000, 99999]}]},
-        "invoice_mt202": {"cat": ["INV-2024-", {"fake": ["i64", 10000, 99999]}]},
+        "beneficiary_acct_mt103": "DE89370400440532013000",
+        "beneficiary_acct_mt202": "DE89370400440532013001",
+        "invoice_mt103": {
+            "cat": [
+                "INV-2024-",
+                10000
+            ]
+        },
+        "invoice_mt202": {
+            "cat": [
+                "INV-2024-",
+                10000
+            ]
+        },
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "202",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "202",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "21": {"reference": {"var": "related_ref"}},
-            "32A": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "mt202_amount"}
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
             },
-            "52": {"A": {"bic": {"var": "sender_bic"}}},
-            "53": {"B": {"party_identifier": {"cat": ["/", {"var": "sender_bic"}]}}},
-            "56": {"A": {"bic": {"var": "intermediary_bic"}}},
-            "57": {"A": {"bic": {"var": "receiver_bic"}}},
-            "58": {"A": {"bic": {"var": "receiver_bic"}}},
+            "21": {
+                "reference": {
+                    "var": "related_ref"
+                }
+            },
+            "32A": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "mt202_amount"
+                }
+            },
+            "52": {
+                "A": {
+                    "bic": {
+                        "var": "sender_bic"
+                    }
+                }
+            },
+            "53": {
+                "B": {
+                    "party_identifier": {"var": "sender_bic"}
+                }
+            },
+            "56": {
+                "A": {
+                    "bic": {
+                        "var": "intermediary_bic"
+                    }
+                }
+            },
+            "57": {
+                "A": {
+                    "bic": {
+                        "var": "receiver_bic"
+                    }
+                }
+            },
+            "58": {
+                "A": {
+                    "bic": {
+                        "var": "receiver_bic"
+                    }
+                }
+            },
             "72": {
                 "information": [
                     "/COV/COVER PAYMENT",
@@ -66,9 +152,11 @@
             },
             "50#b": {
                 "K": {
-                    "account": "/GB82WEST12345698765432",
+                    "account": "GB82WEST12345698765432",
                     "name_and_address": [
-                        {"var": "ordering_name_mt202"},
+                        {
+                            "var": "ordering_name_mt202"
+                        },
                         "123 MAIN STREET",
                         "LONDON EC1A 1BB",
                         "UNITED KINGDOM"
@@ -77,19 +165,40 @@
             },
             "59#b": {
                 "NoOption": {
-                    "account": {"var": "beneficiary_acct_mt202"},
-                    "name_and_address": ["GLOBAL TRADING GMBH", "456 COMMERCE STRASSE", "FRANKFURT 60311", "GERMANY"]
+                    "account": {
+                        "var": "beneficiary_acct_mt202"
+                    },
+                    "name_and_address": [
+                        "GLOBAL TRADING GMBH",
+                        "456 COMMERCE STRASSE",
+                        "FRANKFURT 60311",
+                        "GERMANY"
+                    ]
                 }
             },
             "70#b": {
                 "narrative": [
-                    {"cat": ["/INV/", {"var": "invoice_mt202"}]},
+                    {
+                        "cat": [
+                            "/INV/",
+                            {
+                                "var": "invoice_mt202"
+                            }
+                        ]
+                    },
                     "/GOODS/INDUSTRIAL EQUIPMENT",
                     "/MISMATCH/INVOICE REF DIFFERS",
                     "/NOTE/RECONCILIATION REQUIRED"
                 ]
             },
-            "33B#b": {"currency": {"var": "currency"}, "amount": {"var": "mt103_amount"}}
+            "33B#b": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "mt103_amount"
+                }
+            }
         }
     }
 }

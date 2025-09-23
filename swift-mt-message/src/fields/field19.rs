@@ -98,6 +98,7 @@
 //! - Currency Code Standards: Decimal Precision Requirements
 //! - Batch Payment Guidelines: Amount Reconciliation Procedures
 
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -110,7 +111,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Amount (17d, up to 17 digits with decimal comma)
 ///
 /// For complete documentation, see the [Field 19 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field19 {
     /// Sum of all transaction amounts in the sequence
     ///

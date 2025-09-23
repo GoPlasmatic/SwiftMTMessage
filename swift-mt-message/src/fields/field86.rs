@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -70,7 +71,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Banking Communication: Account Holder Information Standards
 /// - Customer Protection: Account Information Requirements
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field86 {
     /// Information narrative for account owner
     ///

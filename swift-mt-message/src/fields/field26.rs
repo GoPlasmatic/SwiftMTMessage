@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -134,7 +135,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Contains the 3-character transaction type code for categorizing
 /// and processing financial transactions.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field26T {
     /// Transaction type code
     ///

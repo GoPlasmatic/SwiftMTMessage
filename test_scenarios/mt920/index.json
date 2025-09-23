@@ -1,5 +1,5 @@
 {
-    "message_type": "MT920",
+    "message_type": "920",
     "description": "Request Message",
     "scenarios": [
         {"file": "statement_request_basic.json", "description": "Basic statement request"},

@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -100,7 +101,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Payment Reference Standards: International Payment References
 /// - STP Guidelines: Straight Through Processing Requirements
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field70 {
     /// Remittance information narrative
     ///

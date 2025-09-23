@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -128,7 +129,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Structured institutional beneficiary identification using BIC code with optional party identifier.
 /// Preferred option for institutional transfers and financial institution beneficiaries.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field58A {
     /// Optional party identifier for institutional account or system reference
     ///
@@ -149,7 +151,8 @@ pub struct Field58A {
 ///
 /// Detailed institutional beneficiary identification with full name and address information.
 /// Used only in exceptional circumstances when structured BIC identification is not available.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field58D {
     /// Optional party identifier for institutional system reference
     ///
@@ -167,7 +170,8 @@ pub struct Field58D {
     pub name_and_address: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field58 {
     A(Field58A),
     D(Field58D),

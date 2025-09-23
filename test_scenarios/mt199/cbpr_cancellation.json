@@ -1,88 +1,266 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "message_ref": {"cat": ["CAN", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "original_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "message_ref": {
+            "cat": [
+                "CAN",
+                100000000000
+            ]
+        },
+        "original_ref": {
+            "cat": [
+                "PAY",
+                100000000000
+            ]
+        },
         "session_num": "0001",
         "sequence_num": "005678",
-        "uetr": {"fake": ["uuid"]},
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
         "cancel_reason": "CUST",
-        "amount": {"fake": ["f64", 10000.0, 100000.0]},
+        "amount": 10000,
         "currency": "EUR",
         "value_date": "2024-12-20",
-        "ordering_customer": {"fake": ["company_name"]},
-        "beneficiary_name": {"fake": ["company_name"]},
+        "ordering_customer": "ACME CORPORATION",
+        "beneficiary_name": "ACME CORPORATION",
         "purpose_code": "GDDS"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "199",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "199",
         "fields": {
-            "20": {"reference": {"var": "message_ref"}},
-            "21": {"reference": {"cat": ["", {"var": "original_ref"}]}},
+            "20": {
+                "reference": {
+                    "var": "message_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "cat": [
+                        "",
+                        {
+                            "var": "original_ref"
+                        }
+                    ]
+                }
+            },
             "79": {
                 "information": [
                     "/REJT/CBPR+ PAYMENT CANCELLATION REQUEST",
-                    {"substr": [{"cat": ["ORIGINAL PAYMENT REFERENCE: ", {"var": "original_ref"}]}, 0, 50]},
-                    {"substr": [{"cat": ["UETR: ", {"var": "uetr"}]}, 0, 50]},
                     {
                         "substr": [
                             {
                                 "cat": [
-                                    "AMOUNT: ",
-                                    {"var": "currency"},
-                                    " ",
-                                    {"var": "amount"}
+                                    "ORIGINAL PAYMENT REFERENCE: ",
+                                    {
+                                        "var": "original_ref"
+                                    }
                                 ]
                             },
                             0,
                             50
                         ]
                     },
-                    {"substr": [{"cat": ["VALUE DATE: ", {"var": "value_date"}]}, 0, 50]},
-                    {"substr": [{"cat": ["CANCELLATION REASON CODE: ", {"var": "cancel_reason"}]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "UETR: ",
+                                    {
+                                        "var": "uetr"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "AMOUNT: ",
+                                    {
+                                        "var": "currency"
+                                    },
+                                    " ",
+                                    {
+                                        "var": "amount"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "VALUE DATE: ",
+                                    {
+                                        "var": "value_date"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "CANCELLATION REASON CODE: ",
+                                    {
+                                        "var": "cancel_reason"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "DETAILED REASON:",
-                    { "if": [
-                        {"==": [{"var": "cancel_reason"}, "CUST"]},
-                        "CUSTOMER REQUESTED CANCELLATION",
-                        { "if": [
-                            {"==": [{"var": "cancel_reason"}, "DUPL"]},
-                            "DUPLICATE PAYMENT - PAYMENT SENT IN ERROR",
-                            { "if": [
-                                {"==": [{"var": "cancel_reason"}, "FRAD"]},
-                                "SUSPECTED FRAUD - FLAGGED",
-                                { "if": [
-                                    {"==": [{"var": "cancel_reason"}, "TECH"]},
-                                    "TECHNICAL ERROR - SYSTEM FAILURE",
-                                    "AGENT ERROR - INCORRECT ROUTING OR PROCESSING"
-                                ]}
-                            ]}
-                        ]}
-                    ]},
+                    {
+                        "if": [
+                            {
+                                "==": [
+                                    {
+                                        "var": "cancel_reason"
+                                    },
+                                    "CUST"
+                                ]
+                            },
+                            "CUSTOMER REQUESTED CANCELLATION",
+                            {
+                                "if": [
+                                    {
+                                        "==": [
+                                            {
+                                                "var": "cancel_reason"
+                                            },
+                                            "DUPL"
+                                        ]
+                                    },
+                                    "DUPLICATE PAYMENT - PAYMENT SENT IN ERROR",
+                                    {
+                                        "if": [
+                                            {
+                                                "==": [
+                                                    {
+                                                        "var": "cancel_reason"
+                                                    },
+                                                    "FRAD"
+                                                ]
+                                            },
+                                            "SUSPECTED FRAUD - FLAGGED",
+                                            {
+                                                "if": [
+                                                    {
+                                                        "==": [
+                                                            {
+                                                                "var": "cancel_reason"
+                                                            },
+                                                            "TECH"
+                                                        ]
+                                                    },
+                                                    "TECHNICAL ERROR - SYSTEM FAILURE",
+                                                    "AGENT ERROR - INCORRECT ROUTING OR PROCESSING"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
                     "PAYMENT DETAILS:",
-                    {"substr": [{"cat": ["ORDERING CUSTOMER: ", {"var": "ordering_customer"}]}, 0, 50]},
-                    {"substr": [{"cat": ["BENEFICIARY: ", {"var": "beneficiary_name"}]}, 0, 50]},
-                    {"substr": [{"cat": ["PURPOSE CODE: ", {"var": "purpose_code"}]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "ORDERING CUSTOMER: ",
+                                    {
+                                        "var": "ordering_customer"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "BENEFICIARY: ",
+                                    {
+                                        "var": "beneficiary_name"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "PURPOSE CODE: ",
+                                    {
+                                        "var": "purpose_code"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "CURRENT STATUS: PENDING AT YOUR INSTITUTION",
                     "LAST KNOWN LOCATION: CORRESPONDENT BANK",
                     "REQUESTED ACTION:",

@@ -6,6 +6,7 @@ resolver = "2"
 # Core serialization and parsing
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+serde_path_to_error = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
 
 # Error handling and utilities
@@ -18,5 +19,14 @@ proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 
-# Data validation
-datalogic-rs = "3.1"
+# Data validation and workflow
+datalogic-rs = "4.0"
+dataflow-rs = "2.0"
+
+# Plugin support
+async-trait = "0.1"
+tracing = "0.1"
+rand = "0.8"
+
+# Datafake for sample generation
+datafake-rs = { version = "0.2", path = "../datafake-rs" }

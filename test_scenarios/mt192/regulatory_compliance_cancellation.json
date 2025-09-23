@@ -1,41 +1,83 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "cancel_ref": {"cat": ["COMPL", {"fake": ["i64", 100000, 999999]}]},
-        "original_ref": {"cat": ["INTL", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "cancel_ref": {
+            "cat": [
+                "COMPL",
+                100000
+            ]
+        },
+        "original_ref": {
+            "cat": [
+                "INTL",
+                100000000000
+            ]
+        },
         "reason_code": "LEGL",
         "session": "0003",
         "sequence": "345678",
         "session_num": "0003",
         "sequence_num": "001234",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "192",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
-            "service_type_id": "fin",
+            "service_type_identifier": "fin",
             "banking_priority": "0001",
-            "unique_end_to_end_reference": {"var": "uetr"}
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            }
         },
         "message_type": "192",
         "fields": {
-            "20": {"reference": {"var": "cancel_ref"}},
-            "21": {"reference": {"var": "original_ref"}},
+            "20": {
+                "reference": {
+                    "var": "cancel_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "var": "original_ref"
+                }
+            },
             "11S": {
                 "message_type": "103",
                 "date": "2024-12-20",
@@ -46,21 +88,17 @@
                 "information": [
                     "/LEGL/",
                     "REGULATORY COMPLIANCE CANCELLATION",
-                    "",
                     "ORIGINAL MESSAGE TYPE: MT103",
                     "ORIGINAL REFERENCE: INTL567890123456",
                     "AMOUNT: JPY 50000000",
                     "ORDERING: TECH INNOVATIONS INC",
                     "BENEFICIARY: DIGITAL SOLUTIONS KK",
-                    "",
                     "SANCTIONS SCREENING ALERT",
                     "BENEFICIARY NAME MATCH DETECTED",
                     "REGULATORY REVIEW REQUIRED",
-                    "",
                     "OFAC/EU SANCTIONS LIST HIT",
                     "FALSE POSITIVE UNDER INVESTIGATION",
                     "PAYMENT MUST BE CANCELLED PENDING REVIEW",
-                    "",
                     "COMPLIANCE REF: AML2024-12345",
                     "ESTIMATED REVIEW: 48-72 HOURS",
                     "CONTACT: compliance@bank.com"

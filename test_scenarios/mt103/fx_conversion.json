@@ -1,74 +1,144 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "PAY",
+                100000000000
+            ]
+        },
         "settlement_currency": "USD",
-        "settlement_amount": {"fake": ["f64", 50000.0, 100000.0]},
+        "settlement_amount": 10000,
         "value_date": "2024-12-20",
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
         "sequence_num": "002345",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "103",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "23B": {"instruction_code": {"var": "bank_op_code"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "23B": {
+                "instruction_code": {
+                    "var": "bank_op_code"
+                }
+            },
             "32A": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "settlement_currency"},
-                "amount": {"var": "settlement_amount"}
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "settlement_currency"
+                },
+                "amount": {
+                    "var": "settlement_amount"
+                }
             },
             "50": {
                 "K": {
-                    "account": "/AT611904300234573201",
+                    "account": "AT611904300234573201",
                     "name_and_address": [
-                        {"fake": ["company_name"]},
-                        {"fake": ["street_address"]},
-                        {"fake": ["city_name"]},
+                        "ACME CORPORATION",
+                        "123 MAIN STREET",
+                        "NEW YORK",
                         "AUSTRIA"
                     ]
                 }
             },
-            "52": {"A": {"bic": {"var": "sender_bic"}}},
-            "57": {"A": {"bic": {"var": "receiver_bic"}}},
+            "52": {
+                "A": {
+                    "bic": {
+                        "var": "sender_bic"
+                    }
+                }
+            },
+            "57": {
+                "A": {
+                    "bic": {
+                        "var": "receiver_bic"
+                    }
+                }
+            },
             "59": {
                 "NoOption": {
-                    "account": "/US1234567890123456",
+                    "account": "US1234567890123456",
                     "name_and_address": [
-                        {"fake": ["company_name"]},
-                        {"fake": ["street_address"]},
-                        {"fake": ["city_name"]},
+                        "ACME CORPORATION",
+                        "123 MAIN STREET",
+                        "NEW YORK",
                         "UNITED STATES"
                     ]
                 }
             },
-            "70": {"narrative": ["FX CONVERSION PAYMENT", "ORIGINAL CCY EUR", "SETTLEMENT CCY USD"]},
-            "71A": {"code": {"var": "charges"}},
-            "72": {"information": ["/EXCH/FX RATE APPLIED", "/ACC/CURRENCY CONVERSION"]}
+            "70": {
+                "narrative": [
+                    "FX CONVERSION PAYMENT",
+                    "ORIGINAL CCY EUR",
+                    "SETTLEMENT CCY USD"
+                ]
+            },
+            "71A": {
+                "code": {
+                    "var": "charges"
+                }
+            },
+            "72": {
+                "information": [
+                    "/EXCH/FX RATE APPLIED",
+                    "/ACC/CURRENCY CONVERSION"
+                ]
+            }
         }
     }
 }

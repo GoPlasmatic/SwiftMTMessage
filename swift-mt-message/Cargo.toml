@@ -16,11 +16,10 @@ categories = ["data-structures", "development-tools", "parsing"]
 # Macro crate
 swift-mt-message-macros = { version = "3.0.4", path = "../swift-mt-message-macros" }
 
-datafake-rs = "0.2"
-
 # Core serialization and parsing
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_path_to_error = { workspace = true }
 chrono = { workspace = true }
 
 # Error handling and utilities
@@ -28,9 +27,22 @@ thiserror = { workspace = true }
 regex = { workspace = true }
 once_cell = { workspace = true }
 
-# Data validation
+# Data validation and workflow
 datalogic-rs = { workspace = true }
+dataflow-rs = { workspace = true }
+
+# Plugin support
+async-trait = { workspace = true }
+tracing = { workspace = true }
+rand = { workspace = true }
+
+# Datafake for sample generation
+datafake-rs = { workspace = true }
+
+[features]
+default = []
 
 [dev-dependencies]
 pretty_assertions = "1.4"
 tempfile = "3.22"
+tokio = { version = "1.35", features = ["rt", "macros", "test-util"] }

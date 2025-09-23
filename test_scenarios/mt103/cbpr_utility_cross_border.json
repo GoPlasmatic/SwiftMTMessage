@@ -1,16 +1,26 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["UTIL", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "currency": {"fake": ["currency_code"]},
-        "utility_amount": {"fake": ["f64", 50.0, 5000.0]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "UTIL",
+                100000000000
+            ]
+        },
+        "currency": "USD",
+        "utility_amount": 10000,
         "value_date": "2024-12-28",
         "bank_op_code": "CRED",
         "charges": "SHA",
         "utility_lei": "LEIXG9UTILITYCOMP001",
-        "uetr": {"fake": ["uuid"]},
-        "account_number": {"cat": ["UTIL-", {"fake": ["i64", 10000000, 99999999]}]},
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "account_number": {
+            "cat": [
+                "UTIL-",
+                10000000
+            ]
+        },
         "billing_period": "DEC-2024",
         "session_num": "0001",
         "sequence_num": "000123"
@@ -19,70 +29,155 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
-            "service_type_id": "gpi",
-            "unique_end_to_end_reference": {"var": "uetr"},
-            "monetary_amount": {"cat": [{"var": "currency"}, {"var": "utility_amount"}]}
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            }
         },
         "message_type": "103",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "23B": {"instruction_code": {"var": "bank_op_code"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "23B": {
+                "instruction_code": {
+                    "var": "bank_op_code"
+                }
+            },
             "32A": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "utility_amount"}
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "utility_amount"
+                }
             },
             "50": {
                 "K": {
-                    "account": "/CORPORATE-ACCOUNT",
+                    "account": "CORPORATE-ACCOUNT",
                     "name_and_address": [
-                        {"fake": ["company_name"]},
+                        "ACME CORPORATION",
                         "INTERNATIONAL OFFICE",
-                        {"fake": ["street_address"]},
-                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                        "123 MAIN STREET",
+                        {
+                            "cat": [
+                                "NEW YORK",
+                                ", ",
+                                "US"
+                            ]
+                        }
                     ]
                 }
             },
-            "52": {"A": {"bic": {"var": "sender_bic"}}},
-            "57": {"A": {"bic": {"var": "receiver_bic"}}},
+            "52": {
+                "A": {
+                    "bic": {
+                        "var": "sender_bic"
+                    }
+                }
+            },
+            "57": {
+                "A": {
+                    "bic": {
+                        "var": "receiver_bic"
+                    }
+                }
+            },
             "59": {
                 "NoOption": {
-                    "account": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+                    "account": "1000000000000000",
                     "name_and_address": [
-                        {"fake": ["company_name"]},
-                        {"cat": ["UTILITY PROVIDER/", {"var": "utility_lei"}]},
-                        {"fake": ["street_address"]},
-                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                        "ACME CORPORATION",
+                        {
+                            "cat": [
+                                "UTILITY PROVIDER/",
+                                {
+                                    "var": "utility_lei"
+                                }
+                            ]
+                        },
+                        "123 MAIN STREET",
+                        {
+                            "cat": [
+                                "NEW YORK",
+                                ", ",
+                                "US"
+                            ]
+                        }
                     ]
                 }
             },
             "70": {
                 "narrative": [
                     "/PURP/UTIL",
-                    "/ACCOUNT/{account}",
+                    "/ACCOUNT/ACC456789",
                     "/PERIOD/DEC-2024 /SERVICE/ELEC",
                     "/RFB/UTILITY PAYMENT"
                 ]
             },
-            "71A": {"code": {"var": "charges"}},
+            "71A": {
+                "code": {
+                    "var": "charges"
+                }
+            },
             "72": {
                 "information": [
                     "/CBPR/COMPLIANT",
                     "/TYPE/UTILITY PAYMENT",
-                    {"substr": [{"cat": ["/PROVIDER/", {"var": "utility_lei"}]}, 0, 35]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "/PROVIDER/",
+                                    {
+                                        "var": "utility_lei"
+                                    }
+                                ]
+                            },
+                            0,
+                            35
+                        ]
+                    },
                     "/RECURRING/MONTHLY",
                     "/INS/CROSS-BORDER OFFICE"
                 ]

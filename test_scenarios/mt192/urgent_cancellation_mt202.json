@@ -1,41 +1,83 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "cancel_ref": {"cat": ["URG", {"fake": ["i64", 100000, 999999]}]},
-        "original_ref": {"cat": ["FT", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "cancel_ref": {
+            "cat": [
+                "URG",
+                100000
+            ]
+        },
+        "original_ref": {
+            "cat": [
+                "FT",
+                100000000000
+            ]
+        },
         "reason_code": "DUPL",
         "session": "0001",
         "sequence": "654321",
         "session_num": "0001",
         "sequence_num": "000456",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "192",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "U"
         },
         "user_header": {
-            "service_type_id": "fin",
+            "service_type_identifier": "fin",
             "banking_priority": "9999",
-            "unique_end_to_end_reference": {"var": "uetr"}
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            }
         },
         "message_type": "192",
         "fields": {
-            "20": {"reference": {"var": "cancel_ref"}},
-            "21": {"reference": {"var": "original_ref"}},
+            "20": {
+                "reference": {
+                    "var": "cancel_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "var": "original_ref"
+                }
+            },
             "11S": {
                 "message_type": "202",
                 "date": "2024-12-22",
@@ -46,19 +88,15 @@
                 "information": [
                     "/DUPL/",
                     "URGENT CANCELLATION REQUEST",
-                    "",
                     "ORIGINAL MESSAGE TYPE: MT202",
                     "ORIGINAL REFERENCE: FT123456789012",
-                    "AMOUNT: EUR 1500000.00",
+                    "AMOUNT: EUR 15000000",
                     "VALUE DATE: 2024-12-22",
-                    "",
                     "DUPLICATE PAYMENT IDENTIFIED",
                     "INTERNAL CONTROL ALERT",
-                    "",
                     "EXTREMELY URGENT - SAME DAY VALUE",
                     "PLEASE STOP PROCESSING IMMEDIATELY",
                     "CONFIRM VIA MT196 WITHIN 30 MINUTES",
-                    "",
                     "CONTACT: TREASURY OPS +1234567890"
                 ]
             }

@@ -204,10 +204,25 @@ pub fn find_field_with_variant_sequential_constrained(
     tracker: &mut FieldConsumptionTracker,
     valid_variants: Option<&[&str]>,
 ) -> Option<(String, Option<String>, usize)> {
+    #[cfg(debug_assertions)]
+    {
+        eprintln!("DEBUG: find_field_with_variant called for base_tag={}, valid_variants={:?}",
+            base_tag, valid_variants);
+        eprintln!("  Available fields: {:?}", fields.keys().collect::<Vec<_>>());
+    }
+
     // First try to find exact match (for non-variant fields)
     if let Some(values) = fields.get(base_tag)
         && let Some((value, pos)) = tracker.get_next_available(base_tag, values)
     {
+        #[cfg(debug_assertions)]
+        {
+            eprintln!("DEBUG: Found exact match for base_tag={}, marking as consumed at pos={}", base_tag, pos);
+            if base_tag == "90D" || base_tag == "86" {
+                eprintln!("DEBUG: Returning value for {}: '{}'", base_tag,
+                    if value.len() > 50 { &value[..50] } else { value });
+            }
+        }
         tracker.mark_consumed(base_tag, pos);
         return Some((value.to_string(), None, pos));
     }
@@ -249,10 +264,16 @@ pub fn find_field_with_variant_sequential_constrained(
         if let Some(valid) = valid_variants
             && !valid.contains(&variant_str.as_str())
         {
+            #[cfg(debug_assertions)]
+            eprintln!("DEBUG: Skipping field {} with variant {} - not in valid variants {:?}",
+                tag, variant_str, valid);
             continue; // Skip variants that aren't in the valid list
         }
 
         if let Some((value, pos)) = tracker.get_next_available(tag, values) {
+            #[cfg(debug_assertions)]
+            eprintln!("DEBUG: Found field {} with variant {} for base tag {}",
+                tag, variant_str, base_tag);
             tracker.mark_consumed(tag, pos);
             return Some((value.to_string(), Some(variant_str), pos));
         }
@@ -836,6 +857,10 @@ where
                 .get(tag)
                 .is_none_or(|set| !set.contains(pos))
             {
+                #[cfg(debug_assertions)]
+                if tag.starts_with("50") {
+                    eprintln!("DEBUG: Collecting field for sequence: tag='{}' from fields HashMap", tag);
+                }
                 all_fields.push((tag.clone(), value.clone(), *pos));
             }
         }
@@ -859,6 +884,14 @@ where
     let mut current_sequence_fields: HashMap<String, Vec<(String, usize)>> = HashMap::new();
     let mut in_sequence = false;
 
+    // For MT942, fields that belong in the repeating section are only 61 and 86
+    // Fields 90D, 90C, and other 86 occurrences after the repeating section should not be consumed
+    let is_mt942_statement = message_type.contains("MT942StatementLine");
+
+    // Track whether we've seen Field 61 in the current sequence to know if we should expect Field 86
+    let mut has_field_61_in_sequence = false;
+    let mut has_field_86_in_sequence = false;
+
     for (tag, value, pos) in all_fields {
         // Check if this is the start of a new sequence
         let is_sequence_start = (tag == primary_marker
@@ -877,10 +910,46 @@ where
                 current_sequence_fields.clear();
             }
             in_sequence = true;
+            has_field_61_in_sequence = true;  // Field 61 is the sequence start marker
+            has_field_86_in_sequence = false;
         }
 
-        // Add field to current sequence if we're in one
-        if in_sequence {
+        // For MT942StatementLine, be smart about which fields to include
+        let should_include_in_sequence = if is_mt942_statement && in_sequence {
+            if tag == "61" {
+                // New Field 61 - if we already have one in the sequence, start a new sequence
+                if has_field_61_in_sequence && !current_sequence_fields.is_empty() {
+                    // Complete the previous sequence
+                    if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
+                        sequences.push(sequence_item);
+                    }
+                    current_sequence_fields.clear();
+                    has_field_86_in_sequence = false;
+                }
+                has_field_61_in_sequence = true;
+                true
+            } else if tag == "86" && has_field_61_in_sequence && !has_field_86_in_sequence {
+                // This is the Field 86 that pairs with the current Field 61
+                has_field_86_in_sequence = true;
+                true
+            } else {
+                // Any other field ends the sequence
+                false
+            }
+        } else if !is_mt942_statement && in_sequence {
+            // For non-MT942 messages, include all fields in the sequence
+            true
+        } else {
+            false
+        };
+
+        // Add field to current sequence if we should include it
+        if should_include_in_sequence {
+            #[cfg(debug_assertions)]
+            if tag.starts_with("50") || tag.starts_with("90") || tag.starts_with("86") {
+                eprintln!("DEBUG: Adding field to sequence: tag='{}', value_start='{}'",
+                    tag, value.lines().next().unwrap_or(""));
+            }
             current_sequence_fields
                 .entry(tag.clone())
                 .or_default()
@@ -888,6 +957,21 @@ where
 
             // Mark this field as consumed
             tracker.mark_consumed(&tag, pos);
+        } else if is_mt942_statement && in_sequence && !should_include_in_sequence {
+            // For MT942, if we encounter a field that shouldn't be in the sequence,
+            // we should end the current sequence and not consume this field
+            if !current_sequence_fields.is_empty() {
+                if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
+                    sequences.push(sequence_item);
+                }
+                current_sequence_fields.clear();
+            }
+            in_sequence = false;
+            has_field_61_in_sequence = false;
+            has_field_86_in_sequence = false;
+
+            #[cfg(debug_assertions)]
+            eprintln!("DEBUG: Ending MT942 sequence at field: tag='{}'", tag);
         }
     }
 
@@ -926,6 +1010,9 @@ where
     }
     all_fields.sort_by_key(|(_, _, pos)| *pos);
 
+    #[cfg(debug_assertions)]
+    eprintln!("DEBUG parse_sequence_b_items: found {} total fields to process", all_fields.len());
+
     // Determine the sequence start tag based on message type
     let message_type = std::any::type_name::<T>();
     let sequence_start_tag = if message_type.contains("MT204Transaction") {
@@ -944,10 +1031,22 @@ where
             && !tag.ends_with("C")
             && !tag.ends_with("D")
         {
+            #[cfg(debug_assertions)]
+            eprintln!("DEBUG: Found sequence start tag {} at position {}, in_sequence={}, current_fields_count={}",
+                tag, pos, in_sequence, current_sequence_fields.len());
+
             // If we were already in a sequence, parse the previous one
             if in_sequence && !current_sequence_fields.is_empty() {
+                #[cfg(debug_assertions)]
+                eprintln!("DEBUG: Parsing previous sequence with {} field types", current_sequence_fields.len());
+
                 if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
                     sequences.push(sequence_item);
+                    #[cfg(debug_assertions)]
+                    eprintln!("DEBUG: Successfully parsed sequence #{}", sequences.len());
+                } else {
+                    #[cfg(debug_assertions)]
+                    eprintln!("DEBUG: Failed to parse sequence");
                 }
                 current_sequence_fields.clear();
             }
@@ -956,6 +1055,11 @@ where
 
         // Add field to current sequence if we're in one
         if in_sequence {
+            #[cfg(debug_assertions)]
+            if tag.starts_with("50") {
+                eprintln!("DEBUG: Adding field to sequence: tag='{}', value_start='{}'",
+                    tag, value.lines().next().unwrap_or(""));
+            }
             current_sequence_fields
                 .entry(tag.clone())
                 .or_default()
@@ -968,9 +1072,14 @@ where
 
     // Parse the last sequence if there is one
     if in_sequence && !current_sequence_fields.is_empty() {
+        #[cfg(debug_assertions)]
+        eprintln!("DEBUG: Parsing final sequence with {} field types", current_sequence_fields.len());
+
         match T::from_fields(current_sequence_fields) {
             Ok(sequence_item) => {
                 sequences.push(sequence_item);
+                #[cfg(debug_assertions)]
+                eprintln!("DEBUG: Successfully parsed final sequence #{}", sequences.len());
             }
             Err(_e) => {
                 #[cfg(debug_assertions)]
@@ -978,6 +1087,9 @@ where
             }
         }
     }
+
+    #[cfg(debug_assertions)]
+    eprintln!("DEBUG: parse_sequence_b_items returning {} sequences", sequences.len());
 
     Ok(sequences)
 }

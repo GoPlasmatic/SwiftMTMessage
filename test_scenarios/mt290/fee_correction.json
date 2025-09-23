@@ -1,69 +1,143 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["COR", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "related_ref": {"cat": ["AMF", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "COR",
+                100000000000
+            ]
+        },
+        "related_ref": {
+            "cat": [
+                "AMF",
+                100000000000
+            ]
+        },
         "currency": "GBP",
-        "incorrect_fee": {"fake": ["f64", 50.0, 200.0]},
+        "incorrect_fee": 10000,
         "value_date": "2024-12-31",
-        "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "account_number": "1000000000000000",
         "session_num": "0001",
-        "sequence_num": {"cat": ["", {"fake": ["i64", 100000, 999999]}]},
-        "uetr": {"fake": ["uuid"]},
-        "correct_fee": {"fake": ["f64", 10.0, 50.0]}
+        "sequence_num": {
+            "cat": [
+                "",
+                100000
+            ]
+        },
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "correct_fee": 10000
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "290",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "290",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "21": {"reference": {"var": "related_ref"}},
-            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "var": "related_ref"
+                }
+            },
+            "25": {
+                "NoOption": {
+                    "authorisation": {
+                        "var": "account_number"
+                    }
+                }
+            },
             "32": {
                 "C": {
-                    "value_date": {"var": "value_date"},
-                    "currency": {"var": "currency"},
-                    "amount": {"var": "incorrect_fee"}
+                    "value_date": {
+                        "var": "value_date"
+                    },
+                    "currency": {
+                        "var": "currency"
+                    },
+                    "amount": {
+                        "var": "incorrect_fee"
+                    }
                 }
             },
             "71B": {
                 "details": [
                     "FEE CORRECTION NOTICE",
-                    {"cat": ["REF: ", {"var": "related_ref"}]},
+                    {
+                        "cat": [
+                            "REF: ",
+                            {
+                                "var": "related_ref"
+                            }
+                        ]
+                    },
                     {
                         "cat": [
                             "INCORRECT: ",
-                            {"var": "currency"},
+                            {
+                                "var": "currency"
+                            },
                             " ",
-                            {"var": "incorrect_fee"}
+                            {
+                                "var": "incorrect_fee"
+                            }
                         ]
                     },
                     {
                         "cat": [
                             "CORRECT: ",
-                            {"var": "currency"},
+                            {
+                                "var": "currency"
+                            },
                             " ",
-                            {"var": "correct_fee"}
+                            {
+                                "var": "correct_fee"
+                            }
                         ]
                     },
                     "FULL REVERSAL",
@@ -71,7 +145,11 @@
                 ]
             },
             "72": {
-                "information": ["/COR/FEE CORRECTION", "/NEW/CORRECTED MT190 FOLLOWS", "/REF/PRICING ERROR"]
+                "information": [
+                    "/COR/FEE CORRECTION",
+                    "/NEW/CORRECTED MT190 FOLLOWS",
+                    "/REF/PRICING ERROR"
+                ]
             }
         }
     }

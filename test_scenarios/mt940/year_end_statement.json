@@ -1,51 +1,98 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "account_id": {"cat": ["GB33BNBK", {"fake": ["i64", 10000000000000, 99999999999999]}]},
-        "statement_num": {"fake": ["i64", 9000, 9999]},
-        "opening_balance": {"fake": ["f64", 1500000.0, 5000000.0]},
-        "closing_balance": {"fake": ["f64", 2000000.0, 6000000.0]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "account_id": {
+            "cat": [
+                "GB33BNBK",
+                10000000000000
+            ]
+        },
+        "statement_num": 9000,
+        "opening_balance": 10000,
+        "closing_balance": 10000,
         "currency": "GBP",
         "value_date": "2024-12-31",
         "entry_date": "1231",
         "session_num": "0003",
         "sequence_num": "009999",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "940",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "940",
         "fields": {
-            "20": {"reference": "YEAREND2024"},
-            "21": {"reference": "ANNUAL"},
-            "25": {"NoOption": {"authorisation": {"var": "account_id"}}},
-            "28C": {"statement_number": {"var": "statement_num"}},
+            "20": {
+                "reference": "YEAREND2024"
+            },
+            "21": {
+                "reference": "ANNUAL"
+            },
+            "25": {
+                "NoOption": {
+                    "authorisation": {
+                        "var": "account_id"
+                    }
+                }
+            },
+            "28C": {
+                "statement_number": {
+                    "var": "statement_num"
+                }
+            },
             "60": {
                 "F": {
                     "debit_credit_mark": "C",
                     "value_date": "2024-01-01",
-                    "currency": {"var": "currency"},
-                    "amount": {"var": "opening_balance"}
+                    "currency": {
+                        "var": "currency"
+                    },
+                    "amount": {
+                        "var": "opening_balance"
+                    }
                 }
             },
             "#": [
@@ -54,17 +101,17 @@
                         "value_date": "2024-03-31",
                         "entry_date": "0331",
                         "debit_credit_mark": "C",
-                        "amount": 250000.0,
+                        "amount": 250000,
                         "transaction_type": "NTRF",
-                        "customer_reference": "Q1-SUMMARY",
-                        "bank_reference": "//QUARTERLY-01"
+                        "customer_reference": "Q1-SUMMARY000000",
+                        "bank_reference": "BA1-1234567890"
                     },
                     "86": {
                         "narrative": [
                             "/SUMMARY/Q1 2024 NET MOVEMENTS",
                             "/CREDITS/85 TRANSACTIONS",
                             "/DEBITS/62 TRANSACTIONS",
-                            "/NET/+250,000.00 GBP"
+                            "/NET/+250,0000 GBP"
                         ]
                     }
                 },
@@ -73,17 +120,17 @@
                         "value_date": "2024-06-30",
                         "entry_date": "0630",
                         "debit_credit_mark": "C",
-                        "amount": 175000.0,
+                        "amount": 175000,
                         "transaction_type": "NTRF",
-                        "customer_reference": "Q2-SUMMARY",
-                        "bank_reference": "//QUARTERLY-02"
+                        "customer_reference": "Q2-SUMMARY000000",
+                        "bank_reference": "BA2-1234567890"
                     },
                     "86": {
                         "narrative": [
                             "/SUMMARY/Q2 2024 NET MOVEMENTS",
                             "/CREDITS/92 TRANSACTIONS",
                             "/DEBITS/71 TRANSACTIONS",
-                            "/NET/+175,000.00 GBP"
+                            "/NET/+175,0000 GBP"
                         ]
                     }
                 },
@@ -92,74 +139,80 @@
                         "value_date": "2024-09-30",
                         "entry_date": "0930",
                         "debit_credit_mark": "D",
-                        "amount": 50000.0,
+                        "amount": 50000,
                         "transaction_type": "NTRF",
-                        "customer_reference": "Q3-SUMMARY",
-                        "bank_reference": "//QUARTERLY-03"
+                        "customer_reference": "Q3-SUMMARY000000",
+                        "bank_reference": "BA3-1234567890"
                     },
                     "86": {
                         "narrative": [
                             "/SUMMARY/Q3 2024 NET MOVEMENTS",
                             "/CREDITS/78 TRANSACTIONS",
                             "/DEBITS/83 TRANSACTIONS",
-                            "/NET/-50,000.00 GBP"
+                            "/NET/-50,0000 GBP"
                         ]
                     }
                 },
                 {
                     "61": {
                         "value_date": "2024-12-31",
-                        "entry_date": {"var": "entry_date"},
+                        "entry_date": {
+                            "var": "entry_date"
+                        },
                         "debit_credit_mark": "C",
-                        "amount": 125000.0,
+                        "amount": 125000,
                         "transaction_type": "NTRF",
-                        "customer_reference": "Q4-SUMMARY",
-                        "bank_reference": "//QUARTERLY-04"
+                        "customer_reference": "Q4-SUMMARY000000",
+                        "bank_reference": "BA4-1234567890"
                     },
                     "86": {
                         "narrative": [
                             "/SUMMARY/Q4 2024 NET MOVEMENTS",
                             "/CREDITS/104 TRANSACTIONS",
                             "/DEBITS/88 TRANSACTIONS",
-                            "/NET/+125,000.00 GBP"
+                            "/NET/+125,0000 GBP"
                         ]
                     }
                 },
                 {
                     "61": {
                         "value_date": "2024-12-31",
-                        "entry_date": {"var": "entry_date"},
+                        "entry_date": {
+                            "var": "entry_date"
+                        },
                         "debit_credit_mark": "C",
-                        "amount": 15000.0,
+                        "amount": 15000,
                         "transaction_type": "NINT",
-                        "customer_reference": "INT-ANNUAL-2024",
-                        "bank_reference": "//YEAR-INT"
+                        "customer_reference": "INT00ANNUAL-2024",
+                        "bank_reference": "BA5-1234567890"
                     },
                     "86": {
                         "narrative": [
                             "/INT/ANNUAL INTEREST SUMMARY",
                             "/GROSS/15,250.00 GBP",
                             "/TAX/250.00 GBP @ 20%",
-                            "/NET/15,000.00 GBP"
+                            "/NET/15,0000 GBP"
                         ]
                     }
                 },
                 {
                     "61": {
                         "value_date": "2024-12-31",
-                        "entry_date": {"var": "entry_date"},
+                        "entry_date": {
+                            "var": "entry_date"
+                        },
                         "debit_credit_mark": "D",
-                        "amount": 2500.0,
+                        "amount": 2500,
                         "transaction_type": "NCHG",
-                        "customer_reference": "FEE-ANNUAL-2024",
-                        "bank_reference": "//YEAR-CHG"
+                        "customer_reference": "FEE-ANNUAL-20240",
+                        "bank_reference": "BA6-1234567890"
                     },
                     "86": {
                         "narrative": [
                             "/CHARGES/ANNUAL ACCOUNT FEES",
-                            "/MAINTENANCE/1,200.00 GBP",
-                            "/TRANSACTIONS/800.00 GBP",
-                            "/SERVICES/500.00 GBP"
+                            "/MAINTENANCE/1,2000 GBP",
+                            "/TRANSACTIONS/8000 GBP",
+                            "/SERVICES/5000 GBP"
                         ]
                     }
                 }
@@ -168,23 +221,31 @@
                 "F": {
                     "debit_credit_mark": "C",
                     "value_date": "2024-12-31",
-                    "currency": {"var": "currency"},
-                    "amount": {"var": "closing_balance"}
+                    "currency": {
+                        "var": "currency"
+                    },
+                    "amount": {
+                        "var": "closing_balance"
+                    }
                 }
             },
             "64": {
                 "debit_credit_mark": "C",
                 "value_date": "2024-12-31",
-                "currency": {"var": "currency"},
-                "amount": {"var": "closing_balance"}
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "closing_balance"
+                }
             },
             "86": {
                 "narrative": [
                     "/ANNUAL SUMMARY 2024/",
                     "/TOTAL CREDITS/359 TRANSACTIONS",
                     "/TOTAL DEBITS/304 TRANSACTIONS",
-                    "/HIGH/2,500,000.00 LOW/1,200,000.00",
-                    "/AVERAGE BALANCE/1,850,000.00",
+                    "/HIGH/2,500,0000 LOW/1,200,0000",
+                    "/AVERAGE BALANCE/1,850,0000",
                     "/THANK YOU FOR YOUR BUSINESS/"
                 ]
             }

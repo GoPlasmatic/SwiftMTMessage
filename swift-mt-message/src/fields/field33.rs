@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -117,7 +118,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Contains the original instructed currency and amount before conversion
 /// and charge applications.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field33B {
     /// Currency code of original instruction
     ///

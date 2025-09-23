@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -126,7 +127,8 @@ use swift_mt_message_macros::SwiftField;
 ///   **Field 36: Exchange Rate Structure**
 ///
 /// Contains the exchange rate for currency conversion calculations.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field36 {
     /// Exchange rate for currency conversion
     ///

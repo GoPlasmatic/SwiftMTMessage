@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -112,7 +113,8 @@ use swift_mt_message_macros::SwiftField;
 /// - BIC Directory: Valid Financial Institution Codes
 /// - Message Routing Guidelines: Institutional Identification Standards
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field51A {
     /// Optional party identifier for clearing system or account reference
     ///

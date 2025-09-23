@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -124,7 +125,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Basic transaction reference used in customer payment instructions.
 /// Limited to 16 characters for simple transaction identification.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field21NoOption {
     /// Transaction reference (up to 16 characters)
     ///
@@ -138,7 +140,8 @@ pub struct Field21NoOption {
 ///
 /// Extended reference capability for customer-specific transaction identification
 /// in treasury operations and complex financial transactions.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field21C {
     /// Customer reference (up to 35 characters)
     ///
@@ -152,7 +155,8 @@ pub struct Field21C {
 ///
 /// Deal reference for treasury and money market transactions, providing
 /// detailed identification for financial market operations.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field21D {
     /// Deal reference (up to 35 characters)
     ///
@@ -166,7 +170,8 @@ pub struct Field21D {
 ///
 /// Related reference for linking transactions and instructions across
 /// multiple messages in a transaction chain.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field21E {
     /// Related reference (up to 35 characters)
     ///
@@ -180,7 +185,8 @@ pub struct Field21E {
 ///
 /// File reference for batch operations, enabling grouping and identification
 /// of multiple transactions processed together.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field21F {
     /// File reference (up to 16 characters)
     ///
@@ -194,7 +200,8 @@ pub struct Field21F {
 ///
 /// Related file reference for linking to previously sent file references
 /// in batch processing scenarios.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field21R {
     /// Related file reference (up to 16 characters)
     ///

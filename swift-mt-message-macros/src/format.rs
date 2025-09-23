@@ -596,6 +596,7 @@ fn build_slash_compound_pattern(first_no_parens: &str, second_no_parens: &str) -
 
 /// Build slash pattern efficiently
 fn build_slash_pattern(inner_regex_no_parens: &str) -> String {
+    // Match slash prefix but only capture the content after it
     let mut result = String::with_capacity(inner_regex_no_parens.len() + 4);
     result.push('/');
     result.push('(');
@@ -894,13 +895,30 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
         }
     }
 
+    // Handle double slash prefix patterns like //16x first
+    if pattern.starts_with("//") && pattern.len() > 2 {
+        let after_double_slash = &pattern[2..];
+        let inner_regex = pattern_to_regex(after_double_slash)?;
+        // Remove the capturing group from inner regex since we'll add our own
+        let inner_regex_no_parens = inner_regex.trim_start_matches('(').trim_end_matches(')');
+        // For //16x patterns, make them non-greedy to avoid capturing content from following optional fields
+        // This is especially important for Field 61 where [//16x] is followed by [34x]
+        let inner_regex_non_greedy = if inner_regex_no_parens == ".{1,16}" {
+            ".{1,16}?"  // Make it non-greedy
+        } else {
+            inner_regex_no_parens
+        };
+        // Capture the double slash and content together
+        return Ok(format!("(//{inner_regex_non_greedy})"));
+    }
+
     // Handle simple slash prefix patterns like /34x
     if pattern.starts_with('/') && pattern.len() > 1 {
         let after_slash = &pattern[1..];
         let inner_regex = pattern_to_regex(after_slash)?;
         // Remove the capturing group from inner regex since we'll add our own
         let inner_regex_no_parens = inner_regex.trim_start_matches('(').trim_end_matches(')');
-        // Match the slash but don't capture it, only capture the content after
+        // Capture the slash and content together
         return Ok(build_slash_pattern(inner_regex_no_parens));
     }
 

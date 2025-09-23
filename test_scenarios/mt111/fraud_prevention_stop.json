@@ -1,43 +1,98 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["FSTOP", {"fake": ["i64", 100000, 999999]}]},
-        "cheque_number": {"fake": ["i64", 100000, 999999]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "FSTOP",
+                100000
+            ]
+        },
+        "cheque_number": 100000,
         "issue_date": "2024-12-20",
-        "currency": {"fake": ["currency_code"]},
-        "amount": {"fake": ["f64", 5000.0, 100000.0]},
+        "currency": "USD",
+        "amount": 10000,
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "111",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "111",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "21": {"reference": {"cat": ["", {"var": "cheque_number"}]}},
-            "30": {"execution_date": {"var": "issue_date"}},
-            "32": {"B": {"currency": {"var": "currency"}, "amount": {"var": "amount"}}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "cat": [
+                        "",
+                        {
+                            "var": "cheque_number"
+                        }
+                    ]
+                }
+            },
+            "30": {
+                "execution_date": {
+                    "var": "issue_date"
+                }
+            },
+            "32": {
+                "B": {
+                    "currency": {
+                        "var": "currency"
+                    },
+                    "amount": {
+                        "var": "amount"
+                    }
+                }
+            },
             "75": {
                 "information": [
                     "REASON: SUSPECTED FRAUD",

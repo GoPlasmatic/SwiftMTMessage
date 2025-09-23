@@ -1,49 +1,112 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["RT", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "account_number": {"cat": ["NOSTRO-", {"fake": ["i64", 10000000, 99999999]}]},
-        "statement_num": {"fake": ["i64", 1, 999]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "RT",
+                100000000000
+            ]
+        },
+        "account_number": {
+            "cat": [
+                "NOSTRO-",
+                10000000
+            ]
+        },
+        "statement_num": 1,
         "currency": "EUR",
-        "debit_limit": {"fake": ["f64", 250000.0, 2500000.0]},
+        "debit_limit": 10000,
         "report_date": "241220",
         "report_time": "0945",
-        "amount1": {"fake": ["f64", 75000.0, 150000.0]},
-        "amount2": {"fake": ["f64", 25000.0, 50000.0]},
-        "ref1": {"cat": ["SEPA", {"fake": ["i64", 100000, 999999]}]},
-        "ref2": {"cat": ["T2", {"fake": ["i64", 100000, 999999]}]},
+        "amount1": 10000,
+        "amount2": 10000,
+        "ref1": {
+            "cat": [
+                "SEPA",
+                100000
+            ]
+        },
+        "ref2": {
+            "cat": [
+                "T2",
+                100000
+            ]
+        },
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
             "session_number": "0001",
             "sequence_number": "000001"
         },
         "application_header": {
             "direction": "I",
             "message_type": "942",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "942",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
-            "28C": {"statement_number": {"var": "statement_num"}, "sequence_number": 1},
-            "34F#1": {"currency": {"var": "currency"}, "amount": {"var": "debit_limit"}, "indicator": "D"},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "25": {
+                "NoOption": {
+                    "authorisation": {
+                        "var": "account_number"
+                    }
+                }
+            },
+            "28C": {
+                "statement_number": {
+                    "var": "statement_num"
+                },
+                "sequence_number": 1
+            },
+            "34F#1": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "debit_limit"
+                },
+                "indicator": "D"
+            },
             "13D": {
                 "date": "2024-12-20",
                 "time": "09:45",
@@ -56,11 +119,14 @@
                         "value_date": "2024-12-20",
                         "entry_date": "1220",
                         "debit_credit_mark": "C",
-                        "currency": {"var": "currency"},
-                        "amount": {"var": "amount1"},
+                        "amount": {
+                            "var": "amount1"
+                        },
                         "transaction_type": "NMSC",
-                        "customer_reference": {"var": "ref1"},
-                        "bank_reference": "//TARGET2/001"
+                        "customer_reference": {
+                            "var": "ref1"
+                        },
+                        "bank_reference": "BA1-1234567890"
                     },
                     "86": {
                         "narrative": [
@@ -76,11 +142,14 @@
                         "value_date": "2024-12-20",
                         "entry_date": "1220",
                         "debit_credit_mark": "D",
-                        "currency": {"var": "currency"},
-                        "amount": {"var": "amount2"},
+                        "amount": {
+                            "var": "amount2"
+                        },
                         "transaction_type": "NMSC",
-                        "customer_reference": {"var": "ref2"},
-                        "bank_reference": "//TARGET2/002"
+                        "customer_reference": {
+                            "var": "ref2"
+                        },
+                        "bank_reference": "BA2-1234567890"
                     },
                     "86": {
                         "narrative": [

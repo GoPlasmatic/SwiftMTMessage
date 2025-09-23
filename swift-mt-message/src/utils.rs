@@ -29,6 +29,29 @@ pub fn get_field_tag_for_mt(tag: &str) -> String {
     extract_base_tag(tag).to_string()
 }
 
+/// Check if a field tag is a numbered field (contains #)
+pub fn is_numbered_field(tag: &str) -> bool {
+    tag.contains('#')
+}
+
+/// Map a variant-based field tag back to a numbered field tag based on context
+/// This is used during MT parsing to restore numbered field distinction
+pub fn map_variant_to_numbered(base_tag: &str, variant: Option<&str>, field_index: usize) -> String {
+    // For now, use a simple mapping based on field order
+    // In a more complete implementation, this would use message-specific rules
+    match (base_tag, variant, field_index) {
+        ("50", _, 0) => "50#1".to_string(),
+        ("50", _, 1) => "50#2".to_string(),
+        _ => {
+            if let Some(v) = variant {
+                format!("{}{}", base_tag, v)
+            } else {
+                base_tag.to_string()
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

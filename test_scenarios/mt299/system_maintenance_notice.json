@@ -1,11 +1,16 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "message_ref": {"cat": ["MAINT", {"fake": ["i64", 10000000, 99999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "message_ref": {
+            "cat": [
+                "MAINT",
+                10000000
+            ]
+        },
         "session_num": "0003",
         "sequence_num": "005678",
-        "uetr": {"fake": ["uuid"]},
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
         "maintenance_date": "2024-12-28",
         "start_time": "22:00",
         "end_time": "06:00",
@@ -15,39 +20,83 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "299",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "299",
         "fields": {
-            "20": {"reference": {"var": "message_ref"}},
+            "20": {
+                "reference": {
+                    "var": "message_ref"
+                }
+            },
             "79": {
                 "information": [
                     "SYSTEM MAINTENANCE NOTIFICATION",
-                    "",
-                    {"substr": [{"cat": ["DATE: ", {"var": "maintenance_date"}]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "DATE: ",
+                                    {
+                                        "var": "maintenance_date"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     {
                         "substr": [
                             {
                                 "cat": [
                                     "TIME: ",
-                                    {"var": "start_time"},
+                                    {
+                                        "var": "start_time"
+                                    },
                                     "-",
-                                    {"var": "end_time"},
+                                    {
+                                        "var": "end_time"
+                                    },
                                     " GMT"
                                 ]
                             },
@@ -55,30 +104,38 @@
                             50
                         ]
                     },
-                    {"substr": [{"cat": ["DURATION: ", {"var": "duration_hours"}, " HOURS"]}, 0, 50]},
-                    "",
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "DURATION: ",
+                                    {
+                                        "var": "duration_hours"
+                                    },
+                                    " HOURS"
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "AFFECTED SERVICES:",
                     "- SWIFT PROCESSING",
                     "- RTGS SYSTEM",
                     "- ONLINE BANKING",
                     "- API SERVICES",
-                    "",
                     "AVAILABLE:",
                     "- EMERGENCY HOTLINE",
                     "- MANUAL PROCESSING",
-                    "",
                     "MAINTENANCE:",
                     "- SYSTEM UPGRADE",
                     "- SECURITY PATCHES",
                     "- DATABASE UPDATES",
-                    "",
                     "CONTINGENCY:",
                     "- MESSAGES QUEUED",
                     "- PROCESSED AFTER",
                     "- URGENT: CALL OPS",
-                    "",
                     "TESTING: 05:00-06:00 GMT",
-                    "",
                     "CONTACT:",
                     "OPS: +44 20 9999 8888",
                     "maintenance@bank.com",

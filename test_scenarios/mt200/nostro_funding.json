@@ -1,10 +1,15 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["NOSTRO", {"fake": ["i64", 1000000, 9999999]}]},
-        "currency": {"fake": ["currency_code"]},
-        "amount": {"fake": ["f64", 1000000.0, 50000000.0]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "NOSTRO",
+                1000000
+            ]
+        },
+        "currency": "USD",
+        "amount": 10000,
         "value_date": "2025-01-15",
         "session_num": "0001",
         "sequence_num": "123456"
@@ -13,29 +18,73 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "200",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "message_type": "200",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "32A": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "amount"}
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
             },
-            "53B": {"party_identifier": "/NOSTRO", "location": "CORRESPONDENT BANK"},
-            "57": {"A": {"bic": {"fake": ["bic"]}}},
-            "72": {"information": ["/INS/NOSTRO FUNDING", "/ACC/EOD SETTLEMENT"]}
+            "32A": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "amount"
+                }
+            },
+            "53B": {
+                "party_identifier": "NOSTRO",
+                "location": "CORRESPONDENT BANK"
+            },
+            "57": {
+                "A": {
+                    "bic": "DEUTDEFF"
+                }
+            },
+            "72": {
+                "information": [
+                    "/INS/NOSTRO FUNDING",
+                    "/ACC/EOD SETTLEMENT"
+                ]
+            }
         }
     }
 }

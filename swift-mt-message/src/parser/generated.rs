@@ -46,6 +46,14 @@ pub fn parse_block4_fields(block4: &str) -> Result<HashMap<String, Vec<(String, 
                 // Normalize field tag by removing option letters (A, F, K, etc.)
                 let field_tag = normalize_field_tag(raw_field_tag);
 
+                #[cfg(debug_assertions)]
+                {
+                    if raw_field_tag.starts_with("50") {
+                        eprintln!("DEBUG: parse_block4_fields - raw_field_tag='{}', normalized field_tag='{}'",
+                            raw_field_tag, field_tag);
+                    }
+                }
+
                 // Find the end of field value (next field marker or end of content)
                 let value_start = tag_end + 1;
                 let value_end = if let Some(next_field) = content[value_start..].find("\n:") {
@@ -117,7 +125,7 @@ pub fn normalize_field_tag(raw_tag: &str) -> std::borrow::Cow<'_, str> {
     // For certain field numbers, preserve the option letter to avoid conflicts
     match numeric_part {
         "11" | "13" | "21" | "23" | "25" | "26" | "28" | "32" | "33" | "34" | "37" | "50"
-        | "52" | "53" | "54" | "55" | "56" | "57" | "58" | "59" | "60" | "62" | "71" | "77" => {
+        | "51" | "52" | "53" | "54" | "55" | "56" | "57" | "58" | "59" | "60" | "62" | "71" | "77" | "90" => {
             // Keep option letters for fields that have multiple variants or specific formats
             Cow::Borrowed(raw_tag)
         }

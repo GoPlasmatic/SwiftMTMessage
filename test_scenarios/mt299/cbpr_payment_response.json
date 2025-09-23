@@ -1,22 +1,55 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "message_ref": {"cat": ["RSP", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "inquiry_ref": {"cat": ["INQ", {"fake": ["i64", 100000000000, 999999999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "message_ref": {
+            "cat": [
+                "RSP",
+                100000000000
+            ]
+        },
+        "inquiry_ref": {
+            "cat": [
+                "INQ",
+                100000000000
+            ]
+        },
         "session_num": "0001",
         "sequence_num": "004567",
-        "payment_ref": {"cat": ["REF", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "uetr": {"fake": ["uuid"]},
-        "processing_time": {"fake": ["i32", 1, 24]},
+        "payment_ref": {
+            "cat": [
+                "REF",
+                100000000000
+            ]
+        },
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "processing_time": {
+            "fake": [
+                "i32",
+                1,
+                24
+            ]
+        },
         "fee_amount": "25.00",
         "exchange_rate": "1.1200",
         "credit_datetime": {
             "cat": [
                 "2024-12-20 ",
-                {"fake": ["i32", 10, 16]},
+                {
+                    "fake": [
+                        "i32",
+                        10,
+                        16
+                    ]
+                },
                 ":",
-                {"fake": ["i32", 10, 59]},
+                {
+                    "fake": [
+                        "i32",
+                        10,
+                        59
+                    ]
+                },
                 ":00"
             ]
         },
@@ -28,35 +61,125 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "299",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "299",
         "fields": {
-            "20": {"reference": {"var": "message_ref"}},
-            "21": {"reference": {"cat": ["", {"var": "inquiry_ref"}]}},
+            "20": {
+                "reference": {
+                    "var": "message_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "cat": [
+                        "",
+                        {
+                            "var": "inquiry_ref"
+                        }
+                    ]
+                }
+            },
             "79": {
                 "information": [
                     "CBPR+ PAYMENT STATUS RESPONSE",
-                    {"substr": [{"cat": ["INQUIRY REFERENCE: ", {"var": "inquiry_ref"}]}, 0, 50]},
-                    {"substr": [{"cat": ["PAYMENT REFERENCE: ", {"var": "payment_ref"}]}, 0, 50]},
-                    {"substr": [{"cat": ["UETR: ", {"var": "uetr"}]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "INQUIRY REFERENCE: ",
+                                    {
+                                        "var": "inquiry_ref"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "PAYMENT REFERENCE: ",
+                                    {
+                                        "var": "payment_ref"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "UETR: ",
+                                    {
+                                        "var": "uetr"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "CURRENT STATUS: COMPLETED",
-                    {"substr": [{"cat": ["BENEFICIARY CREDITED: ", {"var": "credit_datetime"}, " CET"]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "BENEFICIARY CREDITED: ",
+                                    {
+                                        "var": "credit_datetime"
+                                    },
+                                    " CET"
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "TRANSPARENCY PATH:",
                     "1. SENDER -> SENDER'S BANK",
                     "   TIME: T+0 09:00:00",
@@ -65,24 +188,134 @@
                     "2. SENDER'S BANK -> CORRESPONDENT",
                     "   TIME: T+0 09:30:00",
                     "   STATUS: FORWARDED",
-                    {"substr": [{"cat": ["   FEE: ", {"var": "fee_amount"}, " EUR"]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "   FEE: ",
+                                    {
+                                        "var": "fee_amount"
+                                    },
+                                    " EUR"
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "3. CORRESPONDENT -> BENEFICIARY BANK",
                     "   TIME: T+0 14:00:00",
                     "   STATUS: PROCESSED",
                     "   FEE: 10.00 EUR",
                     "4. BENEFICIARY BANK -> BENEFICIARY",
-                    {"substr": [{"cat": ["   TIME: ", {"var": "credit_datetime"}]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "   TIME: ",
+                                    {
+                                        "var": "credit_datetime"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "   STATUS: CREDITED",
                     "   FEE: 5.00 EUR",
                     "CBPR+ COMPLIANCE SUMMARY:",
-                    {"substr": [{"cat": ["- PURPOSE CODE: ", {"var": "purpose_code"}, " (VALIDATED)"]}, 0, 50]},
-                    {"substr": [{"cat": ["- ORDERING LEI: ", {"var": "ordering_lei"}, " (VERIFIED)"]}, 0, 50]},
-                    {"substr": [{"cat": ["- BENEFICIARY LEI: ", {"var": "beneficiary_lei"}, " (VERIFIED)"]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "- PURPOSE CODE: ",
+                                    {
+                                        "var": "purpose_code"
+                                    },
+                                    " (VALIDATED)"
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "- ORDERING LEI: ",
+                                    {
+                                        "var": "ordering_lei"
+                                    },
+                                    " (VERIFIED)"
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "- BENEFICIARY LEI: ",
+                                    {
+                                        "var": "beneficiary_lei"
+                                    },
+                                    " (VERIFIED)"
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "FEE SUMMARY:",
-                    {"substr": [{"cat": ["- TOTAL FEES: ", {"var": "fee_amount"}, " EUR"]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "- TOTAL FEES: ",
+                                    {
+                                        "var": "fee_amount"
+                                    },
+                                    " EUR"
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "- FEE TRANSPARENCY: FULL DISCLOSURE",
-                    {"substr": [{"cat": ["- EXCHANGE RATE APPLIED: ", {"var": "exchange_rate"}]}, 0, 50]},
-                    {"substr": [{"cat": ["PROCESSING TIME: ", {"var": "processing_time"}, " HOURS"]}, 0, 50]},
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "- EXCHANGE RATE APPLIED: ",
+                                    {
+                                        "var": "exchange_rate"
+                                    }
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
+                    {
+                        "substr": [
+                            {
+                                "cat": [
+                                    "PROCESSING TIME: ",
+                                    {
+                                        "var": "processing_time"
+                                    },
+                                    " HOURS"
+                                ]
+                            },
+                            0,
+                            50
+                        ]
+                    },
                     "PERFORMANCE: WITHIN SLA",
                     "ALL CBPR+ REQUIREMENTS SATISFIED",
                     "END OF RESPONSE"

@@ -1,12 +1,22 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "msg_id": {"cat": ["SUBS", {"fake": ["i64", 100000, 999999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "msg_id": {
+            "cat": [
+                "SUBS",
+                100000
+            ]
+        },
         "total_amount": 184,
         "exec_date": "2024-12-25",
-        "currency": {"fake": ["currency_code"]},
-        "account_id": {"cat": ["US33CITI", {"fake": ["i64", 10000000000000, 99999999999999]}]},
+        "currency": "USD",
+        "account_id": {
+            "cat": [
+                "US33CITI",
+                10000000000000
+            ]
+        },
         "amount1": 20,
         "amount2": 50,
         "amount3": 99,
@@ -15,46 +25,108 @@
         "lei_software": "SOFTWARELEICODE67890",
         "session_num": "0001",
         "sequence_num": "003456",
-        "uetr": {"fake": ["uuid"]}
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "104",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
-        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            }
+        },
         "message_type": "104",
         "fields": {
-            "20": {"reference": {"var": "msg_id"}},
-            "23E": {"instruction_code": "CORT"},
-            "28D": {"message_index": 1, "total": 1},
-            "30": {"execution_date": {"var": "exec_date"}},
+            "20": {
+                "reference": {
+                    "var": "msg_id"
+                }
+            },
+            "23E": {
+                "instruction_code": "CORT"
+            },
+            "30": {
+                "execution_date": {
+                    "var": "exec_date"
+                }
+            },
             "#": [
                 {
-                    "21": {"reference": "STREAM001"},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount1"}},
+                    "21": {
+                        "reference": "STREAM001"
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": {
+                            "var": "amount1"
+                        }
+                    },
                     "50#2": {
                         "K": {
                             "account": "US12345678901234567890",
-                            "name_and_address": ["SMITH, JOHN", "123 MAIN STREET APT 4B", "NEW YORK NY 10001", "UNITED STATES"]
+                            "name_and_address": [
+                                "SMITH, JOHN",
+                                "123 MAIN STREET APT 4B",
+                                "NEW YORK NY 10001",
+                                "UNITED STATES"
+                            ]
                         }
                     },
-                    "52": {"A": {"bic": {"var": "sender_bic"}}},
-                    "57": {"A": {"bic": "CHASUS33XXX"}},
+                    "52": {
+                        "A": {
+                            "bic": {
+                                "var": "sender_bic"
+                            }
+                        }
+                    },
+                    "57": {
+                        "A": {
+                            "bic": "CHASUS33XXX"
+                        }
+                    },
                     "59": {
                         "NoOption": {
-                            "account": {"var": "account_id"},
+                            "account": {
+                                "var": "account_id"
+                            },
                             "name_and_address": [
                                 "STREAMING PLUS INC",
                                 "SUBSCRIPTION SERVICES",
@@ -71,7 +143,9 @@
                             "/PERIOD/JANUARY 2025"
                         ]
                     },
-                    "71A": {"code": "SHA"},
+                    "71A": {
+                        "code": "SHA"
+                    },
                     "77B": {
                         "narrative": [
                             "/ORDERRES/SMITH, JOHN",
@@ -81,19 +155,45 @@
                     }
                 },
                 {
-                    "21": {"reference": "SOFTWARE002"},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount2"}},
+                    "21": {
+                        "reference": "SOFTWARE002"
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": {
+                            "var": "amount2"
+                        }
+                    },
                     "50#2": {
                         "K": {
                             "account": "US98765432109876543210",
-                            "name_and_address": ["JOHNSON, SARAH", "456 TECH AVENUE", "SAN FRANCISCO CA 94107", "UNITED STATES"]
+                            "name_and_address": [
+                                "JOHNSON, SARAH",
+                                "456 TECH AVENUE",
+                                "SAN FRANCISCO CA 94107",
+                                "UNITED STATES"
+                            ]
                         }
                     },
-                    "52": {"A": {"bic": {"var": "sender_bic"}}},
-                    "57": {"A": {"bic": "WFBIUS6SXXX"}},
+                    "52": {
+                        "A": {
+                            "bic": {
+                                "var": "sender_bic"
+                            }
+                        }
+                    },
+                    "57": {
+                        "A": {
+                            "bic": "WFBIUS6SXXX"
+                        }
+                    },
                     "59": {
                         "NoOption": {
-                            "account": {"var": "account_id"},
+                            "account": {
+                                "var": "account_id"
+                            },
                             "name_and_address": [
                                 "CLOUD SOFTWARE CORP",
                                 "BILLING DEPARTMENT",
@@ -110,7 +210,9 @@
                             "/PERIOD/JANUARY 2025"
                         ]
                     },
-                    "71A": {"code": "SHA"},
+                    "71A": {
+                        "code": "SHA"
+                    },
                     "77B": {
                         "narrative": [
                             "/ORDERRES/JOHNSON, SARAH",
@@ -120,19 +222,45 @@
                     }
                 },
                 {
-                    "21": {"reference": "FITNESS003"},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount3"}},
+                    "21": {
+                        "reference": "FITNESS003"
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": {
+                            "var": "amount3"
+                        }
+                    },
                     "50#2": {
                         "K": {
                             "account": "US11223344556677889900",
-                            "name_and_address": ["DAVIS, MICHAEL", "789 HEALTH STREET", "BOSTON MA 02108", "UNITED STATES"]
+                            "name_and_address": [
+                                "DAVIS, MICHAEL",
+                                "789 HEALTH STREET",
+                                "BOSTON MA 02108",
+                                "UNITED STATES"
+                            ]
                         }
                     },
-                    "52": {"A": {"bic": {"var": "sender_bic"}}},
-                    "57": {"A": {"bic": "BOFAUS3NXXX"}},
+                    "52": {
+                        "A": {
+                            "bic": {
+                                "var": "sender_bic"
+                            }
+                        }
+                    },
+                    "57": {
+                        "A": {
+                            "bic": "BOFAUS3NXXX"
+                        }
+                    },
                     "59": {
                         "NoOption": {
-                            "account": {"var": "account_id"},
+                            "account": {
+                                "var": "account_id"
+                            },
                             "name_and_address": [
                                 "FITNESS CLUB INTERNATIONAL",
                                 "MEMBERSHIP SERVICES",
@@ -149,7 +277,9 @@
                             "/PERIOD/JANUARY 2025"
                         ]
                     },
-                    "71A": {"code": "SHA"},
+                    "71A": {
+                        "code": "SHA"
+                    },
                     "77B": {
                         "narrative": [
                             "/ORDERRES/DAVIS, MICHAEL",
@@ -159,19 +289,45 @@
                     }
                 },
                 {
-                    "21": {"reference": "NEWS004"},
-                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount4"}},
+                    "21": {
+                        "reference": "NEWS004"
+                    },
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": {
+                            "var": "amount4"
+                        }
+                    },
                     "50#2": {
                         "K": {
                             "account": "US99887766554433221100",
-                            "name_and_address": ["WILSON, EMMA", "321 READER LANE", "WASHINGTON DC 20001", "UNITED STATES"]
+                            "name_and_address": [
+                                "WILSON, EMMA",
+                                "321 READER LANE",
+                                "WASHINGTON DC 20001",
+                                "UNITED STATES"
+                            ]
                         }
                     },
-                    "52": {"A": {"bic": {"var": "sender_bic"}}},
-                    "57": {"A": {"bic": "PNBPUS3NXXX"}},
+                    "52": {
+                        "A": {
+                            "bic": {
+                                "var": "sender_bic"
+                            }
+                        }
+                    },
+                    "57": {
+                        "A": {
+                            "bic": "PNBPUS3NXXX"
+                        }
+                    },
                     "59": {
                         "NoOption": {
-                            "account": {"var": "account_id"},
+                            "account": {
+                                "var": "account_id"
+                            },
                             "name_and_address": [
                                 "DIGITAL NEWS CORPORATION",
                                 "SUBSCRIPTION BILLING",
@@ -188,7 +344,9 @@
                             "/PERIOD/JANUARY 2025"
                         ]
                     },
-                    "71A": {"code": "SHA"},
+                    "71A": {
+                        "code": "SHA"
+                    },
                     "77B": {
                         "narrative": [
                             "/ORDERRES/WILSON, EMMA",
@@ -198,7 +356,14 @@
                     }
                 }
             ],
-            "32B": {"currency": {"var": "currency"}, "amount": {"var": "total_amount"}}
+            "32B": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "total_amount"
+                }
+            }
         }
     }
 }

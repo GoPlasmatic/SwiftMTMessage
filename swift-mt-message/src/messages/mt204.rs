@@ -134,7 +134,7 @@ pub const MT204_VALIDATION_RULES: &str = r##"{
             }
         },
         {
-            "id": "C2", 
+            "id": "C2",
             "description": "The currency code in the amount field 32B must be the same for all occurrences of this field in the message",
             "condition": {
                 "all": [
@@ -142,7 +142,7 @@ pub const MT204_VALIDATION_RULES: &str = r##"{
                     {
                         "==": [
                             {"var": "32B.currency"},
-                            {"val": [[-3], "fields", "#", 0, "32B", "currency"]}
+                            {"val": [[2], "fields", "#", 0, "32B", "currency"]}
                         ]
                     }
                 ]

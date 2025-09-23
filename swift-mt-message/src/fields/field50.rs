@@ -83,6 +83,7 @@
 //! - AML/CFT Compliance: Originator Screening Best Practices
 //! - STP Implementation Guide: Ordering Customer Optimization
 
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -95,7 +96,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Name and address lines (4*35x)
 ///
 /// For complete documentation, see the [Field 50 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field50NoOption {
     #[component("4*35x")]
     pub name_and_address: Vec<String>,
@@ -111,7 +113,8 @@ pub struct Field50NoOption {
 /// - Name and address lines (4*(1!n/33x))
 ///
 /// For complete documentation, see the [Field 50 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field50A {
     /// Optional account identifier (IBAN, account number, etc.)
     /// Format: [/34x] - Up to 34 characters with leading slash
@@ -133,7 +136,8 @@ pub struct Field50A {
 /// - BIC (4!a2!a2!c\[3!c\])
 ///
 /// For complete documentation, see the [Field 50 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field50F {
     #[component("35x")]
     pub account: String,
@@ -152,7 +156,8 @@ pub struct Field50F {
 /// - Name and address lines (4*35x)
 ///
 /// For complete documentation, see the [Field 50 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field50K {
     /// Optional account identifier (free format)
     /// Format: \[/34x\] - Up to 34 characters with leading slash
@@ -173,7 +178,8 @@ pub struct Field50K {
 /// - BIC (4!a2!a2!c\[3!c\])
 ///
 /// For complete documentation, see the [Field 50 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field50C {
     /// BIC code
     #[component("4!a2!a2!c[3!c]")]
@@ -188,7 +194,8 @@ pub struct Field50C {
 /// - Party identifier (35x)
 ///
 /// For complete documentation, see the [Field 50 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field50L {
     #[component("35x")]
     pub party_identifier: String,
@@ -203,7 +210,8 @@ pub struct Field50L {
 /// - BIC (4!a2!a2!c\[3!c\])
 ///
 /// For complete documentation, see the [Field 50 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field50G {
     #[component("/34x")]
     pub account: String,
@@ -221,7 +229,8 @@ pub struct Field50G {
 /// - Name and address lines (4*35x)
 ///
 /// For complete documentation, see the [Field 50 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field50H {
     #[component("/34x")]
     pub account: String,
@@ -230,34 +239,39 @@ pub struct Field50H {
     pub name_and_address: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field50InstructingParty {
     C(Field50C),
     L(Field50L),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field50OrderingCustomerFGH {
     F(Field50F),
     G(Field50G),
     H(Field50H),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field50OrderingCustomerAFK {
     A(Field50A),
     F(Field50F),
     K(Field50K),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field50OrderingCustomerNCF {
     NoOption(Field50NoOption),
     C(Field50C),
     F(Field50F),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field50Creditor {
     A(Field50A),
     K(Field50K),

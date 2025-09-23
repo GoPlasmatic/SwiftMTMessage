@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -121,7 +122,8 @@ use swift_mt_message_macros::SwiftField;
 ///
 /// Structured beneficiary bank identification using BIC code with optional party identifier.
 /// Preferred option for automated settlement and final fund delivery.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field57A {
     /// Optional party identifier for settlement and payment method codes
     ///
@@ -142,7 +144,8 @@ pub struct Field57A {
 ///
 /// Domestic beneficiary bank routing using party identifier and location details.
 /// Used for location-based settlement in domestic payment systems.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field57B {
     /// Optional party identifier for settlement routing
     ///
@@ -163,7 +166,8 @@ pub struct Field57B {
 ///
 /// Simplified beneficiary bank reference using party identifier only.
 /// Used when BIC is not required or available for settlement purposes.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field57C {
     /// Party identifier for beneficiary bank settlement
     ///
@@ -177,7 +181,8 @@ pub struct Field57C {
 ///
 /// Detailed beneficiary bank identification with full name and address information.
 /// Used when structured BIC identification is not available for beneficiary bank.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field57D {
     /// Optional party identifier for settlement routing
     ///
@@ -194,7 +199,8 @@ pub struct Field57D {
     pub name_and_address: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field57AccountWithInstitution {
     A(Field57A),
     B(Field57B),
@@ -202,14 +208,16 @@ pub enum Field57AccountWithInstitution {
     D(Field57D),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field57DebtorBank {
     A(Field57A),
     C(Field57C),
     D(Field57D),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field57DebtInstitution {
     A(Field57A),
     B(Field57B),

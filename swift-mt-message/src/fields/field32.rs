@@ -101,6 +101,7 @@
 //! - STP Implementation Guide: Amount Format Requirements
 
 use chrono::NaiveDate;
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -115,7 +116,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Amount (15d, decimal with comma separator)
 ///
 /// For complete documentation, see the [Field 32 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field32A {
     /// Value date when the payment becomes effective
     ///
@@ -149,7 +151,8 @@ pub struct Field32A {
 /// - Amount (15d, decimal with comma separator)
 ///
 /// For complete documentation, see the [Field 32 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field32B {
     /// Currency code (ISO 4217)
     #[component("3!a")]
@@ -171,7 +174,8 @@ pub struct Field32B {
 /// - Amount (15d, decimal with comma separator)
 ///
 /// For complete documentation, see the [Field 32 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field32C {
     /// Value date when the credit becomes effective
     ///
@@ -204,7 +208,8 @@ pub struct Field32C {
 /// - Amount (15d, decimal with comma separator)
 ///
 /// For complete documentation, see the [Field 32 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field32D {
     /// Value date when the debit becomes effective
     ///
@@ -231,7 +236,8 @@ pub struct Field32D {
 /// levels of settlement information detail.
 ///
 /// For complete documentation, see the [Field 32 module](index.html).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field32 {
     A(Field32A),
     B(Field32B),

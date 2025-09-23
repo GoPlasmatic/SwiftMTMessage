@@ -1,51 +1,110 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref": {"cat": ["CHG", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "related_ref": {"cat": ["DEC-2024-", {"fake": ["i64", 10000, 99999]}]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {
+            "cat": [
+                "CHG",
+                100000000000
+            ]
+        },
+        "related_ref": {
+            "cat": [
+                "DEC-2024-",
+                10000
+            ]
+        },
         "currency": "EUR",
-        "total_charges": {"fake": ["f64", 25.0, 500.0]},
+        "total_charges": 10000,
         "value_date": "2024-12-31",
-        "account_number": {"cat": ["/", {"fake": ["i64", 1000000000000000, 9999999999999999]}]},
+        "account_number": "1000000000000000",
         "session_num": "0001",
-        "sequence_num": {"cat": ["", {"fake": ["i64", 100000, 999999]}]},
-        "uetr": {"fake": ["uuid"]},
-        "wire_fee": {"fake": ["f64", 15.0, 50.0]},
-        "service_fee": {"fake": ["f64", 5.0, 25.0]},
-        "processing_fee": {"fake": ["f64", 10.0, 30.0]}
+        "sequence_num": {
+            "cat": [
+                "",
+                100000
+            ]
+        },
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "wire_fee": 10000,
+        "service_fee": 10000,
+        "processing_fee": 10000
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "190",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "uetr"},
+            "unique_end_to_end_reference": {
+                "var": "uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "190",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref"}},
-            "21": {"reference": {"var": "related_ref"}},
-            "25": {"NoOption": {"authorisation": {"var": "account_number"}}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref"
+                }
+            },
+            "21": {
+                "reference": {
+                    "var": "related_ref"
+                }
+            },
+            "25": {
+                "NoOption": {
+                    "authorisation": {
+                        "var": "account_number"
+                    }
+                }
+            },
             "32": {
                 "D": {
-                    "value_date": {"var": "value_date"},
-                    "currency": {"var": "currency"},
-                    "amount": {"var": "total_charges"}
+                    "value_date": {
+                        "var": "value_date"
+                    },
+                    "currency": {
+                        "var": "currency"
+                    },
+                    "amount": {
+                        "var": "total_charges"
+                    }
                 }
             },
             "71B": {
@@ -54,40 +113,60 @@
                     {
                         "cat": [
                             "WIRE FEES: ",
-                            {"var": "currency"},
+                            {
+                                "var": "currency"
+                            },
                             " ",
-                            {"var": "wire_fee"}
+                            {
+                                "var": "wire_fee"
+                            }
                         ]
                     },
                     {
                         "cat": [
                             "SERVICE: ",
-                            {"var": "currency"},
+                            {
+                                "var": "currency"
+                            },
                             " ",
-                            {"var": "service_fee"}
+                            {
+                                "var": "service_fee"
+                            }
                         ]
                     },
                     {
                         "cat": [
                             "PROCESSING: ",
-                            {"var": "currency"},
+                            {
+                                "var": "currency"
+                            },
                             " ",
-                            {"var": "processing_fee"}
+                            {
+                                "var": "processing_fee"
+                            }
                         ]
                     },
                     {
                         "cat": [
                             "TOTAL: ",
-                            {"var": "currency"},
+                            {
+                                "var": "currency"
+                            },
                             " ",
-                            {"var": "total_charges"}
+                            {
+                                "var": "total_charges"
+                            }
                         ]
                     },
                     "DEBIT TO YOUR ACCOUNT"
                 ]
             },
             "72": {
-                "information": ["/ACC/CURRENT ACCOUNT", "/PER/01DEC2024-31DEC2024", "/REF/MONTHLY STATEMENT"]
+                "information": [
+                    "/ACC/CURRENT ACCOUNT",
+                    "/PER/01DEC2024-31DEC2024",
+                    "/REF/MONTHLY STATEMENT"
+                ]
             }
         }
     }

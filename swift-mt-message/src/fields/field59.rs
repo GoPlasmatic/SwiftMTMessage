@@ -1,3 +1,4 @@
+use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
 
@@ -103,7 +104,8 @@ use swift_mt_message_macros::SwiftField;
 /// - Swift FIN User Handbook: Option F Beneficiary Specifications
 /// - KYC Guidelines: Enhanced Customer Identification Requirements
 /// - Regulatory Compliance: Beneficiary Documentation Standards
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field59F {
     /// Party identifier
     #[component("[/34x]")]
@@ -231,7 +233,8 @@ pub struct Field59F {
 /// - Swift FIN User Handbook: Option A Beneficiary Specifications
 /// - ISO 9362 Standard: BIC Code Structure and Validation
 /// - STP Implementation Guide: Beneficiary Identification Best Practices
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field59A {
     /// Account number (optional)
     #[component("[/34x]")]
@@ -251,7 +254,8 @@ pub struct Field59A {
 /// - Name and address lines (4*35x)
 ///
 /// For complete documentation, see the [Field 59 module](index.html).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub struct Field59NoOption {
     /// Account number (optional)
     ///
@@ -341,7 +345,8 @@ pub struct Field59NoOption {
 /// - FATF Guidelines: Customer Due Diligence Requirements
 /// - Regional Payment Guides: Country-specific beneficiary requirements
 /// - AML/CFT Compliance: Beneficiary Screening Best Practices
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field59 {
     /// Option A: BIC-based identification with optional account
     /// Preferred for STP processing with structured bank identification
@@ -356,7 +361,8 @@ pub enum Field59 {
     NoOption(Field59NoOption),
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, SwiftField)]
+#[serde_swift_fields]
+#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
 pub enum Field59Debtor {
     A(Field59A),
     NoOption(Field59NoOption),

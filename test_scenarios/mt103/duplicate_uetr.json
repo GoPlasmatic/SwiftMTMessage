@@ -1,12 +1,22 @@
 {
     "variables": {
-        "sender_bic": {"fake": ["bic"]},
-        "receiver_bic": {"fake": ["bic"]},
-        "transaction_ref1": {"cat": ["PAY", {"fake": ["i64", 100000000000, 999999999999]}]},
-        "transaction_ref2": {"cat": ["PAY", {"fake": ["i64", 200000000000, 299999999999]}]},
-        "currency": {"fake": ["currency_code"]},
-        "amount1": {"fake": ["f64", 50000.0, 100000.0]},
-        "amount2": {"fake": ["f64", 75000.0, 150000.0]},
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref1": {
+            "cat": [
+                "PAY",
+                100000000000
+            ]
+        },
+        "transaction_ref2": {
+            "cat": [
+                "PAY",
+                200000000000
+            ]
+        },
+        "currency": "USD",
+        "amount1": 10000,
+        "amount2": 10000,
         "value_date": "2024-12-20",
         "bank_op_code": "CRED",
         "charges": "SHA",
@@ -18,51 +28,113 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
-            "sender_bic": {"var": "sender_bic"},
-            "session_number": {"var": "session_num"},
-            "sequence_number": {"var": "sequence_num"}
+            "logical_terminal": {
+                "cat": [
+                    {
+                        "var": "sender_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "sender_bic": {
+                "var": "sender_bic"
+            },
+            "session_number": {
+                "var": "session_num"
+            },
+            "sequence_number": {
+                "var": "sequence_num"
+            }
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
-            "receiver_bic": {"var": "receiver_bic"},
+            "destination_address": {
+                "cat": [
+                    {
+                        "var": "receiver_bic"
+                    },
+                    "XXXX"
+                ]
+            },
+            "receiver_bic": {
+                "var": "receiver_bic"
+            },
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {"var": "duplicate_uetr"},
+            "unique_end_to_end_reference": {
+                "var": "duplicate_uetr"
+            },
             "validation_flag": "STP"
         },
         "message_type": "103",
         "fields": {
-            "20": {"reference": {"var": "transaction_ref1"}},
-            "23B": {"instruction_code": {"var": "bank_op_code"}},
+            "20": {
+                "reference": {
+                    "var": "transaction_ref1"
+                }
+            },
+            "23B": {
+                "instruction_code": {
+                    "var": "bank_op_code"
+                }
+            },
             "32A": {
-                "value_date": {"var": "value_date"},
-                "currency": {"var": "currency"},
-                "amount": {"var": "amount1"}
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "amount1"
+                }
             },
             "50": {
                 "K": {
-                    "account": "/GB82WEST12345698765432",
+                    "account": "GB82WEST12345698765432",
                     "name_and_address": [
                         "ALPHA CORPORATION",
-                        {"fake": ["street_address"]},
-                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                        "123 MAIN STREET",
+                        {
+                            "cat": [
+                                "NEW YORK",
+                                ", ",
+                                "US"
+                            ]
+                        }
                     ]
                 }
             },
-            "52": {"A": {"bic": {"var": "sender_bic"}}},
-            "57": {"A": {"bic": {"var": "receiver_bic"}}},
+            "52": {
+                "A": {
+                    "bic": {
+                        "var": "sender_bic"
+                    }
+                }
+            },
+            "57": {
+                "A": {
+                    "bic": {
+                        "var": "receiver_bic"
+                    }
+                }
+            },
             "59": {
                 "NoOption": {
-                    "account": "/DE89370400440532013000",
+                    "account": "DE89370400440532013000",
                     "name_and_address": [
                         "BETA INDUSTRIES",
-                        {"fake": ["street_address"]},
-                        {"cat": [{"fake": ["city_name"]}, ", ", {"fake": ["country_code"]}]}
+                        "123 MAIN STREET",
+                        {
+                            "cat": [
+                                "NEW YORK",
+                                ", ",
+                                "US"
+                            ]
+                        }
                     ]
                 }
             },
@@ -70,11 +142,22 @@
                 "narrative": [
                     "/RFB/PAYMENT FOR INVOICE A123",
                     "/UETR/DUPLICATE WARNING",
-                    {"cat": ["/ORIG/", {"var": "transaction_ref2"}]},
+                    {
+                        "cat": [
+                            "/ORIG/",
+                            {
+                                "var": "transaction_ref2"
+                            }
+                        ]
+                    },
                     "/NOTE/SAME UETR DIFFERENT TXN"
                 ]
             },
-            "71A": {"code": {"var": "charges"}},
+            "71A": {
+                "code": {
+                    "var": "charges"
+                }
+            },
             "72": {
                 "information": [
                     "/ERR/DUPLICATE UETR DETECTED",

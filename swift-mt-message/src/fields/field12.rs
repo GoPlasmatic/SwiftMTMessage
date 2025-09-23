@@ -70,9 +70,9 @@
 //! - Processing Guidelines: Sub-Type Routing Rules
 //! - System Integration Guide: Sub-Type Code Usage
 
-use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
+use swift_mt_message_macros::serde_swift_fields;
 
 /// **Field 12: Sub Message Type**
 ///

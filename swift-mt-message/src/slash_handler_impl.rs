@@ -59,9 +59,9 @@ impl SlashPrefixHandler for SwiftSlashHandler {
             }
 
             // Single slash optional [/34x]
-            if inner.starts_with('/') {
+            if let Some(stripped) = inner.strip_prefix('/') {
                 // Check if numeric pattern like [/5n]
-                if let Some(n) = extract_numeric_length(&inner[1..]) {
+                if let Some(n) = extract_numeric_length(stripped) {
                     return SlashPrefixType::OptionalNumeric(n);
                 }
                 return SlashPrefixType::Optional;
@@ -200,11 +200,10 @@ impl SlashPrefixHandler for SwiftSlashHandler {
 /// Extract numeric length from a pattern like "5n" or "34x"
 fn extract_numeric_length(pattern: &str) -> Option<usize> {
     // Look for patterns like "5n", "2n", etc.
-    if pattern.len() >= 2 && pattern.ends_with('n') {
-        if let Ok(n) = pattern[..pattern.len()-1].parse::<usize>() {
+    if pattern.len() >= 2 && pattern.ends_with('n')
+        && let Ok(n) = pattern[..pattern.len()-1].parse::<usize>() {
             return Some(n);
         }
-    }
     None
 }
 

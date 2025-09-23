@@ -98,9 +98,9 @@
 //! - Currency Code Standards: Decimal Precision Requirements
 //! - Batch Payment Guidelines: Amount Reconciliation Procedures
 
-use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
+use swift_mt_message_macros::serde_swift_fields;
 
 /// **Field 19: Sum of Amounts**
 ///

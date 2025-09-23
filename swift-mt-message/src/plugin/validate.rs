@@ -34,15 +34,20 @@ impl AsyncFunctionHandler for Validate {
             }
         };
 
-        let mt_message_field = input
-            .get("mt_message")
-            .and_then(Value::as_str)
-            .ok_or_else(|| DataflowError::Validation("'mt_message' parameter is required".to_string()))?;
+        let mt_message_field =
+            input
+                .get("mt_message")
+                .and_then(Value::as_str)
+                .ok_or_else(|| {
+                    DataflowError::Validation("'mt_message' parameter is required".to_string())
+                })?;
 
         let validation_result_field = input
             .get("validation_result")
             .and_then(Value::as_str)
-            .ok_or_else(|| DataflowError::Validation("'validation_result' parameter is required".to_string()))?;
+            .ok_or_else(|| {
+                DataflowError::Validation("'validation_result' parameter is required".to_string())
+            })?;
 
         // Get the MT message to validate
         let mt_content = if mt_message_field == "payload" {
@@ -55,10 +60,12 @@ impl AsyncFunctionHandler for Validate {
             }
         } else {
             // Check if the field contains an object with mt_message (from generate_mt output)
-            let field_value = message
-                .data()
-                .get(mt_message_field)
-                .ok_or_else(|| DataflowError::Validation(format!("MT message field '{}' not found in message data", mt_message_field)))?;
+            let field_value = message.data().get(mt_message_field).ok_or_else(|| {
+                DataflowError::Validation(format!(
+                    "MT message field '{}' not found in message data",
+                    mt_message_field
+                ))
+            })?;
 
             // If it's an object with mt_message field, extract that
             if let Some(mt_msg) = field_value.get("mt_message").and_then(Value::as_str) {
@@ -67,9 +74,10 @@ impl AsyncFunctionHandler for Validate {
                 // If it's a direct string, use it
                 s.to_string()
             } else {
-                return Err(DataflowError::Validation(
-                    format!("Field '{}' does not contain a valid MT message", mt_message_field)
-                ));
+                return Err(DataflowError::Validation(format!(
+                    "Field '{}' does not contain a valid MT message",
+                    mt_message_field
+                )));
             }
         };
 
@@ -83,11 +91,10 @@ impl AsyncFunctionHandler for Validate {
         let validation_result = self.validate_mt_message(&mt_content)?;
 
         // Store validation result
-        message
-            .data_mut()
-            .as_object_mut()
-            .unwrap()
-            .insert(validation_result_field.to_string(), validation_result.clone());
+        message.data_mut().as_object_mut().unwrap().insert(
+            validation_result_field.to_string(),
+            validation_result.clone(),
+        );
 
         // Update metadata with validation summary
         message.metadata_mut().as_object_mut().unwrap().insert(

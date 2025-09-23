@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
-use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
+use swift_mt_message_macros::serde_swift_fields;
 
 ///   **Field 62: Closing Balance**
 ///

@@ -307,19 +307,21 @@ impl std::fmt::Display for BasicHeader {
         };
 
         // Ensure session_number is exactly 4 digits, left-padded with zeros
-        let session_number = format!("{:0>4}", &self.session_number[..self.session_number.len().min(4)]);
+        let session_number = format!(
+            "{:0>4}",
+            &self.session_number[..self.session_number.len().min(4)]
+        );
 
         // Ensure sequence_number is exactly 6 digits, left-padded with zeros
-        let sequence_number = format!("{:0>6}", &self.sequence_number[..self.sequence_number.len().min(6)]);
+        let sequence_number = format!(
+            "{:0>6}",
+            &self.sequence_number[..self.sequence_number.len().min(6)]
+        );
 
         write!(
             f,
             "{}{}{}{}{}",
-            self.application_id,
-            self.service_id,
-            logical_terminal,
-            session_number,
-            sequence_number
+            self.application_id, self.service_id, logical_terminal, session_number, sequence_number
         )
     }
 }
@@ -389,7 +391,9 @@ impl serde::Serialize for InputApplicationHeader {
             self.destination_address.clone()
         };
 
-        let field_count = 4 + self.delivery_monitoring.is_some() as usize + self.obsolescence_period.is_some() as usize;
+        let field_count = 4
+            + self.delivery_monitoring.is_some() as usize
+            + self.obsolescence_period.is_some() as usize;
         let mut state = serializer.serialize_struct("InputApplicationHeader", field_count)?;
         state.serialize_field("message_type", &self.message_type)?;
         state.serialize_field("destination_address", &normalized_destination_address)?;
@@ -685,7 +689,9 @@ impl ApplicationHeader {
                 let receiver_bic = if destination_address.ends_with("XXXX") {
                     // Padding detected, original BIC is 8 characters
                     destination_address[0..8].to_string()
-                } else if destination_address.ends_with("XXX") && !destination_address.ends_with("XXXX") {
+                } else if destination_address.ends_with("XXX")
+                    && !destination_address.ends_with("XXXX")
+                {
                     // Less common: 9-char padded to 12 with XXX
                     destination_address[0..9].to_string()
                 } else if destination_address.len() >= 11 {
@@ -703,7 +709,10 @@ impl ApplicationHeader {
                 let delivery_monitoring = if block2.len() >= 18 {
                     let monitoring = &block2[17..18];
                     // Only set if it's a valid monitoring code (not a space or other character)
-                    if monitoring.chars().all(|c| c.is_ascii_alphabetic() || c.is_ascii_digit()) {
+                    if monitoring
+                        .chars()
+                        .all(|c| c.is_ascii_alphabetic() || c.is_ascii_digit())
+                    {
                         Some(monitoring.to_string())
                     } else {
                         None
@@ -852,7 +861,10 @@ impl std::fmt::Display for InputApplicationHeader {
         // - priority is always 1 character
 
         // Ensure message_type is exactly 3 characters
-        let message_type = format!("{:0>3}", &self.message_type[..self.message_type.len().min(3)]);
+        let message_type = format!(
+            "{:0>3}",
+            &self.message_type[..self.message_type.len().min(3)]
+        );
 
         // Pad or truncate destination_address to exactly 12 characters
         let destination_address = if self.destination_address.len() > 12 {
@@ -863,10 +875,7 @@ impl std::fmt::Display for InputApplicationHeader {
             self.destination_address.clone()
         };
 
-        let mut result = format!(
-            "I{}{}{}",
-            message_type, destination_address, self.priority
-        );
+        let mut result = format!("I{}{}{}", message_type, destination_address, self.priority);
 
         if let Some(ref delivery_monitoring) = self.delivery_monitoring {
             result.push_str(delivery_monitoring);

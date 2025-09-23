@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use datafake_rs::DataGenerator;
 use dataflow_rs::engine::error::DataflowError;
 use dataflow_rs::engine::{
     AsyncFunctionHandler, FunctionConfig,
@@ -6,7 +7,6 @@ use dataflow_rs::engine::{
     message::{Change, Message},
 };
 use datalogic_rs::DataLogic;
-use datafake_rs::DataGenerator;
 use serde_json::Value;
 use std::sync::Arc;
 use tracing::{debug, error, instrument};
@@ -35,27 +35,24 @@ impl AsyncFunctionHandler for Generate {
         };
 
         // Get schema and generated field names
-        let schema_field = input
-            .get("schema")
-            .and_then(Value::as_str)
-            .ok_or_else(|| DataflowError::Validation("'schema' parameter is required".to_string()))?;
+        let schema_field = input.get("schema").and_then(Value::as_str).ok_or_else(|| {
+            DataflowError::Validation("'schema' parameter is required".to_string())
+        })?;
 
         let generated_field = input
             .get("generated")
             .and_then(Value::as_str)
-            .ok_or_else(|| DataflowError::Validation("'generated' parameter is required".to_string()))?;
+            .ok_or_else(|| {
+                DataflowError::Validation("'generated' parameter is required".to_string())
+            })?;
 
         // Get the datafake schema from the schema field
-        let schema = message
-            .data()
-            .get(schema_field)
-            .cloned()
-            .ok_or_else(|| {
-                DataflowError::Validation(format!(
-                    "Schema field '{}' not found in message data",
-                    schema_field
-                ))
-            })?;
+        let schema = message.data().get(schema_field).cloned().ok_or_else(|| {
+            DataflowError::Validation(format!(
+                "Schema field '{}' not found in message data",
+                schema_field
+            ))
+        })?;
 
         debug!(
             schema_field = %schema_field,
@@ -65,12 +62,10 @@ impl AsyncFunctionHandler for Generate {
 
         // Generate data using datafake
         let generated_data = match DataGenerator::from_value(schema.clone()) {
-            Ok(generator) => {
-                generator.generate().map_err(|e| {
-                    error!(error = ?e, "Datafake generation failed");
-                    DataflowError::Validation(format!("Datafake generation failed: {}", e))
-                })?
-            }
+            Ok(generator) => generator.generate().map_err(|e| {
+                error!(error = ?e, "Datafake generation failed");
+                DataflowError::Validation(format!("Datafake generation failed: {}", e))
+            })?,
             Err(e) => {
                 error!(error = ?e, "Failed to create datafake generator from schema");
                 return Err(DataflowError::Validation(format!(
@@ -81,7 +76,11 @@ impl AsyncFunctionHandler for Generate {
         };
 
         // Store the generated data in the generated field
-        let old_value = message.data().get(generated_field).cloned().unwrap_or(Value::Null);
+        let old_value = message
+            .data()
+            .get(generated_field)
+            .cloned()
+            .unwrap_or(Value::Null);
 
         message
             .data_mut()

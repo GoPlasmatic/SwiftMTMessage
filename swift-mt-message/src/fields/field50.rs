@@ -83,9 +83,9 @@
 //! - AML/CFT Compliance: Originator Screening Best Practices
 //! - STP Implementation Guide: Ordering Customer Optimization
 
-use swift_mt_message_macros::serde_swift_fields;
 use serde::{Deserialize, Serialize};
 use swift_mt_message_macros::SwiftField;
+use swift_mt_message_macros::serde_swift_fields;
 
 /// **Field 50 (No Option): Ordering Customer**
 ///

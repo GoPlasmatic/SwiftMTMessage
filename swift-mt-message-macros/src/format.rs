@@ -904,7 +904,7 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
         // For //16x patterns, make them non-greedy to avoid capturing content from following optional fields
         // This is especially important for Field 61 where [//16x] is followed by [34x]
         let inner_regex_non_greedy = if inner_regex_no_parens == ".{1,16}" {
-            ".{1,16}?"  // Make it non-greedy
+            ".{1,16}?" // Make it non-greedy
         } else {
             inner_regex_no_parens
         };

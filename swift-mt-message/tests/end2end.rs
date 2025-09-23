@@ -1,10 +1,7 @@
 use dataflow_rs::Engine;
-use dataflow_rs::engine::{
-    Workflow, Message,
-    AsyncFunctionHandler,
-};
-use serde_json::{json, Value};
+use dataflow_rs::engine::{AsyncFunctionHandler, Message, Workflow};
 use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -69,7 +66,8 @@ async fn test_swift_mt_workflow_pipeline() {
     let samples_per_scenario = samples_str.parse::<usize>().unwrap_or(10);
 
     // Create the dataflow engine with registered SWIFT MT functions
-    let mut custom_functions: HashMap<String, Box<dyn AsyncFunctionHandler + Send + Sync>> = HashMap::new();
+    let mut custom_functions: HashMap<String, Box<dyn AsyncFunctionHandler + Send + Sync>> =
+        HashMap::new();
 
     // Register all SWIFT MT plugin functions
     for (name, handler) in register_swift_mt_functions() {
@@ -115,7 +113,10 @@ async fn test_swift_mt_workflow_pipeline() {
                 Ok(schema) => schema,
                 Err(e) => {
                     if debug_mode {
-                        eprintln!("Failed to load schema for {}/{}: {}", message_type, scenario, e);
+                        eprintln!(
+                            "Failed to load schema for {}/{}: {}",
+                            message_type, scenario, e
+                        );
                     }
                     failure_count += 1;
                     continue;
@@ -126,18 +127,21 @@ async fn test_swift_mt_workflow_pipeline() {
             let mut message = Message::from_value(&json!({}));
 
             // Set the data fields
-            message.data_mut().as_object_mut().unwrap().insert(
-                "message_type".to_string(),
-                json!(message_type)
-            );
-            message.data_mut().as_object_mut().unwrap().insert(
-                "scenario".to_string(),
-                json!(scenario)
-            );
-            message.data_mut().as_object_mut().unwrap().insert(
-                "schema".to_string(),
-                schema.clone()
-            );
+            message
+                .data_mut()
+                .as_object_mut()
+                .unwrap()
+                .insert("message_type".to_string(), json!(message_type));
+            message
+                .data_mut()
+                .as_object_mut()
+                .unwrap()
+                .insert("scenario".to_string(), json!(scenario));
+            message
+                .data_mut()
+                .as_object_mut()
+                .unwrap()
+                .insert("schema".to_string(), schema.clone());
 
             // Important: invalidate cache after modifying data
             message.invalidate_context_cache();
@@ -146,11 +150,17 @@ async fn test_swift_mt_workflow_pipeline() {
                 println!("\nDebug - Initial message created with:");
                 println!("  message_type: {}", message_type);
                 println!("  scenario: {}", scenario);
-                println!("  schema: {} bytes", serde_json::to_string(&schema).unwrap_or_default().len());
+                println!(
+                    "  schema: {} bytes",
+                    serde_json::to_string(&schema).unwrap_or_default().len()
+                );
 
                 // Verify the data was set
                 if let Some(obj) = message.data().as_object() {
-                    println!("  Data fields present: {:?}", obj.keys().collect::<Vec<_>>());
+                    println!(
+                        "  Data fields present: {:?}",
+                        obj.keys().collect::<Vec<_>>()
+                    );
                 }
             }
 
@@ -162,7 +172,7 @@ async fn test_swift_mt_workflow_pipeline() {
                     "scenario": scenario,
                     "sample_index": sample_idx,
                     "start_time": chrono::Utc::now().to_rfc3339()
-                })
+                }),
             );
 
             // Process the message through the engine
@@ -192,24 +202,44 @@ async fn test_swift_mt_workflow_pipeline() {
                         println!("  - {}", key);
 
                         // Show detailed output for key fields to debug the structure
-                        if (key == "sample_json" || key == "sample_mt" || key == "validation_result" || key == "mt_json") && scenario == "standard" && message_type == "MT103" {
+                        if (key == "sample_json"
+                            || key == "sample_mt"
+                            || key == "validation_result"
+                            || key == "mt_json")
+                            && scenario == "standard"
+                            && message_type == "MT103"
+                        {
                             println!("\nDebug - {} structure:", key);
                             if let Some(json_data) = value.get("json_data") {
                                 // Show the top-level keys
                                 if let Some(json_obj) = json_data.as_object() {
-                                    println!("  json_data keys: {:?}", json_obj.keys().collect::<Vec<_>>());
+                                    println!(
+                                        "  json_data keys: {:?}",
+                                        json_obj.keys().collect::<Vec<_>>()
+                                    );
 
                                     // Show fields structure
                                     if let Some(fields) = json_obj.get("fields") {
                                         if let Some(fields_obj) = fields.as_object() {
-                                            println!("  fields keys: {:?}", fields_obj.keys().collect::<Vec<_>>());
+                                            println!(
+                                                "  fields keys: {:?}",
+                                                fields_obj.keys().collect::<Vec<_>>()
+                                            );
 
                                             // Show a sample field
                                             if let Some(field_20) = fields_obj.get("20") {
-                                                println!("  field 20 structure: {}", serde_json::to_string_pretty(field_20).unwrap_or_default());
+                                                println!(
+                                                    "  field 20 structure: {}",
+                                                    serde_json::to_string_pretty(field_20)
+                                                        .unwrap_or_default()
+                                                );
                                             }
                                             if let Some(field_50) = fields_obj.get("50") {
-                                                println!("  field 50 structure: {}", serde_json::to_string_pretty(field_50).unwrap_or_default());
+                                                println!(
+                                                    "  field 50 structure: {}",
+                                                    serde_json::to_string_pretty(field_50)
+                                                        .unwrap_or_default()
+                                                );
                                             }
                                         }
                                     }
@@ -218,7 +248,11 @@ async fn test_swift_mt_workflow_pipeline() {
                                 }
                             } else {
                                 println!("  No json_data field in {}!", key);
-                                println!("  {} keys: {:?}", key, value.as_object().map(|o| o.keys().collect::<Vec<_>>()));
+                                println!(
+                                    "  {} keys: {:?}",
+                                    key,
+                                    value.as_object().map(|o| o.keys().collect::<Vec<_>>())
+                                );
                             }
                         } else if key == "sample_mt" {
                             println!("\nDebug - Sample MT structure:");
@@ -247,7 +281,9 @@ async fn test_swift_mt_workflow_pipeline() {
 
                     // Check if the workflow was triggered
                     if obj.is_empty() {
-                        println!("\nWARNING: Message data is empty - workflow may not have been triggered!");
+                        println!(
+                            "\nWARNING: Message data is empty - workflow may not have been triggered!"
+                        );
                         println!("Expected workflow condition: data.message_type == 'MT103'");
                         if let Some(mt) = obj.get("message_type") {
                             println!("Actual message_type value: {:?}", mt);
@@ -303,12 +339,27 @@ async fn test_swift_mt_workflow_pipeline() {
                 if debug_mode {
                     println!("\n❌ Sample {} failed:", sample_idx);
                     println!("  Workflow Steps:");
-                    println!("    1. Generate: {}", status_symbol(test_result.generate_success));
-                    println!("    2. Publish: {}", status_symbol(test_result.publish_success));
+                    println!(
+                        "    1. Generate: {}",
+                        status_symbol(test_result.generate_success)
+                    );
+                    println!(
+                        "    2. Publish: {}",
+                        status_symbol(test_result.publish_success)
+                    );
                     println!("    3. Parse: {}", status_symbol(test_result.parse_success));
-                    println!("    4. Validate: {}", status_symbol(test_result.validation_passed));
-                    println!("    5. Transform: {}", status_symbol(test_result.transform_success));
-                    println!("  Round-trip: {}", status_symbol(test_result.round_trip_success));
+                    println!(
+                        "    4. Validate: {}",
+                        status_symbol(test_result.validation_passed)
+                    );
+                    println!(
+                        "    5. Transform: {}",
+                        status_symbol(test_result.transform_success)
+                    );
+                    println!(
+                        "  Round-trip: {}",
+                        status_symbol(test_result.round_trip_success)
+                    );
 
                     if let Some(ref error) = test_result.error {
                         println!("  Error: {}", error);
@@ -346,7 +397,10 @@ async fn test_swift_mt_workflow_pipeline() {
 }
 
 /// Get test cases based on environment variables
-fn get_test_cases(message_type: Option<&str>, scenario: Option<&str>) -> Vec<(String, String, String)> {
+fn get_test_cases(
+    message_type: Option<&str>,
+    scenario: Option<&str>,
+) -> Vec<(String, String, String)> {
     match (message_type, scenario) {
         (None, None) => {
             // Test all message types and scenarios
@@ -355,14 +409,12 @@ fn get_test_cases(message_type: Option<&str>, scenario: Option<&str>) -> Vec<(St
         (Some(mt), None) => {
             // Test all scenarios for given message type
             // Load scenarios with descriptions from index.json
-            let index_path = format!(
-                "../test_scenarios/{}/index.json",
-                mt.to_lowercase()
-            );
+            let index_path = format!("../test_scenarios/{}/index.json", mt.to_lowercase());
 
             if let Ok(content) = fs::read_to_string(&index_path) {
                 if let Ok(index) = serde_json::from_str::<ScenarioIndex>(&content) {
-                    index.scenarios
+                    index
+                        .scenarios
                         .into_iter()
                         .map(|s| {
                             let name = s.file.trim_end_matches(".json");
@@ -415,11 +467,12 @@ fn get_all_test_cases() -> Vec<(String, String, String)> {
                             if let Ok(content) = fs::read_to_string(&index_path) {
                                 if let Ok(index) = serde_json::from_str::<ScenarioIndex>(&content) {
                                     for scenario_info in index.scenarios {
-                                        let scenario_name = scenario_info.file.trim_end_matches(".json");
+                                        let scenario_name =
+                                            scenario_info.file.trim_end_matches(".json");
                                         test_cases.push((
                                             message_type.clone(),
                                             scenario_name.to_string(),
-                                            scenario_info.description
+                                            scenario_info.description,
                                         ));
                                     }
                                     continue;
@@ -577,10 +630,10 @@ fn create_swift_mt_workflow(message_type: &str) -> Workflow {
     });
 
     // Convert JSON to Workflow struct using from_json
-    let workflow_str = serde_json::to_string(&workflow_json).expect("Failed to serialize workflow JSON");
+    let workflow_str =
+        serde_json::to_string(&workflow_json).expect("Failed to serialize workflow JSON");
     Workflow::from_json(&workflow_str).expect("Failed to parse workflow JSON")
 }
-
 
 /// Check if round-trip was successful by comparing sample_json with mt_json
 fn check_round_trip_success(message: &Message) -> bool {
@@ -602,24 +655,43 @@ fn check_round_trip_success(message: &Message) -> bool {
                 if orig_str != parsed_str {
                     println!("\n  Debug round-trip comparison:");
                     if let (Some(orig_obj), Some(parsed_obj)) =
-                        (original_data.as_object(), parsed.as_object()) {
-                        println!("    Original keys: {:?}", orig_obj.keys().collect::<Vec<_>>());
-                        println!("    Parsed keys: {:?}", parsed_obj.keys().collect::<Vec<_>>());
+                        (original_data.as_object(), parsed.as_object())
+                    {
+                        println!(
+                            "    Original keys: {:?}",
+                            orig_obj.keys().collect::<Vec<_>>()
+                        );
+                        println!(
+                            "    Parsed keys: {:?}",
+                            parsed_obj.keys().collect::<Vec<_>>()
+                        );
 
                         // Compare each top-level field
                         for key in orig_obj.keys() {
-                            let orig_val = serde_json::to_string(orig_obj.get(key).unwrap()).unwrap_or_default();
-                            let parsed_val = serde_json::to_string(parsed_obj.get(key).unwrap_or(&Value::Null)).unwrap_or_default();
+                            let orig_val = serde_json::to_string(orig_obj.get(key).unwrap())
+                                .unwrap_or_default();
+                            let parsed_val =
+                                serde_json::to_string(parsed_obj.get(key).unwrap_or(&Value::Null))
+                                    .unwrap_or_default();
                             if orig_val != parsed_val {
                                 println!("    Mismatch in '{}' field!", key);
                                 if key == "fields" {
                                     // Show field-level differences
-                                    if let (Some(orig_fields), Some(parsed_fields)) =
-                                        (orig_obj.get("fields").and_then(|f| f.as_object()),
-                                         parsed_obj.get("fields").and_then(|f| f.as_object())) {
+                                    if let (Some(orig_fields), Some(parsed_fields)) = (
+                                        orig_obj.get("fields").and_then(|f| f.as_object()),
+                                        parsed_obj.get("fields").and_then(|f| f.as_object()),
+                                    ) {
                                         for field_key in orig_fields.keys() {
-                                            let orig_field = serde_json::to_string(orig_fields.get(field_key).unwrap()).unwrap_or_default();
-                                            let parsed_field = serde_json::to_string(parsed_fields.get(field_key).unwrap_or(&Value::Null)).unwrap_or_default();
+                                            let orig_field = serde_json::to_string(
+                                                orig_fields.get(field_key).unwrap(),
+                                            )
+                                            .unwrap_or_default();
+                                            let parsed_field = serde_json::to_string(
+                                                parsed_fields
+                                                    .get(field_key)
+                                                    .unwrap_or(&Value::Null),
+                                            )
+                                            .unwrap_or_default();
                                             if orig_field != parsed_field {
                                                 println!("      Field {} differs:", field_key);
                                                 println!("        Original: {}", orig_field);
@@ -639,7 +711,7 @@ fn check_round_trip_success(message: &Message) -> bool {
 
             // Direct comparison
             orig_str == parsed_str
-        },
+        }
         _ => false,
     }
 }
@@ -656,12 +728,14 @@ fn analyze_workflow_results(message: &Message, debug_mode: bool) -> WorkflowResu
 
     // Step 3: Validate - Check validation results
     if let Some(validation) = message.data().get("validation_result") {
-        result.validate_success = validation.get("valid")
+        result.validate_success = validation
+            .get("valid")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
 
         if let Some(errors) = validation.get("errors").and_then(|e| e.as_array()) {
-            result.validation_errors = errors.iter()
+            result.validation_errors = errors
+                .iter()
                 .filter_map(|e| e.as_str().map(|s| s.to_string()))
                 .collect();
         }
@@ -684,8 +758,14 @@ fn analyze_workflow_results(message: &Message, debug_mode: bool) -> WorkflowResu
         println!("  2. Publish: {}", status_symbol(result.publish_success));
         println!("  3. Parse: {}", status_symbol(result.parse_success));
         println!("  4. Validate: {}", status_symbol(result.validate_success));
-        println!("  5. Transform: {}", status_symbol(result.transform_success));
-        println!("  Round-trip match: {}", status_symbol(result.round_trip_match));
+        println!(
+            "  5. Transform: {}",
+            status_symbol(result.transform_success)
+        );
+        println!(
+            "  Round-trip match: {}",
+            status_symbol(result.round_trip_match)
+        );
 
         if !result.validation_errors.is_empty() {
             println!("\n  Validation errors:");
@@ -716,12 +796,12 @@ struct WorkflowResult {
 
 impl WorkflowResult {
     fn is_fully_successful(&self) -> bool {
-        self.generate_success &&
-        self.publish_success &&
-        self.parse_success &&
-        self.validate_success &&
-        self.transform_success &&
-        self.round_trip_match
+        self.generate_success
+            && self.publish_success
+            && self.parse_success
+            && self.validate_success
+            && self.transform_success
+            && self.round_trip_match
     }
 }
 
@@ -742,13 +822,13 @@ struct TestResult {
 
 impl TestResult {
     fn is_fully_successful(&self) -> bool {
-        self.workflow_completed &&
-        self.generate_success &&
-        self.publish_success &&
-        self.parse_success &&
-        self.validation_passed &&
-        self.transform_success &&
-        self.round_trip_success
+        self.workflow_completed
+            && self.generate_success
+            && self.publish_success
+            && self.parse_success
+            && self.validation_passed
+            && self.transform_success
+            && self.round_trip_success
     }
 }
 
@@ -766,33 +846,81 @@ fn print_test_summary(results: &[TestResult]) {
     let mut sorted_scenarios: Vec<_> = scenario_results.iter().collect();
     sorted_scenarios.sort_by_key(|(key, _)| key.as_str());
 
-    println!("\n╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗");
-    println!("║                                                        SWIFT MT Workflow Pipeline Test Results                                                                     ║");
-    println!("╠═════════╤══════════════════════════════════════════════════════════╤════════╤══════════════╤═════════════╤═════════════╤══════════════╤═════════════╤══════════════╣");
-    println!("║ Message │ Scenario                                                 │Samples │   Generate   │   Publish   │    Parse    │   Validate   │  Transform  │  Round-trip  ║");
-    println!("╟─────────┼──────────────────────────────────────────────────────────┼────────┼──────────────┼─────────────┼─────────────┼──────────────┼─────────────┼──────────────╢");
+    println!(
+        "\n╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗"
+    );
+    println!(
+        "║                                                        SWIFT MT Workflow Pipeline Test Results                                                                     ║"
+    );
+    println!(
+        "╠═════════╤══════════════════════════════════════════════════════════╤════════╤══════════════╤═════════════╤═════════════╤══════════════╤═════════════╤══════════════╣"
+    );
+    println!(
+        "║ Message │ Scenario                                                 │Samples │   Generate   │   Publish   │    Parse    │   Validate   │  Transform  │  Round-trip  ║"
+    );
+    println!(
+        "╟─────────┼──────────────────────────────────────────────────────────┼────────┼──────────────┼─────────────┼─────────────┼──────────────┼─────────────┼──────────────╢"
+    );
 
     for (scenario_key, scenario_tests) in sorted_scenarios {
         let parts: Vec<&str> = scenario_key.split('/').collect();
         let message_type = parts.get(0).unwrap_or(&"");
-        let scenario_name = parts.get(1).unwrap_or(&"")
-            .trim_end_matches(".json");  // Remove .json extension if present
+        let scenario_name = parts.get(1).unwrap_or(&"").trim_end_matches(".json"); // Remove .json extension if present
 
         let total = scenario_tests.len();
         let generate_pass = scenario_tests.iter().filter(|r| r.generate_success).count();
         let publish_pass = scenario_tests.iter().filter(|r| r.publish_success).count();
         let parse_pass = scenario_tests.iter().filter(|r| r.parse_success).count();
-        let validation_pass = scenario_tests.iter().filter(|r| r.validation_passed).count();
-        let transform_pass = scenario_tests.iter().filter(|r| r.transform_success).count();
-        let roundtrip_pass = scenario_tests.iter().filter(|r| r.round_trip_success).count();
+        let validation_pass = scenario_tests
+            .iter()
+            .filter(|r| r.validation_passed)
+            .count();
+        let transform_pass = scenario_tests
+            .iter()
+            .filter(|r| r.transform_success)
+            .count();
+        let roundtrip_pass = scenario_tests
+            .iter()
+            .filter(|r| r.round_trip_success)
+            .count();
 
         // Format status strings with exact widths
-        let generate_str = format!("{:>3}/{:<3} {}", generate_pass, total, pass_fail_symbol(generate_pass, total));
-        let publish_str = format!("{:>3}/{:<3} {}", publish_pass, total, pass_fail_symbol(publish_pass, total));
-        let parse_str = format!("{:>3}/{:<3} {}", parse_pass, total, pass_fail_symbol(parse_pass, total));
-        let validate_str = format!("{:>3}/{:<3} {}", validation_pass, total, pass_fail_symbol(validation_pass, total));
-        let transform_str = format!("{:>3}/{:<3} {}", transform_pass, total, pass_fail_symbol(transform_pass, total));
-        let roundtrip_str = format!("{:>3}/{:<3} {:>2}", roundtrip_pass, total, pass_fail_symbol(roundtrip_pass, total));
+        let generate_str = format!(
+            "{:>3}/{:<3} {}",
+            generate_pass,
+            total,
+            pass_fail_symbol(generate_pass, total)
+        );
+        let publish_str = format!(
+            "{:>3}/{:<3} {}",
+            publish_pass,
+            total,
+            pass_fail_symbol(publish_pass, total)
+        );
+        let parse_str = format!(
+            "{:>3}/{:<3} {}",
+            parse_pass,
+            total,
+            pass_fail_symbol(parse_pass, total)
+        );
+        let validate_str = format!(
+            "{:>3}/{:<3} {}",
+            validation_pass,
+            total,
+            pass_fail_symbol(validation_pass, total)
+        );
+        let transform_str = format!(
+            "{:>3}/{:<3} {}",
+            transform_pass,
+            total,
+            pass_fail_symbol(transform_pass, total)
+        );
+        let roundtrip_str = format!(
+            "{:>3}/{:<3} {:>2}",
+            roundtrip_pass,
+            total,
+            pass_fail_symbol(roundtrip_pass, total)
+        );
 
         println!(
             "║ {:^7} │ {:<56} │{:^9}│ {:^10} │ {:^10} │ {:^10} │ {:^11} │ {:^10} │ {:^11} ║",
@@ -808,7 +936,9 @@ fn print_test_summary(results: &[TestResult]) {
         );
     }
 
-    println!("╚═════════╧══════════════════════════════════════════════════════════╧═════════╧═════════════╧═════════════╧═════════════╧══════════════╧═════════════╧══════════════╝");
+    println!(
+        "╚═════════╧══════════════════════════════════════════════════════════╧═════════╧═════════════╧═════════════╧═════════════╧══════════════╧═════════════╧══════════════╝"
+    );
 
     // Summary statistics
     let total = results.len();
@@ -823,14 +953,42 @@ fn print_test_summary(results: &[TestResult]) {
 
     println!("\n📊 Summary:");
     println!("   Total test samples: {}", total);
-    println!("   Fully successful: {} ({}%)", fully_successful, percentage(fully_successful, total));
+    println!(
+        "   Fully successful: {} ({}%)",
+        fully_successful,
+        percentage(fully_successful, total)
+    );
     println!("\n   Step Success Rates:");
-    println!("   1. Generate: {} ({}%)", generate_success, percentage(generate_success, total));
-    println!("   2. Publish: {} ({}%)", publish_success, percentage(publish_success, total));
-    println!("   3. Parse: {} ({}%)", parse_success, percentage(parse_success, total));
-    println!("   4. Validate: {} ({}%)", validation_success, percentage(validation_success, total));
-    println!("   5. Transform: {} ({}%)", transform_success, percentage(transform_success, total));
-    println!("   Round-trip match: {} ({}%)", roundtrip_success, percentage(roundtrip_success, total));
+    println!(
+        "   1. Generate: {} ({}%)",
+        generate_success,
+        percentage(generate_success, total)
+    );
+    println!(
+        "   2. Publish: {} ({}%)",
+        publish_success,
+        percentage(publish_success, total)
+    );
+    println!(
+        "   3. Parse: {} ({}%)",
+        parse_success,
+        percentage(parse_success, total)
+    );
+    println!(
+        "   4. Validate: {} ({}%)",
+        validation_success,
+        percentage(validation_success, total)
+    );
+    println!(
+        "   5. Transform: {} ({}%)",
+        transform_success,
+        percentage(transform_success, total)
+    );
+    println!(
+        "   Round-trip match: {} ({}%)",
+        roundtrip_success,
+        percentage(roundtrip_success, total)
+    );
 }
 
 fn pass_fail_symbol(pass_count: usize, total_count: usize) -> &'static str {

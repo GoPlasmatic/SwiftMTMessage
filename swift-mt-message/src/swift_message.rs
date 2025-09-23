@@ -446,7 +446,11 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         {
             eprintln!("DEBUG to_mt_message: all field tags:");
             for (tag, val) in &ordered_fields {
-                eprintln!("  tag='{}', value_prefix='{}'", tag, &val[..val.len().min(30)]);
+                eprintln!(
+                    "  tag='{}', value_prefix='{}'",
+                    tag,
+                    &val[..val.len().min(30)]
+                );
             }
         }
 
@@ -468,7 +472,12 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                 let mt_tag = if field_tag.contains('#') {
                     // For numbered fields like "50#1", "50#2", extract base tag
                     extract_base_tag(&field_tag).to_string()
-                } else if field_tag.len() > 2 && field_tag.chars().last().map_or(false, |c| c.is_ascii_uppercase()) {
+                } else if field_tag.len() > 2
+                    && field_tag
+                        .chars()
+                        .last()
+                        .is_some_and(|c| c.is_ascii_uppercase())
+                {
                     // If the tag ends with an uppercase letter (variant), keep it
                     // This handles cases like "50K", "59A" etc.
                     field_tag.clone()
@@ -476,10 +485,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                     // For regular fields, use the tag as-is
                     field_tag.clone()
                 };
-                block4.push_str(&format!(
-                    "\n:{}:{field_value}",
-                    mt_tag
-                ));
+                block4.push_str(&format!("\n:{}:{field_value}", mt_tag));
             }
         }
 

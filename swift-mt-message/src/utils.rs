@@ -36,7 +36,11 @@ pub fn is_numbered_field(tag: &str) -> bool {
 
 /// Map a variant-based field tag back to a numbered field tag based on context
 /// This is used during MT parsing to restore numbered field distinction
-pub fn map_variant_to_numbered(base_tag: &str, variant: Option<&str>, field_index: usize) -> String {
+pub fn map_variant_to_numbered(
+    base_tag: &str,
+    variant: Option<&str>,
+    field_index: usize,
+) -> String {
     // For now, use a simple mapping based on field order
     // In a more complete implementation, this would use message-specific rules
     match (base_tag, variant, field_index) {

@@ -1,7 +1,7 @@
-/// Custom serialization helpers for SWIFT MT fields
-///
-/// This module provides custom serde implementations to ensure consistent
-/// JSON serialization behavior across the library, particularly for numeric fields.
+//! Custom serialization helpers for SWIFT MT fields
+//!
+//! This module provides custom serde implementations to ensure consistent
+//! JSON serialization behavior across the library, particularly for numeric fields.
 
 /// Custom serializer/deserializer for f64 amount fields
 ///
@@ -91,7 +91,7 @@ pub mod optional_amount_serializer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde::{Serialize, Deserialize};
+    use serde::{Deserialize, Serialize};
     use serde_json;
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]

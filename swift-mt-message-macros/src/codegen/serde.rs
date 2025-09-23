@@ -72,8 +72,8 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
                 let type_category = categorize_type(&field.ty);
 
                 // Check if this is an f64 field with "15d" or "17d" format (amount fields)
-                let is_amount_field = matches!(type_category, TypeCategory::F64) &&
-                    is_decimal_format_component(&field.attrs);
+                let is_amount_field = matches!(type_category, TypeCategory::F64)
+                    && is_decimal_format_component(&field.attrs);
 
                 if is_amount_field {
                     // Add custom amount serializer for f64 fields with decimal format
@@ -81,8 +81,9 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
                         #[serde(with = "crate::serde_helpers::amount_serializer")]
                     };
                     field.attrs.push(serde_attr);
-                } else if matches!(type_category, TypeCategory::OptionF64) &&
-                    is_decimal_format_component(&field.attrs) {
+                } else if matches!(type_category, TypeCategory::OptionF64)
+                    && is_decimal_format_component(&field.attrs)
+                {
                     // Add custom amount serializer for optional f64 fields
                     let serde_attr = syn::parse_quote! {
                         #[serde(with = "crate::serde_helpers::optional_amount_serializer", skip_serializing_if = "Option::is_none")]
@@ -145,15 +146,16 @@ fn has_component_attribute(attrs: &[syn::Attribute]) -> bool {
 /// Check if field has a decimal format component attribute (15d, 17d, etc.)
 fn is_decimal_format_component(attrs: &[syn::Attribute]) -> bool {
     for attr in attrs {
-        if attr.path().is_ident("component") {
-            if let syn::Meta::List(meta_list) = &attr.meta {
-                if let Ok(lit) = syn::parse2::<syn::LitStr>(meta_list.tokens.clone()) {
-                    let value = lit.value();
-                    // Check for decimal formats like "15d", "17d", etc.
-                    return value.ends_with('d') &&
-                           value[..value.len()-1].chars().all(|c| c.is_ascii_digit() || c == '!');
-                }
-            }
+        if attr.path().is_ident("component")
+            && let syn::Meta::List(meta_list) = &attr.meta
+            && let Ok(lit) = syn::parse2::<syn::LitStr>(meta_list.tokens.clone())
+        {
+            let value = lit.value();
+            // Check for decimal formats like "15d", "17d", etc.
+            return value.ends_with('d')
+                && value[..value.len() - 1]
+                    .chars()
+                    .all(|c| c.is_ascii_digit() || c == '!');
         }
     }
     false

@@ -1122,15 +1122,6 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                             fields.entry(mt_tag).or_insert_with(Vec::new).push(value.to_swift_string());
                         }
                     });
-                } else if tag.contains('#') {
-                    // For numbered fields, keep the full tag for JSON serialization
-                    // but use variant-based tag for MT serialization
-                    field_serializers.push(quote! {
-                        if let Some(ref value) = self.#field_name {
-                            // For JSON: use the numbered tag (e.g., "50#1", "50#2")
-                            fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
-                        }
-                    });
                 } else {
                     field_serializers.push(quote! {
                         if let Some(ref value) = self.#field_name {
@@ -1428,11 +1419,13 @@ fn extract_message_type_from_name(name: &str) -> &str {
 }
 
 /// Generate to_ordered_fields implementation for nested messages with enum fields
-fn generate_to_ordered_fields_for_nested_messages(fields: &[MessageField]) -> MacroResult<TokenStream> {
+fn generate_to_ordered_fields_for_nested_messages(
+    fields: &[MessageField],
+) -> MacroResult<TokenStream> {
     // Check if any fields are numbered enum fields
-    let has_numbered_enum_fields = fields.iter().any(|f| {
-        f.tag.contains('#') && is_enum_field_type(&f.inner_type)
-    });
+    let has_numbered_enum_fields = fields
+        .iter()
+        .any(|f| f.tag.contains('#') && is_enum_field_type(&f.inner_type));
 
     if !has_numbered_enum_fields {
         // Use default implementation if no numbered enum fields

@@ -1,3 +1,4 @@
+use crate::{SwiftMessage, messages::*};
 use async_trait::async_trait;
 use dataflow_rs::engine::error::DataflowError;
 use dataflow_rs::engine::{
@@ -9,7 +10,6 @@ use datalogic_rs::DataLogic;
 use serde_json::Value;
 use std::sync::Arc;
 use tracing::{debug, error, instrument};
-use crate::{SwiftMessage, messages::*};
 
 /// Fix numbered enum fields in MT message by adding variant letters
 fn fix_numbered_enum_fields_in_mt(mt_message: &str, json_value: &Value) -> String {
@@ -21,26 +21,30 @@ fn fix_numbered_enum_fields_in_mt(mt_message: &str, json_value: &Value) -> Strin
     // Look for numbered fields in JSON that are enum types
     if let Some(fields) = json_value.get("fields") {
         #[cfg(debug_assertions)]
-        eprintln!("DEBUG fields is_object: {}, is_array: {}", fields.is_object(), fields.is_array());
+        eprintln!(
+            "DEBUG fields is_object: {}, is_array: {}",
+            fields.is_object(),
+            fields.is_array()
+        );
 
         // Check for numbered fields at the top level (for MT101, MT104, MT107 sequence A)
         check_and_fix_field_50(&mut fixed_message, fields, "50#1", 0);
         check_and_fix_field_50(&mut fixed_message, fields, "50#2", 1);
 
         // Fix Field 60 variants (F or M)
-        if let Some(field_60) = fields.get("60") {
-            if let Some((variant, _)) = field_60.as_object().and_then(|o| o.iter().next()) {
-                // Replace :60: with :60<variant>:
-                fixed_message = fixed_message.replace(":60:", &format!(":60{}:", variant));
-            }
+        if let Some(field_60) = fields.get("60")
+            && let Some((variant, _)) = field_60.as_object().and_then(|o| o.iter().next())
+        {
+            // Replace :60: with :60<variant>:
+            fixed_message = fixed_message.replace(":60:", &format!(":60{}:", variant));
         }
 
         // Fix Field 62 variants (F or M)
-        if let Some(field_62) = fields.get("62") {
-            if let Some((variant, _)) = field_62.as_object().and_then(|o| o.iter().next()) {
-                // Replace :62: with :62<variant>:
-                fixed_message = fixed_message.replace(":62:", &format!(":62{}:", variant));
-            }
+        if let Some(field_62) = fields.get("62")
+            && let Some((variant, _)) = field_62.as_object().and_then(|o| o.iter().next())
+        {
+            // Replace :62: with :62<variant>:
+            fixed_message = fixed_message.replace(":62:", &format!(":62{}:", variant));
         }
 
         // For messages with transactions (MT101, MT104, MT107), check the "#" field which is the array
@@ -50,31 +54,31 @@ fn fix_numbered_enum_fields_in_mt(mt_message: &str, json_value: &Value) -> Strin
 
             for transaction in transactions {
                 // Check for 50#1 and 50#2 fields in each transaction
-                if let Some(field_50_1) = transaction.get("50#1") {
-                    if let Some((variant, _)) = field_50_1.as_object().and_then(|o| o.iter().next()) {
-                        // Always replace the first remaining :50: with :50<variant>:
-                        replace_nth_field_50(&mut fixed_message, 0, variant);
-                    }
+                if let Some(field_50_1) = transaction.get("50#1")
+                    && let Some((variant, _)) = field_50_1.as_object().and_then(|o| o.iter().next())
+                {
+                    // Always replace the first remaining :50: with :50<variant>:
+                    replace_nth_field_50(&mut fixed_message, 0, variant);
                 }
-                if let Some(field_50_2) = transaction.get("50#2") {
-                    if let Some((variant, _)) = field_50_2.as_object().and_then(|o| o.iter().next()) {
-                        // Always replace the first remaining :50: with :50<variant>:
-                        replace_nth_field_50(&mut fixed_message, 0, variant);
-                    }
+                if let Some(field_50_2) = transaction.get("50#2")
+                    && let Some((variant, _)) = field_50_2.as_object().and_then(|o| o.iter().next())
+                {
+                    // Always replace the first remaining :50: with :50<variant>:
+                    replace_nth_field_50(&mut fixed_message, 0, variant);
                 }
 
                 // Also check for Field 60 and 62 in transactions if they exist
-                if let Some(field_60) = transaction.get("60") {
-                    if let Some((variant, _)) = field_60.as_object().and_then(|o| o.iter().next()) {
-                        // Replace :60: with :60<variant>:
-                        fixed_message = fixed_message.replace(":60:", &format!(":60{}:", variant));
-                    }
+                if let Some(field_60) = transaction.get("60")
+                    && let Some((variant, _)) = field_60.as_object().and_then(|o| o.iter().next())
+                {
+                    // Replace :60: with :60<variant>:
+                    fixed_message = fixed_message.replace(":60:", &format!(":60{}:", variant));
                 }
-                if let Some(field_62) = transaction.get("62") {
-                    if let Some((variant, _)) = field_62.as_object().and_then(|o| o.iter().next()) {
-                        // Replace :62: with :62<variant>:
-                        fixed_message = fixed_message.replace(":62:", &format!(":62{}:", variant));
-                    }
+                if let Some(field_62) = transaction.get("62")
+                    && let Some((variant, _)) = field_62.as_object().and_then(|o| o.iter().next())
+                {
+                    // Replace :62: with :62<variant>:
+                    fixed_message = fixed_message.replace(":62:", &format!(":62{}:", variant));
                 }
             }
         }
@@ -84,11 +88,16 @@ fn fix_numbered_enum_fields_in_mt(mt_message: &str, json_value: &Value) -> Strin
 }
 
 /// Check for a numbered field and fix it if found
-fn check_and_fix_field_50(fixed_message: &mut String, fields: &Value, field_name: &str, occurrence: usize) {
-    if let Some(field) = fields.get(field_name) {
-        if let Some((variant, _)) = field.as_object().and_then(|o| o.iter().next()) {
-            replace_nth_field_50(fixed_message, occurrence, variant);
-        }
+fn check_and_fix_field_50(
+    fixed_message: &mut String,
+    fields: &Value,
+    field_name: &str,
+    occurrence: usize,
+) {
+    if let Some(field) = fields.get(field_name)
+        && let Some((variant, _)) = field.as_object().and_then(|o| o.iter().next())
+    {
+        replace_nth_field_50(fixed_message, occurrence, variant);
     }
 }
 
@@ -101,7 +110,10 @@ fn replace_nth_field_50(message: &mut String, n: usize, variant: &str) -> bool {
     while let Some(found_pos) = message[pos..].find(target) {
         let actual_pos = pos + found_pos;
         if count == n {
-            message.replace_range(actual_pos..actual_pos + target.len(), &format!(":50{}:", variant));
+            message.replace_range(
+                actual_pos..actual_pos + target.len(),
+                &format!(":50{}:", variant),
+            );
             return true;
         }
         count += 1;
@@ -128,12 +140,19 @@ fn clean_null_fields(data: &Value) -> Value {
 }
 
 /// Parse JSON into a SwiftMessage and convert to MT format
-fn json_to_mt(message_type: &str, json_value: &Value) -> std::result::Result<String, DataflowError> {
+fn json_to_mt(
+    message_type: &str,
+    json_value: &Value,
+) -> std::result::Result<String, DataflowError> {
     macro_rules! convert_json {
         ($mt_type:ty) => {{
             let msg: SwiftMessage<$mt_type> =
                 serde_json::from_value(json_value.clone()).map_err(|e| {
-                    DataflowError::Validation(format!("Failed to parse JSON as {}: {}", stringify!($mt_type), e))
+                    DataflowError::Validation(format!(
+                        "Failed to parse JSON as {}: {}",
+                        stringify!($mt_type),
+                        e
+                    ))
                 })?;
             let mut mt_message = msg.to_mt_message();
 
@@ -210,12 +229,17 @@ impl AsyncFunctionHandler for Publish {
         let json_data_field = input
             .get("json_data")
             .and_then(Value::as_str)
-            .ok_or_else(|| DataflowError::Validation("'json_data' parameter is required".to_string()))?;
+            .ok_or_else(|| {
+                DataflowError::Validation("'json_data' parameter is required".to_string())
+            })?;
 
-        let mt_message_field = input
-            .get("mt_message")
-            .and_then(Value::as_str)
-            .ok_or_else(|| DataflowError::Validation("'mt_message' parameter is required".to_string()))?;
+        let mt_message_field =
+            input
+                .get("mt_message")
+                .and_then(Value::as_str)
+                .ok_or_else(|| {
+                    DataflowError::Validation("'mt_message' parameter is required".to_string())
+                })?;
 
         // Extract JSON data from the message
         let json_data = message.data().get(json_data_field).cloned().ok_or_else(|| {
@@ -261,8 +285,9 @@ impl AsyncFunctionHandler for Publish {
         debug!(message_type = %message_type, "Converting JSON to MT{}", message_type);
 
         // Convert JSON to MT message
-        let mt_message = json_to_mt(&message_type, &cleaned_data)
-            .map_err(|e| DataflowError::Validation(format!("Failed to convert to MT{}: {}", message_type, e)))?;
+        let mt_message = json_to_mt(&message_type, &cleaned_data).map_err(|e| {
+            DataflowError::Validation(format!("Failed to convert to MT{}: {}", message_type, e))
+        })?;
 
         debug!(
             message_length = mt_message.len(),
@@ -270,7 +295,11 @@ impl AsyncFunctionHandler for Publish {
         );
 
         // Store the MT message in the output field
-        let old_value = message.data().get(mt_message_field).cloned().unwrap_or(Value::Null);
+        let old_value = message
+            .data()
+            .get(mt_message_field)
+            .cloned()
+            .unwrap_or(Value::Null);
 
         message.data_mut()[mt_message_field] = Value::String(mt_message.clone());
 

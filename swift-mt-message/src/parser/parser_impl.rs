@@ -206,9 +206,14 @@ pub fn find_field_with_variant_sequential_constrained(
 ) -> Option<(String, Option<String>, usize)> {
     #[cfg(debug_assertions)]
     {
-        eprintln!("DEBUG: find_field_with_variant called for base_tag={}, valid_variants={:?}",
-            base_tag, valid_variants);
-        eprintln!("  Available fields: {:?}", fields.keys().collect::<Vec<_>>());
+        eprintln!(
+            "DEBUG: find_field_with_variant called for base_tag={}, valid_variants={:?}",
+            base_tag, valid_variants
+        );
+        eprintln!(
+            "  Available fields: {:?}",
+            fields.keys().collect::<Vec<_>>()
+        );
     }
 
     // First try to find exact match (for non-variant fields)
@@ -217,10 +222,20 @@ pub fn find_field_with_variant_sequential_constrained(
     {
         #[cfg(debug_assertions)]
         {
-            eprintln!("DEBUG: Found exact match for base_tag={}, marking as consumed at pos={}", base_tag, pos);
+            eprintln!(
+                "DEBUG: Found exact match for base_tag={}, marking as consumed at pos={}",
+                base_tag, pos
+            );
             if base_tag == "90D" || base_tag == "86" {
-                eprintln!("DEBUG: Returning value for {}: '{}'", base_tag,
-                    if value.len() > 50 { &value[..50] } else { value });
+                eprintln!(
+                    "DEBUG: Returning value for {}: '{}'",
+                    base_tag,
+                    if value.len() > 50 {
+                        &value[..50]
+                    } else {
+                        value
+                    }
+                );
             }
         }
         tracker.mark_consumed(base_tag, pos);
@@ -265,15 +280,19 @@ pub fn find_field_with_variant_sequential_constrained(
             && !valid.contains(&variant_str.as_str())
         {
             #[cfg(debug_assertions)]
-            eprintln!("DEBUG: Skipping field {} with variant {} - not in valid variants {:?}",
-                tag, variant_str, valid);
+            eprintln!(
+                "DEBUG: Skipping field {} with variant {} - not in valid variants {:?}",
+                tag, variant_str, valid
+            );
             continue; // Skip variants that aren't in the valid list
         }
 
         if let Some((value, pos)) = tracker.get_next_available(tag, values) {
             #[cfg(debug_assertions)]
-            eprintln!("DEBUG: Found field {} with variant {} for base tag {}",
-                tag, variant_str, base_tag);
+            eprintln!(
+                "DEBUG: Found field {} with variant {} for base tag {}",
+                tag, variant_str, base_tag
+            );
             tracker.mark_consumed(tag, pos);
             return Some((value.to_string(), Some(variant_str), pos));
         }
@@ -859,7 +878,10 @@ where
             {
                 #[cfg(debug_assertions)]
                 if tag.starts_with("50") {
-                    eprintln!("DEBUG: Collecting field for sequence: tag='{}' from fields HashMap", tag);
+                    eprintln!(
+                        "DEBUG: Collecting field for sequence: tag='{}' from fields HashMap",
+                        tag
+                    );
                 }
                 all_fields.push((tag.clone(), value.clone(), *pos));
             }
@@ -910,7 +932,7 @@ where
                 current_sequence_fields.clear();
             }
             in_sequence = true;
-            has_field_61_in_sequence = true;  // Field 61 is the sequence start marker
+            has_field_61_in_sequence = true; // Field 61 is the sequence start marker
             has_field_86_in_sequence = false;
         }
 
@@ -947,8 +969,11 @@ where
         if should_include_in_sequence {
             #[cfg(debug_assertions)]
             if tag.starts_with("50") || tag.starts_with("90") || tag.starts_with("86") {
-                eprintln!("DEBUG: Adding field to sequence: tag='{}', value_start='{}'",
-                    tag, value.lines().next().unwrap_or(""));
+                eprintln!(
+                    "DEBUG: Adding field to sequence: tag='{}', value_start='{}'",
+                    tag,
+                    value.lines().next().unwrap_or("")
+                );
             }
             current_sequence_fields
                 .entry(tag.clone())
@@ -1011,7 +1036,10 @@ where
     all_fields.sort_by_key(|(_, _, pos)| *pos);
 
     #[cfg(debug_assertions)]
-    eprintln!("DEBUG parse_sequence_b_items: found {} total fields to process", all_fields.len());
+    eprintln!(
+        "DEBUG parse_sequence_b_items: found {} total fields to process",
+        all_fields.len()
+    );
 
     // Determine the sequence start tag based on message type
     let message_type = std::any::type_name::<T>();
@@ -1032,13 +1060,21 @@ where
             && !tag.ends_with("D")
         {
             #[cfg(debug_assertions)]
-            eprintln!("DEBUG: Found sequence start tag {} at position {}, in_sequence={}, current_fields_count={}",
-                tag, pos, in_sequence, current_sequence_fields.len());
+            eprintln!(
+                "DEBUG: Found sequence start tag {} at position {}, in_sequence={}, current_fields_count={}",
+                tag,
+                pos,
+                in_sequence,
+                current_sequence_fields.len()
+            );
 
             // If we were already in a sequence, parse the previous one
             if in_sequence && !current_sequence_fields.is_empty() {
                 #[cfg(debug_assertions)]
-                eprintln!("DEBUG: Parsing previous sequence with {} field types", current_sequence_fields.len());
+                eprintln!(
+                    "DEBUG: Parsing previous sequence with {} field types",
+                    current_sequence_fields.len()
+                );
 
                 if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
                     sequences.push(sequence_item);
@@ -1057,8 +1093,11 @@ where
         if in_sequence {
             #[cfg(debug_assertions)]
             if tag.starts_with("50") {
-                eprintln!("DEBUG: Adding field to sequence: tag='{}', value_start='{}'",
-                    tag, value.lines().next().unwrap_or(""));
+                eprintln!(
+                    "DEBUG: Adding field to sequence: tag='{}', value_start='{}'",
+                    tag,
+                    value.lines().next().unwrap_or("")
+                );
             }
             current_sequence_fields
                 .entry(tag.clone())
@@ -1073,13 +1112,19 @@ where
     // Parse the last sequence if there is one
     if in_sequence && !current_sequence_fields.is_empty() {
         #[cfg(debug_assertions)]
-        eprintln!("DEBUG: Parsing final sequence with {} field types", current_sequence_fields.len());
+        eprintln!(
+            "DEBUG: Parsing final sequence with {} field types",
+            current_sequence_fields.len()
+        );
 
         match T::from_fields(current_sequence_fields) {
             Ok(sequence_item) => {
                 sequences.push(sequence_item);
                 #[cfg(debug_assertions)]
-                eprintln!("DEBUG: Successfully parsed final sequence #{}", sequences.len());
+                eprintln!(
+                    "DEBUG: Successfully parsed final sequence #{}",
+                    sequences.len()
+                );
             }
             Err(_e) => {
                 #[cfg(debug_assertions)]
@@ -1089,7 +1134,10 @@ where
     }
 
     #[cfg(debug_assertions)]
-    eprintln!("DEBUG: parse_sequence_b_items returning {} sequences", sequences.len());
+    eprintln!(
+        "DEBUG: parse_sequence_b_items returning {} sequences",
+        sequences.len()
+    );
 
     Ok(sequences)
 }

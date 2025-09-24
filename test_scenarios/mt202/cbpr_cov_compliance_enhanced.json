@@ -118,7 +118,7 @@
             },
             "52": {
                 "A": {
-                    "account": "COMPLIANCE-VERIFIED",
+                    "party_identifier": "C/COMPLIANCE-VERIFIED",
                     "bic": {
                         "var": "sender_bic"
                     }
@@ -140,7 +140,7 @@
             },
             "58": {
                 "A": {
-                    "account": "SANCTIONS-CLEARED",
+                    "party_identifier": "S/SANCTIONS-CLEARED",
                     "bic": {
                         "var": "receiver_bic"
                     }

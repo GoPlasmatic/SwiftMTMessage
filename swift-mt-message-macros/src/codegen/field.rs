@@ -137,6 +137,12 @@ fn generate_enum_field_impl(name: &syn::Ident, enum_field: &EnumField) -> MacroR
             fn valid_variants() -> Option<Vec<&'static str>> {
                 Some(vec![#(stringify!(#variant_idents)),*])
             }
+
+            fn get_variant_tag(&self) -> Option<&'static str> {
+                match self {
+                    #(Self::#variant_idents(_) => Some(stringify!(#variant_idents)),)*
+                }
+            }
         }
     })
 }

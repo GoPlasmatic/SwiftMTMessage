@@ -1357,37 +1357,79 @@ fn generate_to_ordered_fields_with_sequences_impl(
         let field_name = &field.name;
         let tag = &field.tag;
         let base_tag = extract_base_tag(tag);
+        let field_type = &field.inner_type;
 
-        if field.is_optional {
-            if field.is_repetitive {
-                // Optional Vec<T>
-                seq_c_field_serializers.push(quote! {
-                    if let Some(ref values) = self.#field_name {
-                        for value in values {
-                            ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+        // Check if this is an enum field that needs variant handling
+        if is_enum_field_type(field_type) {
+            // Enum field - needs variant handling
+            if field.is_optional {
+                if field.is_repetitive {
+                    // Optional Vec<T> with enum
+                    seq_c_field_serializers.push(quote! {
+                        if let Some(ref values) = self.#field_name {
+                            for value in values {
+                                let field_tag = crate::get_field_tag_with_variant(#base_tag, value);
+                                ordered_fields.push((field_tag, value.to_swift_string()));
+                            }
                         }
+                    });
+                } else {
+                    // Optional T with enum
+                    seq_c_field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            let field_tag = crate::get_field_tag_with_variant(#base_tag, value);
+                            ordered_fields.push((field_tag, value.to_swift_string()));
+                        }
+                    });
+                }
+            } else if field.is_repetitive {
+                // Required Vec<T> with enum
+                seq_c_field_serializers.push(quote! {
+                    for value in &self.#field_name {
+                        let field_tag = crate::get_field_tag_with_variant(#base_tag, value);
+                        ordered_fields.push((field_tag, value.to_swift_string()));
                     }
                 });
             } else {
-                // Optional T
+                // Required T with enum
                 seq_c_field_serializers.push(quote! {
-                    if let Some(ref value) = self.#field_name {
+                    let field_tag = crate::get_field_tag_with_variant(#base_tag, &self.#field_name);
+                    ordered_fields.push((field_tag, self.#field_name.to_swift_string()));
+                });
+            }
+        } else {
+            // Non-enum field - use base tag directly
+            if field.is_optional {
+                if field.is_repetitive {
+                    // Optional Vec<T>
+                    seq_c_field_serializers.push(quote! {
+                        if let Some(ref values) = self.#field_name {
+                            for value in values {
+                                ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                            }
+                        }
+                    });
+                } else {
+                    // Optional T
+                    seq_c_field_serializers.push(quote! {
+                        if let Some(ref value) = self.#field_name {
+                            ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
+                        }
+                    });
+                }
+            } else if field.is_repetitive {
+                // Required Vec<T>
+                seq_c_field_serializers.push(quote! {
+                    for value in &self.#field_name {
                         ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
                     }
                 });
+            } else {
+                // Required T
+                seq_c_field_serializers.push(quote! {
+                    ordered_fields.push((#base_tag.to_string(), self.#field_name.to_swift_string()));
+                });
             }
-        } else if field.is_repetitive {
-            // Required Vec<T>
-            seq_c_field_serializers.push(quote! {
-                for value in &self.#field_name {
-                    ordered_fields.push((#base_tag.to_string(), value.to_swift_string()));
-                }
-            });
-        } else {
-            // Required T
-            seq_c_field_serializers.push(quote! {
-                ordered_fields.push((#base_tag.to_string(), self.#field_name.to_swift_string()));
-            });
         }
     }
 
@@ -1713,8 +1755,8 @@ fn is_enum_field_type(field_type: &Type) -> bool {
                     // Explicit list of known enum fields (have A/F/K/D/etc variants)
                     // This replaces the problematic digit-based check
                     matches!(type_name.as_str(),
-                        "Field25" | "Field32" | "Field50" | "Field52" | "Field53" | "Field54" | 
-                        "Field55" | "Field56" | "Field57" | "Field58" | "Field59"
+                        "Field25" | "Field32" | "Field50" | "Field52" | "Field53" | "Field54" |
+                        "Field55" | "Field56" | "Field57" | "Field58" | "Field59" | "Field60" | "Field62"
                     )
                 )
         } else {

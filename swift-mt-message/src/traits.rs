@@ -36,6 +36,12 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
     fn valid_variants() -> Option<Vec<&'static str>> {
         None // Default implementation for non-enum fields
     }
+
+    /// Get the variant tag for enum fields (e.g., "A", "F", "M")
+    /// Returns None for non-enum fields
+    fn get_variant_tag(&self) -> Option<&'static str> {
+        None
+    }
 }
 
 /// Core trait for Swift message types

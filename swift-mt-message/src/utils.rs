@@ -5,14 +5,10 @@ use crate::parser::extract_base_tag;
 /// Helper function to get field tag with variant for enum fields
 pub fn get_field_tag_with_variant<T>(base_tag: &str, field_value: &T) -> String
 where
-    T: std::fmt::Debug,
+    T: crate::SwiftField,
 {
-    let debug_string = format!("{field_value:?}");
-
-    // Extract variant from debug string (e.g., "K(...)" -> "K")
-    if let Some(variant_end) = debug_string.find('(') {
-        let variant = &debug_string[..variant_end];
-
+    // Use the get_variant_tag method if available
+    if let Some(variant) = field_value.get_variant_tag() {
         // Special handling for "NoOption" variant - use base tag without suffix
         if variant == "NoOption" {
             base_tag.to_string()

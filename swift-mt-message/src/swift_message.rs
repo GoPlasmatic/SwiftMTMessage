@@ -421,26 +421,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
             .collect();
 
         // Use to_ordered_fields for proper sequence ordering
-        let mut ordered_fields = self.fields.to_ordered_fields();
-
-        // Post-process ordered fields to fix variant information for numbered enum fields
-        // This is needed because nested message structures don't properly include variant letters
-        for (field_tag, _field_value) in &mut ordered_fields {
-            if field_tag.contains('#') {
-                // This is a numbered field (e.g., "50#1", "50#2")
-                // We need to determine if it's an enum field and get the variant
-                let base_tag = extract_base_tag(field_tag);
-
-                // For MT104, field 50#1 is Field50InstructingParty (variants C, L)
-                // and field 50#2 is Field50Creditor (variants A, K)
-                // We need to inspect the actual field value to determine the variant
-
-                // Since we can't easily determine the variant from the serialized string,
-                // we'll rely on the publish function to handle this correctly
-                // by inspecting the JSON structure
-                *field_tag = base_tag.to_string();
-            }
-        }
+        let ordered_fields = self.fields.to_ordered_fields();
 
         #[cfg(debug_assertions)]
         {

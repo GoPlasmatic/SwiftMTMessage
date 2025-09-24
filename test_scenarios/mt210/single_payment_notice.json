@@ -106,17 +106,15 @@
                         }
                     },
                     "50": {
-                        "F": {
+                        "K": {
                             "account": "DE89370400440532013000",
-                            "party_identifier": "DE89370400440532013000",
                             "name_and_address": [
                                 "ACME CORPORATION",
                                 "EXPORT DIVISION",
                                 "123 MAIN STREET",
                                 "FRANKFURT",
                                 "GERMANY"
-                            ],
-                            "bic": "DEUTDEFF"
+                            ]
                         }
                     },
                     "52": {

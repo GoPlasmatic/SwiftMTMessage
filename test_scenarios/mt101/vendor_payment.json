@@ -70,7 +70,7 @@
                 "index": 1,
                 "total": 1
             },
-            "50#2": {
+            "ordering_customer": {
                 "G": {
                     "account": "AP-MASTER-ACCOUNT",
                     "bic": "DEUTDEFF"

@@ -185,7 +185,7 @@
                     "/PURP/GDDS"
                 ]
             },
-            "50#b": {
+            "ordering_customer_b": {
                 "K": {
                     "name_and_address": [
                         {
@@ -197,7 +197,7 @@
                     ]
                 }
             },
-            "59#b": {
+            "beneficiary_customer_b": {
                 "NoOption": {
                     "name_and_address": [
                         {
@@ -209,7 +209,7 @@
                     ]
                 }
             },
-            "70#b": {
+            "remittance_information_b": {
                 "narrative": [
                     {
                         "var": "remittance_info"

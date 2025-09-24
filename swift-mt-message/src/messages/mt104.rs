@@ -108,11 +108,11 @@ pub struct MT104 {
     #[field("51A")]
     pub field_51a: Option<Field51A>,
 
-    #[field("50#1")]
-    pub field_50_instructing: Option<Field50InstructingParty>,
+    #[field("50", name = "instructing_party")]
+    pub instructing_party: Option<Field50InstructingParty>,
 
-    #[field("50#2")]
-    pub field_50_creditor: Option<Field50Creditor>,
+    #[field("50", name = "creditor")]
+    pub creditor: Option<Field50Creditor>,
 
     #[field("52")]
     pub field_52: Option<Field52CreditorBank>,
@@ -169,11 +169,11 @@ pub struct MT104Transaction {
     #[field("32B")]
     pub field_32b: Field32B,
 
-    #[field("50#1")]
-    pub field_50_instructing: Option<Field50InstructingParty>,
+    #[field("50", name = "instructing_party_tx")]
+    pub instructing_party_tx: Option<Field50InstructingParty>,
 
-    #[field("50#2")]
-    pub field_50_creditor: Option<Field50Creditor>,
+    #[field("50", name = "creditor_tx")]
+    pub creditor_tx: Option<Field50Creditor>,
 
     #[field("52")]
     pub field_52: Option<Field52CreditorBank>,
@@ -252,16 +252,16 @@ const MT104_VALIDATION_RULES: &str = r#"{
           {
             "and": [
               {"or": [
-                {"exists": ["fields", "50", "A"]},
-                {"exists": ["fields", "50", "K"]}
+                {"exists": ["fields", "creditor", "A"]},
+                {"exists": ["fields", "creditor", "K"]}
               ]},
               {
                 "all": [
                   {"var": "fields.#"},
                   {
                     "and": [
-                      {"!": {"var": "50#2.A"}},
-                      {"!": {"var": "50#2.K"}}
+                      {"!": {"exists": ["creditor_tx", "A"]}},
+                      {"!": {"exists": ["creditor_tx", "K"]}}
                     ]
                   }
                 ]
@@ -272,8 +272,8 @@ const MT104_VALIDATION_RULES: &str = r#"{
             "and": [
               {
                 "and": [
-                  {"!": {"exists": ["fields", "50", "A"]}},
-                  {"!": {"exists": ["fields", "50", "K"]}}
+                  {"!": {"exists": ["fields", "creditor", "A"]}},
+                  {"!": {"exists": ["fields", "creditor", "K"]}}
                 ]
               },
               {
@@ -281,8 +281,8 @@ const MT104_VALIDATION_RULES: &str = r#"{
                   {"var": "fields.#"},
                   {
                     "or": [
-                      {"var": "50#2.A"},
-                      {"var": "50#2.K"}
+                      {"exists": ["creditor_tx", "A"]},
+                      {"exists": ["creditor_tx", "K"]}
                     ]
                   }
                 ]
@@ -360,16 +360,16 @@ const MT104_VALIDATION_RULES: &str = r#"{
           {
             "if": [
               {"or": [
-                {"exists": ["fields", "50#1", "C"]},
-                {"exists": ["fields", "50#1", "L"]}
+                {"exists": ["fields", "instructing_party", "C"]},
+                {"exists": ["fields", "instructing_party", "L"]}
               ]},
               {
                 "all": [
                   {"var": "fields.#"},
                   {
                     "and": [
-                      {"!": {"exists": ["fields", "50#1", "C"]}},
-                      {"!": {"exists": ["fields", "50#1", "L"]}}
+                      {"!": {"exists": ["fields", "instructing_party", "C"]}},
+                      {"!": {"exists": ["fields", "instructing_party", "L"]}}
                     ]
                   }
                 ]
@@ -390,8 +390,8 @@ const MT104_VALIDATION_RULES: &str = r#"{
               {"exists": ["fields", "21E"]},
               {
                 "or": [
-                  {"exists": ["fields", "50#2", "A"]},
-                  {"exists": ["fields", "50#2", "K"]}
+                  {"exists": ["fields", "creditor", "A"]},
+                  {"exists": ["fields", "creditor", "K"]}
                 ]
               },
               true
@@ -405,8 +405,8 @@ const MT104_VALIDATION_RULES: &str = r#"{
                   {"exists": ["fields", "21E"]},
                   {
                     "or": [
-                      {"exists": ["fields", "50#2", "A"]},
-                      {"exists": ["fields", "50#2", "K"]}
+                      {"exists": ["fields", "creditor_tx", "A"]},
+                      {"exists": ["fields", "creditor_tx", "K"]}
                     ]
                   },
                   true
@@ -608,8 +608,8 @@ const MT104_VALIDATION_RULES: &str = r#"{
                   {
                     "and": [
                       {"!": {"exists": ["fields", "21E"]}},
-                      {"!": {"exists": ["fields", "50#2", "A"]}},
-                      {"!": {"exists": ["fields", "50#2", "K"]}},
+                      {"!": {"exists": ["fields", "creditor_tx", "A"]}},
+                      {"!": {"exists": ["fields", "creditor_tx", "K"]}},
                       {"!": {"exists": ["fields", "52"]}},
                       {"!": {"exists": ["fields", "71F"]}},
                       {"!": {"exists": ["fields", "71G"]}}

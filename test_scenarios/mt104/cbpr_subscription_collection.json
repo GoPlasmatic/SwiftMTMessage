@@ -99,17 +99,6 @@
                             "var": "amount1"
                         }
                     },
-                    "50#2": {
-                        "K": {
-                            "account": "US12345678901234567890",
-                            "name_and_address": [
-                                "SMITH, JOHN",
-                                "123 MAIN STREET APT 4B",
-                                "NEW YORK NY 10001",
-                                "UNITED STATES"
-                            ]
-                        }
-                    },
                     "52": {
                         "A": {
                             "bic": {
@@ -152,6 +141,17 @@
                             "/BENEFRES/STREAMING PLUS INC",
                             "/PURPOSE/STREAM SUB PREMIUM HD"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "US12345678901234567890",
+                            "name_and_address": [
+                                "SMITH, JOHN",
+                                "123 MAIN STREET APT 4B",
+                                "NEW YORK NY 10001",
+                                "UNITED STATES"
+                            ]
+                        }
                     }
                 },
                 {
@@ -164,17 +164,6 @@
                         },
                         "amount": {
                             "var": "amount2"
-                        }
-                    },
-                    "50#2": {
-                        "K": {
-                            "account": "US98765432109876543210",
-                            "name_and_address": [
-                                "JOHNSON, SARAH",
-                                "456 TECH AVENUE",
-                                "SAN FRANCISCO CA 94107",
-                                "UNITED STATES"
-                            ]
                         }
                     },
                     "52": {
@@ -219,6 +208,17 @@
                             "/BENEFRES/CLOUD SOFTWARE CORP",
                             "/PURPOSE/SAAS SUB BUSINESS PRO"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "US98765432109876543210",
+                            "name_and_address": [
+                                "JOHNSON, SARAH",
+                                "456 TECH AVENUE",
+                                "SAN FRANCISCO CA 94107",
+                                "UNITED STATES"
+                            ]
+                        }
                     }
                 },
                 {
@@ -231,17 +231,6 @@
                         },
                         "amount": {
                             "var": "amount3"
-                        }
-                    },
-                    "50#2": {
-                        "K": {
-                            "account": "US11223344556677889900",
-                            "name_and_address": [
-                                "DAVIS, MICHAEL",
-                                "789 HEALTH STREET",
-                                "BOSTON MA 02108",
-                                "UNITED STATES"
-                            ]
                         }
                     },
                     "52": {
@@ -286,6 +275,17 @@
                             "/BENEFRES/FITNESS CLUB INTL",
                             "/PURPOSE/GYM PLATINUM ACCESS"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "US11223344556677889900",
+                            "name_and_address": [
+                                "DAVIS, MICHAEL",
+                                "789 HEALTH STREET",
+                                "BOSTON MA 02108",
+                                "UNITED STATES"
+                            ]
+                        }
                     }
                 },
                 {
@@ -298,17 +298,6 @@
                         },
                         "amount": {
                             "var": "amount4"
-                        }
-                    },
-                    "50#2": {
-                        "K": {
-                            "account": "US99887766554433221100",
-                            "name_and_address": [
-                                "WILSON, EMMA",
-                                "321 READER LANE",
-                                "WASHINGTON DC 20001",
-                                "UNITED STATES"
-                            ]
                         }
                     },
                     "52": {
@@ -353,6 +342,17 @@
                             "/BENEFRES/DIGITAL NEWS CORP",
                             "/PURPOSE/NEWS ALL ACCESS DIGITAL"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "US99887766554433221100",
+                            "name_and_address": [
+                                "WILSON, EMMA",
+                                "321 READER LANE",
+                                "WASHINGTON DC 20001",
+                                "UNITED STATES"
+                            ]
+                        }
                     }
                 }
             ],

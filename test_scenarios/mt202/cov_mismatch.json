@@ -150,7 +150,7 @@
                     "/ACC/BENEFICIARY ACCOUNT MISMATCH"
                 ]
             },
-            "50#b": {
+            "ordering_customer_b": {
                 "K": {
                     "account": "GB82WEST12345698765432",
                     "name_and_address": [
@@ -163,7 +163,7 @@
                     ]
                 }
             },
-            "59#b": {
+            "beneficiary_customer_b": {
                 "NoOption": {
                     "account": {
                         "var": "beneficiary_acct_mt202"
@@ -176,7 +176,7 @@
                     ]
                 }
             },
-            "70#b": {
+            "remittance_information_b": {
                 "narrative": [
                     {
                         "cat": [
@@ -191,7 +191,7 @@
                     "/NOTE/RECONCILIATION REQUIRED"
                 ]
             },
-            "33B#b": {
+            "currency_amount_b": {
                 "currency": {
                     "var": "currency"
                 },

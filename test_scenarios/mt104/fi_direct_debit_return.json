@@ -107,23 +107,6 @@
                             "var": "return_amount"
                         }
                     },
-                    "50#2": {
-                        "K": {
-                            "account": "RETURN-PROCESSING",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "RETURNS DEPARTMENT",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
                     "59": {
                         "NoOption": {
                             "account": "1000000000000000",
@@ -173,6 +156,23 @@
                     "71A": {
                         "code": {
                             "var": "charges"
+                        }
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "RETURN-PROCESSING",
+                            "name_and_address": [
+                                "ACME CORPORATION",
+                                "RETURNS DEPARTMENT",
+                                "123 MAIN STREET",
+                                {
+                                    "cat": [
+                                        "NEW YORK",
+                                        ", ",
+                                        "US"
+                                    ]
+                                }
+                            ]
                         }
                     }
                 }

@@ -124,29 +124,29 @@ pub struct MT205 {
     pub field_72: Option<Field72>, // Sender to Receiver Information
 
     // Sequence B: COV Cover Message Fields (Optional)
-    #[field("50#b")]
-    pub field_50_seq_b: Option<Field50OrderingCustomerAFK>, // Ordering Customer
+    #[field("50", name = "ordering_customer_b")]
+    pub ordering_customer_b: Option<Field50OrderingCustomerAFK>, // Ordering Customer
 
-    #[field("52#b")]
-    pub field_52_seq_b: Option<Field52OrderingInstitution>, // Ordering Institution (Seq B)
+    #[field("52", name = "ordering_institution_b")]
+    pub ordering_institution_b: Option<Field52OrderingInstitution>, // Ordering Institution (Seq B)
 
-    #[field("56#b")]
-    pub field_56_seq_b: Option<Field56Intermediary>, // Intermediary Institution (Seq B)
+    #[field("56", name = "intermediary_b")]
+    pub intermediary_b: Option<Field56Intermediary>, // Intermediary Institution (Seq B)
 
-    #[field("57#b")]
-    pub field_57_seq_b: Option<Field57AccountWithInstitution>, // Account With Institution (Seq B)
+    #[field("57", name = "account_with_institution_b")]
+    pub account_with_institution_b: Option<Field57AccountWithInstitution>, // Account With Institution (Seq B)
 
-    #[field("59#b")]
-    pub field_59_seq_b: Option<Field59>, // Beneficiary Customer
+    #[field("59", name = "beneficiary_customer_b")]
+    pub beneficiary_customer_b: Option<Field59>, // Beneficiary Customer
 
-    #[field("70#b")]
-    pub field_70_seq_b: Option<Field70>, // Remittance Information
+    #[field("70", name = "remittance_information_b")]
+    pub remittance_information_b: Option<Field70>, // Remittance Information
 
-    #[field("72#b")]
-    pub field_72_seq_b: Option<Field72>, // Sender to Receiver Info (Seq B)
+    #[field("72", name = "sender_to_receiver_information_b")]
+    pub sender_to_receiver_information_b: Option<Field72>, // Sender to Receiver Info (Seq B)
 
-    #[field("33B#b")]
-    pub field_33b_seq_b: Option<Field33B>, // Currency/Instructed Amount
+    #[field("33B", name = "currency_amount_b")]
+    pub currency_amount_b: Option<Field33B>, // Currency/Instructed Amount
 }
 
 impl MT205 {
@@ -206,7 +206,7 @@ impl MT205 {
     pub fn is_cover_message(&self) -> bool {
         // The key distinguishing feature of COV is the presence of Sequence B customer fields
         // According to spec: field 50a (Ordering Customer) or field 59a (Beneficiary Customer)
-        self.field_50_seq_b.is_some() || self.field_59_seq_b.is_some()
+        self.ordering_customer_b.is_some() || self.beneficiary_customer_b.is_some()
     }
 }
 
@@ -229,8 +229,8 @@ const MT205_VALIDATION_RULES: &str = r#"{
 			"description": "If field 56a is present in Sequence B, then field 57a must also be present",
 			"condition": {
 				"if": [
-					{"exists": ["fields", "56#b"]},
-					{"exists": ["fields", "57#b"]},
+					{"exists": ["fields", "intermediary_b"]},
+					{"exists": ["fields", "account_with_institution_b"]},
 					true
 				]
 			}
@@ -241,12 +241,12 @@ const MT205_VALIDATION_RULES: &str = r#"{
 			"condition": {
 				"if": [
 					{"or": [
-						{"exists": ["fields", "50#b"]},
-						{"exists": ["fields", "59#b"]}
+						{"exists": ["fields", "ordering_customer_b"]},
+						{"exists": ["fields", "beneficiary_customer_b"]}
 					]},
 					{"and": [
-						{"exists": ["fields", "50#b"]},
-						{"exists": ["fields", "59#b"]}
+						{"exists": ["fields", "ordering_customer_b"]},
+						{"exists": ["fields", "beneficiary_customer_b"]}
 					]},
 					true
 				]

@@ -122,30 +122,6 @@
                             "var": "debit_amount"
                         }
                     },
-                    "50#2": {
-                        "K": {
-                            "account": "CREDITOR-001",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                {
-                                    "cat": [
-                                        "CREDITOR INSTITUTION/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
                     "59": {
                         "NoOption": {
                             "account": "1000000000000000",
@@ -184,6 +160,30 @@
                             "/PURP/SUPP",
                             "/CD/RECURRING PAYMENT"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "CREDITOR-001",
+                            "name_and_address": [
+                                "ACME CORPORATION",
+                                {
+                                    "cat": [
+                                        "CREDITOR INSTITUTION/",
+                                        {
+                                            "var": "sender_lei"
+                                        }
+                                    ]
+                                },
+                                "123 MAIN STREET",
+                                {
+                                    "cat": [
+                                        "NEW YORK",
+                                        ", ",
+                                        "US"
+                                    ]
+                                }
+                            ]
+                        }
                     }
                 }
             ],

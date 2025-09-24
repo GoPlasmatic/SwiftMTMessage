@@ -100,24 +100,6 @@
                         },
                         "amount": 250
                     },
-                    "50#2": {
-                        "K": {
-                            "account": "UTILITY-COMPANY-001",
-                            "name_and_address": [
-                                "GLOBAL UTILITIES INC",
-                                {
-                                    "cat": [
-                                        "UTILITY PROVIDER/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "100 ENERGY BOULEVARD",
-                                "NEW YORK, NY US"
-                            ]
-                        }
-                    },
                     "59": {
                         "NoOption": {
                             "account": "1000000000000000",
@@ -167,6 +149,24 @@
                     "71A": {
                         "code": {
                             "var": "charges"
+                        }
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "UTILITY-COMPANY-001",
+                            "name_and_address": [
+                                "GLOBAL UTILITIES INC",
+                                {
+                                    "cat": [
+                                        "UTILITY PROVIDER/",
+                                        {
+                                            "var": "sender_lei"
+                                        }
+                                    ]
+                                },
+                                "100 ENERGY BOULEVARD",
+                                "NEW YORK, NY US"
+                            ]
                         }
                     }
                 },
@@ -189,24 +189,6 @@
                         },
                         "amount": 350
                     },
-                    "50#2": {
-                        "K": {
-                            "account": "UTILITY-COMPANY-001",
-                            "name_and_address": [
-                                "GLOBAL UTILITIES INC",
-                                {
-                                    "cat": [
-                                        "UTILITY PROVIDER/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "100 ENERGY BOULEVARD",
-                                "NEW YORK, NY US"
-                            ]
-                        }
-                    },
                     "59": {
                         "NoOption": {
                             "account": "1000000000000000",
@@ -257,6 +239,24 @@
                         "code": {
                             "var": "charges"
                         }
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "UTILITY-COMPANY-001",
+                            "name_and_address": [
+                                "GLOBAL UTILITIES INC",
+                                {
+                                    "cat": [
+                                        "UTILITY PROVIDER/",
+                                        {
+                                            "var": "sender_lei"
+                                        }
+                                    ]
+                                },
+                                "100 ENERGY BOULEVARD",
+                                "NEW YORK, NY US"
+                            ]
+                        }
                     }
                 },
                 {
@@ -277,24 +277,6 @@
                             "var": "currency"
                         },
                         "amount": 400
-                    },
-                    "50#2": {
-                        "K": {
-                            "account": "UTILITY-COMPANY-001",
-                            "name_and_address": [
-                                "GLOBAL UTILITIES INC",
-                                {
-                                    "cat": [
-                                        "UTILITY PROVIDER/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "100 ENERGY BOULEVARD",
-                                "NEW YORK, NY US"
-                            ]
-                        }
                     },
                     "59": {
                         "NoOption": {
@@ -345,6 +327,24 @@
                     "71A": {
                         "code": {
                             "var": "charges"
+                        }
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "UTILITY-COMPANY-001",
+                            "name_and_address": [
+                                "GLOBAL UTILITIES INC",
+                                {
+                                    "cat": [
+                                        "UTILITY PROVIDER/",
+                                        {
+                                            "var": "sender_lei"
+                                        }
+                                    ]
+                                },
+                                "100 ENERGY BOULEVARD",
+                                "NEW YORK, NY US"
+                            ]
                         }
                     }
                 }

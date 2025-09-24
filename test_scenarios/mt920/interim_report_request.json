@@ -78,7 +78,7 @@
                             "var": "account_number"
                         }
                     },
-                    "34F#1": {
+                    "floor_limit_debit": {
                         "currency": {
                             "var": "currency"
                         },
@@ -87,7 +87,7 @@
                             "var": "debit_floor"
                         }
                     },
-                    "34F#2": {
+                    "floor_limit_credit": {
                         "currency": {
                             "var": "currency"
                         },

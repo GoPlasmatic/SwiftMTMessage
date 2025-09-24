@@ -116,7 +116,7 @@
                 },
                 "sequence_number": 1
             },
-            "34F#1": {
+            "floor_limit_debit": {
                 "currency": {
                     "var": "currency"
                 },
@@ -124,7 +124,7 @@
                     "var": "debit_limit"
                 }
             },
-            "34F#2": {
+            "floor_limit_credit": {
                 "currency": {
                     "var": "currency"
                 },

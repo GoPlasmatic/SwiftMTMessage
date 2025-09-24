@@ -86,7 +86,7 @@
                     "var": "execution_date"
                 }
             },
-            "50#2": {
+            "creditor": {
                 "K": {
                     "account": "RETURN-PROCESSOR",
                     "name_and_address": [

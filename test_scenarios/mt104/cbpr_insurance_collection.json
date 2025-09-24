@@ -97,17 +97,6 @@
                             "var": "amount1"
                         }
                     },
-                    "50#2": {
-                        "K": {
-                            "account": "CH1234567890123456789",
-                            "name_and_address": [
-                                "MUELLER, HANS",
-                                "BAHNHOFSTRASSE 123",
-                                "8001 ZURICH",
-                                "SWITZERLAND"
-                            ]
-                        }
-                    },
                     "52": {
                         "A": {
                             "bic": {
@@ -150,6 +139,17 @@
                             "/BENEFRES/SWISS HEALTH INSURANCE",
                             "/PURPOSE/HEALTH INS JAN-2025"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "CH1234567890123456789",
+                            "name_and_address": [
+                                "MUELLER, HANS",
+                                "BAHNHOFSTRASSE 123",
+                                "8001 ZURICH",
+                                "SWITZERLAND"
+                            ]
+                        }
                     }
                 },
                 {
@@ -162,17 +162,6 @@
                         },
                         "amount": {
                             "var": "amount2"
-                        }
-                    },
-                    "50#2": {
-                        "K": {
-                            "account": "CH9876543210987654321",
-                            "name_and_address": [
-                                "SCHMID, ANNA",
-                                "HAUPTSTRASSE 45",
-                                "4051 BASEL",
-                                "SWITZERLAND"
-                            ]
                         }
                     },
                     "52": {
@@ -217,6 +206,17 @@
                             "/BENEFRES/HELVETIA INSURANCE",
                             "/PURPOSE/AUTO INS Q1-2025"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "CH9876543210987654321",
+                            "name_and_address": [
+                                "SCHMID, ANNA",
+                                "HAUPTSTRASSE 45",
+                                "4051 BASEL",
+                                "SWITZERLAND"
+                            ]
+                        }
                     }
                 },
                 {
@@ -229,17 +229,6 @@
                         },
                         "amount": {
                             "var": "amount3"
-                        }
-                    },
-                    "50#2": {
-                        "K": {
-                            "account": "CH1122334455667788990",
-                            "name_and_address": [
-                                "WEBER, PETER",
-                                "SEESTRASSE 78",
-                                "6005 LUCERNE",
-                                "SWITZERLAND"
-                            ]
                         }
                     },
                     "52": {
@@ -284,6 +273,17 @@
                             "/BENEFRES/ZURICH INSURANCE LTD",
                             "/PURPOSE/HOME INS JAN-2025"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "CH1122334455667788990",
+                            "name_and_address": [
+                                "WEBER, PETER",
+                                "SEESTRASSE 78",
+                                "6005 LUCERNE",
+                                "SWITZERLAND"
+                            ]
+                        }
                     }
                 }
             ],

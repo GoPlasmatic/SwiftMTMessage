@@ -318,6 +318,11 @@ pub fn get_sequence_config(message_type: &str) -> SequenceConfig {
             sequence_c_fields: vec![],
             has_sequence_c: false,
         },
+        "MT110" => SequenceConfig {
+            sequence_b_marker: "21".to_string(),
+            sequence_c_fields: vec![],
+            has_sequence_c: false,
+        },
         "MT204" => SequenceConfig {
             // Note: MT204 has special handling since field 20 appears in both sequences
             // The first 20 is for sequence A, subsequent 20s are for sequence B transactions

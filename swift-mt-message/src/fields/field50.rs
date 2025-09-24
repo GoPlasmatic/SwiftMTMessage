@@ -276,3 +276,31 @@ pub enum Field50Creditor {
     A(Field50A),
     K(Field50K),
 }
+
+#[cfg(test)]
+mod field50a_tests {
+    use super::*;
+    use crate::SwiftField;
+
+    #[test]
+    fn test_field50a_to_mt_with_line_numbers() {
+        let field = Field50A {
+            party_identifier: Some("US/123456789".to_string()),
+            name_and_address: vec![
+                "ACME CORPORATION".to_string(),
+                "123 MAIN STREET".to_string(),
+                "NEW YORK".to_string(),
+                "USA".to_string(),
+            ],
+        };
+
+        let mt_string = field.to_swift_string();
+        println!("Field50A to_mt output: {}", mt_string);
+        
+        // Field50A should generate numbered lines for the address
+        assert!(mt_string.contains("1/ACME CORPORATION"), "Missing line 1");
+        assert!(mt_string.contains("2/123 MAIN STREET"), "Missing line 2");
+        assert!(mt_string.contains("3/NEW YORK"), "Missing line 3");
+        assert!(mt_string.contains("4/USA"), "Missing line 4");
+    }
+}

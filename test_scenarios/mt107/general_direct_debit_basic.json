@@ -73,7 +73,7 @@
                     "var": "execution_date"
                 }
             },
-            "50#2": {
+            "creditor": {
                 "K": {
                     "account": "CREDITOR-GEN-001",
                     "name_and_address": [

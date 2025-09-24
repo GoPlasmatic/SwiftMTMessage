@@ -102,11 +102,11 @@ pub struct MT101 {
     #[field("28D")]
     pub field_28d: Field28D, // Message Index/Total
 
-    #[field("50#1")]
-    pub field_50_instructing_party: Option<Field50InstructingParty>, // Instructing Party
+    #[field("50", name = "instructing_party")]
+    pub instructing_party: Option<Field50InstructingParty>, // Instructing Party
 
-    #[field("50#2")]
-    pub field_50_ordering_customer: Option<Field50OrderingCustomerFGH>, // Ordering Customer
+    #[field("50", name = "ordering_customer")]
+    pub ordering_customer: Option<Field50OrderingCustomerFGH>, // Ordering Customer
 
     #[field("52")]
     pub field_52a: Option<Field52AccountServicingInstitution>, // Account Servicing Institution (Seq A)
@@ -162,11 +162,11 @@ pub struct MT101Transaction {
     #[field("32B")]
     pub field_32b: Field32B, // Currency/Amount
 
-    #[field("50#1")]
-    pub field_50_instructing_party: Option<Field50InstructingParty>, // Instructing Party
+    #[field("50", name = "instructing_party_tx")]
+    pub instructing_party_tx: Option<Field50InstructingParty>, // Instructing Party
 
-    #[field("50#2")]
-    pub field_50_ordering_customer: Option<Field50OrderingCustomerFGH>, // Ordering Customer
+    #[field("50", name = "ordering_customer_tx")]
+    pub ordering_customer_tx: Option<Field50OrderingCustomerFGH>, // Ordering Customer
 
     #[field("52")]
     pub field_52: Option<Field52AccountServicingInstitution>, // Account Servicing Institution
@@ -258,22 +258,22 @@ const MT101_VALIDATION_RULES: &str = r#"{
         "or": [
           {
             "and": [
-              {"exists": ["fields", "50#2"]},
+              {"exists": ["fields", "ordering_customer"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!": {"exists": ["fields", "50#2"]}}
+                  {"!": {"exists": ["fields", "ordering_customer_tx"]}}
                 ]
               }
             ]
           },
           {
             "and": [
-              {"!": {"exists": ["fields", "50#2"]}},
+              {"!": {"exists": ["fields", "ordering_customer"]}},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"exists": ["fields", "50#2"]}
+                  {"exists": ["fields", "ordering_customer_tx"]}
                 ]
               }
             ]
@@ -286,11 +286,11 @@ const MT101_VALIDATION_RULES: &str = r#"{
       "description": "Field 50a (option C or L) may be present in either sequence A or in one or more occurrences of sequence B, but must not be present in both sequences",
       "condition": {
         "if": [
-          {"exists": ["fields", "50#1"]},
+          {"exists": ["fields", "instructing_party"]},
           {
             "all": [
               {"var": "fields.#"},
-              {"!": {"exists": ["fields", "50"]}}
+              {"!": {"exists": ["fields", "instructing_party_tx"]}}
             ]
           },
           true

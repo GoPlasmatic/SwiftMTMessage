@@ -89,11 +89,11 @@ pub struct MT942 {
     #[field("28C")]
     pub field_28c: Field28C,
 
-    #[field("34F#1")]
-    pub field_34f_debit_limit: Field34F,
+    #[field("34F", name = "floor_limit_debit")]
+    pub floor_limit_debit: Field34F,
 
-    #[field("34F#2")]
-    pub field_34f_credit_limit: Option<Field34F>,
+    #[field("34F", name = "floor_limit_credit")]
+    pub floor_limit_credit: Option<Field34F>,
 
     #[field("13D")]
     pub field_13d: Field13D,
@@ -129,13 +129,13 @@ const MT942_VALIDATION_RULES: &str = r#"{
       "description": "The first two characters of the three-character currency code in fields 34F, 61, 90D, and 90C must be the same for all occurrences",
       "condition": {
         "and": [
-          {"exists": ["fields", "34F#1"]},
+          {"exists": ["fields", "floor_limit_debit"]},
           {
             "if": [
-              {"exists": ["fields", "34F#2"]},
+              {"exists": ["fields", "floor_limit_credit"]},
               {"==": [
-                {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
-                {"substr": [{"var": "fields.34F#2.currency"}, 0, 2]}
+                {"substr": [{"var": "fields.floor_limit_debit.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.floor_limit_credit.currency"}, 0, 2]}
               ]},
               true
             ]
@@ -144,7 +144,7 @@ const MT942_VALIDATION_RULES: &str = r#"{
             "if": [
               {"exists": ["fields", "90D"]},
               {"==": [
-                {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.floor_limit_debit.currency"}, 0, 2]},
                 {"substr": [{"var": "fields.90D.currency"}, 0, 2]}
               ]},
               true
@@ -154,7 +154,7 @@ const MT942_VALIDATION_RULES: &str = r#"{
             "if": [
               {"exists": ["fields", "90C"]},
               {"==": [
-                {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                {"substr": [{"var": "fields.floor_limit_debit.currency"}, 0, 2]},
                 {"substr": [{"var": "fields.90C.currency"}, 0, 2]}
               ]},
               true
@@ -170,7 +170,7 @@ const MT942_VALIDATION_RULES: &str = r#"{
                     "if": [
                       {"exists": ["fields", "61"]},
                       {"==": [
-                        {"substr": [{"var": "fields.34F#1.currency"}, 0, 2]},
+                        {"substr": [{"var": "fields.floor_limit_debit.currency"}, 0, 2]},
                         {"substr": [{"var": "61.currency"}, 0, 2]}
                       ]},
                       true

@@ -115,7 +115,7 @@
                     }
                 }
             ],
-            "50#2": {
+            "ordering_customer": {
                 "G": {
                     "account": "MINIMAL-ACCOUNT",
                     "bic": "DEUTDEFF"

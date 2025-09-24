@@ -82,7 +82,7 @@
                     "var": "execution_date"
                 }
             },
-            "50#2": {
+            "creditor": {
                 "K": {
                     "account": "COLLECTION-AGENCY",
                     "name_and_address": [

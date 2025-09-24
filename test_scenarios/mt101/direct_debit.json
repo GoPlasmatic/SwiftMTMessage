@@ -76,12 +76,12 @@
                 "index": 1,
                 "total": 1
             },
-            "50#1": {
+            "instructing_party": {
                 "L": {
                     "party_identifier": "ACME CORPORATION"
                 }
             },
-            "50#2": {
+            "ordering_customer": {
                 "F": {
                     "account": "DD/COLLECTOR",
                     "bic": "DEUTDEFF"

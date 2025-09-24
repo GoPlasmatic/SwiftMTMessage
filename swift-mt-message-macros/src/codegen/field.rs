@@ -194,10 +194,12 @@ fn generate_multi_component_to_swift_string(
     }
 
     // Pattern: [/34x] + 4*35x (Field50K style - optional string + vec string)
+    // Note: Exclude numbered line patterns like 4*(1!n/33x)
     if patterns.len() == 2 &&
        patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&
        patterns[0].contains("x") && // Ensure it's a text field
-       patterns[1].contains("*") && patterns[1].contains("x")
+       patterns[1].contains("*") && patterns[1].contains("x") &&
+       !patterns[1].contains("1!n") // Exclude numbered line patterns
     {
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];
@@ -311,10 +313,9 @@ fn generate_multi_component_to_swift_string(
                 let mut result = String::with_capacity(capacity);
 
                 if let Some(ref party_id) = self.#first_field {
-                    // Only add slash if party_id doesn't already start with one
-                    if !party_id.starts_with('/') {
-                        result.push('/');
-                    }
+                    // For Field53B/Field57B: format is [/1!a][/34x]
+                    // The value should already include the slash if needed (e.g., "/C/LCHCLEAR")
+                    // We preserve the value as-is since parsing now keeps the slash
                     result.push_str(party_id);
                 }
 

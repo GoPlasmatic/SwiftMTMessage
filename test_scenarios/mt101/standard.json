@@ -84,7 +84,7 @@
                 "index": 1,
                 "total": 1
             },
-            "50#2": {
+            "ordering_customer": {
                 "F": {
                     "account": "1234567890",
                     "bic": "DEUTDEFF"

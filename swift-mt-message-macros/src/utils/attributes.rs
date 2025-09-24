@@ -56,9 +56,90 @@ pub fn extract_component_attribute(attrs: &[Attribute]) -> MacroResult<String> {
     extract_string_attribute(attrs, "component")
 }
 
-/// Extract field specification from #[field("tag")] attribute
+/// Extract field specification from #[field("tag")] or #[field("tag", name = "...")] attribute
+/// Returns (tag, optional_name)
+pub fn extract_field_attribute_with_name(attrs: &[Attribute]) -> MacroResult<(String, Option<String>)> {
+    for attr in attrs {
+        if attr.path().is_ident("field") {
+            match &attr.meta {
+                Meta::List(meta_list) => {
+                    // Try to parse as simple string first: #[field("tag")]
+                    if let Ok(lit) = meta_list.parse_args::<Lit>() {
+                        if let Lit::Str(lit_str) = lit {
+                            return Ok((lit_str.value(), None));
+                        }
+                    }
+
+                    // Parse as complex form: #[field("tag", name = "...")]
+                    let tokens = &meta_list.tokens;
+                    let parsed = syn::parse2::<FieldAttributeArgs>(tokens.clone())?;
+                    return Ok((parsed.tag, parsed.name));
+                }
+                _ => {
+                    return Err(MacroError::invalid_attribute(
+                        attr.span(),
+                        "field",
+                        "invalid syntax",
+                        r#"#[field("tag")] or #[field("tag", name = "...")]"#,
+                    ));
+                }
+            }
+        }
+    }
+
+    Err(MacroError::missing_attribute(
+        Span::call_site(),
+        "field",
+        "field attribute",
+    ))
+}
+
+/// Extract field specification from #[field("tag")] attribute (legacy)
 pub fn extract_field_attribute(attrs: &[Attribute]) -> MacroResult<String> {
-    extract_string_attribute(attrs, "field")
+    extract_field_attribute_with_name(attrs).map(|(tag, _)| tag)
+}
+
+/// Helper struct for parsing field attribute arguments
+struct FieldAttributeArgs {
+    tag: String,
+    name: Option<String>,
+}
+
+impl syn::parse::Parse for FieldAttributeArgs {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        // Parse the tag string
+        let tag_lit: Lit = input.parse()?;
+        let tag = if let Lit::Str(lit_str) = tag_lit {
+            lit_str.value()
+        } else {
+            return Err(syn::Error::new(input.span(), "Expected string literal for tag"));
+        };
+
+        // Check if there's a comma and name parameter
+        let mut name = None;
+        if input.peek(syn::Token![,]) {
+            input.parse::<syn::Token![,]>()?;
+
+            // Parse "name"
+            let ident: syn::Ident = input.parse()?;
+            if ident != "name" {
+                return Err(syn::Error::new(ident.span(), "Expected 'name' parameter"));
+            }
+
+            // Parse "="
+            input.parse::<syn::Token![=]>()?;
+
+            // Parse the name value
+            let name_lit: Lit = input.parse()?;
+            if let Lit::Str(lit_str) = name_lit {
+                name = Some(lit_str.value());
+            } else {
+                return Err(syn::Error::new(input.span(), "Expected string literal for name"));
+            }
+        }
+
+        Ok(FieldAttributeArgs { tag, name })
+    }
 }
 
 #[cfg(test)]

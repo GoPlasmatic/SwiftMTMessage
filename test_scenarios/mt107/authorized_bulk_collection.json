@@ -107,24 +107,6 @@
                     "23E": {
                         "instruction_code": "AUTH"
                     },
-                    "50": {
-                        "K": {
-                            "account": "TAX-AUTHORITY-001",
-                            "name_and_address": [
-                                "NATIONAL TAX AUTHORITY",
-                                {
-                                    "cat": [
-                                        "GOV ENTITY/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "GOVERNMENT DISTRICT",
-                                "CAPITAL CITY, GB"
-                            ]
-                        }
-                    },
                     "32B": {
                         "currency": {
                             "var": "currency"
@@ -165,21 +147,8 @@
                             "/PURP/TAXS",
                             "/PERIOD/Q4 2024"
                         ]
-                    }
-                },
-                {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "VAT",
-                                10000000
-                            ]
-                        }
                     },
-                    "23E": {
-                        "instruction_code": "AUTH"
-                    },
-                    "50": {
+                    "creditor_tx": {
                         "K": {
                             "account": "TAX-AUTHORITY-001",
                             "name_and_address": [
@@ -196,6 +165,19 @@
                                 "CAPITAL CITY, GB"
                             ]
                         }
+                    }
+                },
+                {
+                    "21": {
+                        "reference": {
+                            "cat": [
+                                "VAT",
+                                10000000
+                            ]
+                        }
+                    },
+                    "23E": {
+                        "instruction_code": "AUTH"
                     },
                     "32B": {
                         "currency": {
@@ -237,6 +219,24 @@
                             "/PURP/TAXS",
                             "/PERIOD/DEC 2024"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "TAX-AUTHORITY-001",
+                            "name_and_address": [
+                                "NATIONAL TAX AUTHORITY",
+                                {
+                                    "cat": [
+                                        "GOV ENTITY/",
+                                        {
+                                            "var": "sender_lei"
+                                        }
+                                    ]
+                                },
+                                "GOVERNMENT DISTRICT",
+                                "CAPITAL CITY, GB"
+                            ]
+                        }
                     }
                 }
             ]

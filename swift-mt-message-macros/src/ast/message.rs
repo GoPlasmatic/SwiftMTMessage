@@ -1,7 +1,7 @@
 //! AST structures and parsing for message definitions
 
 use crate::error::{MacroError, MacroResult};
-use crate::utils::attributes::extract_field_attribute;
+use crate::utils::attributes::extract_field_attribute_with_name;
 use crate::utils::types::{
     TypeCategory, categorize_type, extract_inner_type, extract_option_vec_inner_type,
 };
@@ -63,22 +63,29 @@ pub struct MessageDefinition {
 /// #[field("32A")]
 /// field_32a: Field32A,
 /// ```
-/// This creates a MessageField with:
-/// - name: `field_32a`
-/// - tag: `"32A"`
-/// - inner_type: `Field32A`
+/// Or with a semantic name:
+/// ```logic
+/// #[field("34F", name = "floor_limit_debit")]
+/// floor_limit_debit: Field34F,
+/// ```
 #[derive(Debug, Clone)]
 pub struct MessageField {
-    /// Field name in the struct (e.g., `field_20`, `field_32a`)
+    /// Field name in the struct (e.g., `field_20`, `floor_limit_debit`)
     pub name: Ident,
     /// Inner field type (extracted from Option<T> or Vec<T>)
     pub inner_type: Type,
-    /// SWIFT field tag (e.g., "20", "32A", "71A")
+    /// SWIFT field tag (e.g., "20", "32A", "34F")
     pub tag: String,
+    /// Semantic name for JSON serialization (e.g., "floor_limit_debit")
+    /// If provided, this will be used for serde rename attribute
+    pub semantic_name: Option<String>,
     /// Whether the field is optional (wrapped in Option<T>)
     pub is_optional: bool,
     /// Whether the field is repetitive (wrapped in Vec<T>)
     pub is_repetitive: bool,
+    /// Valid variants for numbered field tags (e.g., ["A", "F", "K"] for Field50)
+    /// Only populated for fields with numbered tags like "50#1", "50#2"
+    pub variant_constraints: Option<Vec<String>>,
 }
 
 impl MessageDefinition {
@@ -158,8 +165,8 @@ impl MessageField {
 
         let field_type = field.ty.clone();
 
-        // Extract field tag from #[field("tag")] attribute
-        let tag = extract_field_attribute(&field.attrs)?;
+        // Extract field tag and optional name from #[field("tag")] or #[field("tag", name = "...")] attribute
+        let (tag, semantic_name) = extract_field_attribute_with_name(&field.attrs)?;
 
         // Determine if field is optional or repetitive using TypeCategory
         let type_category = categorize_type(&field_type);
@@ -190,12 +197,21 @@ impl MessageField {
             extract_inner_type(&field_type, is_optional, is_repetitive)
         };
 
+        // Extract variant constraints for numbered field tags
+        let variant_constraints = if tag.contains('#') {
+            extract_variant_constraints_from_type(&inner_type)
+        } else {
+            None
+        };
+
         Ok(MessageField {
             name,
             inner_type,
             tag,
+            semantic_name,
             is_optional,
             is_repetitive,
+            variant_constraints,
         })
     }
 }
@@ -366,5 +382,70 @@ fn get_default_sequence_config(message_name: &str) -> SequenceConfig {
             sequence_c_fields: vec![],
             has_sequence_c: false,
         },
+    }
+}
+
+/// Extract variant constraints from field type for numbered field tags
+///
+/// This function maps field types to their valid SWIFT variants based on the
+/// SWIFT MT standards. For example, Field50InstructingParty accepts only
+/// variants "C" and "L", while Field50Creditor accepts "A", "F", and "K".
+fn extract_variant_constraints_from_type(inner_type: &Type) -> Option<Vec<String>> {
+    if let Type::Path(type_path) = inner_type {
+        if let Some(last_segment) = type_path.path.segments.last() {
+            let type_name = last_segment.ident.to_string();
+
+            // Map field types to their valid variants
+            match type_name.as_str() {
+                // Field 50 variants
+                "Field50InstructingParty" => Some(vec!["C".to_string(), "L".to_string()]),
+                "Field50Creditor" => Some(vec!["A".to_string(), "F".to_string(), "K".to_string()]),
+                "Field50OrderingCustomer" => Some(vec!["A".to_string(), "F".to_string(), "K".to_string()]),
+                "Field50OrderingCustomerAFK" => Some(vec!["A".to_string(), "F".to_string(), "K".to_string()]),
+
+                // Field 52 variants
+                "Field52CreditorBank" => Some(vec!["A".to_string(), "B".to_string(), "D".to_string()]),
+                "Field52OrderingInstitution" => Some(vec!["A".to_string(), "B".to_string(), "D".to_string()]),
+
+                // Field 53 variants
+                "Field53SenderCorrespondent" => Some(vec!["A".to_string(), "B".to_string(), "D".to_string()]),
+
+                // Field 54 variants
+                "Field54ReceiverCorrespondent" => Some(vec!["A".to_string(), "B".to_string(), "D".to_string()]),
+
+                // Field 56 variants
+                "Field56Intermediary" => Some(vec!["A".to_string(), "C".to_string(), "D".to_string()]),
+
+                // Field 57 variants
+                "Field57DebtorBank" => Some(vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()]),
+                "Field57AccountWithInstitution" => Some(vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()]),
+
+                // Field 58 variants
+                "Field58Beneficiary" => Some(vec!["A".to_string(), "D".to_string()]),
+
+                // Field 59 variants
+                "Field59BeneficiaryCustomer" => Some(vec!["A".to_string(), "F".to_string()]),
+                "Field59Debtor" => Some(vec!["A".to_string(), "F".to_string()]),
+
+                // Add more field type mappings as needed
+                _ => {
+                    // For unknown types, try to infer from naming patterns
+                    if type_name.contains("InstructingParty") || type_name.contains("Creditor") {
+                        // Most instructing party and creditor fields use A/F/K or C/L variants
+                        if type_name.contains("Instructing") {
+                            Some(vec!["C".to_string(), "L".to_string()])
+                        } else {
+                            Some(vec!["A".to_string(), "F".to_string(), "K".to_string()])
+                        }
+                    } else {
+                        None
+                    }
+                }
+            }
+        } else {
+            None
+        }
+    } else {
+        None
     }
 }

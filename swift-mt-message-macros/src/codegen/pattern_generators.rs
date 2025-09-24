@@ -261,13 +261,9 @@ impl FieldPatternGenerator for Field53B57BPatternGenerator {
                 // - Second line is location
                 // This matches the SWIFT standard where party_identifier comes first
                 let party_id = if !first_line.is_empty() {
-                    // Strip the leading '/' when parsing from MT format back to JSON
-                    let cleaned = if first_line.starts_with('/') {
-                        first_line.trim_start_matches('/').to_string()
-                    } else {
-                        first_line.to_string()
-                    };
-                    Some(cleaned)
+                    // Keep the value as-is, including any leading slash
+                    // The slash is part of the data per SWIFT format [/1!a][/34x]
+                    Some(first_line.to_string())
                 } else {
                     None
                 };
@@ -285,9 +281,8 @@ impl FieldPatternGenerator for Field53B57BPatternGenerator {
                 let line = lines[0];
 
                 if line.starts_with('/') {
-                    // This is a party identifier only (strip the slash for JSON)
-                    let cleaned = line.trim_start_matches('/').to_string();
-                    (Some(cleaned), None)
+                    // This is a party identifier only (keep the slash)
+                    (Some(line.to_string()), None)
                 } else {
                     // This is a location only
                     (None, Some(line.to_string()))

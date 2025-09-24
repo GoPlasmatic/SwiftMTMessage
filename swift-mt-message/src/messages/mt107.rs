@@ -111,11 +111,11 @@ pub struct MT107 {
     #[field("51A")]
     pub field_51a: Option<Field51A>,
 
-    #[field("50#1")]
-    pub field_50_instructing: Option<Field50InstructingParty>,
+    #[field("50", name = "instructing_party")]
+    pub instructing_party: Option<Field50InstructingParty>,
 
-    #[field("50#2")]
-    pub field_50_creditor: Option<Field50Creditor>,
+    #[field("50", name = "creditor")]
+    pub creditor: Option<Field50Creditor>,
 
     #[field("52")]
     pub field_52: Option<Field52CreditorBank>,
@@ -198,11 +198,11 @@ pub struct MT107Transaction {
     #[field("32B")]
     pub field_32b: Field32B,
 
-    #[field("50#1")]
-    pub field_50_instructing: Option<Field50InstructingParty>,
+    #[field("50", name = "instructing_party_tx")]
+    pub instructing_party_tx: Option<Field50InstructingParty>,
 
-    #[field("50#2")]
-    pub field_50_creditor: Option<Field50Creditor>,
+    #[field("50", name = "creditor_tx")]
+    pub creditor_tx: Option<Field50Creditor>,
 
     #[field("52")]
     pub field_52: Option<Field52CreditorBank>,
@@ -260,11 +260,11 @@ const MT107_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"exists": ["fields", "50#2"]},
+              {"exists": ["fields", "creditor"]},
               {
                 "all": [
                   {"var": "fields.#"},
-                  {"!": {"exists": ["fields", "50#2"]}}
+                  {"!": {"exists": ["fields", "creditor"]}}
                 ]
               },
               true
@@ -315,8 +315,8 @@ const MT107_VALIDATION_RULES: &str = r#"{
           },
           {
             "if": [
-              {"exists": ["fields", "50#1"]},
-              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "50#1"]}}]},
+              {"exists": ["fields", "instructing_party"]},
+              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "instructing_party"]}}]},
               true
             ]
           }
@@ -331,7 +331,7 @@ const MT107_VALIDATION_RULES: &str = r#"{
           {
             "if": [
               {"exists": ["fields", "21E"]},
-              {"exists": ["fields", "50#2"]},
+              {"exists": ["fields", "creditor"]},
               true
             ]
           },
@@ -341,7 +341,7 @@ const MT107_VALIDATION_RULES: &str = r#"{
               {
                 "if": [
                   {"exists": ["fields", "21E"]},
-                  {"exists": ["fields", "50#2"]},
+                  {"exists": ["fields", "creditor"]},
                   true
                 ]
               }

@@ -193,7 +193,7 @@
                     }
                 ]
             },
-            "50#b": {
+            "ordering_customer_b": {
                 "K": {
                     "account": "VERIFIED-ACCOUNT-123456",
                     "name_and_address": [
@@ -224,28 +224,28 @@
                     ]
                 }
             },
-            "52#b": {
+            "ordering_institution_b": {
                 "A": {
                     "bic": {
                         "var": "sender_bic"
                     }
                 }
             },
-            "56#b": {
+            "intermediary_b": {
                 "A": {
                     "bic": {
                         "var": "intermediary_bic"
                     }
                 }
             },
-            "57#b": {
+            "account_with_institution_b": {
                 "A": {
                     "bic": {
                         "var": "account_with_bic"
                     }
                 }
             },
-            "59#b": {
+            "beneficiary_customer_b": {
                 "NoOption": {
                     "account": "VERIFIED-ACCOUNT-789012",
                     "name_and_address": [
@@ -276,7 +276,7 @@
                     ]
                 }
             },
-            "70#b": {
+            "remittance_information_b": {
                 "narrative": [
                     {
                         "cat": [
@@ -291,7 +291,7 @@
                     "/COMPL/AML CHECKS CLEARED"
                 ]
             },
-            "72#b": {
+            "sender_to_receiver_information_b": {
                 "information": [
                     "/ACC/NESTED LEI STRUCTURE",
                     "/ORD/LEIXG8HWVXGGR1B2V5K893",

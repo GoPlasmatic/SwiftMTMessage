@@ -180,6 +180,133 @@ impl FieldConsumptionTracker {
     }
 }
 
+/// Field routing strategy for numbered field tags
+#[derive(Debug, Clone)]
+enum FieldRoutingStrategy {
+    /// Use all available variants (default behavior)
+    AllVariants,
+    /// For Field50InstructingParty - typically uses C, L variants
+    InstructingParty,
+    /// For Field50Creditor - typically uses A, F, K variants
+    CreditorParty,
+}
+
+impl FieldRoutingStrategy {
+    /// Get preferred variants for this routing strategy
+    fn get_preferred_variants(&self, base_tag: &str) -> Option<Vec<&'static str>> {
+        match (self, base_tag) {
+            (FieldRoutingStrategy::InstructingParty, "50") => Some(vec!["C", "L"]),
+            (FieldRoutingStrategy::CreditorParty, "50") => Some(vec!["A", "F", "K"]),
+            _ => None,
+        }
+    }
+}
+
+/// Apply intelligent routing strategy for Field 50 numbered fields
+///
+/// This function implements a smart routing algorithm for Field 50 variants when dealing
+/// with numbered field tags (50#1, 50#2). The strategy is:
+///
+/// 1. First call (no Field 50 consumed yet) -> Prefer C, L variants (InstructingParty)
+/// 2. Second call (some Field 50 already consumed) -> Prefer A, F, K variants (Creditor)
+///
+/// This matches the typical SWIFT message pattern where:
+/// - field_50_instructing (50#1) typically uses 50C or 50L
+/// - field_50_creditor (50#2) typically uses 50A, 50F, or 50K
+fn apply_field50_routing_strategy<'a>(
+    mut candidates: Vec<(&'a String, &'a Vec<(String, usize)>)>,
+    tracker: &FieldConsumptionTracker,
+    base_tag: &str,
+) -> Vec<(&'a String, &'a Vec<(String, usize)>)> {
+    // Check how many Field 50 variants have been consumed already
+    let consumed_field50_count = candidates
+        .iter()
+        .filter(|(tag, _)| {
+            tracker
+                .consumed_indices
+                .get(*tag)
+                .map_or(false, |set| !set.is_empty())
+        })
+        .count();
+
+    #[cfg(debug_assertions)]
+    eprintln!(
+        "DEBUG: Field50 routing strategy - consumed_count={}, candidates={:?}",
+        consumed_field50_count,
+        candidates.iter().map(|(tag, _)| tag.as_str()).collect::<Vec<_>>()
+    );
+
+    // Determine routing strategy based on consumption history
+    let strategy = if consumed_field50_count == 0 {
+        // First Field 50 access -> prefer InstructingParty variants (C, L)
+        FieldRoutingStrategy::InstructingParty
+    } else {
+        // Subsequent Field 50 access -> prefer Creditor variants (A, F, K)
+        FieldRoutingStrategy::CreditorParty
+    };
+
+    if let Some(preferred_variants) = strategy.get_preferred_variants(base_tag) {
+        // Reorder candidates to prioritize preferred variants
+        candidates.sort_by_key(|(tag, _)| {
+            let variant_char = tag.chars().last().unwrap_or(' ');
+            let variant_str = variant_char.to_string();
+
+            // Check if this variant is in the preferred list
+            let is_preferred = preferred_variants.contains(&variant_str.as_str());
+
+            if is_preferred {
+                0 // High priority
+            } else {
+                1 // Lower priority
+            }
+        });
+
+        #[cfg(debug_assertions)]
+        eprintln!(
+            "DEBUG: Field50 routing - strategy={:?}, preferred_variants={:?}, reordered_candidates={:?}",
+            strategy,
+            preferred_variants,
+            candidates.iter().map(|(tag, _)| tag.as_str()).collect::<Vec<_>>()
+        );
+    }
+
+    candidates
+}
+
+/// Find field values for numbered tags with intelligent routing
+///
+/// ## Purpose
+/// Special handling for numbered field tags (e.g., "50#1", "50#2") that require
+/// intelligent routing based on the specific numbered tag and its variant constraints.
+///
+/// ## Parameters
+/// - `fields`: HashMap of all parsed fields with position tracking
+/// - `base_tag`: Base field tag (e.g., "50", "59")
+/// - `tracker`: Mutable reference to consumption tracker for sequential processing
+/// - `valid_variants`: Optional list of valid variant letters specific to this numbered field
+/// - `numbered_tag`: The full numbered tag (e.g., "50#1", "50#2") for routing context
+///
+/// ## Returns
+/// `Option<(field_value, variant, position)>`
+pub fn find_field_with_variant_sequential_numbered(
+    fields: &HashMap<String, Vec<(String, usize)>>,
+    base_tag: &str,
+    tracker: &mut FieldConsumptionTracker,
+    valid_variants: Option<Vec<&str>>,
+    _numbered_tag: &str,
+) -> Option<(String, Option<String>, usize)> {
+    #[cfg(debug_assertions)]
+    eprintln!(
+        "DEBUG: find_field_with_variant_sequential_numbered for tag={}, base={}, variants={:?}",
+        _numbered_tag, base_tag, valid_variants
+    );
+
+    // Use the variant constraints for this specific numbered field
+    // This ensures that 50#1 uses its specific variants (e.g., C, L)
+    // and 50#2 uses its specific variants (e.g., A, F, K)
+    find_field_with_variant_sequential_constrained(fields, base_tag, tracker, valid_variants.as_ref().map(|v| v.as_slice()))
+}
+
 /// Find field values by base tag with sequential consumption tracking and variant constraints
 ///
 /// ## Purpose
@@ -214,6 +341,21 @@ pub fn find_field_with_variant_sequential_constrained(
             "  Available fields: {:?}",
             fields.keys().collect::<Vec<_>>()
         );
+
+        // Special debug for numbered field tags (50#1, 50#2, etc.)
+        if base_tag == "50" {
+            eprintln!(
+                "DEBUG: Field50 routing - base_tag={}, constraints={:?}",
+                base_tag, valid_variants
+            );
+            eprintln!(
+                "DEBUG: Available Field50 variants: {:?}",
+                fields
+                    .keys()
+                    .filter(|k| k.starts_with("50") && k.len() == 3)
+                    .collect::<Vec<_>>()
+            );
+        }
     }
 
     // First try to find exact match (for non-variant fields)
@@ -255,6 +397,12 @@ pub fn find_field_with_variant_sequential_constrained(
                     .is_some_and(|c| c.is_ascii_alphabetic() && c.is_ascii_uppercase())
         })
         .collect();
+
+    // Implement intelligent routing for numbered field tags
+    if base_tag == "50" && valid_variants.is_some() {
+        // Apply numbered field routing strategy for Field 50
+        variant_candidates = apply_field50_routing_strategy(variant_candidates, tracker, base_tag);
+    }
 
     // Sort by the minimum unconsumed position in each tag's values
     variant_candidates.sort_by_key(|(tag, values)| {
@@ -799,6 +947,17 @@ where
         return parse_sequence_b_items::<T>(&parsed_sequences.sequence_b, tracker);
     }
 
+    if message_type.contains("MT110Cheque") {
+        // MT110 has repetitive cheque sequences starting with field 21
+        use crate::parser::sequence_parser::{get_sequence_config, split_into_sequences};
+
+        let config = get_sequence_config("MT110");
+        let parsed_sequences = split_into_sequences(fields, &config)?;
+
+        // Parse only sequence B (cheques)
+        return parse_sequence_b_items::<T>(&parsed_sequences.sequence_b, tracker);
+    }
+
     if message_type.contains("MT204Transaction") {
         // MT204 has a special structure where fields are grouped by type, not by transaction
         // We need to reconstruct transactions from the grouped fields
@@ -849,11 +1008,11 @@ where
             }
 
             // Get field 72 if present (optional)
+            // MT204 structure: First Field 72 is for Sequence A, then one Field 72 per transaction in Sequence B
             if let Some(field_72_values) = fields.get("72") {
-                // Field 72 can appear multiple times, need to figure out which ones belong to transactions
-                // For now, skip the first two (which are for sequence A) and take one per transaction
-                if i + 2 < field_72_values.len() {
-                    tx_fields.insert("72".to_string(), vec![field_72_values[i + 2].clone()]);
+                // Skip the first Field 72 (belongs to Sequence A), then take one per transaction
+                if i + 1 < field_72_values.len() {
+                    tx_fields.insert("72".to_string(), vec![field_72_values[i + 1].clone()]);
                 }
             }
 
@@ -1076,13 +1235,16 @@ where
                     current_sequence_fields.len()
                 );
 
-                if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
-                    sequences.push(sequence_item);
-                    #[cfg(debug_assertions)]
-                    eprintln!("DEBUG: Successfully parsed sequence #{}", sequences.len());
-                } else {
-                    #[cfg(debug_assertions)]
-                    eprintln!("DEBUG: Failed to parse sequence");
+                match T::from_fields(current_sequence_fields.clone()) {
+                    Ok(sequence_item) => {
+                        sequences.push(sequence_item);
+                        #[cfg(debug_assertions)]
+                        eprintln!("DEBUG: Successfully parsed sequence #{}", sequences.len());
+                    }
+                    Err(e) => {
+                        #[cfg(debug_assertions)]
+                        eprintln!("DEBUG: Failed to parse sequence: {}", e);
+                    }
                 }
                 current_sequence_fields.clear();
             }

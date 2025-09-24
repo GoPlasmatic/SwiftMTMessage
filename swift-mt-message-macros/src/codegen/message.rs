@@ -214,18 +214,32 @@ fn generate_sequence_field_parser(
     let tag = &field.tag;
 
     if field.is_optional && field.is_repetitive {
+        // Get variant constraints for numbered fields
+        let variant_constraints = &field.variant_constraints;
+        let variant_constraints_tokens = if let Some(constraints) = variant_constraints {
+            let constraint_strings: Vec<_> = constraints.iter().map(|s| s.as_str()).collect();
+            quote! { Some(vec![#(#constraint_strings),*]) }
+        } else {
+            quote! { None::<Vec<&str>> }
+        };
+
         // Handle Option<Vec<T>>
         Ok(quote! {
             let #field_name = {
                 let base_tag = crate::extract_base_tag(#tag);
+
+                // Always use the field's valid variants
                 let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                let valid_variants_vec: Option<Vec<&str>> = valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                let valid_variants_slice = valid_variants_vec.as_ref().map(|v| v.as_slice());
 
                 // Find all matching fields
                 let mut results = Vec::new();
 
                 // Try to find fields with tracker
-                while let Some((value, variant_tag, pos)) = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice) {
+                while let Some((value, variant_tag, pos)) =
+                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
+                {
                     let parsed = #inner_type::parse_with_variant(&value, variant_tag.as_deref(), Some(base_tag))
                         .map_err(|e| {
                             let line_num = pos >> 16;
@@ -248,25 +262,23 @@ fn generate_sequence_field_parser(
             };
         })
     } else if field.is_optional {
+        // Get variant constraints for numbered fields
+        let variant_constraints = &field.variant_constraints;
+        let variant_constraints_tokens = if let Some(constraints) = variant_constraints {
+            let constraint_strings: Vec<_> = constraints.iter().map(|s| s.as_str()).collect();
+            quote! { Some(vec![#(#constraint_strings),*]) }
+        } else {
+            quote! { None::<Vec<&str>> }
+        };
+
         Ok(quote! {
             let #field_name = {
-                // For numbered fields (e.g., "50#1", "50#2"), use variant-based routing
-                let field_result = if #tag.contains('#') {
-                    // For numbered fields, we never look for the exact numbered tag in MT parsing
-                    // Instead, we use variant-based routing to determine which field to populate
-                    let base_tag = crate::extract_base_tag(#tag);
-                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
-
-                    // Find field with matching variant for this specific type
-                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
-                } else {
-                    // Non-numbered fields use normal variant logic
-                    let base_tag = crate::extract_base_tag(#tag);
-                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
-                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
-                };
+                // Always use sequential consumption for fields
+                let base_tag = crate::extract_base_tag(#tag);
+                let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                let valid_variants_vec: Option<Vec<&str>> = valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                let valid_variants_slice = valid_variants_vec.as_ref().map(|v| v.as_slice());
+                let field_result = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice);
 
                 if let Some((value, variant_tag, pos)) = field_result {
                     let parse_base_tag = crate::extract_base_tag(#tag);
@@ -285,7 +297,8 @@ fn generate_sequence_field_parser(
                     let mut found = None;
                     let fallback_base_tag = crate::extract_base_tag(#tag);
                     let fallback_valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                    let fallback_valid_variants_slice = fallback_valid_variants.as_ref().map(|v| v.as_slice());
+                    let fallback_valid_variants_vec: Option<Vec<&str>> = fallback_valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                    let fallback_valid_variants_slice = fallback_valid_variants_vec.as_ref().map(|v| v.as_slice());
 
                     // If we have valid variants, try each one
                     if let Some(variants) = fallback_valid_variants_slice {
@@ -333,7 +346,8 @@ fn generate_sequence_field_parser(
             let #field_name = {
                 let base_tag = crate::extract_base_tag(#tag);
                 let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                let valid_variants_vec: Option<Vec<&str>> = valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                let valid_variants_slice = valid_variants_vec.as_ref().map(|v| v.as_slice());
 
                 // Find all matching fields
                 let mut results = Vec::new();
@@ -369,23 +383,14 @@ fn generate_sequence_field_parser(
     } else {
         Ok(quote! {
             let #field_name = {
-                // For numbered fields (e.g., "50#1", "50#2"), use variant-based routing
-                let field_result = if #tag.contains('#') {
-                    // For numbered fields, we never look for the exact numbered tag in MT parsing
-                    // Instead, we use variant-based routing to determine which field to populate
-                    let base_tag = crate::extract_base_tag(#tag);
-                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                // Use variant-based routing for all fields
+                let base_tag = crate::extract_base_tag(#tag);
+                let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
+                let valid_variants_vec: Option<Vec<&str>> = valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                let valid_variants_slice = valid_variants_vec.as_ref().map(|v| v.as_slice());
 
-                    // Find field with matching variant for this specific type
-                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
-                } else {
-                    // Non-numbered fields use normal variant logic
-                    let base_tag = crate::extract_base_tag(#tag);
-                    let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
-                    crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice)
-                };
+                // Find field with matching variant for this specific type
+                let field_result = crate::parser::find_field_with_variant_sequential_constrained(&#sequence_name, base_tag, &mut tracker, valid_variants_slice);
 
                 let (value, variant_tag, pos) = if let Some(result) = field_result {
                     result
@@ -396,7 +401,8 @@ fn generate_sequence_field_parser(
                     // Define variables needed for fallback logic
                     let fallback_base_tag = crate::extract_base_tag(#tag);
                     let fallback_valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                    let fallback_valid_variants_slice = fallback_valid_variants.as_ref().map(|v| v.as_slice());
+                    let fallback_valid_variants_vec: Option<Vec<&str>> = fallback_valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                    let fallback_valid_variants_slice = fallback_valid_variants_vec.as_ref().map(|v| v.as_slice());
 
                     // If we have valid variants, try each one
                     if let Some(variants) = fallback_valid_variants_slice {
@@ -501,6 +507,15 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                     }
                 });
             } else {
+                // Get variant constraints for numbered fields
+                let variant_constraints = &field.variant_constraints;
+                let variant_constraints_tokens = if let Some(constraints) = variant_constraints {
+                    let constraint_strings = constraints.iter().map(|s| s.as_str());
+                    quote! { Some(vec![#(#constraint_strings),*]) }
+                } else {
+                    quote! { None }
+                };
+
                 // Optional T - use sequential consumption with enhanced error context
                 field_parsers.push(quote! {
                     #field_name: {
@@ -509,16 +524,18 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                             // For numbered fields, we never look for the exact numbered tag in MT parsing
                             // Instead, we use variant-based routing to determine which field to populate
                             let base_tag = crate::extract_base_tag(#tag);
-                            let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                            let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
 
-                            // Find field with matching variant for this specific type
-                            crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
+                            // Use the variant constraints extracted at compile time for this specific numbered field
+                            let valid_variants = #variant_constraints_tokens;
+
+                            // Pass the field tag to help with routing strategy
+                            crate::parser::find_field_with_variant_sequential_numbered(&fields, base_tag, &mut tracker, valid_variants, #tag)
                         } else {
                             // Non-numbered fields use normal variant logic
                             let base_tag = crate::extract_base_tag(#tag);
                             let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                            let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                            let valid_variants_vec: Option<Vec<&str>> = valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                    let valid_variants_slice = valid_variants_vec.as_ref().map(|v| v.as_slice());
                             crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
                         };
 
@@ -539,7 +556,8 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                             let mut found = None;
                             let fallback_base_tag = crate::extract_base_tag(#tag);
                             let fallback_valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                            let fallback_valid_variants_slice = fallback_valid_variants.as_ref().map(|v| v.as_slice());
+                            let fallback_valid_variants_vec: Option<Vec<&str>> = fallback_valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                    let fallback_valid_variants_slice = fallback_valid_variants_vec.as_ref().map(|v| v.as_slice());
 
                             // If we have valid variants, try each one
                             if let Some(variants) = fallback_valid_variants_slice {
@@ -634,7 +652,8 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                         // Instead, we use variant-based routing to determine which field to populate
                         let base_tag = crate::extract_base_tag(#tag);
                         let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                        let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                        let valid_variants_vec: Option<Vec<&str>> = valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                    let valid_variants_slice = valid_variants_vec.as_ref().map(|v| v.as_slice());
 
                         // Find field with matching variant for this specific type
                         crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
@@ -642,7 +661,8 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                         // Non-numbered fields use normal variant logic
                         let base_tag = crate::extract_base_tag(#tag);
                         let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                        let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                        let valid_variants_vec: Option<Vec<&str>> = valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                    let valid_variants_slice = valid_variants_vec.as_ref().map(|v| v.as_slice());
                         crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice)
                     };
 
@@ -654,7 +674,8 @@ fn generate_from_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream
                         let mut found = None;
                         let fallback_base_tag = crate::extract_base_tag(#tag);
                         let fallback_valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                        let fallback_valid_variants_slice = fallback_valid_variants.as_ref().map(|v| v.as_slice());
+                        let fallback_valid_variants_vec: Option<Vec<&str>> = fallback_valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                    let fallback_valid_variants_slice = fallback_valid_variants_vec.as_ref().map(|v| v.as_slice());
 
                         // If we have valid variants, try each one
                         if let Some(variants) = fallback_valid_variants_slice {
@@ -804,7 +825,8 @@ fn generate_from_fields_with_config_impl(fields: &[MessageField]) -> MacroResult
                     let #field_name = {
                         let base_tag = crate::extract_base_tag(#tag);
                         let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                        let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                        let valid_variants_vec: Option<Vec<&str>> = valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                    let valid_variants_slice = valid_variants_vec.as_ref().map(|v| v.as_slice());
 
                         let field_result = crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice);
 
@@ -893,7 +915,8 @@ fn generate_from_fields_with_config_impl(fields: &[MessageField]) -> MacroResult
                 let #field_name = {
                     let base_tag = crate::extract_base_tag(#tag);
                     let valid_variants = <#inner_type as crate::SwiftField>::valid_variants();
-                    let valid_variants_slice = valid_variants.as_ref().map(|v| v.as_slice());
+                    let valid_variants_vec: Option<Vec<&str>> = valid_variants.as_ref().map(|v| v.iter().map(|s| *s).collect());
+                    let valid_variants_slice = valid_variants_vec.as_ref().map(|v| v.as_slice());
 
                     let field_result = crate::parser::find_field_with_variant_sequential_constrained(&fields, base_tag, &mut tracker, valid_variants_slice);
 
@@ -1091,22 +1114,7 @@ fn generate_to_fields_impl(fields: &[MessageField]) -> MacroResult<TokenStream> 
                 // Optional T - check if it's an enum field that needs variant handling
                 let field_type = &field.inner_type;
                 let base_tag = extract_base_tag(tag);
-                if tag.contains('#') && is_enum_field_type(field_type) {
-                    // For numbered enum fields (e.g., 50#1, 50#2), preserve the numbered tag in JSON
-                    // but include variant information for proper MT serialization
-                    field_serializers.push(quote! {
-                        if let Some(ref value) = self.#field_name {
-                            fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
-                        }
-                    });
-                } else if tag.contains('#') {
-                    // For numbered non-enum fields, preserve the numbered tag in JSON
-                    field_serializers.push(quote! {
-                        if let Some(ref value) = self.#field_name {
-                            fields.insert(#tag.to_string(), vec![value.to_swift_string()]);
-                        }
-                    });
-                } else if is_enum_field_type(field_type) {
+                if is_enum_field_type(field_type) {
                     field_serializers.push(quote! {
                         if let Some(ref value) = self.#field_name {
                             let base_tag = crate::get_field_tag_for_mt(#tag);

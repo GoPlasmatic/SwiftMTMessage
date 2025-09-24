@@ -165,7 +165,7 @@
                     "/EXCH/EUR/USD/1.0916"
                 ]
             },
-            "50#b": {
+            "ordering_customer_b": {
                 "K": {
                     "account": "FR1420041010050500013M02606",
                     "name_and_address": [
@@ -189,21 +189,21 @@
                     ]
                 }
             },
-            "56#b": {
+            "intermediary_b": {
                 "A": {
                     "bic": {
                         "var": "intermediary3_bic"
                     }
                 }
             },
-            "57#b": {
+            "account_with_institution_b": {
                 "A": {
                     "bic": {
                         "var": "account_with_bic"
                     }
                 }
             },
-            "59#b": {
+            "beneficiary_customer_b": {
                 "NoOption": {
                     "account": "US64SVBK12345678901234567890",
                     "name_and_address": [
@@ -227,7 +227,7 @@
                     ]
                 }
             },
-            "70#b": {
+            "remittance_information_b": {
                 "narrative": [
                     {
                         "cat": [
@@ -242,7 +242,7 @@
                     "MULTI-CURRENCY SETTLEMENT"
                 ]
             },
-            "33B#b": {
+            "currency_amount_b": {
                 "currency": {
                     "var": "original_currency"
                 },
@@ -250,7 +250,7 @@
                     "var": "instructed_amount"
                 }
             },
-            "72#b": {
+            "sender_to_receiver_information_b": {
                 "information": [
                     "/ACC/ROUTING TRANSPARENCY",
                     "/R1/CHASUS33 CORRESPONDENT",

@@ -96,24 +96,6 @@
                             "var": "subscription_amount"
                         }
                     },
-                    "50#2": {
-                        "K": {
-                            "account": "MERCHANT-SUB-001",
-                            "name_and_address": [
-                                "DIGITAL SERVICES CORP",
-                                {
-                                    "cat": [
-                                        "SUBSCRIPTION MERCHANT/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "500 TECH PARK DRIVE",
-                                "SAN FRANCISCO, CA US"
-                            ]
-                        }
-                    },
                     "59": {
                         "NoOption": {
                             "account": "1000000000000000",
@@ -173,6 +155,24 @@
                             "/ORDERRES/BE//SUBSCRIPTION SERVICE",
                             "/BENEFRES/US//DIGITAL CONTENT"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "MERCHANT-SUB-001",
+                            "name_and_address": [
+                                "DIGITAL SERVICES CORP",
+                                {
+                                    "cat": [
+                                        "SUBSCRIPTION MERCHANT/",
+                                        {
+                                            "var": "sender_lei"
+                                        }
+                                    ]
+                                },
+                                "500 TECH PARK DRIVE",
+                                "SAN FRANCISCO, CA US"
+                            ]
+                        }
                     }
                 }
             ],

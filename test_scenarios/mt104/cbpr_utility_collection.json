@@ -97,17 +97,6 @@
                             "var": "amount1"
                         }
                     },
-                    "50#2": {
-                        "K": {
-                            "account": "FR7612345678901234567890123",
-                            "name_and_address": [
-                                "DUPONT, MARIE",
-                                "15 RUE DE LA PAIX",
-                                "75002 PARIS",
-                                "FRANCE"
-                            ]
-                        }
-                    },
                     "52": {
                         "A": {
                             "bic": {
@@ -150,6 +139,17 @@
                             "/BENEFRES/ELECTRICITE DE FRANCE",
                             "/PURPOSE/ELEC BILL DEC-2024"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "FR7612345678901234567890123",
+                            "name_and_address": [
+                                "DUPONT, MARIE",
+                                "15 RUE DE LA PAIX",
+                                "75002 PARIS",
+                                "FRANCE"
+                            ]
+                        }
                     }
                 },
                 {
@@ -162,17 +162,6 @@
                         },
                         "amount": {
                             "var": "amount2"
-                        }
-                    },
-                    "50#2": {
-                        "K": {
-                            "account": "FR9876543210987654321098765",
-                            "name_and_address": [
-                                "MARTIN, JACQUES",
-                                "45 AVENUE VICTOR HUGO",
-                                "69006 LYON",
-                                "FRANCE"
-                            ]
                         }
                     },
                     "52": {
@@ -217,6 +206,17 @@
                             "/BENEFRES/GAZ DE FRANCE SUEZ",
                             "/PURPOSE/GAS BILL DEC-2024"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "FR9876543210987654321098765",
+                            "name_and_address": [
+                                "MARTIN, JACQUES",
+                                "45 AVENUE VICTOR HUGO",
+                                "69006 LYON",
+                                "FRANCE"
+                            ]
+                        }
                     }
                 },
                 {
@@ -229,17 +229,6 @@
                         },
                         "amount": {
                             "var": "amount3"
-                        }
-                    },
-                    "50#2": {
-                        "K": {
-                            "account": "FR1122334455667788990011223",
-                            "name_and_address": [
-                                "BERNARD, SOPHIE",
-                                "78 RUE DE RIVOLI",
-                                "75004 PARIS",
-                                "FRANCE"
-                            ]
                         }
                     },
                     "52": {
@@ -284,6 +273,17 @@
                             "/BENEFRES/VEOLIA EAU",
                             "/PURPOSE/WATER BILL Q4-2024"
                         ]
+                    },
+                    "creditor_tx": {
+                        "K": {
+                            "account": "FR1122334455667788990011223",
+                            "name_and_address": [
+                                "BERNARD, SOPHIE",
+                                "78 RUE DE RIVOLI",
+                                "75004 PARIS",
+                                "FRANCE"
+                            ]
+                        }
                     }
                 }
             ],

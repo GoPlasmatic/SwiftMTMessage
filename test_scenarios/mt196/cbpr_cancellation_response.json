@@ -67,18 +67,6 @@
         },
         "message_type": "196",
         "fields": {
-            "11S": {
-                "message_type": "192",
-                "date": "241223",
-                "logical_terminal": {
-                    "cat": [
-                        "RECVRBK1",
-                        "XXXX"
-                    ]
-                },
-                "session_number": "0001",
-                "sequence_number": "008901"
-            },
             "20": {
                 "reference": {
                     "var": "reference"

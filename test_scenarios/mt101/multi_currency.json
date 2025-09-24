@@ -73,7 +73,7 @@
                 "index": 1,
                 "total": 1
             },
-            "50#2": {
+            "ordering_customer": {
                 "F": {
                     "account": "TREASURY",
                     "bic": "DEUTDEFF"

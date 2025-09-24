@@ -119,11 +119,11 @@ pub struct MT920Sequence {
     #[field("25")]
     pub field_25: Field25A,
 
-    #[field("34F#1")]
-    pub field_34f_debit: Option<Field34F>,
+    #[field("34F", name = "floor_limit_debit")]
+    pub floor_limit_debit: Option<Field34F>,
 
-    #[field("34F#2")]
-    pub field_34f_credit: Option<Field34F>,
+    #[field("34F", name = "floor_limit_credit")]
+    pub floor_limit_credit: Option<Field34F>,
 }
 
 /// Validation rules for MT920 - Request Message
@@ -140,8 +140,8 @@ const MT920_VALIDATION_RULES: &str = r#"{
               {"==": [{"var": "12.value"}, "942"]},
               {
                 "or": [
-                  {"exists": ["fields", "34F#1"]},
-                  {"exists": ["fields", "34F#2"]}
+                  {"exists": ["fields", "floor_limit_debit"]},
+                  {"exists": ["fields", "floor_limit_credit"]}
                 ]
               },
               true
@@ -160,14 +160,14 @@ const MT920_VALIDATION_RULES: &str = r#"{
             "if": [
               {
                 "and": [
-                  {"exists": ["fields", "34F#1"]},
-                  {"exists": ["fields", "34F#2"]}
+                  {"exists": ["fields", "floor_limit_debit"]},
+                  {"exists": ["fields", "floor_limit_credit"]}
                 ]
               },
               {
                 "and": [
-                  {"==": [{"var": "34F#1.indicator"}, "D"]},
-                  {"==": [{"var": "34F#2.indicator"}, "C"]}
+                  {"==": [{"var": "floor_limit_debit.indicator"}, "D"]},
+                  {"==": [{"var": "floor_limit_credit.indicator"}, "C"]}
                 ]
               },
               {
@@ -176,14 +176,14 @@ const MT920_VALIDATION_RULES: &str = r#"{
                     "or": [
                       {
                         "and": [
-                          {"exists": ["fields", "34F#1"]},
-                          {"!": {"exists": ["fields", "34F#2"]}}
+                          {"exists": ["fields", "floor_limit_debit"]},
+                          {"!": {"exists": ["fields", "floor_limit_credit"]}}
                         ]
                       },
                       {
                         "and": [
-                          {"!": {"exists": ["fields", "34F#1"]}},
-                          {"exists": ["fields", "34F#2"]}
+                          {"!": {"exists": ["fields", "floor_limit_debit"]}},
+                          {"exists": ["fields", "floor_limit_credit"]}
                         ]
                       }
                     ]
@@ -192,14 +192,14 @@ const MT920_VALIDATION_RULES: &str = r#"{
                     "or": [
                       {
                         "and": [
-                          {"exists": ["fields", "34F#1"]},
-                          {"!": {"exists": ["fields", "34F#1", "indicator"]}}
+                          {"exists": ["fields", "floor_limit_debit"]},
+                          {"!": {"exists": ["fields", "floor_limit_debit", "indicator"]}}
                         ]
                       },
                       {
                         "and": [
-                          {"exists": ["fields", "34F#2"]},
-                          {"!": {"exists": ["fields", "34F#2", "indicator"]}}
+                          {"exists": ["fields", "floor_limit_credit"]},
+                          {"!": {"exists": ["fields", "floor_limit_credit", "indicator"]}}
                         ]
                       }
                     ]
@@ -222,13 +222,13 @@ const MT920_VALIDATION_RULES: &str = r#"{
             "if": [
               {
                 "and": [
-                  {"exists": ["fields", "34F#1"]},
-                  {"exists": ["fields", "34F#2"]}
+                  {"exists": ["fields", "floor_limit_debit"]},
+                  {"exists": ["fields", "floor_limit_credit"]}
                 ]
               },
               {"==": [
-                {"var": "34F#1.currency"},
-                {"var": "34F#2.currency"}
+                {"var": "floor_limit_debit.currency"},
+                {"var": "floor_limit_credit.currency"}
               ]},
               true
             ]

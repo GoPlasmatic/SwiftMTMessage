@@ -79,9 +79,11 @@
                 "index": 1,
                 "total": 1
             },
-            "50#2": {
+            "ordering_customer": {
                 "G": {
-                    "account": {"var": "account_id"},
+                    "account": {
+                        "var": "account_id"
+                    },
                     "bic": {
                         "var": "sender_bic"
                     }

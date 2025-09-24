@@ -16,16 +16,18 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
         && let syn::Fields::Named(ref mut fields) = data_struct.fields
     {
         for field in &mut fields.named {
-            // Look for #[field("tag")] attributes (for message structs) or component attributes (for field structs)
-            if let Some(field_tag) = extract_field_tag(&field.attrs) {
+            // Look for #[field("tag")] or #[field("tag", name = "...")] attributes
+            if let Some((field_tag, semantic_name)) = extract_field_tag_with_name(&field.attrs) {
+                // Determine the rename value: use semantic name if provided, otherwise use field tag
+                let rename_value = semantic_name.as_ref().unwrap_or(&field_tag);
+
                 // Handle sequence fields marked with "#"
                 if field_tag == "#" {
                     // For sequence fields, add rename to "#" and skip_serializing_if for Vec types
                     let type_category = categorize_type(&field.ty);
                     if matches!(type_category, TypeCategory::Vec | TypeCategory::VecString) {
-                        let rename_value = "#";
                         let serde_attr = syn::parse_quote! {
-                            #[serde(rename = #rename_value, skip_serializing_if = "Vec::is_empty", default)]
+                            #[serde(rename = "#", skip_serializing_if = "Vec::is_empty", default)]
                         };
                         field.attrs.push(serde_attr);
                     }
@@ -47,23 +49,23 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
                         | TypeCategory::OptionField
                         | TypeCategory::OptionVec
                 ) {
-                    // Add serde(rename = "tag", skip_serializing_if = "Option::is_none") attribute
+                    // Add serde(rename = "...", skip_serializing_if = "Option::is_none") attribute
                     let serde_attr = syn::parse_quote! {
-                        #[serde(rename = #field_tag, skip_serializing_if = "Option::is_none")]
+                        #[serde(rename = #rename_value, skip_serializing_if = "Option::is_none")]
                     };
                     field.attrs.push(serde_attr);
                 }
                 // Check if the field is a Vec type
                 else if matches!(type_category, TypeCategory::Vec | TypeCategory::VecString) {
-                    // Add serde(rename = "tag", skip_serializing_if = "Vec::is_empty") attribute
+                    // Add serde(rename = "...", skip_serializing_if = "Vec::is_empty") attribute
                     let serde_attr = syn::parse_quote! {
-                        #[serde(rename = #field_tag, skip_serializing_if = "Vec::is_empty")]
+                        #[serde(rename = #rename_value, skip_serializing_if = "Vec::is_empty")]
                     };
                     field.attrs.push(serde_attr);
                 } else {
-                    // Add serde(rename = "tag") attribute for other fields
+                    // Add serde(rename = "...") attribute for other fields
                     let serde_rename_attr = syn::parse_quote! {
-                        #[serde(rename = #field_tag)]
+                        #[serde(rename = #rename_value)]
                     };
                     field.attrs.push(serde_rename_attr);
                 }
@@ -125,17 +127,16 @@ pub fn generate_serde_attributes(input: &DeriveInput) -> MacroResult<TokenStream
     Ok(tokens)
 }
 
-/// Extract field tag from #[field("tag")] attribute
+/// Extract field tag and optional name from #[field("tag")] or #[field("tag", name = "...")] attribute
+fn extract_field_tag_with_name(attrs: &[syn::Attribute]) -> Option<(String, Option<String>)> {
+    use crate::utils::attributes::extract_field_attribute_with_name;
+
+    extract_field_attribute_with_name(attrs).ok()
+}
+
+/// Extract field tag from #[field("tag")] attribute (legacy)
 fn extract_field_tag(attrs: &[syn::Attribute]) -> Option<String> {
-    for attr in attrs {
-        if attr.path().is_ident("field")
-            && let syn::Meta::List(meta_list) = &attr.meta
-            && let Ok(lit) = syn::parse2::<syn::LitStr>(meta_list.tokens.clone())
-        {
-            return Some(lit.value());
-        }
-    }
-    None
+    extract_field_tag_with_name(attrs).map(|(tag, _)| tag)
 }
 
 /// Check if field has a #[component(...)] attribute

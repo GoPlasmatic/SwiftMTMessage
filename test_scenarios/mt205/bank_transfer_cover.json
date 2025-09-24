@@ -185,7 +185,7 @@
                     "/PURP/GDDS"
                 ]
             },
-            "50": {
+            "50#b": {
                 "K": {
                     "name_and_address": [
                         {
@@ -197,18 +197,20 @@
                     ]
                 }
             },
-            "59": {
-                "name_and_address": [
-                    {
-                        "var": "beneficiary_customer"
-                    },
-                    "BENEFICIARY ADDRESS LINE 1",
-                    "BENEFICIARY ADDRESS LINE 2",
-                    "BENEFICIARY CITY COUNTRY"
-                ]
+            "59#b": {
+                "NoOption": {
+                    "name_and_address": [
+                        {
+                            "var": "beneficiary_customer"
+                        },
+                        "BENEFICIARY ADDRESS LINE 1",
+                        "BENEFICIARY ADDRESS LINE 2",
+                        "BENEFICIARY CITY COUNTRY"
+                    ]
+                }
             },
-            "70": {
-                "information": [
+            "70#b": {
+                "narrative": [
                     {
                         "var": "remittance_info"
                     }

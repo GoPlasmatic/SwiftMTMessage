@@ -120,9 +120,8 @@
                         }
                     },
                     "50": {
-                        "F": {
+                        "K": {
                             "account": "GB12345678901234",
-                            "party_identifier": "GB/987654321",
                             "name_and_address": [
                                 {
                                     "fake": [
@@ -132,8 +131,7 @@
                                 "123 MAIN STREET",
                                 "NEW YORK",
                                 "US"
-                            ],
-                            "bic": "DEUTDEFF"
+                            ]
                         }
                     },
                     "52": {

@@ -84,10 +84,10 @@ pub struct MT110 {
     #[field("20")]
     pub field_20: Field20,
 
-    #[field("53A")]
+    #[field("53")]
     pub field_53a: Option<Field53SenderCorrespondent>,
 
-    #[field("54A")]
+    #[field("54")]
     pub field_54a: Option<Field54ReceiverCorrespondent>,
 
     #[field("72")]

@@ -1737,8 +1737,8 @@ fn is_enum_field_type(field_type: &Type) -> bool {
             type_name.starts_with("Field")
                 && (
                     // Specific enum patterns
-                    type_name.contains("Ordering") || 
-                    type_name.contains("Creditor") || 
+                    type_name.contains("Ordering") ||
+                    type_name.contains("Creditor") ||
                     type_name.contains("Debtor") ||
                     type_name.contains("Beneficiary") ||
                     type_name.contains("Instructing") ||
@@ -1749,6 +1749,8 @@ fn is_enum_field_type(field_type: &Type) -> bool {
                     type_name.contains("AccountWithInstitution") ||
                     type_name.contains("AccountIdentification") ||
                     type_name.contains("DebtorBank") ||
+                    type_name.contains("DrawerBank") ||
+                    type_name.contains("OrderingCustomer") ||
                     type_name.ends_with("AFK") ||
                     type_name.ends_with("NCF") ||
                     type_name.ends_with("FGH") ||

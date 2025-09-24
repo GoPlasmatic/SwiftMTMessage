@@ -1748,12 +1748,17 @@ fn is_enum_field_type(field_type: &Type) -> bool {
                     type_name.contains("Intermediary") ||
                     type_name.contains("AccountWithInstitution") ||
                     type_name.contains("AccountIdentification") ||
+                    type_name.contains("AccountServicing") ||
+                    type_name.contains("ThirdReimbursement") ||
                     type_name.contains("DebtorBank") ||
+                    type_name.contains("DebtInstitution") ||
                     type_name.contains("DrawerBank") ||
                     type_name.contains("OrderingCustomer") ||
+                    type_name.contains("OrderingInstitution") ||
                     type_name.ends_with("AFK") ||
                     type_name.ends_with("NCF") ||
                     type_name.ends_with("FGH") ||
+                    type_name.ends_with("AD") ||
                     // Explicit list of known enum fields (have A/F/K/D/etc variants)
                     // This replaces the problematic digit-based check
                     matches!(type_name.as_str(),

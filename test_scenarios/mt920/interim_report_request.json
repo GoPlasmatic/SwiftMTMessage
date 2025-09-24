@@ -10,8 +10,8 @@
         },
         "account_number": "1000000000000000",
         "currency": "USD",
-        "debit_floor": "0001",
-        "credit_floor": "0001",
+        "debit_floor": 1,
+        "credit_floor": 1,
         "session_num": "0001",
         "sequence_num": "000123",
         "uetr": "550e8400-e29b-41d4-a716-446655440000"
@@ -78,26 +78,24 @@
                             "var": "account_number"
                         }
                     },
-                    "34F": [
-                        {
-                            "currency": {
-                                "var": "currency"
-                            },
-                            "debit_credit_indicator": "D",
-                            "amount": {
-                                "var": "debit_floor"
-                            }
+                    "34F#1": {
+                        "currency": {
+                            "var": "currency"
                         },
-                        {
-                            "currency": {
-                                "var": "currency"
-                            },
-                            "debit_credit_indicator": "C",
-                            "amount": {
-                                "var": "credit_floor"
-                            }
+                        "indicator": "D",
+                        "amount": {
+                            "var": "debit_floor"
                         }
-                    ]
+                    },
+                    "34F#2": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "indicator": "C",
+                        "amount": {
+                            "var": "credit_floor"
+                        }
+                    }
                 }
             ]
         }

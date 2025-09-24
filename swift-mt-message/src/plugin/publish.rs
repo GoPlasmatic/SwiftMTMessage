@@ -11,8 +11,6 @@ use serde_json::Value;
 use std::sync::Arc;
 use tracing::{debug, error, instrument};
 
-
-
 /// Helper function to clean null values from fields before serialization
 fn clean_null_fields(data: &Value) -> Value {
     let mut cleaned = data.clone();

@@ -90,17 +90,25 @@
                     "var": "amount"
                 }
             },
-            "52A": {
-                "bic": "DEUTDEFFXXX"
+            "52": {
+                "A": {
+                    "bic": "DEUTDEFFXXX"
+                }
             },
-            "53A": {
-                "bic": "BNPAFRPPXXX"
+            "53": {
+                "A": {
+                    "bic": "BNPAFRPPXXX"
+                }
             },
-            "56A": {
-                "bic": "SOGEFRPPXXX"
+            "56": {
+                "A": {
+                    "bic": "SOGEFRPPXXX"
+                }
             },
-            "57A": {
-                "bic": "BARCGB22XXX"
+            "57": {
+                "A": {
+                    "bic": "BARCGB22XXX"
+                }
             },
             "58": {
                 "A": {

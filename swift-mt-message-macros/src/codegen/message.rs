@@ -1755,7 +1755,7 @@ fn is_enum_field_type(field_type: &Type) -> bool {
                     // Explicit list of known enum fields (have A/F/K/D/etc variants)
                     // This replaces the problematic digit-based check
                     matches!(type_name.as_str(),
-                        "Field25" | "Field32" | "Field50" | "Field52" | "Field53" | "Field54" |
+                        "Field11" | "Field25" | "Field32" | "Field50" | "Field52" | "Field53" | "Field54" |
                         "Field55" | "Field56" | "Field57" | "Field58" | "Field59" | "Field60" | "Field62"
                     )
                 )

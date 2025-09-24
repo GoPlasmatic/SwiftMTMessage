@@ -90,20 +90,30 @@
                     "var": "amount"
                 }
             },
-            "52A": {
-                "bic": "UBSWCHZHXXX"
+            "52": {
+                "A": {
+                    "bic": "UBSWCHZHXXX"
+                }
             },
-            "53A": {
-                "bic": "DEUTDEFFXXX"
+            "53": {
+                "A": {
+                    "bic": "DEUTDEFFXXX"
+                }
             },
-            "54A": {
-                "bic": "BNPAFRPPXXX"
+            "54": {
+                "A": {
+                    "bic": "BNPAFRPPXXX"
+                }
             },
-            "56A": {
-                "bic": "CHASUS33XXX"
+            "56": {
+                "A": {
+                    "bic": "CHASUS33XXX"
+                }
             },
-            "57A": {
-                "bic": "CITIJPJTXXX"
+            "57": {
+                "A": {
+                    "bic": "CITIJPJTXXX"
+                }
             },
             "58": {
                 "A": {

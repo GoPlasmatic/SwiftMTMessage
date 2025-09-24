@@ -91,17 +91,25 @@
                     "var": "amount"
                 }
             },
-            "52A": {
-                "bic": "CHASUS33XXX"
+            "52": {
+                "A": {
+                    "bic": "CHASUS33XXX"
+                }
             },
-            "53A": {
-                "bic": "FNBBUS44XXX"
+            "53": {
+                "A": {
+                    "bic": "FNBBUS44XXX"
+                }
             },
-            "56A": {
-                "bic": "CITIUS33XXX"
+            "56": {
+                "A": {
+                    "bic": "CITIUS33XXX"
+                }
             },
-            "57A": {
-                "bic": "DEUTDEFFXXX"
+            "57": {
+                "A": {
+                    "bic": "DEUTDEFFXXX"
+                }
             },
             "58": {
                 "A": {

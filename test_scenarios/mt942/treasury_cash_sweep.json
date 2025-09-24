@@ -198,14 +198,6 @@
                     "var": "currency"
                 },
                 "amount": 250050
-            },
-            "86": {
-                "narrative": [
-                    "/SERVICE/TREASURY CASH MANAGEMENT",
-                    "/TYPE/END OF DAY SWEEP",
-                    "/STATUS/COMPLETED SUCCESSFULLY",
-                    "/NEXT/TOMORROW 17:00 GMT"
-                ]
             }
         }
     }

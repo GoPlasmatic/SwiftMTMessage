@@ -109,7 +109,7 @@
             },
             "13D": {
                 "date": "2024-12-20",
-                "time": "09:45",
+                "time": "09:45:00",
                 "offset_sign": "+",
                 "offset_seconds": "0100"
             },
@@ -160,14 +160,7 @@
                         ]
                     }
                 }
-            ],
-            "86": {
-                "narrative": [
-                    "/POSITION/REAL-TIME UPDATE",
-                    "/SYSTEM/TARGET2 CONNECTED",
-                    "/STATUS/NORMAL OPERATIONS"
-                ]
-            }
+            ]
         }
     }
 }

@@ -137,7 +137,7 @@
             },
             "13D": {
                 "date": "2024-12-20",
-                "time": "14:30",
+                "time": "14:30:00",
                 "offset_sign": "+",
                 "offset_seconds": "0100"
             },
@@ -226,14 +226,6 @@
                 "amount": {
                     "var": "amount3"
                 }
-            },
-            "86": {
-                "narrative": [
-                    "/LIQUIDITY/INTRADAY MONITORING REPORT",
-                    "/LIMIT/DEBIT USD 1,000,0000",
-                    "/LIMIT/CREDIT USD 5,000,0000",
-                    "/STATUS/WITHIN LIMITS"
-                ]
             }
         }
     }

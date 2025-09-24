@@ -89,7 +89,6 @@
                     "37H": [
                         {
                             "rate_indicator": "D",
-                            "is_negative": false,
                             "rate": {
                                 "var": "total_rate"
                             }

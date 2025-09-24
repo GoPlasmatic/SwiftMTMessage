@@ -83,21 +83,18 @@
                     "37H": [
                         {
                             "rate_indicator": "C",
-                            "is_negative": false,
                             "rate": {
                                 "var": "policy_rate"
                             }
                         },
                         {
                             "rate_indicator": "D",
-                            "is_negative": false,
                             "rate": {
                                 "var": "deposit_rate"
                             }
                         },
                         {
                             "rate_indicator": "C",
-                            "is_negative": false,
                             "rate": {
                                 "var": "lending_rate"
                             }

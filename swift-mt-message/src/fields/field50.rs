@@ -296,7 +296,7 @@ mod field50a_tests {
 
         let mt_string = field.to_swift_string();
         println!("Field50A to_mt output: {}", mt_string);
-        
+
         // Field50A should generate numbered lines for the address
         assert!(mt_string.contains("1/ACME CORPORATION"), "Missing line 1");
         assert!(mt_string.contains("2/123 MAIN STREET"), "Missing line 2");

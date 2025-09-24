@@ -76,9 +76,6 @@ pub struct MessageField {
     pub inner_type: Type,
     /// SWIFT field tag (e.g., "20", "32A", "34F")
     pub tag: String,
-    /// Semantic name for JSON serialization (e.g., "floor_limit_debit")
-    /// If provided, this will be used for serde rename attribute
-    pub semantic_name: Option<String>,
     /// Whether the field is optional (wrapped in Option<T>)
     pub is_optional: bool,
     /// Whether the field is repetitive (wrapped in Vec<T>)
@@ -166,7 +163,7 @@ impl MessageField {
         let field_type = field.ty.clone();
 
         // Extract field tag and optional name from #[field("tag")] or #[field("tag", name = "...")] attribute
-        let (tag, semantic_name) = extract_field_attribute_with_name(&field.attrs)?;
+        let (tag, _) = extract_field_attribute_with_name(&field.attrs)?;
 
         // Determine if field is optional or repetitive using TypeCategory
         let type_category = categorize_type(&field_type);
@@ -208,7 +205,6 @@ impl MessageField {
             name,
             inner_type,
             tag,
-            semantic_name,
             is_optional,
             is_repetitive,
             variant_constraints,
@@ -400,25 +396,49 @@ fn extract_variant_constraints_from_type(inner_type: &Type) -> Option<Vec<String
                 // Field 50 variants
                 "Field50InstructingParty" => Some(vec!["C".to_string(), "L".to_string()]),
                 "Field50Creditor" => Some(vec!["A".to_string(), "F".to_string(), "K".to_string()]),
-                "Field50OrderingCustomer" => Some(vec!["A".to_string(), "F".to_string(), "K".to_string()]),
-                "Field50OrderingCustomerAFK" => Some(vec!["A".to_string(), "F".to_string(), "K".to_string()]),
+                "Field50OrderingCustomer" => {
+                    Some(vec!["A".to_string(), "F".to_string(), "K".to_string()])
+                }
+                "Field50OrderingCustomerAFK" => {
+                    Some(vec!["A".to_string(), "F".to_string(), "K".to_string()])
+                }
 
                 // Field 52 variants
-                "Field52CreditorBank" => Some(vec!["A".to_string(), "B".to_string(), "D".to_string()]),
-                "Field52OrderingInstitution" => Some(vec!["A".to_string(), "B".to_string(), "D".to_string()]),
+                "Field52CreditorBank" => {
+                    Some(vec!["A".to_string(), "B".to_string(), "D".to_string()])
+                }
+                "Field52OrderingInstitution" => {
+                    Some(vec!["A".to_string(), "B".to_string(), "D".to_string()])
+                }
 
                 // Field 53 variants
-                "Field53SenderCorrespondent" => Some(vec!["A".to_string(), "B".to_string(), "D".to_string()]),
+                "Field53SenderCorrespondent" => {
+                    Some(vec!["A".to_string(), "B".to_string(), "D".to_string()])
+                }
 
                 // Field 54 variants
-                "Field54ReceiverCorrespondent" => Some(vec!["A".to_string(), "B".to_string(), "D".to_string()]),
+                "Field54ReceiverCorrespondent" => {
+                    Some(vec!["A".to_string(), "B".to_string(), "D".to_string()])
+                }
 
                 // Field 56 variants
-                "Field56Intermediary" => Some(vec!["A".to_string(), "C".to_string(), "D".to_string()]),
+                "Field56Intermediary" => {
+                    Some(vec!["A".to_string(), "C".to_string(), "D".to_string()])
+                }
 
                 // Field 57 variants
-                "Field57DebtorBank" => Some(vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()]),
-                "Field57AccountWithInstitution" => Some(vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()]),
+                "Field57DebtorBank" => Some(vec![
+                    "A".to_string(),
+                    "B".to_string(),
+                    "C".to_string(),
+                    "D".to_string(),
+                ]),
+                "Field57AccountWithInstitution" => Some(vec![
+                    "A".to_string(),
+                    "B".to_string(),
+                    "C".to_string(),
+                    "D".to_string(),
+                ]),
 
                 // Field 58 variants
                 "Field58Beneficiary" => Some(vec!["A".to_string(), "D".to_string()]),

@@ -199,7 +199,8 @@ fn generate_multi_component_to_swift_string(
        patterns[0].starts_with("[/") && patterns[0].ends_with("]") &&
        patterns[0].contains("x") && // Ensure it's a text field
        patterns[1].contains("*") && patterns[1].contains("x") &&
-       !patterns[1].contains("1!n") // Exclude numbered line patterns
+       !patterns[1].contains("1!n")
+    // Exclude numbered line patterns
     {
         let first_component = &struct_field.components[0];
         let second_component = &struct_field.components[1];

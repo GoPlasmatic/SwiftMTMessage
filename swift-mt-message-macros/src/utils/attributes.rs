@@ -58,16 +58,18 @@ pub fn extract_component_attribute(attrs: &[Attribute]) -> MacroResult<String> {
 
 /// Extract field specification from #[field("tag")] or #[field("tag", name = "...")] attribute
 /// Returns (tag, optional_name)
-pub fn extract_field_attribute_with_name(attrs: &[Attribute]) -> MacroResult<(String, Option<String>)> {
+pub fn extract_field_attribute_with_name(
+    attrs: &[Attribute],
+) -> MacroResult<(String, Option<String>)> {
     for attr in attrs {
         if attr.path().is_ident("field") {
             match &attr.meta {
                 Meta::List(meta_list) => {
                     // Try to parse as simple string first: #[field("tag")]
-                    if let Ok(lit) = meta_list.parse_args::<Lit>() {
-                        if let Lit::Str(lit_str) = lit {
-                            return Ok((lit_str.value(), None));
-                        }
+                    if let Ok(lit) = meta_list.parse_args::<Lit>()
+                        && let Lit::Str(lit_str) = lit
+                    {
+                        return Ok((lit_str.value(), None));
                     }
 
                     // Parse as complex form: #[field("tag", name = "...")]
@@ -94,11 +96,6 @@ pub fn extract_field_attribute_with_name(attrs: &[Attribute]) -> MacroResult<(St
     ))
 }
 
-/// Extract field specification from #[field("tag")] attribute (legacy)
-pub fn extract_field_attribute(attrs: &[Attribute]) -> MacroResult<String> {
-    extract_field_attribute_with_name(attrs).map(|(tag, _)| tag)
-}
-
 /// Helper struct for parsing field attribute arguments
 struct FieldAttributeArgs {
     tag: String,
@@ -112,7 +109,10 @@ impl syn::parse::Parse for FieldAttributeArgs {
         let tag = if let Lit::Str(lit_str) = tag_lit {
             lit_str.value()
         } else {
-            return Err(syn::Error::new(input.span(), "Expected string literal for tag"));
+            return Err(syn::Error::new(
+                input.span(),
+                "Expected string literal for tag",
+            ));
         };
 
         // Check if there's a comma and name parameter
@@ -134,7 +134,10 @@ impl syn::parse::Parse for FieldAttributeArgs {
             if let Lit::Str(lit_str) = name_lit {
                 name = Some(lit_str.value());
             } else {
-                return Err(syn::Error::new(input.span(), "Expected string literal for name"));
+                return Err(syn::Error::new(
+                    input.span(),
+                    "Expected string literal for name",
+                ));
             }
         }
 
@@ -171,15 +174,6 @@ mod tests {
         let result = extract_component_attribute(&attrs);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "16x");
-    }
-
-    #[test]
-    fn test_extract_field_attribute() {
-        let attrs: Vec<Attribute> = vec![parse_quote!(#[field("20")])];
-
-        let result = extract_field_attribute(&attrs);
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "20");
     }
 
     #[test]

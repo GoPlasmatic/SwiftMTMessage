@@ -183,8 +183,6 @@ impl FieldConsumptionTracker {
 /// Field routing strategy for numbered field tags
 #[derive(Debug, Clone)]
 enum FieldRoutingStrategy {
-    /// Use all available variants (default behavior)
-    AllVariants,
     /// For Field50InstructingParty - typically uses C, L variants
     InstructingParty,
     /// For Field50Creditor - typically uses A, F, K variants
@@ -225,7 +223,7 @@ fn apply_field50_routing_strategy<'a>(
             tracker
                 .consumed_indices
                 .get(*tag)
-                .map_or(false, |set| !set.is_empty())
+                .is_some_and(|set| !set.is_empty())
         })
         .count();
 
@@ -233,7 +231,10 @@ fn apply_field50_routing_strategy<'a>(
     eprintln!(
         "DEBUG: Field50 routing strategy - consumed_count={}, candidates={:?}",
         consumed_field50_count,
-        candidates.iter().map(|(tag, _)| tag.as_str()).collect::<Vec<_>>()
+        candidates
+            .iter()
+            .map(|(tag, _)| tag.as_str())
+            .collect::<Vec<_>>()
     );
 
     // Determine routing strategy based on consumption history
@@ -266,7 +267,10 @@ fn apply_field50_routing_strategy<'a>(
             "DEBUG: Field50 routing - strategy={:?}, preferred_variants={:?}, reordered_candidates={:?}",
             strategy,
             preferred_variants,
-            candidates.iter().map(|(tag, _)| tag.as_str()).collect::<Vec<_>>()
+            candidates
+                .iter()
+                .map(|(tag, _)| tag.as_str())
+                .collect::<Vec<_>>()
         );
     }
 
@@ -304,7 +308,12 @@ pub fn find_field_with_variant_sequential_numbered(
     // Use the variant constraints for this specific numbered field
     // This ensures that 50#1 uses its specific variants (e.g., C, L)
     // and 50#2 uses its specific variants (e.g., A, F, K)
-    find_field_with_variant_sequential_constrained(fields, base_tag, tracker, valid_variants.as_ref().map(|v| v.as_slice()))
+    find_field_with_variant_sequential_constrained(
+        fields,
+        base_tag,
+        tracker,
+        valid_variants.as_deref(),
+    )
 }
 
 /// Find field values by base tag with sequential consumption tracking and variant constraints

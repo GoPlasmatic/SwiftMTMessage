@@ -134,11 +134,6 @@ fn extract_field_tag_with_name(attrs: &[syn::Attribute]) -> Option<(String, Opti
     extract_field_attribute_with_name(attrs).ok()
 }
 
-/// Extract field tag from #[field("tag")] attribute (legacy)
-fn extract_field_tag(attrs: &[syn::Attribute]) -> Option<String> {
-    extract_field_tag_with_name(attrs).map(|(tag, _)| tag)
-}
-
 /// Check if field has a #[component(...)] attribute
 fn has_component_attribute(attrs: &[syn::Attribute]) -> bool {
     attrs.iter().any(|attr| attr.path().is_ident("component"))

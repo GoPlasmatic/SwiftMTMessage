@@ -214,15 +214,6 @@ fn generate_sequence_field_parser(
     let tag = &field.tag;
 
     if field.is_optional && field.is_repetitive {
-        // Get variant constraints for numbered fields
-        let variant_constraints = &field.variant_constraints;
-        let variant_constraints_tokens = if let Some(constraints) = variant_constraints {
-            let constraint_strings: Vec<_> = constraints.iter().map(|s| s.as_str()).collect();
-            quote! { Some(vec![#(#constraint_strings),*]) }
-        } else {
-            quote! { None::<Vec<&str>> }
-        };
-
         // Handle Option<Vec<T>>
         Ok(quote! {
             let #field_name = {
@@ -262,15 +253,6 @@ fn generate_sequence_field_parser(
             };
         })
     } else if field.is_optional {
-        // Get variant constraints for numbered fields
-        let variant_constraints = &field.variant_constraints;
-        let variant_constraints_tokens = if let Some(constraints) = variant_constraints {
-            let constraint_strings: Vec<_> = constraints.iter().map(|s| s.as_str()).collect();
-            quote! { Some(vec![#(#constraint_strings),*]) }
-        } else {
-            quote! { None::<Vec<&str>> }
-        };
-
         Ok(quote! {
             let #field_name = {
                 // Always use sequential consumption for fields

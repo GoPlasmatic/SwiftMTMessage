@@ -260,18 +260,35 @@ impl BasicHeader {
 
         // Extract BIC from logical_terminal
         // SWIFT BICs are either 8 or 11 characters
-        // If the logical_terminal ends with XXX or XXXX, it's likely padding
-        let sender_bic = if logical_terminal.ends_with("XXXX") {
-            // Padding detected, original BIC is 8 characters
-            logical_terminal[0..8].to_string()
-        } else if logical_terminal.ends_with("XXX") && !logical_terminal.ends_with("XXXX") {
-            // Less common: 9-char padded to 12 with XXX
-            logical_terminal[0..9].to_string()
+        // The logical_terminal is 12 chars: BIC (8 or 11) + optional terminal ID
+        // Common patterns:
+        // - 8-char BIC + 4-char terminal: "DEUTDEFFAXXX" -> BIC="DEUTDEFF"
+        // - 11-char BIC + 1-char terminal: "DEUTDEFF001A" -> BIC="DEUTDEFF001"
+
+        let sender_bic = if logical_terminal.len() == 12 {
+            // Check if this looks like an 8-char BIC with terminal suffix
+            // Terminal suffixes are typically single letter + XXX (e.g., AXXX, BXXX)
+            // or just XXX for no specific terminal
+            let last_four = &logical_terminal[8..12];
+            if last_four == "XXXX" || (last_four.len() == 4 && &last_four[1..] == "XXX") {
+                // 8-character BIC with terminal suffix
+                logical_terminal[0..8].to_string()
+            } else {
+                // Check if chars 9-11 could be a valid branch code
+                let potential_branch = &logical_terminal[8..11];
+                if potential_branch.chars().all(|c| c.is_ascii_alphanumeric())
+                    && potential_branch != "XXX"
+                {
+                    // Likely an 11-character BIC
+                    logical_terminal[0..11].to_string()
+                } else {
+                    // Default to 8-character BIC
+                    logical_terminal[0..8].to_string()
+                }
+            }
         } else if logical_terminal.len() >= 11 {
-            // Has full 11-character BIC, preserve it entirely
             logical_terminal[0..11].to_string()
         } else if logical_terminal.len() >= 8 {
-            // Standard 8-character BIC
             logical_terminal[0..8].to_string()
         } else {
             // Should not happen with valid SWIFT messages
@@ -686,19 +703,30 @@ impl ApplicationHeader {
                 // Extract BIC from destination_address
                 // SWIFT BICs are either 8 or 11 characters
                 // If the destination_address ends with XXX or XXXX, it's likely padding
-                let receiver_bic = if destination_address.ends_with("XXXX") {
-                    // Padding detected, original BIC is 8 characters
-                    destination_address[0..8].to_string()
-                } else if destination_address.ends_with("XXX")
-                    && !destination_address.ends_with("XXXX")
-                {
-                    // Less common: 9-char padded to 12 with XXX
-                    destination_address[0..9].to_string()
+                let receiver_bic = if destination_address.len() == 12 {
+                    // Check if this looks like an 8-char BIC with terminal suffix
+                    // Terminal suffixes are typically single letter + XXX (e.g., AXXX, BXXX)
+                    // or just XXXX for no specific terminal
+                    let last_four = &destination_address[8..12];
+                    if last_four == "XXXX" || (last_four.len() == 4 && &last_four[1..] == "XXX") {
+                        // 8-character BIC with terminal suffix
+                        destination_address[0..8].to_string()
+                    } else {
+                        // Check if chars 9-11 could be a valid branch code
+                        let potential_branch = &destination_address[8..11];
+                        if potential_branch.chars().all(|c| c.is_ascii_alphanumeric())
+                            && potential_branch != "XXX"
+                        {
+                            // Likely an 11-character BIC
+                            destination_address[0..11].to_string()
+                        } else {
+                            // Default to 8-character BIC
+                            destination_address[0..8].to_string()
+                        }
+                    }
                 } else if destination_address.len() >= 11 {
-                    // Has full 11-character BIC, preserve it entirely
                     destination_address[0..11].to_string()
                 } else if destination_address.len() >= 8 {
-                    // Standard 8-character BIC
                     destination_address[0..8].to_string()
                 } else {
                     // Should not happen with valid SWIFT messages

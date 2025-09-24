@@ -261,7 +261,13 @@ impl FieldPatternGenerator for Field53B57BPatternGenerator {
                 // - Second line is location
                 // This matches the SWIFT standard where party_identifier comes first
                 let party_id = if !first_line.is_empty() {
-                    Some(first_line.to_string())
+                    // Strip the leading '/' when parsing from MT format back to JSON
+                    let cleaned = if first_line.starts_with('/') {
+                        first_line.trim_start_matches('/').to_string()
+                    } else {
+                        first_line.to_string()
+                    };
+                    Some(cleaned)
                 } else {
                     None
                 };
@@ -279,8 +285,9 @@ impl FieldPatternGenerator for Field53B57BPatternGenerator {
                 let line = lines[0];
 
                 if line.starts_with('/') {
-                    // This is a party identifier only (keep the slash)
-                    (Some(line.to_string()), None)
+                    // This is a party identifier only (strip the slash for JSON)
+                    let cleaned = line.trim_start_matches('/').to_string();
+                    (Some(cleaned), None)
                 } else {
                     // This is a location only
                     (None, Some(line.to_string()))
@@ -581,13 +588,31 @@ impl FieldParserGenerator {
         let component_names: Vec<_> = field.components.iter().map(|c| &c.name).collect();
         let mut regex_parts = Vec::new();
 
-        for component in &field.components {
+        for component in field.components.iter() {
             let component_regex = swift_format_to_regex(&component.format.pattern)?;
-            let component_regex = component_regex
+            let mut component_regex = component_regex
                 .trim_start_matches('^')
-                .trim_end_matches('$');
+                .trim_end_matches('$')
+                .to_string();
 
-            let non_capturing_regex = convert_to_non_capturing_groups(component_regex);
+            // Special handling for Field61 consecutive optional fields
+            if name == "Field61" {
+                if component.name == "customer_reference" {
+                    // Restrict to alphanumeric and hyphens to avoid consuming //
+                    component_regex = component_regex.replace("(.{1,16})", "([A-Z0-9-]{1,16})");
+                } else if component.name == "bank_reference"
+                    && component_regex.contains("//.{1,16}")
+                {
+                    // For bank_reference after //, make it non-greedy and stop at first non-alphanumeric-hyphen
+                    // This prevents capturing into the supplementary_details field
+                    component_regex = component_regex.replace(
+                        "(//.{1,16})",
+                        "(//[A-Z0-9-]{1,14})", // Slightly shorter to avoid over-capture
+                    );
+                }
+            }
+
+            let non_capturing_regex = convert_to_non_capturing_groups(&component_regex);
 
             if (non_capturing_regex.starts_with('/')
                 && non_capturing_regex.ends_with('/')

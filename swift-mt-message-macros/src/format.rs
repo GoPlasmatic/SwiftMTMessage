@@ -699,9 +699,9 @@ impl FormatSpec {
         }
 
         // Handle prefix characters like '/'
-        if working_str.starts_with('/') {
-            working_str = &working_str[1..];
-        }
+        // But preserve // for double slash patterns like [//16x]
+        // Don't strip any slashes - they're part of the pattern
+        // The stripping will be done when generating the regex
 
         // Try to parse simple format specifications first
         if let Ok(re) = Regex::new(r"^(\d*)(!?)([a-zA-Z])$") {
@@ -765,7 +765,8 @@ pub fn swift_format_to_regex(format_str: &str) -> MacroResult<String> {
         }
     }
 
-    Ok(build_anchored_pattern(&regex_parts.join("")))
+    let result = build_anchored_pattern(&regex_parts.join(""));
+    Ok(result)
 }
 
 /// Extract the next format pattern from the string
@@ -835,7 +836,8 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
     if pattern.starts_with('[') && pattern.ends_with(']') {
         let inner = &pattern[1..pattern.len() - 1];
         let inner_regex = pattern_to_regex(inner)?;
-        return Ok(build_optional_pattern(&inner_regex));
+        let result = build_optional_pattern(&inner_regex);
+        return Ok(result);
     }
 
     // Handle compound optional patterns like [/1!a][/34x]
@@ -861,6 +863,20 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
     // Handle prefix slash
     if pattern == "/" {
         return Ok("/".to_string());
+    }
+
+    // IMPORTANT: Handle double slash prefix patterns BEFORE compound slash patterns
+    // This must come before the compound slash handler to prevent //16x being split incorrectly
+    if pattern.starts_with("//") && pattern.len() > 2 {
+        let after_double_slash = &pattern[2..];
+        let inner_regex = pattern_to_regex(after_double_slash)?;
+        // Remove the capturing group from inner regex since we'll add our own
+        let inner_regex_no_parens = inner_regex.trim_start_matches('(').trim_end_matches(')');
+        // Keep the inner regex as is
+        let inner_regex_final = inner_regex_no_parens;
+        // Capture the double slash and content together
+        let result = format!("(//{inner_regex_final})");
+        return Ok(result);
     }
 
     // Handle compound slash patterns like /1!a/34x and /8c/
@@ -893,23 +909,6 @@ fn pattern_to_regex(pattern: &str) -> MacroResult<String> {
                 second_no_parens,
             ));
         }
-    }
-
-    // Handle double slash prefix patterns like //16x first
-    if pattern.starts_with("//") && pattern.len() > 2 {
-        let after_double_slash = &pattern[2..];
-        let inner_regex = pattern_to_regex(after_double_slash)?;
-        // Remove the capturing group from inner regex since we'll add our own
-        let inner_regex_no_parens = inner_regex.trim_start_matches('(').trim_end_matches(')');
-        // For //16x patterns, make them non-greedy to avoid capturing content from following optional fields
-        // This is especially important for Field 61 where [//16x] is followed by [34x]
-        let inner_regex_non_greedy = if inner_regex_no_parens == ".{1,16}" {
-            ".{1,16}?" // Make it non-greedy
-        } else {
-            inner_regex_no_parens
-        };
-        // Capture the double slash and content together
-        return Ok(format!("(//{inner_regex_non_greedy})"));
     }
 
     // Handle simple slash prefix patterns like /34x

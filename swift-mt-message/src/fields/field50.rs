@@ -920,7 +920,10 @@ mod tests {
         let field = Field50NoOption::parse("JOHN DOE\n123 MAIN ST\nNEW YORK").unwrap();
         assert_eq!(field.name_and_address.len(), 3);
         assert_eq!(field.name_and_address[0], "JOHN DOE");
-        assert_eq!(field.to_swift_string(), ":50:JOHN DOE\n123 MAIN ST\nNEW YORK");
+        assert_eq!(
+            field.to_swift_string(),
+            ":50:JOHN DOE\n123 MAIN ST\nNEW YORK"
+        );
     }
 
     #[test]

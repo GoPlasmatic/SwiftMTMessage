@@ -52,7 +52,8 @@ impl MT291 {
         let currency_amount = parser.parse_field::<Field32B>("32B")?;
 
         // Parse optional Field 52 - Ordering Institution
-        let ordering_institution = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+        let ordering_institution =
+            parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
 
         // Parse optional Field 57 - Account With Institution
         let account_with_institution = parser.parse_optional_variant_field::<Field57>("57")?;
@@ -112,16 +113,25 @@ impl crate::traits::SwiftMessageBody for MT291 {
     ) -> Result<ParseResult<Self>, ParseError> {
         match Self::from_fields(fields) {
             Ok(msg) => Ok(ParseResult::Success(msg)),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
     fn to_fields(&self) -> HashMap<String, Vec<String>> {
         let mut fields = HashMap::new();
 
-        fields.insert("20".to_string(), vec![self.transaction_reference.to_swift_string()]);
-        fields.insert("21".to_string(), vec![self.related_reference.to_swift_string()]);
-        fields.insert("32B".to_string(), vec![self.currency_amount.to_swift_string()]);
+        fields.insert(
+            "20".to_string(),
+            vec![self.transaction_reference.to_swift_string()],
+        );
+        fields.insert(
+            "21".to_string(),
+            vec![self.related_reference.to_swift_string()],
+        );
+        fields.insert(
+            "32B".to_string(),
+            vec![self.currency_amount.to_swift_string()],
+        );
 
         if let Some(ref ord_inst) = self.ordering_institution {
             match ord_inst {
@@ -149,7 +159,10 @@ impl crate::traits::SwiftMessageBody for MT291 {
             }
         }
 
-        fields.insert("71B".to_string(), vec![self.details_of_charges.to_swift_string()]);
+        fields.insert(
+            "71B".to_string(),
+            vec![self.details_of_charges.to_swift_string()],
+        );
 
         if let Some(ref sender_info) = self.sender_to_receiver {
             fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);

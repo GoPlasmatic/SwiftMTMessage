@@ -103,22 +103,28 @@ impl MT190 {
         let reference = &self.field_20.reference;
         if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT190: Field 20 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT190: Field 20 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 21 - same rules as Field 20
         let related_ref = &self.field_21.reference;
-        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//") {
+        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//")
+        {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT190: Field 21 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT190: Field 21 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 71B has content
         if self.field_71b.details.is_empty() {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT190: Field 71B must contain at least one line of charge details".to_string(),
+                message: "MT190: Field 71B must contain at least one line of charge details"
+                    .to_string(),
             });
         }
 
@@ -179,22 +185,30 @@ impl crate::traits::SwiftMessageBody for MT190 {
         // Add amount field (32C or 32D)
         match &self.field_32 {
             Field32Amount::C(field_32c) => {
-                fields.insert("32C".to_string(), vec![format!("{:02}{:02}{:02}{}{}",
-                    field_32c.value_date.year() % 100,
-                    field_32c.value_date.month(),
-                    field_32c.value_date.day(),
-                    field_32c.currency,
-                    field_32c.amount.to_string().replace('.', ",")
-                )]);
+                fields.insert(
+                    "32C".to_string(),
+                    vec![format!(
+                        "{:02}{:02}{:02}{}{}",
+                        field_32c.value_date.year() % 100,
+                        field_32c.value_date.month(),
+                        field_32c.value_date.day(),
+                        field_32c.currency,
+                        field_32c.amount.to_string().replace('.', ",")
+                    )],
+                );
             }
             Field32Amount::D(field_32d) => {
-                fields.insert("32D".to_string(), vec![format!("{:02}{:02}{:02}{}{}",
-                    field_32d.value_date.year() % 100,
-                    field_32d.value_date.month(),
-                    field_32d.value_date.day(),
-                    field_32d.currency,
-                    field_32d.amount.to_string().replace('.', ",")
-                )]);
+                fields.insert(
+                    "32D".to_string(),
+                    vec![format!(
+                        "{:02}{:02}{:02}{}{}",
+                        field_32d.value_date.year() % 100,
+                        field_32d.value_date.month(),
+                        field_32d.value_date.day(),
+                        field_32d.currency,
+                        field_32d.amount.to_string().replace('.', ",")
+                    )],
+                );
             }
         }
 

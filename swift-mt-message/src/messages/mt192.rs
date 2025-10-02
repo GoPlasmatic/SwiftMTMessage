@@ -71,15 +71,20 @@ impl MT192 {
         let reference = &self.field_20.reference;
         if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT192: Field 20 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT192: Field 20 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 21 - same rules as Field 20
         let related_ref = &self.field_21.reference;
-        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//") {
+        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//")
+        {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT192: Field 21 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT192: Field 21 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
@@ -137,7 +142,8 @@ impl crate::traits::SwiftMessageBody for MT192 {
         fields.insert("21".to_string(), vec![self.field_21.reference.clone()]);
 
         // Add field 11S
-        let mut field_11s_value = format!("{}{:02}{:02}{:02}",
+        let mut field_11s_value = format!(
+            "{}{:02}{:02}{:02}",
             self.field_11s.message_type,
             self.field_11s.date.year() % 100,
             self.field_11s.date.month(),

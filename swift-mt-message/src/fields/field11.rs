@@ -153,8 +153,7 @@ mod date_string {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        NaiveDate::parse_from_str(&s, "%Y-%m-%d")
-            .map_err(serde::de::Error::custom)
+        NaiveDate::parse_from_str(&s, "%Y-%m-%d").map_err(serde::de::Error::custom)
     }
 }
 
@@ -364,7 +363,8 @@ impl SwiftField for Field11 {
         // Field 11 requires at least 9 characters (3 for MT + 6 for date)
         if input.len() < 9 {
             return Err(ParseError::InvalidFormat {
-                message: "Field 11 requires at least 9 characters (3 for MT + 6 for date)".to_string(),
+                message: "Field 11 requires at least 9 characters (3 for MT + 6 for date)"
+                    .to_string(),
             });
         }
 
@@ -397,10 +397,7 @@ impl SwiftField for Field11 {
                 message: format!("Invalid date in Field 11: {}", date_str),
             })?;
 
-        Ok(Field11 {
-            message_type,
-            date,
-        })
+        Ok(Field11 { message_type, date })
     }
 
     fn to_swift_string(&self) -> String {

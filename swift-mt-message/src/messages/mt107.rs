@@ -192,9 +192,11 @@ impl MT107 {
             let txn_field_21e = parser.parse_optional_field::<Field21E>("21E")?;
             let txn_field_32b = parser.parse_field::<Field32B>("32B")?;
 
-            let (txn_field_50_instructing, txn_field_50_creditor) = Self::parse_field_50(&mut parser)?;
+            let (txn_field_50_instructing, txn_field_50_creditor) =
+                Self::parse_field_50(&mut parser)?;
 
-            let txn_field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+            let txn_field_52 =
+                parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
             let txn_field_57 = parser.parse_optional_variant_field::<Field57>("57")?;
             let txn_field_59 = parser.parse_variant_field::<Field59>("59")?;
             let txn_field_70 = parser.parse_optional_field::<Field70>("70")?;
@@ -235,7 +237,8 @@ impl MT107 {
         let settlement_field_19 = parser.parse_optional_field::<Field19>("19")?;
         let settlement_field_71f = parser.parse_optional_field::<Field71F>("71F")?;
         let settlement_field_71g = parser.parse_optional_field::<Field71G>("71G")?;
-        let settlement_field_53 = parser.parse_optional_variant_field::<Field53SenderCorrespondent>("53")?;
+        let settlement_field_53 =
+            parser.parse_optional_variant_field::<Field53SenderCorrespondent>("53")?;
 
         // Verify all content is consumed
         if !parser.is_complete() {
@@ -272,18 +275,21 @@ impl MT107 {
     /// Helper to parse field 50 which can be either instructing party (C/L) or creditor (A/K)
     fn parse_field_50(
         parser: &mut crate::message_parser::MessageParser,
-    ) -> Result<(Option<Field50InstructingParty>, Option<Field50Creditor>), crate::errors::ParseError> {
+    ) -> Result<(Option<Field50InstructingParty>, Option<Field50Creditor>), crate::errors::ParseError>
+    {
         // Detect which variant of field 50 is present
         let remaining = parser.remaining();
         let trimmed = remaining.trim_start_matches(|c: char| c.is_whitespace());
 
         // Check for instructing party variants (C, L)
         if trimmed.starts_with(":50C:") {
-            let field_50_instructing = parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
+            let field_50_instructing =
+                parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
             return Ok((field_50_instructing, None));
         }
         if trimmed.starts_with(":50L:") {
-            let field_50_instructing = parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
+            let field_50_instructing =
+                parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
             return Ok((field_50_instructing, None));
         }
 
@@ -377,22 +383,31 @@ impl crate::traits::SwiftMessageBody for MT107 {
             fields.insert("51A".to_string(), vec![field_51a.to_swift_value()]);
         }
 
-        if let Some(ref field_50) = self.field_50_instructing {
-            if let Some(variant_tag) = field_50.get_variant_tag() {
-                fields.insert(format!("50{}", variant_tag), vec![field_50.to_swift_value()]);
-            }
+        if let Some(ref field_50) = self.field_50_instructing
+            && let Some(variant_tag) = field_50.get_variant_tag()
+        {
+            fields.insert(
+                format!("50{}", variant_tag),
+                vec![field_50.to_swift_value()],
+            );
         }
 
-        if let Some(ref field_50) = self.field_50_creditor {
-            if let Some(variant_tag) = field_50.get_variant_tag() {
-                fields.insert(format!("50{}", variant_tag), vec![field_50.to_swift_value()]);
-            }
+        if let Some(ref field_50) = self.field_50_creditor
+            && let Some(variant_tag) = field_50.get_variant_tag()
+        {
+            fields.insert(
+                format!("50{}", variant_tag),
+                vec![field_50.to_swift_value()],
+            );
         }
 
-        if let Some(ref field_52) = self.field_52 {
-            if let Some(variant_tag) = field_52.get_variant_tag() {
-                fields.insert(format!("52{}", variant_tag), vec![field_52.to_swift_value()]);
-            }
+        if let Some(ref field_52) = self.field_52
+            && let Some(variant_tag) = field_52.get_variant_tag()
+        {
+            fields.insert(
+                format!("52{}", variant_tag),
+                vec![field_52.to_swift_value()],
+            );
         }
 
         if let Some(ref field_26t) = self.field_26t {
@@ -413,91 +428,154 @@ impl crate::traits::SwiftMessageBody for MT107 {
 
         // Add transaction fields
         for transaction in &self.transactions {
-            fields.entry("21".to_string()).or_default().push(transaction.field_21.to_swift_value());
+            fields
+                .entry("21".to_string())
+                .or_default()
+                .push(transaction.field_21.to_swift_value());
 
             if let Some(ref field_23e) = transaction.field_23e {
-                fields.entry("23E".to_string()).or_default().push(field_23e.to_swift_value());
+                fields
+                    .entry("23E".to_string())
+                    .or_default()
+                    .push(field_23e.to_swift_value());
             }
 
             if let Some(ref field_21c) = transaction.field_21c {
-                fields.entry("21C".to_string()).or_default().push(field_21c.to_swift_value());
+                fields
+                    .entry("21C".to_string())
+                    .or_default()
+                    .push(field_21c.to_swift_value());
             }
 
             if let Some(ref field_21d) = transaction.field_21d {
-                fields.entry("21D".to_string()).or_default().push(field_21d.to_swift_value());
+                fields
+                    .entry("21D".to_string())
+                    .or_default()
+                    .push(field_21d.to_swift_value());
             }
 
             if let Some(ref field_21e) = transaction.field_21e {
-                fields.entry("21E".to_string()).or_default().push(field_21e.to_swift_value());
+                fields
+                    .entry("21E".to_string())
+                    .or_default()
+                    .push(field_21e.to_swift_value());
             }
 
-            fields.entry("32B".to_string()).or_default().push(transaction.field_32b.to_swift_value());
+            fields
+                .entry("32B".to_string())
+                .or_default()
+                .push(transaction.field_32b.to_swift_value());
 
-            if let Some(ref field_50) = transaction.field_50_instructing {
-                if let Some(variant_tag) = field_50.get_variant_tag() {
-                    fields.entry(format!("50{}", variant_tag)).or_default().push(field_50.to_swift_value());
-                }
+            if let Some(ref field_50) = transaction.field_50_instructing
+                && let Some(variant_tag) = field_50.get_variant_tag()
+            {
+                fields
+                    .entry(format!("50{}", variant_tag))
+                    .or_default()
+                    .push(field_50.to_swift_value());
             }
 
-            if let Some(ref field_50) = transaction.field_50_creditor {
-                if let Some(variant_tag) = field_50.get_variant_tag() {
-                    fields.entry(format!("50{}", variant_tag)).or_default().push(field_50.to_swift_value());
-                }
+            if let Some(ref field_50) = transaction.field_50_creditor
+                && let Some(variant_tag) = field_50.get_variant_tag()
+            {
+                fields
+                    .entry(format!("50{}", variant_tag))
+                    .or_default()
+                    .push(field_50.to_swift_value());
             }
 
-            if let Some(ref field_52) = transaction.field_52 {
-                if let Some(variant_tag) = field_52.get_variant_tag() {
-                    fields.entry(format!("52{}", variant_tag)).or_default().push(field_52.to_swift_value());
-                }
+            if let Some(ref field_52) = transaction.field_52
+                && let Some(variant_tag) = field_52.get_variant_tag()
+            {
+                fields
+                    .entry(format!("52{}", variant_tag))
+                    .or_default()
+                    .push(field_52.to_swift_value());
             }
 
-            if let Some(ref field_57) = transaction.field_57 {
-                if let Some(variant_tag) = field_57.get_variant_tag() {
-                    fields.entry(format!("57{}", variant_tag)).or_default().push(field_57.to_swift_value());
-                }
+            if let Some(ref field_57) = transaction.field_57
+                && let Some(variant_tag) = field_57.get_variant_tag()
+            {
+                fields
+                    .entry(format!("57{}", variant_tag))
+                    .or_default()
+                    .push(field_57.to_swift_value());
             }
 
             if let Some(variant_tag) = transaction.field_59.get_variant_tag() {
-                fields.entry(format!("59{}", variant_tag)).or_default().push(transaction.field_59.to_swift_value());
+                fields
+                    .entry(format!("59{}", variant_tag))
+                    .or_default()
+                    .push(transaction.field_59.to_swift_value());
             } else {
-                fields.entry("59".to_string()).or_default().push(transaction.field_59.to_swift_value());
+                fields
+                    .entry("59".to_string())
+                    .or_default()
+                    .push(transaction.field_59.to_swift_value());
             }
 
             if let Some(ref field_70) = transaction.field_70 {
-                fields.entry("70".to_string()).or_default().push(field_70.to_swift_value());
+                fields
+                    .entry("70".to_string())
+                    .or_default()
+                    .push(field_70.to_swift_value());
             }
 
             if let Some(ref field_26t) = transaction.field_26t {
-                fields.entry("26T".to_string()).or_default().push(field_26t.to_swift_value());
+                fields
+                    .entry("26T".to_string())
+                    .or_default()
+                    .push(field_26t.to_swift_value());
             }
 
             if let Some(ref field_77b) = transaction.field_77b {
-                fields.entry("77B".to_string()).or_default().push(field_77b.to_swift_value());
+                fields
+                    .entry("77B".to_string())
+                    .or_default()
+                    .push(field_77b.to_swift_value());
             }
 
             if let Some(ref field_33b) = transaction.field_33b {
-                fields.entry("33B".to_string()).or_default().push(field_33b.to_swift_value());
+                fields
+                    .entry("33B".to_string())
+                    .or_default()
+                    .push(field_33b.to_swift_value());
             }
 
             if let Some(ref field_71a) = transaction.field_71a {
-                fields.entry("71A".to_string()).or_default().push(field_71a.to_swift_value());
+                fields
+                    .entry("71A".to_string())
+                    .or_default()
+                    .push(field_71a.to_swift_value());
             }
 
             if let Some(ref field_71f) = transaction.field_71f {
-                fields.entry("71F".to_string()).or_default().push(field_71f.to_swift_value());
+                fields
+                    .entry("71F".to_string())
+                    .or_default()
+                    .push(field_71f.to_swift_value());
             }
 
             if let Some(ref field_71g) = transaction.field_71g {
-                fields.entry("71G".to_string()).or_default().push(field_71g.to_swift_value());
+                fields
+                    .entry("71G".to_string())
+                    .or_default()
+                    .push(field_71g.to_swift_value());
             }
 
             if let Some(ref field_36) = transaction.field_36 {
-                fields.entry("36".to_string()).or_default().push(field_36.to_swift_value());
+                fields
+                    .entry("36".to_string())
+                    .or_default()
+                    .push(field_36.to_swift_value());
             }
         }
 
         // Add Sequence C fields
-        fields.entry("32B".to_string()).or_default().push(self.field_32b.to_swift_value());
+        fields
+            .entry("32B".to_string())
+            .or_default()
+            .push(self.field_32b.to_swift_value());
 
         if let Some(ref field_19) = self.field_19 {
             fields.insert("19".to_string(), vec![field_19.to_swift_value()]);
@@ -511,10 +589,13 @@ impl crate::traits::SwiftMessageBody for MT107 {
             fields.insert("71G".to_string(), vec![field_71g.to_swift_value()]);
         }
 
-        if let Some(ref field_53) = self.field_53 {
-            if let Some(variant_tag) = field_53.get_variant_tag() {
-                fields.insert(format!("53{}", variant_tag), vec![field_53.to_swift_value()]);
-            }
+        if let Some(ref field_53) = self.field_53
+            && let Some(variant_tag) = field_53.get_variant_tag()
+        {
+            fields.insert(
+                format!("53{}", variant_tag),
+                vec![field_53.to_swift_value()],
+            );
         }
 
         fields
@@ -541,22 +622,22 @@ impl crate::traits::SwiftMessageBody for MT107 {
             ordered_fields.push(("51A".to_string(), field_51a.to_swift_value()));
         }
 
-        if let Some(ref field_50) = self.field_50_instructing {
-            if let Some(variant_tag) = field_50.get_variant_tag() {
-                ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
-            }
+        if let Some(ref field_50) = self.field_50_instructing
+            && let Some(variant_tag) = field_50.get_variant_tag()
+        {
+            ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
         }
 
-        if let Some(ref field_50) = self.field_50_creditor {
-            if let Some(variant_tag) = field_50.get_variant_tag() {
-                ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
-            }
+        if let Some(ref field_50) = self.field_50_creditor
+            && let Some(variant_tag) = field_50.get_variant_tag()
+        {
+            ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
         }
 
-        if let Some(ref field_52) = self.field_52 {
-            if let Some(variant_tag) = field_52.get_variant_tag() {
-                ordered_fields.push((format!("52{}", variant_tag), field_52.to_swift_value()));
-            }
+        if let Some(ref field_52) = self.field_52
+            && let Some(variant_tag) = field_52.get_variant_tag()
+        {
+            ordered_fields.push((format!("52{}", variant_tag), field_52.to_swift_value()));
         }
 
         if let Some(ref field_26t) = self.field_26t {
@@ -597,32 +678,35 @@ impl crate::traits::SwiftMessageBody for MT107 {
 
             ordered_fields.push(("32B".to_string(), transaction.field_32b.to_swift_value()));
 
-            if let Some(ref field_50) = transaction.field_50_instructing {
-                if let Some(variant_tag) = field_50.get_variant_tag() {
-                    ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
-                }
+            if let Some(ref field_50) = transaction.field_50_instructing
+                && let Some(variant_tag) = field_50.get_variant_tag()
+            {
+                ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
             }
 
-            if let Some(ref field_50) = transaction.field_50_creditor {
-                if let Some(variant_tag) = field_50.get_variant_tag() {
-                    ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
-                }
+            if let Some(ref field_50) = transaction.field_50_creditor
+                && let Some(variant_tag) = field_50.get_variant_tag()
+            {
+                ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
             }
 
-            if let Some(ref field_52) = transaction.field_52 {
-                if let Some(variant_tag) = field_52.get_variant_tag() {
-                    ordered_fields.push((format!("52{}", variant_tag), field_52.to_swift_value()));
-                }
+            if let Some(ref field_52) = transaction.field_52
+                && let Some(variant_tag) = field_52.get_variant_tag()
+            {
+                ordered_fields.push((format!("52{}", variant_tag), field_52.to_swift_value()));
             }
 
-            if let Some(ref field_57) = transaction.field_57 {
-                if let Some(variant_tag) = field_57.get_variant_tag() {
-                    ordered_fields.push((format!("57{}", variant_tag), field_57.to_swift_value()));
-                }
+            if let Some(ref field_57) = transaction.field_57
+                && let Some(variant_tag) = field_57.get_variant_tag()
+            {
+                ordered_fields.push((format!("57{}", variant_tag), field_57.to_swift_value()));
             }
 
             if let Some(variant_tag) = transaction.field_59.get_variant_tag() {
-                ordered_fields.push((format!("59{}", variant_tag), transaction.field_59.to_swift_value()));
+                ordered_fields.push((
+                    format!("59{}", variant_tag),
+                    transaction.field_59.to_swift_value(),
+                ));
             } else {
                 ordered_fields.push(("59".to_string(), transaction.field_59.to_swift_value()));
             }
@@ -675,10 +759,10 @@ impl crate::traits::SwiftMessageBody for MT107 {
             ordered_fields.push(("71G".to_string(), field_71g.to_swift_value()));
         }
 
-        if let Some(ref field_53) = self.field_53 {
-            if let Some(variant_tag) = field_53.get_variant_tag() {
-                ordered_fields.push((format!("53{}", variant_tag), field_53.to_swift_value()));
-            }
+        if let Some(ref field_53) = self.field_53
+            && let Some(variant_tag) = field_53.get_variant_tag()
+        {
+            ordered_fields.push((format!("53{}", variant_tag), field_53.to_swift_value()));
         }
 
         ordered_fields
@@ -689,6 +773,9 @@ impl crate::traits::SwiftMessageBody for MT107 {
     }
 
     fn optional_fields() -> Vec<&'static str> {
-        vec!["23E", "21E", "51A", "50", "52", "26T", "77B", "71A", "72", "21C", "21D", "57", "70", "33B", "71F", "71G", "36", "19", "53"]
+        vec![
+            "23E", "21E", "51A", "50", "52", "26T", "77B", "71A", "72", "21C", "21D", "57", "70",
+            "33B", "71F", "71G", "36", "19", "53",
+        ]
     }
 }

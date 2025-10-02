@@ -439,7 +439,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         // }
 
         // Output fields in the correct order
-        for (_i, (field_tag, field_value)) in ordered_fields.iter().enumerate() {
+        for (field_tag, field_value) in ordered_fields.iter() {
             // Skip empty optional fields
             if optional_fields.contains(field_tag) && field_value.trim().is_empty() {
                 continue;
@@ -466,7 +466,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                 // Extract the MT tag, handling numbered fields and variant letters
                 let mt_tag = if field_tag.contains('#') {
                     // For numbered fields like "50#1", "50#2", extract base tag
-                    extract_base_tag(&field_tag).to_string()
+                    extract_base_tag(field_tag).to_string()
                 } else if field_tag.len() > 2
                     && field_tag
                         .chars()

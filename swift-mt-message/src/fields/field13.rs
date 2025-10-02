@@ -99,7 +99,7 @@ use super::swift_utils::{parse_date_yymmdd, parse_exact_length, parse_numeric, p
 use crate::errors::ParseError;
 use crate::traits::SwiftField;
 use chrono::{NaiveDate, NaiveTime};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 
 /// Helper module for serializing/deserializing NaiveTime as HHMM string
 mod time_format {
@@ -157,8 +157,9 @@ mod date_format {
         let month: u32 = s[2..4].parse().map_err(serde::de::Error::custom)?;
         let day: u32 = s[4..6].parse().map_err(serde::de::Error::custom)?;
 
-        NaiveDate::from_ymd_opt(year, month, day)
-            .ok_or_else(|| serde::de::Error::custom(format!("Invalid date: {}/{}/{}", year, month, day)))
+        NaiveDate::from_ymd_opt(year, month, day).ok_or_else(|| {
+            serde::de::Error::custom(format!("Invalid date: {}/{}/{}", year, month, day))
+        })
     }
 }
 

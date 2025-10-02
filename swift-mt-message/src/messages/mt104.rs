@@ -111,77 +111,155 @@ impl MT104 {
         // Parse mandatory fields
         eprintln!("DEBUG MT104: Starting message-level parsing");
         let field_20 = parser.parse_field::<Field20>("20")?;
-        eprintln!("DEBUG MT104: After field 20, position = {}", parser.position());
+        eprintln!(
+            "DEBUG MT104: After field 20, position = {}",
+            parser.position()
+        );
 
         let field_23e = parser.parse_optional_field::<Field23E>("23E")?;
-        eprintln!("DEBUG MT104: After field 23E, position = {}", parser.position());
+        eprintln!(
+            "DEBUG MT104: After field 23E, position = {}",
+            parser.position()
+        );
 
         let field_30 = parser.parse_field::<Field30>("30")?;
-        eprintln!("DEBUG MT104: After field 30, position = {}, remaining: {:?}", parser.position(), parser.remaining().chars().take(100).collect::<String>());
+        eprintln!(
+            "DEBUG MT104: After field 30, position = {}, remaining: {:?}",
+            parser.position(),
+            parser.remaining().chars().take(100).collect::<String>()
+        );
 
         // Parse optional fields before transactions
         let field_50 = parser.parse_optional_variant_field::<Field50Creditor>("50")?;
-        eprintln!("DEBUG MT104: After msg field 50, position = {}, found: {}", parser.position(), field_50.is_some());
+        eprintln!(
+            "DEBUG MT104: After msg field 50, position = {}, found: {}",
+            parser.position(),
+            field_50.is_some()
+        );
 
         let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
-        eprintln!("DEBUG MT104: After msg field 52, position = {}, found: {}", parser.position(), field_52.is_some());
+        eprintln!(
+            "DEBUG MT104: After msg field 52, position = {}, found: {}",
+            parser.position(),
+            field_52.is_some()
+        );
 
         let field_53 = parser.parse_optional_variant_field::<Field53SenderCorrespondent>("53")?;
-        eprintln!("DEBUG MT104: After msg field 53, position = {}, found: {}", parser.position(), field_53.is_some());
+        eprintln!(
+            "DEBUG MT104: After msg field 53, position = {}, found: {}",
+            parser.position(),
+            field_53.is_some()
+        );
 
         let field_71a = parser.parse_optional_field::<Field71A>("71A")?;
-        eprintln!("DEBUG MT104: After msg field 71A, position = {}, found: {}", parser.position(), field_71a.is_some());
+        eprintln!(
+            "DEBUG MT104: After msg field 71A, position = {}, found: {}",
+            parser.position(),
+            field_71a.is_some()
+        );
 
         let field_72 = parser.parse_optional_field::<Field72>("72")?;
-        eprintln!("DEBUG MT104: After msg field 72, position = {}, found: {}", parser.position(), field_72.is_some());
+        eprintln!(
+            "DEBUG MT104: After msg field 72, position = {}, found: {}",
+            parser.position(),
+            field_72.is_some()
+        );
 
         // Parse transactions - enable duplicates for repeating fields
         let mut transactions = Vec::new();
         parser = parser.with_duplicates(true);
 
-        eprintln!("DEBUG MT104: Starting transaction parsing loop at position {}", parser.position());
+        eprintln!(
+            "DEBUG MT104: Starting transaction parsing loop at position {}",
+            parser.position()
+        );
 
         // Parse each transaction - they start with field 21
         let mut txn_count = 0;
         while parser.detect_field("21") {
             txn_count += 1;
-            eprintln!("DEBUG MT104: === Transaction {} detected at position {} ===", txn_count, parser.position());
-            eprintln!("DEBUG MT104: Remaining content (first 150 chars): {:?}", parser.remaining().chars().take(150).collect::<String>());
+            eprintln!(
+                "DEBUG MT104: === Transaction {} detected at position {} ===",
+                txn_count,
+                parser.position()
+            );
+            eprintln!(
+                "DEBUG MT104: Remaining content (first 150 chars): {:?}",
+                parser.remaining().chars().take(150).collect::<String>()
+            );
 
             let field_21 = parser.parse_field::<Field21NoOption>("21")?;
-            eprintln!("DEBUG MT104: After field 21, position = {}", parser.position());
+            eprintln!(
+                "DEBUG MT104: After field 21, position = {}",
+                parser.position()
+            );
 
             let field_23e = parser.parse_optional_field::<Field23E>("23E")?;
-            eprintln!("DEBUG MT104: After field 23E, position = {}", parser.position());
+            eprintln!(
+                "DEBUG MT104: After field 23E, position = {}",
+                parser.position()
+            );
 
             let field_32b = parser.parse_field::<Field32B>("32B")?;
-            eprintln!("DEBUG MT104: After field 32B, position = {}", parser.position());
+            eprintln!(
+                "DEBUG MT104: After field 32B, position = {}",
+                parser.position()
+            );
 
             // Parse optional transaction fields
             let field_50 = parser.parse_optional_variant_field::<Field50Creditor>("50")?;
-            eprintln!("DEBUG MT104: After field 50, position = {}", parser.position());
+            eprintln!(
+                "DEBUG MT104: After field 50, position = {}",
+                parser.position()
+            );
 
-            let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
-            eprintln!("DEBUG MT104: After field 52, position = {}", parser.position());
+            let field_52 =
+                parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+            eprintln!(
+                "DEBUG MT104: After field 52, position = {}",
+                parser.position()
+            );
 
             let field_57 = parser.parse_optional_variant_field::<Field57>("57")?;
-            eprintln!("DEBUG MT104: After field 57, position = {}", parser.position());
+            eprintln!(
+                "DEBUG MT104: After field 57, position = {}",
+                parser.position()
+            );
 
             let field_59 = parser.parse_variant_field::<Field59>("59")?;
-            eprintln!("DEBUG MT104: After field 59, position = {}", parser.position());
+            eprintln!(
+                "DEBUG MT104: After field 59, position = {}",
+                parser.position()
+            );
 
             let field_70 = parser.parse_optional_field::<Field70>("70")?;
-            eprintln!("DEBUG MT104: After field 70, position = {}", parser.position());
+            eprintln!(
+                "DEBUG MT104: After field 70, position = {}",
+                parser.position()
+            );
 
             let field_71a = parser.parse_optional_field::<Field71A>("71A")?;
-            eprintln!("DEBUG MT104: After field 71A, position = {}", parser.position());
+            eprintln!(
+                "DEBUG MT104: After field 71A, position = {}",
+                parser.position()
+            );
 
             let field_72 = parser.parse_optional_field::<Field72>("72")?;
-            eprintln!("DEBUG MT104: After field 72, position = {}", parser.position());
+            eprintln!(
+                "DEBUG MT104: After field 72, position = {}",
+                parser.position()
+            );
 
             let field_77b = parser.parse_optional_field::<Field77B>("77B")?;
-            eprintln!("DEBUG MT104: After field 77B, position = {}", parser.position());
-            eprintln!("DEBUG MT104: Transaction {} complete. Remaining (first 80 chars): {:?}", txn_count, parser.remaining().chars().take(80).collect::<String>());
+            eprintln!(
+                "DEBUG MT104: After field 77B, position = {}",
+                parser.position()
+            );
+            eprintln!(
+                "DEBUG MT104: Transaction {} complete. Remaining (first 80 chars): {:?}",
+                txn_count,
+                parser.remaining().chars().take(80).collect::<String>()
+            );
 
             transactions.push(MT104Transaction {
                 field_21,
@@ -198,9 +276,19 @@ impl MT104 {
             });
         }
 
-        eprintln!("DEBUG MT104: Transaction loop exited. Parsed {} transactions. Current position = {}", txn_count, parser.position());
-        eprintln!("DEBUG MT104: Checking for next field 21: {}", parser.detect_field("21"));
-        eprintln!("DEBUG MT104: Remaining content (first 200 chars): {:?}", parser.remaining().chars().take(200).collect::<String>());
+        eprintln!(
+            "DEBUG MT104: Transaction loop exited. Parsed {} transactions. Current position = {}",
+            txn_count,
+            parser.position()
+        );
+        eprintln!(
+            "DEBUG MT104: Checking for next field 21: {}",
+            parser.detect_field("21")
+        );
+        eprintln!(
+            "DEBUG MT104: Remaining content (first 200 chars): {:?}",
+            parser.remaining().chars().take(200).collect::<String>()
+        );
 
         // Parse the summary amount field at the end (Sequence C)
         let field_32b = parser.parse_field::<Field32B>("32B")?;
@@ -398,7 +486,10 @@ impl crate::traits::SwiftMessageBody for MT104 {
 
         if let Some(ref field_50) = self.field_50 {
             if let Some(variant_tag) = field_50.get_variant_tag() {
-                fields.insert(format!("50{}", variant_tag), vec![field_50.to_swift_value()]);
+                fields.insert(
+                    format!("50{}", variant_tag),
+                    vec![field_50.to_swift_value()],
+                );
             } else {
                 fields.insert("50".to_string(), vec![field_50.to_swift_value()]);
             }
@@ -406,7 +497,10 @@ impl crate::traits::SwiftMessageBody for MT104 {
 
         if let Some(ref field_52) = self.field_52 {
             if let Some(variant_tag) = field_52.get_variant_tag() {
-                fields.insert(format!("52{}", variant_tag), vec![field_52.to_swift_value()]);
+                fields.insert(
+                    format!("52{}", variant_tag),
+                    vec![field_52.to_swift_value()],
+                );
             } else {
                 fields.insert("52".to_string(), vec![field_52.to_swift_value()]);
             }
@@ -414,7 +508,10 @@ impl crate::traits::SwiftMessageBody for MT104 {
 
         if let Some(ref field_53) = self.field_53 {
             if let Some(variant_tag) = field_53.get_variant_tag() {
-                fields.insert(format!("53{}", variant_tag), vec![field_53.to_swift_value()]);
+                fields.insert(
+                    format!("53{}", variant_tag),
+                    vec![field_53.to_swift_value()],
+                );
             } else {
                 fields.insert("53".to_string(), vec![field_53.to_swift_value()]);
             }
@@ -430,55 +527,97 @@ impl crate::traits::SwiftMessageBody for MT104 {
 
         // Add transaction fields
         for transaction in &self.transactions {
-            fields.entry("21".to_string()).or_default().push(transaction.field_21.to_swift_value());
+            fields
+                .entry("21".to_string())
+                .or_default()
+                .push(transaction.field_21.to_swift_value());
 
             if let Some(ref field_23e) = transaction.field_23e {
-                fields.entry("23E".to_string()).or_default().push(field_23e.to_swift_value());
+                fields
+                    .entry("23E".to_string())
+                    .or_default()
+                    .push(field_23e.to_swift_value());
             }
 
-            fields.entry("32B".to_string()).or_default().push(transaction.field_32b.to_swift_value());
+            fields
+                .entry("32B".to_string())
+                .or_default()
+                .push(transaction.field_32b.to_swift_value());
 
             if let Some(ref field_50) = transaction.field_50 {
                 if let Some(variant_tag) = field_50.get_variant_tag() {
-                    fields.entry(format!("50{}", variant_tag)).or_default().push(field_50.to_swift_value());
+                    fields
+                        .entry(format!("50{}", variant_tag))
+                        .or_default()
+                        .push(field_50.to_swift_value());
                 } else {
-                    fields.entry("50".to_string()).or_default().push(field_50.to_swift_value());
+                    fields
+                        .entry("50".to_string())
+                        .or_default()
+                        .push(field_50.to_swift_value());
                 }
             }
 
             if let Some(ref field_52) = transaction.field_52 {
                 if let Some(variant_tag) = field_52.get_variant_tag() {
-                    fields.entry(format!("52{}", variant_tag)).or_default().push(field_52.to_swift_value());
+                    fields
+                        .entry(format!("52{}", variant_tag))
+                        .or_default()
+                        .push(field_52.to_swift_value());
                 } else {
-                    fields.entry("52".to_string()).or_default().push(field_52.to_swift_value());
+                    fields
+                        .entry("52".to_string())
+                        .or_default()
+                        .push(field_52.to_swift_value());
                 }
             }
 
             if let Some(ref field_57) = transaction.field_57 {
                 if let Some(variant_tag) = field_57.get_variant_tag() {
-                    fields.entry(format!("57{}", variant_tag)).or_default().push(field_57.to_swift_value());
+                    fields
+                        .entry(format!("57{}", variant_tag))
+                        .or_default()
+                        .push(field_57.to_swift_value());
                 } else {
-                    fields.entry("57".to_string()).or_default().push(field_57.to_swift_value());
+                    fields
+                        .entry("57".to_string())
+                        .or_default()
+                        .push(field_57.to_swift_value());
                 }
             }
 
             if let Some(variant_tag) = transaction.field_59.get_variant_tag() {
-                fields.entry(format!("59{}", variant_tag)).or_default().push(transaction.field_59.to_swift_value());
+                fields
+                    .entry(format!("59{}", variant_tag))
+                    .or_default()
+                    .push(transaction.field_59.to_swift_value());
             } else {
-                fields.entry("59".to_string()).or_default().push(transaction.field_59.to_swift_value());
+                fields
+                    .entry("59".to_string())
+                    .or_default()
+                    .push(transaction.field_59.to_swift_value());
             }
 
             if let Some(ref field_70) = transaction.field_70 {
-                fields.entry("70".to_string()).or_default().push(field_70.to_swift_value());
+                fields
+                    .entry("70".to_string())
+                    .or_default()
+                    .push(field_70.to_swift_value());
             }
 
             if let Some(ref field_72) = transaction.field_72 {
-                fields.entry("72".to_string()).or_default().push(field_72.to_swift_value());
+                fields
+                    .entry("72".to_string())
+                    .or_default()
+                    .push(field_72.to_swift_value());
             }
         }
 
         // Add summary amount (Sequence C)
-        fields.entry("32B".to_string()).or_default().push(self.field_32b.to_swift_value());
+        fields
+            .entry("32B".to_string())
+            .or_default()
+            .push(self.field_32b.to_swift_value());
 
         // Add optional Sequence C fields
         if let Some(ref field_19) = self.field_19 {
@@ -574,7 +713,10 @@ impl crate::traits::SwiftMessageBody for MT104 {
 
             // Add field 59 with variant
             if let Some(variant_tag) = transaction.field_59.get_variant_tag() {
-                ordered_fields.push((format!("59{}", variant_tag), transaction.field_59.to_swift_value()));
+                ordered_fields.push((
+                    format!("59{}", variant_tag),
+                    transaction.field_59.to_swift_value(),
+                ));
             } else {
                 ordered_fields.push(("59".to_string(), transaction.field_59.to_swift_value()));
             }

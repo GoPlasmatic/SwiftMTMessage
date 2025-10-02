@@ -54,7 +54,9 @@ impl MT292 {
         // Validation: Either Field 79 or original fields must be present
         if narrative_description.is_none() && original_fields.is_empty() {
             return Err(ParseError::InvalidFormat {
-                message: "MT292: Either Field 79 or copy of original message fields must be present".to_string(),
+                message:
+                    "MT292: Either Field 79 or copy of original message fields must be present"
+                        .to_string(),
             });
         }
 
@@ -93,8 +95,11 @@ impl crate::traits::SwiftMessageBody for MT292 {
         // Build block4
         let mut block4 = String::new();
         for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}
-", tag, value));
+            block4.push_str(&format!(
+                ":{}:{}
+",
+                tag, value
+            ));
         }
 
         Self::parse_from_block4(&block4)
@@ -106,7 +111,7 @@ impl crate::traits::SwiftMessageBody for MT292 {
     ) -> Result<ParseResult<Self>, ParseError> {
         match Self::from_fields(fields) {
             Ok(msg) => Ok(ParseResult::Success(msg)),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
@@ -114,9 +119,18 @@ impl crate::traits::SwiftMessageBody for MT292 {
         let mut fields = HashMap::new();
 
         // Note: Field order matters in SWIFT - 20 and 21 must come before 11S
-        fields.insert("20".to_string(), vec![self.transaction_reference.to_swift_string()]);
-        fields.insert("21".to_string(), vec![self.related_reference.to_swift_string()]);
-        fields.insert("11S".to_string(), vec![self.original_message_type.to_swift_string()]);
+        fields.insert(
+            "20".to_string(),
+            vec![self.transaction_reference.to_swift_string()],
+        );
+        fields.insert(
+            "21".to_string(),
+            vec![self.related_reference.to_swift_string()],
+        );
+        fields.insert(
+            "11S".to_string(),
+            vec![self.original_message_type.to_swift_string()],
+        );
 
         if let Some(ref narrative) = self.narrative_description {
             fields.insert("79".to_string(), vec![narrative.to_swift_string()]);
@@ -180,7 +194,8 @@ impl crate::traits::SwiftMessageBody for MT292 {
         }
 
         // Add any other fields (from original_fields) in numeric order
-        let mut other_tags: Vec<String> = field_map.keys()
+        let mut other_tags: Vec<String> = field_map
+            .keys()
             .filter(|k| !["20", "21", "11S", "79"].contains(&k.as_str()))
             .cloned()
             .collect();

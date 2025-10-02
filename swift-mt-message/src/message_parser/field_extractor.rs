@@ -45,7 +45,10 @@ pub fn extract_field_content(input: &str, tag: &str) -> Option<(String, usize)> 
     let content = raw_content.trim_end_matches('\n').trim_end_matches('\r');
 
     // Calculate consumed characters including the newline after the content if present
-    let consumed = field_start + field_marker.len() + raw_content_len + if has_trailing_newline { 1 } else { 0 };
+    let consumed = field_start
+        + field_marker.len()
+        + raw_content_len
+        + if has_trailing_newline { 1 } else { 0 };
 
     Some((content.to_string(), consumed))
 }

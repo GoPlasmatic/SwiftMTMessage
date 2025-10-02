@@ -207,8 +207,11 @@ impl crate::traits::SwiftMessageBody for MT910 {
         // Reconstruct block4 in the correct order
         let mut block4 = String::new();
         for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}
-", tag, value));
+            block4.push_str(&format!(
+                ":{}:{}
+",
+                tag, value
+            ));
         }
         Self::parse_from_block4(&block4)
     }

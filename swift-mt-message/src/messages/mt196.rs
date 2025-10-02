@@ -73,22 +73,28 @@ impl MT196 {
         let reference = &self.field_20.reference;
         if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT196: Field 20 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT196: Field 20 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 21 - same rules as Field 20
         let related_ref = &self.field_21.reference;
-        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//") {
+        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//")
+        {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT196: Field 21 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT196: Field 21 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 76 has content
         if self.field_76.information.is_empty() {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT196: Field 76 must contain at least one line of answer information".to_string(),
+                message: "MT196: Field 76 must contain at least one line of answer information"
+                    .to_string(),
             });
         }
 
@@ -149,7 +155,8 @@ impl crate::traits::SwiftMessageBody for MT196 {
         }
 
         if let Some(ref field_11) = self.field_11 {
-            let field_11_value = format!("{}{:02}{:02}{:02}",
+            let field_11_value = format!(
+                "{}{:02}{:02}{:02}",
                 field_11.message_type,
                 field_11.date.year() % 100,
                 field_11.date.month(),

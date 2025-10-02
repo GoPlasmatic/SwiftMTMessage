@@ -309,8 +309,7 @@ mod date_string {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        NaiveDate::parse_from_str(&s, "%Y-%m-%d")
-            .map_err(serde::de::Error::custom)
+        NaiveDate::parse_from_str(&s, "%Y-%m-%d").map_err(serde::de::Error::custom)
     }
 }
 
@@ -666,10 +665,7 @@ mod tests {
         let field = Field32AmountCD::parse("240719EUR500,25").unwrap();
         match field {
             Field32AmountCD::C(f) => {
-                assert_eq!(
-                    f.value_date,
-                    NaiveDate::from_ymd_opt(2024, 7, 19).unwrap()
-                );
+                assert_eq!(f.value_date, NaiveDate::from_ymd_opt(2024, 7, 19).unwrap());
                 assert_eq!(f.currency, "EUR");
                 assert_eq!(f.amount, 500.25);
             }
@@ -681,10 +677,7 @@ mod tests {
         match field {
             Field32AmountCD::C(f) => {
                 // Since both C and D have same format, it will parse as C first
-                assert_eq!(
-                    f.value_date,
-                    NaiveDate::from_ymd_opt(2024, 7, 20).unwrap()
-                );
+                assert_eq!(f.value_date, NaiveDate::from_ymd_opt(2024, 7, 20).unwrap());
                 assert_eq!(f.currency, "USD");
                 assert_eq!(f.amount, 750.50);
             }

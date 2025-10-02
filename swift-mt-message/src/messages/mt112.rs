@@ -102,22 +102,30 @@ impl MT112 {
         let reference = &self.field_20.reference;
         if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT112: Field 20 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT112: Field 20 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 21 - same rules as Field 20
         let cheque_number = &self.field_21.reference;
-        if cheque_number.starts_with('/') || cheque_number.ends_with('/') || cheque_number.contains("//") {
+        if cheque_number.starts_with('/')
+            || cheque_number.ends_with('/')
+            || cheque_number.contains("//")
+        {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT112: Field 21 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT112: Field 21 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 76 is not empty
         if self.field_76.information.is_empty() {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT112: Field 76 must contain at least one line of status information".to_string(),
+                message: "MT112: Field 76 must contain at least one line of status information"
+                    .to_string(),
             });
         }
 
@@ -171,28 +179,40 @@ impl crate::traits::SwiftMessageBody for MT112 {
         // Add mandatory fields
         fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
         fields.insert("21".to_string(), vec![self.field_21.reference.clone()]);
-        fields.insert("30".to_string(), vec![format!("{:02}{:02}{:02}",
-            self.field_30.execution_date.year() % 100,
-            self.field_30.execution_date.month(),
-            self.field_30.execution_date.day()
-        )]);
+        fields.insert(
+            "30".to_string(),
+            vec![format!(
+                "{:02}{:02}{:02}",
+                self.field_30.execution_date.year() % 100,
+                self.field_30.execution_date.month(),
+                self.field_30.execution_date.day()
+            )],
+        );
 
         // Add amount field (32A or 32B)
         match &self.field_32 {
             Field32Amount::A(field_32a) => {
-                fields.insert("32A".to_string(), vec![format!("{:02}{:02}{:02}{}{}",
-                    field_32a.value_date.year() % 100,
-                    field_32a.value_date.month(),
-                    field_32a.value_date.day(),
-                    field_32a.currency,
-                    field_32a.amount.to_string().replace('.', ",")
-                )]);
+                fields.insert(
+                    "32A".to_string(),
+                    vec![format!(
+                        "{:02}{:02}{:02}{}{}",
+                        field_32a.value_date.year() % 100,
+                        field_32a.value_date.month(),
+                        field_32a.value_date.day(),
+                        field_32a.currency,
+                        field_32a.amount.to_string().replace('.', ",")
+                    )],
+                );
             }
             Field32Amount::B(field_32b) => {
-                fields.insert("32B".to_string(), vec![format!("{}{}",
-                    field_32b.currency,
-                    field_32b.amount.to_string().replace('.', ",")
-                )]);
+                fields.insert(
+                    "32B".to_string(),
+                    vec![format!(
+                        "{}{}",
+                        field_32b.currency,
+                        field_32b.amount.to_string().replace('.', ",")
+                    )],
+                );
             }
         }
 

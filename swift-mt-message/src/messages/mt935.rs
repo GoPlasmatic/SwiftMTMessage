@@ -92,7 +92,10 @@ impl MT935 {
 
         if num_sequences > 10 {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!("MT935: Maximum 10 rate change sequences allowed, found {}", num_sequences),
+                message: format!(
+                    "MT935: Maximum 10 rate change sequences allowed, found {}",
+                    num_sequences
+                ),
             });
         }
 
@@ -133,7 +136,7 @@ impl MT935 {
 
             // Simple distribution: if we have N sequences and M field 37Hs,
             // give each sequence approximately M/N fields
-            let fields_per_sequence = (field_37h_list.len() + num_sequences - 1) / num_sequences;
+            let fields_per_sequence = field_37h_list.len().div_ceil(num_sequences);
             let start_idx = i * fields_per_sequence;
             let end_idx = std::cmp::min((i + 1) * fields_per_sequence, field_37h_list.len());
 
@@ -150,7 +153,10 @@ impl MT935 {
 
             if sequence_37h.is_empty() {
                 return Err(crate::errors::ParseError::InvalidFormat {
-                    message: format!("MT935: At least one field 37H is required for sequence {}", i + 1),
+                    message: format!(
+                        "MT935: At least one field 37H is required for sequence {}",
+                        i + 1
+                    ),
                 });
             }
 
@@ -182,7 +188,10 @@ impl MT935 {
         // C1: Rate change sequences must occur 1-10 times
         if self.rate_changes.is_empty() || self.rate_changes.len() > 10 {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!("MT935: Rate change sequences must occur 1-10 times, found {}", self.rate_changes.len()),
+                message: format!(
+                    "MT935: Rate change sequences must occur 1-10 times, found {}",
+                    self.rate_changes.len()
+                ),
             });
         }
 
@@ -194,7 +203,10 @@ impl MT935 {
                 }
                 (Some(_), Some(_)) => {
                     return Err(crate::errors::ParseError::InvalidFormat {
-                        message: format!("MT935: Sequence {} cannot have both field 23 and field 25", idx + 1),
+                        message: format!(
+                            "MT935: Sequence {} cannot have both field 23 and field 25",
+                            idx + 1
+                        ),
                     });
                 }
                 _ => {} // Valid: exactly one field present
@@ -255,18 +267,30 @@ impl crate::traits::SwiftMessageBody for MT935 {
         for seq in &self.rate_changes {
             // Add field 23 or 25
             if let Some(ref field_23) = seq.field_23 {
-                fields.entry("23".to_string()).or_insert_with(Vec::new).push(field_23.to_swift_string());
+                fields
+                    .entry("23".to_string())
+                    .or_insert_with(Vec::new)
+                    .push(field_23.to_swift_string());
             }
             if let Some(ref field_25) = seq.field_25 {
-                fields.entry("25".to_string()).or_insert_with(Vec::new).push(field_25.authorisation.clone());
+                fields
+                    .entry("25".to_string())
+                    .or_insert_with(Vec::new)
+                    .push(field_25.authorisation.clone());
             }
 
             // Add field 30
-            fields.entry("30".to_string()).or_insert_with(Vec::new).push(seq.field_30.to_swift_string());
+            fields
+                .entry("30".to_string())
+                .or_insert_with(Vec::new)
+                .push(seq.field_30.to_swift_string());
 
             // Add field 37H (multiple)
             for field_37h in &seq.field_37h {
-                fields.entry("37H".to_string()).or_insert_with(Vec::new).push(field_37h.to_swift_string());
+                fields
+                    .entry("37H".to_string())
+                    .or_insert_with(Vec::new)
+                    .push(field_37h.to_swift_string());
             }
         }
 

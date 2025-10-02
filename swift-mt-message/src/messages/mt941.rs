@@ -183,55 +183,55 @@ impl MT941 {
         let base_currency = &self.field_62f.currency[0..2];
 
         // Check 60F if present
-        if let Some(ref field_60f) = self.field_60f {
-            if &field_60f.currency[0..2] != base_currency {
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: format!(
-                        "MT941: Currency code mismatch - field 60F currency '{}' does not match field 62F currency '{}'",
-                        &field_60f.currency[0..2],
-                        base_currency
-                    ),
-                });
-            }
+        if let Some(ref field_60f) = self.field_60f
+            && &field_60f.currency[0..2] != base_currency
+        {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "MT941: Currency code mismatch - field 60F currency '{}' does not match field 62F currency '{}'",
+                    &field_60f.currency[0..2],
+                    base_currency
+                ),
+            });
         }
 
         // Check 90D if present
-        if let Some(ref field_90d) = self.field_90d {
-            if &field_90d.currency[0..2] != base_currency {
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: format!(
-                        "MT941: Currency code mismatch - field 90D currency '{}' does not match field 62F currency '{}'",
-                        &field_90d.currency[0..2],
-                        base_currency
-                    ),
-                });
-            }
+        if let Some(ref field_90d) = self.field_90d
+            && &field_90d.currency[0..2] != base_currency
+        {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "MT941: Currency code mismatch - field 90D currency '{}' does not match field 62F currency '{}'",
+                    &field_90d.currency[0..2],
+                    base_currency
+                ),
+            });
         }
 
         // Check 90C if present
-        if let Some(ref field_90c) = self.field_90c {
-            if &field_90c.currency[0..2] != base_currency {
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: format!(
-                        "MT941: Currency code mismatch - field 90C currency '{}' does not match field 62F currency '{}'",
-                        &field_90c.currency[0..2],
-                        base_currency
-                    ),
-                });
-            }
+        if let Some(ref field_90c) = self.field_90c
+            && &field_90c.currency[0..2] != base_currency
+        {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "MT941: Currency code mismatch - field 90C currency '{}' does not match field 62F currency '{}'",
+                    &field_90c.currency[0..2],
+                    base_currency
+                ),
+            });
         }
 
         // Check 64 if present
-        if let Some(ref field_64) = self.field_64 {
-            if &field_64.currency[0..2] != base_currency {
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: format!(
-                        "MT941: Currency code mismatch - field 64 currency '{}' does not match field 62F currency '{}'",
-                        &field_64.currency[0..2],
-                        base_currency
-                    ),
-                });
-            }
+        if let Some(ref field_64) = self.field_64
+            && &field_64.currency[0..2] != base_currency
+        {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "MT941: Currency code mismatch - field 64 currency '{}' does not match field 62F currency '{}'",
+                    &field_64.currency[0..2],
+                    base_currency
+                ),
+            });
         }
 
         // Check 65 if present

@@ -58,16 +58,23 @@ impl MT199 {
         let reference = &self.field_20.reference;
         if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT199: Field 20 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT199: Field 20 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 21 if present - same rules as Field 20
         if let Some(ref field_21) = self.field_21 {
             let related_ref = &field_21.reference;
-            if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//") {
+            if related_ref.starts_with('/')
+                || related_ref.ends_with('/')
+                || related_ref.contains("//")
+            {
                 return Err(crate::errors::ParseError::InvalidFormat {
-                    message: "MT199: Field 21 must not start or end with '/', and must not contain '//'".to_string(),
+                    message:
+                        "MT199: Field 21 must not start or end with '/', and must not contain '//'"
+                            .to_string(),
                 });
             }
         }
@@ -80,11 +87,11 @@ impl MT199 {
         }
 
         // Check for reject/return codes in narrative (informational only)
-        if let Some(first_line) = self.field_79.information.first() {
-            if first_line.starts_with("/REJT/") || first_line.starts_with("/RETN/") {
-                // Note: In production, additional validation for Payments Guidelines would be needed
-                // For now, we just acknowledge these special cases exist
-            }
+        if let Some(first_line) = self.field_79.information.first()
+            && (first_line.starts_with("/REJT/") || first_line.starts_with("/RETN/"))
+        {
+            // Note: In production, additional validation for Payments Guidelines would be needed
+            // For now, we just acknowledge these special cases exist
         }
 
         Ok(())
@@ -92,14 +99,18 @@ impl MT199 {
 
     /// Check if this is a reject message
     pub fn is_reject_message(&self) -> bool {
-        self.field_79.information.first()
+        self.field_79
+            .information
+            .first()
             .map(|line| line.starts_with("/REJT/"))
             .unwrap_or(false)
     }
 
     /// Check if this is a return message
     pub fn is_return_message(&self) -> bool {
-        self.field_79.information.first()
+        self.field_79
+            .information
+            .first()
             .map(|line| line.starts_with("/RETN/"))
             .unwrap_or(false)
     }

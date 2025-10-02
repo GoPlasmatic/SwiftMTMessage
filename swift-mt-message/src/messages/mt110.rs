@@ -133,10 +133,8 @@ impl MT110 {
         for (idx, cheque) in cheque_details.iter().enumerate() {
             let cheque_currency = if let Some(ref amt) = cheque.field_32a {
                 Some(amt.currency.clone())
-            } else if let Some(ref amt) = cheque.field_32b {
-                Some(amt.currency.clone())
             } else {
-                None
+                cheque.field_32b.as_ref().map(|amt| amt.currency.clone())
             };
 
             if let Some(cheque_curr) = cheque_currency {
@@ -312,7 +310,8 @@ impl crate::traits::SwiftMessageBody for MT110 {
             fields
                 .entry("30".to_string())
                 .or_insert_with(Vec::new)
-                .push(format!("{:02}{:02}{:02}",
+                .push(format!(
+                    "{:02}{:02}{:02}",
                     cheque.field_30.execution_date.year() % 100,
                     cheque.field_30.execution_date.month(),
                     cheque.field_30.execution_date.day()

@@ -77,10 +77,7 @@ impl MT940 {
             let field_61 = parser.parse_field::<Field61>("61")?;
             let field_86 = parser.parse_optional_field::<Field86>("86")?;
 
-            statement_lines.push(MT940StatementLine {
-                field_61,
-                field_86,
-            });
+            statement_lines.push(MT940StatementLine { field_61, field_86 });
         }
 
         // Must have at least one statement line
@@ -123,7 +120,10 @@ impl MT940 {
         // C1: Statement lines must occur 1-500 times
         if self.statement_lines.is_empty() || self.statement_lines.len() > 500 {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!("MT940: Statement lines must occur 1-500 times, found {}", self.statement_lines.len()),
+                message: format!(
+                    "MT940: Statement lines must occur 1-500 times, found {}",
+                    self.statement_lines.len()
+                ),
             });
         }
 

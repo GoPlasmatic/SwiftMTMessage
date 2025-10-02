@@ -173,9 +173,22 @@ impl<'a> MessageParser<'a> {
 
         #[cfg(debug_assertions)]
         {
-            if tag.starts_with("21") || tag.starts_with("32") || tag.starts_with("57") || tag.starts_with("59") {
-                eprintln!("DEBUG extract_field('{}') at position {} (allow_duplicates={})", tag, self.position, self.allow_duplicates);
-                eprintln!("  -> input slice (first 100 chars): {:?}", &self.input[self.position..].chars().take(100).collect::<String>());
+            if tag.starts_with("21")
+                || tag.starts_with("32")
+                || tag.starts_with("57")
+                || tag.starts_with("59")
+            {
+                eprintln!(
+                    "DEBUG extract_field('{}') at position {} (allow_duplicates={})",
+                    tag, self.position, self.allow_duplicates
+                );
+                eprintln!(
+                    "  -> input slice (first 100 chars): {:?}",
+                    &self.input[self.position..]
+                        .chars()
+                        .take(100)
+                        .collect::<String>()
+                );
             }
         }
 
@@ -184,8 +197,17 @@ impl<'a> MessageParser<'a> {
 
         #[cfg(debug_assertions)]
         {
-            if tag.starts_with("21") || tag.starts_with("32") || tag.starts_with("57") || tag.starts_with("59") {
-                eprintln!("  -> extract_field_content returned: {:?}", extract_result.as_ref().map(|(c, consumed)| (c.len(), *consumed)));
+            if tag.starts_with("21")
+                || tag.starts_with("32")
+                || tag.starts_with("57")
+                || tag.starts_with("59")
+            {
+                eprintln!(
+                    "  -> extract_field_content returned: {:?}",
+                    extract_result
+                        .as_ref()
+                        .map(|(c, consumed)| (c.len(), *consumed))
+                );
             }
         }
 
@@ -193,9 +215,21 @@ impl<'a> MessageParser<'a> {
             Some((content, consumed)) => {
                 #[cfg(debug_assertions)]
                 {
-                    if tag.starts_with("21") || tag.starts_with("32") || tag.starts_with("57") || tag.starts_with("59") {
-                        eprintln!("  -> extracted content length={}, consumed={}, new position={}", content.len(), consumed, self.position + consumed);
-                        eprintln!("  -> content (first 40 chars): {:?}", &content.chars().take(40).collect::<String>());
+                    if tag.starts_with("21")
+                        || tag.starts_with("32")
+                        || tag.starts_with("57")
+                        || tag.starts_with("59")
+                    {
+                        eprintln!(
+                            "  -> extracted content length={}, consumed={}, new position={}",
+                            content.len(),
+                            consumed,
+                            self.position + consumed
+                        );
+                        eprintln!(
+                            "  -> content (first 40 chars): {:?}",
+                            &content.chars().take(40).collect::<String>()
+                        );
                     }
                 }
                 self.position += consumed;
@@ -208,7 +242,11 @@ impl<'a> MessageParser<'a> {
             None => {
                 #[cfg(debug_assertions)]
                 {
-                    if tag.starts_with("21") || tag.starts_with("32") || tag.starts_with("57") || tag.starts_with("59") {
+                    if tag.starts_with("21")
+                        || tag.starts_with("32")
+                        || tag.starts_with("57")
+                        || tag.starts_with("59")
+                    {
                         eprintln!("  -> NOT FOUND");
                     }
                 }
@@ -243,9 +281,18 @@ impl<'a> MessageParser<'a> {
         #[cfg(debug_assertions)]
         {
             if base_tag == "59" {
-                eprintln!("DEBUG detect_variant('{}') at position {}", base_tag, self.position);
-                eprintln!("  remaining (first 80 chars): {:?}", &remaining.chars().take(80).collect::<String>());
-                eprintln!("  trimmed (first 80 chars): {:?}", &trimmed.chars().take(80).collect::<String>());
+                eprintln!(
+                    "DEBUG detect_variant('{}') at position {}",
+                    base_tag, self.position
+                );
+                eprintln!(
+                    "  remaining (first 80 chars): {:?}",
+                    &remaining.chars().take(80).collect::<String>()
+                );
+                eprintln!(
+                    "  trimmed (first 80 chars): {:?}",
+                    &trimmed.chars().take(80).collect::<String>()
+                );
             }
         }
 

@@ -83,22 +83,28 @@ impl MT191 {
         let reference = &self.field_20.reference;
         if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT191: Field 20 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT191: Field 20 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 21 - same rules as Field 20
         let related_ref = &self.field_21.reference;
-        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//") {
+        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//")
+        {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT191: Field 21 must not start or end with '/', and must not contain '//'".to_string(),
+                message:
+                    "MT191: Field 21 must not start or end with '/', and must not contain '//'"
+                        .to_string(),
             });
         }
 
         // Validate Field 71B has content
         if self.field_71b.details.is_empty() {
             return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT191: Field 71B must contain at least one line of charge details".to_string(),
+                message: "MT191: Field 71B must contain at least one line of charge details"
+                    .to_string(),
             });
         }
 
@@ -151,10 +157,14 @@ impl crate::traits::SwiftMessageBody for MT191 {
         // Add mandatory fields
         fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
         fields.insert("21".to_string(), vec![self.field_21.reference.clone()]);
-        fields.insert("32B".to_string(), vec![format!("{}{}",
-            self.field_32b.currency,
-            self.field_32b.amount.to_string().replace('.', ",")
-        )]);
+        fields.insert(
+            "32B".to_string(),
+            vec![format!(
+                "{}{}",
+                self.field_32b.currency,
+                self.field_32b.amount.to_string().replace('.', ",")
+            )],
+        );
 
         // Add optional fields
         if let Some(ref field_52) = self.field_52 {

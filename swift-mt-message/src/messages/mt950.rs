@@ -188,23 +188,22 @@ impl MT950 {
             return Err(crate::errors::ParseError::InvalidFormat {
                 message: format!(
                     "MT950: Currency code mismatch - field 62 currency '{}' does not match field 60 currency '{}'",
-                    field_62_currency,
-                    base_currency
+                    field_62_currency, base_currency
                 ),
             });
         }
 
         // Check field 64 if present
-        if let Some(ref field_64) = self.field_64 {
-            if &field_64.currency[0..2] != base_currency {
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: format!(
-                        "MT950: Currency code mismatch - field 64 currency '{}' does not match field 60 currency '{}'",
-                        &field_64.currency[0..2],
-                        base_currency
-                    ),
-                });
-            }
+        if let Some(ref field_64) = self.field_64
+            && &field_64.currency[0..2] != base_currency
+        {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "MT950: Currency code mismatch - field 64 currency '{}' does not match field 60 currency '{}'",
+                    &field_64.currency[0..2],
+                    base_currency
+                ),
+            });
         }
 
         Ok(())

@@ -52,7 +52,8 @@ impl MT290 {
         let related_reference = parser.parse_field::<Field21NoOption>("21")?;
 
         // Parse Field 25 - Account Identification
-        let account_identification = parser.parse_variant_field::<Field25AccountIdentification>("25")?;
+        let account_identification =
+            parser.parse_variant_field::<Field25AccountIdentification>("25")?;
 
         // Parse Field 32 - check for variant (32C or 32D)
         let value_date_amount = if parser.detect_field("32C") {
@@ -66,7 +67,8 @@ impl MT290 {
         };
 
         // Parse optional Field 52 - Ordering Institution
-        let ordering_institution = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+        let ordering_institution =
+            parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
 
         // Parse mandatory Field 71B
         let details_of_charges = parser.parse_field::<Field71B>("71B")?;
@@ -123,15 +125,21 @@ impl crate::traits::SwiftMessageBody for MT290 {
     ) -> Result<ParseResult<Self>, ParseError> {
         match Self::from_fields(fields) {
             Ok(msg) => Ok(ParseResult::Success(msg)),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
     fn to_fields(&self) -> HashMap<String, Vec<String>> {
         let mut fields = HashMap::new();
 
-        fields.insert("20".to_string(), vec![self.transaction_reference.to_swift_string()]);
-        fields.insert("21".to_string(), vec![self.related_reference.to_swift_string()]);
+        fields.insert(
+            "20".to_string(),
+            vec![self.transaction_reference.to_swift_string()],
+        );
+        fields.insert(
+            "21".to_string(),
+            vec![self.related_reference.to_swift_string()],
+        );
         match &self.account_identification {
             Field25AccountIdentification::NoOption(f) => {
                 fields.insert("25".to_string(), vec![f.to_swift_string()]);
@@ -161,7 +169,10 @@ impl crate::traits::SwiftMessageBody for MT290 {
             }
         }
 
-        fields.insert("71B".to_string(), vec![self.details_of_charges.to_swift_string()]);
+        fields.insert(
+            "71B".to_string(),
+            vec![self.details_of_charges.to_swift_string()],
+        );
 
         if let Some(ref sender_info) = self.sender_to_receiver {
             fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);

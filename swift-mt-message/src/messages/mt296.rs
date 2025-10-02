@@ -115,8 +115,11 @@ impl crate::traits::SwiftMessageBody for MT296 {
         // Build block4
         let mut block4 = String::new();
         for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}
-", tag, value));
+            block4.push_str(&format!(
+                ":{}:{}
+",
+                tag, value
+            ));
         }
 
         Self::parse_from_block4(&block4)
@@ -128,15 +131,21 @@ impl crate::traits::SwiftMessageBody for MT296 {
     ) -> Result<ParseResult<Self>, ParseError> {
         match Self::from_fields(fields) {
             Ok(msg) => Ok(ParseResult::Success(msg)),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
     fn to_fields(&self) -> HashMap<String, Vec<String>> {
         let mut fields = HashMap::new();
 
-        fields.insert("20".to_string(), vec![self.transaction_reference.to_swift_string()]);
-        fields.insert("21".to_string(), vec![self.related_reference.to_swift_string()]);
+        fields.insert(
+            "20".to_string(),
+            vec![self.transaction_reference.to_swift_string()],
+        );
+        fields.insert(
+            "21".to_string(),
+            vec![self.related_reference.to_swift_string()],
+        );
         fields.insert("76".to_string(), vec![self.answers.to_swift_string()]);
 
         if let Some(ref narr) = self.narrative {

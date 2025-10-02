@@ -85,55 +85,45 @@
                     "var": "amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "GB82WEST12345698765432",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        "123 MAIN STREET",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
-                }
-            },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
+            "50K": {
+                "account": "GB82WEST12345698765432",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    "123 MAIN STREET",
+                    {
+                        "cat": [
+                            "NEW YORK",
+                            ", ",
+                            "US"
+                        ]
                     }
+                ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
-            "56": {
-                "C": {
-                    "party_identifier": "UNKNOWN"
-                }
+            "56C": {
+                "party_identifier": "UNKNOWN"
             },
-            "57": {
-                "D": {
-                    "party_identifier": "MISSING BIC",
-                    "name_and_address": [
-                        "CORRESPONDENT BANK NAME UNKNOWN",
-                        "NO ADDRESS PROVIDED",
-                        "ROUTING INFORMATION MISSING",
-                        "COUNTRY UNKNOWN"
-                    ]
-                }
+            "57D": {
+                "party_identifier": "MISSING BIC",
+                "name_and_address": [
+                    "CORRESPONDENT BANK NAME UNKNOWN",
+                    "NO ADDRESS PROVIDED",
+                    "ROUTING INFORMATION MISSING",
+                    "COUNTRY UNKNOWN"
+                ]
             },
             "59": {
-                "NoOption": {
-                    "account": "??????????????????",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        "ADDRESS LINE 1",
-                        "ADDRESS LINE 2",
-                        "COUNTRY"
-                    ]
-                }
+                "account": "??????????????????",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    "ADDRESS LINE 1",
+                    "ADDRESS LINE 2",
+                    "COUNTRY"
+                ]
             },
             "70": {
                 "narrative": [

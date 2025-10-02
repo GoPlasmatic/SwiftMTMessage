@@ -1,116 +1,180 @@
+use crate::errors::{ParseError, ParseResult, ParserConfig};
 use crate::fields::*;
+use crate::message_parser::MessageParser;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use std::collections::HashMap;
 
-/// MT290: Advice of Charges, Interest and Other Adjustments Cancellation
+/// MT290 - Advice of Charges, Interest and Other Adjustments
 ///
-/// ## Purpose
-/// Used to cancel or reverse a previously sent MT190 advice. This message notifies the account
-/// holder that a previous adjustment advice needs to be cancelled or reversed, ensuring accurate
-/// account records and proper handling of erroneous or superseded adjustments.
-///
-/// ## Scope
-/// This message is:
-/// - Sent by the account servicing institution to the account holder
-/// - Used to cancel previously advised charges, interest, or adjustments
-/// - Applied when errors are discovered or adjustments need reversal
-/// - Essential for maintaining accurate account records
-/// - Part of the error correction and adjustment management process
-///
-/// ## Key Features
-/// - **Cancellation Notification**: Official cancellation of previous MT190 advice
-/// - **Reference Linking**: Clear reference to the original MT190 being cancelled
-/// - **Reversal Details**: Complete information about the adjustment being reversed
-/// - **Account Identification**: Clear identification of the affected account
-/// - **Charge Details**: Detailed explanation of the cancellation reason
-/// - **Audit Trail**: Maintains complete documentation of adjustments and cancellations
-///
-/// ## Common Use Cases
-/// - Cancelling erroneously posted interest calculations
-/// - Reversing incorrect fee charges
-/// - Correcting misapplied account adjustments
-/// - Cancelling duplicate charge advisories
-/// - Reversing provisional adjustments
-/// - Correcting calculation errors in fees
-/// - Cancelling adjustments due to system errors
-/// - Reversing adjustments per customer dispute resolution
-///
-/// ## Message Structure
-/// - **Field 20**: Transaction Reference Number (mandatory) - Unique reference for this cancellation
-/// - **Field 21**: Related Reference (mandatory) - Reference to original MT190 being cancelled
-/// - **Field 25**: Account Identification (mandatory) - Account affected by cancellation
-/// - **Field 32a**: Value Date, Currency Code, Amount (mandatory) - Original adjustment amount (C or D)
-/// - **Field 52a**: Ordering Institution (optional) - Institution initiating cancellation (A or D)
-/// - **Field 71B**: Details of Charges (mandatory) - Explanation of cancellation/reversal
-/// - **Field 72**: Sender to Receiver Information (optional) - Additional cancellation details
-///
-/// ## Network Validation Rules
-/// - **Reference Matching**: Field 21 must reference a valid MT190 transaction
-/// - **Amount Consistency**: Amount should match the original MT190 adjustment
-/// - **Account Validation**: Account must match the original MT190 account
-/// - **Cancellation Details**: Field 71B must explain the cancellation reason
-/// - **Timing Rules**: Cancellation typically within reasonable timeframe of original
-///
-/// ## Processing Context
-/// ### Cancellation Processing Workflow
-/// 1. Error or reversal requirement identified
-/// 2. Original MT190 adjustment reversed in system
-/// 3. MT290 sent to advise cancellation
-/// 4. Account holder reverses original entry
-/// 5. Reconciliation updated accordingly
-///
-/// ### Reversal Management
-/// - Automatic reversal posting
-/// - Audit trail maintenance
-/// - Balance correction
-/// - Statement adjustment
-///
-/// ## SRG2025 Status
-/// - **No Structural Changes**: MT290 format remains stable
-/// - **Enhanced Processing**: Improved cancellation workflow support
-/// - **Validation Updates**: Stricter reference matching validation
-/// - **Real-time Capability**: Support for immediate cancellation notifications
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Integrated with core banking reversal processes
-/// - **Audit Systems**: Complete audit trail for compliance
-/// - **Reconciliation**: Automatic reconciliation adjustment
-/// - **Reporting**: Reflected in account statements and reports
-///
-/// ## Relationship to Other Messages
-/// - **Cancels**: MT190 advice messages
-/// - **May trigger**: New MT190 with corrected information
-/// - **Related to**: MT192/292 for payment cancellations
-/// - **Supports**: Error correction and adjustment management processes
-///
-/// ## Best Practices
-/// - Send MT290 promptly upon discovering errors
-/// - Provide clear cancellation reasons in Field 71B
-/// - Ensure amount and account details match original MT190
-/// - Consider sending corrected MT190 if adjustment still valid
-/// - Maintain complete audit trail of adjustments and cancellations
-
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+/// Used by financial institutions to advise charges, interest and other adjustments
+/// that have been debited/credited to an account.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT290 {
-    #[field("20")]
-    pub field_20: Field20,
+    /// Field 20 - Transaction Reference Number (Mandatory)
+    #[serde(rename = "20")]
+    pub transaction_reference: Field20,
 
-    #[field("21")]
-    pub field_21: Field21NoOption,
+    /// Field 21 - Related Reference (Mandatory)
+    #[serde(rename = "21")]
+    pub related_reference: Field21NoOption,
 
-    #[field("25")]
-    pub field_25: Field25AccountIdentification,
+    /// Field 25 - Account Identification (Mandatory)
+    #[serde(rename = "25")]
+    pub account_identification: Field25AccountIdentification,
 
-    #[field("32")]
-    pub field_32: Field32,
+    /// Field 32 - Value Date, Currency Code, Amount (Mandatory)
+    /// Can be 32C (credit) or 32D (debit)
+    #[serde(flatten)]
+    pub value_date_amount: Field32AmountCD,
 
-    #[field("52")]
-    pub field_52: Option<Field52OrderingInstitution>,
+    /// Field 52 - Ordering Institution (Optional)
+    /// Can be 52A or 52D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub ordering_institution: Option<Field52OrderingInstitution>,
 
-    #[field("71B")]
-    pub field_71b: Field71B,
+    /// Field 71B - Details of Charges (Mandatory)
+    #[serde(rename = "71B")]
+    pub details_of_charges: Field71B,
 
-    #[field("72")]
-    pub field_72: Option<Field72>,
+    /// Field 72 - Sender to Receiver Information (Optional)
+    #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
+    pub sender_to_receiver: Option<Field72>,
+}
+
+impl MT290 {
+    /// Parse MT290 from a raw SWIFT message string
+    pub fn parse_from_block4(block4: &str) -> Result<Self, ParseError> {
+        let mut parser = MessageParser::new(block4, "290");
+
+        // Parse mandatory fields
+        let transaction_reference = parser.parse_field::<Field20>("20")?;
+        let related_reference = parser.parse_field::<Field21NoOption>("21")?;
+
+        // Parse Field 25 - Account Identification
+        let account_identification = parser.parse_variant_field::<Field25AccountIdentification>("25")?;
+
+        // Parse Field 32 - check for variant (32C or 32D)
+        let value_date_amount = if parser.detect_field("32C") {
+            Field32AmountCD::C(parser.parse_field::<Field32C>("32C")?)
+        } else if parser.detect_field("32D") {
+            Field32AmountCD::D(parser.parse_field::<Field32D>("32D")?)
+        } else {
+            return Err(ParseError::InvalidFormat {
+                message: "MT290: Either field 32C or 32D is required".to_string(),
+            });
+        };
+
+        // Parse optional Field 52 - Ordering Institution
+        let ordering_institution = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+
+        // Parse mandatory Field 71B
+        let details_of_charges = parser.parse_field::<Field71B>("71B")?;
+
+        // Parse optional Field 72
+        let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
+
+        Ok(MT290 {
+            transaction_reference,
+            related_reference,
+            account_identification,
+            value_date_amount,
+            ordering_institution,
+            details_of_charges,
+            sender_to_receiver,
+        })
+    }
+
+    /// Static validation rules for MT290
+    pub fn validate() -> &'static str {
+        r#"{"rules": []}"#
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT290 {
+    fn message_type() -> &'static str {
+        "290"
+    }
+
+    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
+        // Reconstruct block4 from fields
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position
+        all_fields.sort_by_key(|f| f.2);
+
+        // Build block4
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: HashMap<String, Vec<(String, usize)>>,
+        _config: &ParserConfig,
+    ) -> Result<ParseResult<Self>, ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(ParseResult::Success(msg)),
+            Err(e) => Err(e)
+        }
+    }
+
+    fn to_fields(&self) -> HashMap<String, Vec<String>> {
+        let mut fields = HashMap::new();
+
+        fields.insert("20".to_string(), vec![self.transaction_reference.to_swift_string()]);
+        fields.insert("21".to_string(), vec![self.related_reference.to_swift_string()]);
+        match &self.account_identification {
+            Field25AccountIdentification::NoOption(f) => {
+                fields.insert("25".to_string(), vec![f.to_swift_string()]);
+            }
+            Field25AccountIdentification::P(f) => {
+                fields.insert("25P".to_string(), vec![f.to_swift_string()]);
+            }
+        }
+
+        match &self.value_date_amount {
+            Field32AmountCD::C(f) => {
+                fields.insert("32C".to_string(), vec![f.to_swift_string()]);
+            }
+            Field32AmountCD::D(f) => {
+                fields.insert("32D".to_string(), vec![f.to_swift_string()]);
+            }
+        }
+
+        if let Some(ref ord_inst) = self.ordering_institution {
+            match ord_inst {
+                Field52OrderingInstitution::A(f) => {
+                    fields.insert("52A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field52OrderingInstitution::D(f) => {
+                    fields.insert("52D".to_string(), vec![f.to_swift_string()]);
+                }
+            }
+        }
+
+        fields.insert("71B".to_string(), vec![self.details_of_charges.to_swift_string()]);
+
+        if let Some(ref sender_info) = self.sender_to_receiver {
+            fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "21", "25", "32", "71B"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["52", "72"]
+    }
 }

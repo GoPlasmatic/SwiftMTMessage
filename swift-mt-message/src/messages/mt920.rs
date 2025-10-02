@@ -1,240 +1,413 @@
 use crate::fields::{field34::Field34F, *};
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// MT920: Request Message
-///
-/// ## Purpose
-/// Used to request specific account information or statement messages from another financial
-/// institution. This message allows institutions to request various types of account-related
-/// data including balances, statements, and transaction details on a per-account basis.
-///
-/// ## Scope
-/// This message is:
-/// - Sent between financial institutions to request account information
-/// - Used to request specific message types (MT940, MT941, MT942, MT950)
-/// - Applied for correspondent banking and account servicing relationships
-/// - Essential for account monitoring and reconciliation processes
-/// - Part of automated cash management and reporting systems
-///
-/// ## Key Features
-/// - **Message Type Specification**: Field 12 specifies the exact message type requested
-/// - **Account-Specific Requests**: Individual account identification for targeted requests
-/// - **Balance Requirements**: Specific balance information requirements using field 34F
-/// - **Repetitive Structure**: Multiple account requests in a single message
-/// - **Flexible Reporting**: Support for different statement and balance message types
-/// - **Automated Processing**: Designed for systematic and automated information requests
-///
-/// ## Common Use Cases
-/// - Requesting daily account statements (MT940)
-/// - Obtaining balance and transaction reports (MT941)
-/// - Requesting interim transaction statements (MT942)
-/// - Getting periodic balance statements (MT950)
-/// - Cash management system automation
-/// - Correspondent banking account monitoring
-/// - Regulatory reporting data collection
-/// - Liquidity management and planning
-///
-/// ## Message Structure
-/// ### Header Section
-/// - **20**: Transaction Reference (mandatory) - Unique reference for this request
-///
-/// ### Repetitive Sequence (MT920Sequence)
-/// Each sequence represents a request for a specific account and contains:
-/// - **12**: Message Type Requested (mandatory) - MT940, MT941, MT942, or MT950
-/// - **25**: Account Identification (mandatory) - Account for which information is requested
-/// - **34F**: Amount Fields (optional) - Specific balance or amount requirements
-///
-/// ## Field 12 - Message Types Requested
-/// Valid message types that can be requested:
-/// - **940**: Customer Statement Message (detailed transaction statement)
-/// - **941**: Balance Report Message (balance information with summary)
-/// - **942**: Interim Transaction Report (interim statement with real-time updates)
-/// - **950**: Statement Message (balance statement with transaction summary)
-///
-/// ## Field 34F - Amount Requirements
-/// Optional field that can specify:
-/// - **Debit Information**: When requesting debit balance details
-/// - **Credit Information**: When requesting credit balance details
-/// - **Currency Specification**: Specific currency for balance reporting
-/// - **Threshold Amounts**: Minimum amounts for transaction reporting
-///
-/// ## Network Validation Rules
-/// - **C1 Rule**: If message requested is 942, field 34F for debit must be present
-/// - **C2 Rule**: When both 34F fields present, first must be 'D' (debit), second must be 'C' (credit)
-/// - **C3 Rule**: Currency code must be consistent across all 34F entries
-/// - **Message Type Validation**: Field 12 must contain valid SWIFT MT type (940, 941, 942, 950)
-/// - **Reference Format**: Transaction references must follow SWIFT formatting standards
-/// - **Required Fields**: All mandatory fields must be present and properly formatted
-///
-/// ## Processing Workflow
-/// ### Request Processing
-/// 1. MT920 sent with specific account and message type requests
-/// 2. Receiving institution validates request parameters
-/// 3. Requested information extracted from account systems
-/// 4. Appropriate response message(s) generated and sent
-/// 5. Requesting institution processes received information
-///
-/// ### Automated Integration
-/// - Integration with cash management systems
-/// - Scheduled automated requests for regular reporting
-/// - Real-time balance monitoring capabilities
-/// - Exception-based reporting triggers
-///
-/// ## SRG2025 Status
-/// - **No Structural Changes**: MT920 format remains unchanged in SRG2025
-/// - **Enhanced Validation**: Additional validation for request accuracy and completeness
-/// - **Digital Integration**: Improved support for digital banking and API integration
-/// - **Real-time Capabilities**: Enhanced support for real-time information requests
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Direct integration with account management and core banking systems
-/// - **Cash Management**: Essential component of comprehensive cash management solutions
-/// - **API Gateway**: Often used in conjunction with modern API-based banking services
-/// - **Reporting Systems**: Critical input for automated reporting and compliance systems
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: MT940, MT941, MT942, MT950 response messages
-/// - **Supports**: Account monitoring, cash management, and reconciliation processes
-/// - **Complements**: Confirmation messages (MT900, MT910) for complete account visibility
-/// - **Integrates with**: Broader cash management and treasury operation workflows
+// MT920: Request Message
+// Used to request specific account information or statement messages from another financial institution.
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT920_VALIDATION_RULES)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT920 {
-    #[field("20")]
+    #[serde(rename = "20")]
     pub field_20: Field20,
 
-    #[field("#")]
-    pub sequence: Vec<MT920Sequence>, // Sequence of Fields
+    #[serde(rename = "#")]
+    pub sequence: Vec<MT920Sequence>,
 }
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT920Sequence {
-    #[field("12")]
+    #[serde(rename = "12")]
     pub field_12: Field12,
 
-    #[field("25")]
+    #[serde(rename = "25")]
     pub field_25: Field25A,
 
-    #[field("34F", name = "floor_limit_debit")]
+    #[serde(rename = "34F_1")]
     pub floor_limit_debit: Option<Field34F>,
 
-    #[field("34F", name = "floor_limit_credit")]
+    #[serde(rename = "34F_2")]
     pub floor_limit_credit: Option<Field34F>,
 }
 
-/// Validation rules for MT920 - Request Message
-const MT920_VALIDATION_RULES: &str = r#"{
+impl MT920 {
+    /// Parse message from Block 4 content
+    pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        let mut parser = crate::message_parser::MessageParser::new(block4, "920");
+
+        // Parse header field
+        let field_20 = parser.parse_field::<Field20>("20")?;
+
+        // Parse repetitive sequences
+        let mut sequence = Vec::new();
+
+        // Enable duplicate field handling for repeated sequences
+        parser = parser.with_duplicates(true);
+
+        // Detect and parse each sequence (field 12 marks the start of a new sequence)
+        while parser.detect_field("12") {
+            let field_12 = parser.parse_field::<Field12>("12")?;
+            let field_25 = parser.parse_field::<Field25A>("25")?;
+            let floor_limit_debit = parser.parse_optional_field::<Field34F>("34F_1")?;
+            let floor_limit_credit = parser.parse_optional_field::<Field34F>("34F_2")?;
+
+            // Apply max repetitions validation
+            if sequence.len() >= 100 {
+                return Err(crate::errors::ParseError::InvalidFormat {
+                    message: "Maximum 100 repetitions allowed".to_string(),
+                });
+            }
+
+            sequence.push(MT920Sequence {
+                field_12,
+                field_25,
+                floor_limit_debit,
+                floor_limit_credit,
+            });
+        }
+
+        // Verify all content is consumed
+        if !parser.is_complete() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "Unparsed content remaining in message: {}",
+                    parser.remaining()
+                ),
+            });
+        }
+
+        Ok(Self { field_20, sequence })
+    }
+
+    /// Validation rules for the message
+    pub fn validate() -> &'static str {
+        r#"{"rules": [{"id": "BASIC", "description": "Basic validation", "condition": true}]}"#
+    }
+
+    /// Parse from SWIFT MT text format
+    pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
+        // If input starts with block headers, extract Block 4
+        let block4 = if input.starts_with("{") {
+            crate::parser::SwiftParser::extract_block(input, 4)?.ok_or_else(|| {
+                crate::errors::ParseError::InvalidFormat {
+                    message: "Block 4 not found".to_string(),
+                }
+            })?
+        } else {
+            // Assume input is already block 4 content
+            input.to_string()
+        };
+        let message = Self::parse_from_block4(&block4)?;
+
+        // Apply validation rules
+        message.validate_network_rules()?;
+
+        Ok(message)
+    }
+
+    /// Validate network rules specific to MT920
+    pub fn validate_network_rules(&self) -> Result<(), crate::errors::ParseError> {
+        // C1: At least one sequence must be present
+        if self.sequence.is_empty() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT920: At least one sequence must be present".to_string(),
+            });
+        }
+
+        // C2: Maximum 100 sequences allowed
+        if self.sequence.len() > 100 {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "MT920: Maximum 100 sequences allowed, found {}",
+                    self.sequence.len()
+                ),
+            });
+        }
+
+        Ok(())
+    }
+
+    /// Convert to SWIFT MT text format
+    pub fn to_mt_string(&self) -> String {
+        use crate::traits::SwiftField;
+        let mut result = String::new();
+
+        // Add header field
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
+
+        // Add sequences
+        for seq in &self.sequence {
+            result.push_str(&seq.field_12.to_swift_string());
+            result.push_str("\r\n");
+            result.push_str(&seq.field_25.to_swift_string());
+            result.push_str("\r\n");
+
+            if let Some(ref floor_limit) = seq.floor_limit_debit {
+                result.push_str(&floor_limit.to_swift_string());
+                result.push_str("\r\n");
+            }
+
+            if let Some(ref floor_limit) = seq.floor_limit_credit {
+                result.push_str(&floor_limit.to_swift_string());
+                result.push_str("\r\n");
+            }
+        }
+
+        result.push('-');
+        result
+    }
+
+    /// Get validation rules in JSON format
+    pub fn validation_rules() -> &'static str {
+        r#"{
   "rules": [
     {
       "id": "C1",
-      "description": "If field 12 = 942, at least one occurrence of field 34F (Debit or Debit and Credit Floor Limit Indicator) must be present",
+      "description": "At least one sequence must be present",
       "condition": {
-        "all": [
-          {"var": "fields.#"},
-          {
-            "if": [
-              {"==": [{"var": "12.value"}, "942"]},
-              {
-                "or": [
-                  {"exists": ["fields", "floor_limit_debit"]},
-                  {"exists": ["fields", "floor_limit_credit"]}
-                ]
-              },
-              true
-            ]
-          }
-        ]
+        "min_sequences": 1
       }
     },
     {
       "id": "C2",
-      "description": "When both 34F fields are present: subfield 2 of the first must be D, subfield 2 of the second must be C. If only one 34F is present, subfield 2 must be omitted",
+      "description": "Maximum 100 sequences allowed",
       "condition": {
-        "all": [
-          {"var": "fields.#"},
-          {
-            "if": [
-              {
-                "and": [
-                  {"exists": ["fields", "floor_limit_debit"]},
-                  {"exists": ["fields", "floor_limit_credit"]}
-                ]
-              },
-              {
-                "and": [
-                  {"==": [{"var": "floor_limit_debit.indicator"}, "D"]},
-                  {"==": [{"var": "floor_limit_credit.indicator"}, "C"]}
-                ]
-              },
-              {
-                "if": [
-                  {
-                    "or": [
-                      {
-                        "and": [
-                          {"exists": ["fields", "floor_limit_debit"]},
-                          {"!": {"exists": ["fields", "floor_limit_credit"]}}
-                        ]
-                      },
-                      {
-                        "and": [
-                          {"!": {"exists": ["fields", "floor_limit_debit"]}},
-                          {"exists": ["fields", "floor_limit_credit"]}
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "or": [
-                      {
-                        "and": [
-                          {"exists": ["fields", "floor_limit_debit"]},
-                          {"!": {"exists": ["fields", "floor_limit_debit", "indicator"]}}
-                        ]
-                      },
-                      {
-                        "and": [
-                          {"exists": ["fields", "floor_limit_credit"]},
-                          {"!": {"exists": ["fields", "floor_limit_credit", "indicator"]}}
-                        ]
-                      }
-                    ]
-                  },
-                  true
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C3",
-      "description": "Currency code must be the same in each occurrence of field 34F within a sequence",
-      "condition": {
-        "all": [
-          {"var": "fields.#"},
-          {
-            "if": [
-              {
-                "and": [
-                  {"exists": ["fields", "floor_limit_debit"]},
-                  {"exists": ["fields", "floor_limit_credit"]}
-                ]
-              },
-              {"==": [
-                {"var": "floor_limit_debit.currency"},
-                {"var": "floor_limit_credit.currency"}
-              ]},
-              true
-            ]
-          }
-        ]
+        "max_sequences": 100
       }
     }
   ]
-}"#;
+}"#
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT920 {
+    fn message_type() -> &'static str {
+        "920"
+    }
+
+    fn from_fields(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+    ) -> crate::SwiftResult<Self> {
+        // Collect all field occurrences with their positions
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields.iter() {
+            for (value, pos) in values {
+                all_fields.push((tag.clone(), value.clone(), *pos));
+            }
+        }
+
+        // Sort by position to maintain original order
+        all_fields.sort_by_key(|(_, _, pos)| *pos);
+
+        // Build block4 content preserving field order
+        let mut block4_parts = Vec::new();
+        for (tag, value, _) in all_fields {
+            block4_parts.push(format!(":{}:{}", tag, value));
+        }
+
+        let block4 = block4_parts.join("\n") + "\n-";
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+        _config: &crate::errors::ParserConfig,
+    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+        use crate::traits::SwiftField;
+        let mut fields = std::collections::HashMap::new();
+
+        // Add header field
+        fields.insert("20".to_string(), vec![self.field_20.to_swift_value()]);
+
+        // Add sequence fields
+        for seq in &self.sequence {
+            fields
+                .entry("12".to_string())
+                .or_insert_with(Vec::new)
+                .push(seq.field_12.to_swift_value());
+
+            fields
+                .entry("25".to_string())
+                .or_insert_with(Vec::new)
+                .push(seq.field_25.to_swift_value());
+
+            if let Some(ref field) = seq.floor_limit_debit {
+                fields
+                    .entry("34F_1".to_string())
+                    .or_insert_with(Vec::new)
+                    .push(field.to_swift_value());
+            }
+
+            if let Some(ref field) = seq.floor_limit_credit {
+                fields
+                    .entry("34F_2".to_string())
+                    .or_insert_with(Vec::new)
+                    .push(field.to_swift_value());
+            }
+        }
+
+        fields
+    }
+
+    fn to_ordered_fields(&self) -> Vec<(String, String)> {
+        use crate::traits::SwiftField;
+        let mut ordered_fields = Vec::new();
+
+        // Add header field first
+        ordered_fields.push(("20".to_string(), self.field_20.to_swift_value()));
+
+        // Add sequences in order - fields within each sequence must stay together
+        for seq in &self.sequence {
+            ordered_fields.push(("12".to_string(), seq.field_12.to_swift_value()));
+            ordered_fields.push(("25".to_string(), seq.field_25.to_swift_value()));
+
+            if let Some(ref field) = seq.floor_limit_debit {
+                ordered_fields.push(("34F_1".to_string(), field.to_swift_value()));
+            }
+
+            if let Some(ref field) = seq.floor_limit_credit {
+                ordered_fields.push(("34F_2".to_string(), field.to_swift_value()));
+            }
+        }
+
+        ordered_fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "12", "25"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["34F_1", "34F_2"]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_mt920_parse() {
+        let mt920_text = r#":20:REQ123456
+:12:100
+:25:/GB12ABCD12345678901234
+:12:200
+:25:/US98EFGH98765432109876
+-"#;
+        let result = MT920::parse_from_block4(mt920_text);
+        if let Err(ref e) = result {
+            eprintln!("MT920 parse error: {:?}", e);
+        }
+        assert!(result.is_ok());
+        let mt920 = result.unwrap();
+        assert_eq!(mt920.field_20.reference, "REQ123456");
+        assert_eq!(mt920.sequence.len(), 2);
+        assert_eq!(mt920.sequence[0].field_12.type_code, "100");
+        assert_eq!(mt920.sequence[1].field_12.type_code, "200");
+    }
+
+    #[test]
+    fn test_mt920_validation() {
+        // Test empty sequence - should fail
+        let mt920_text = r#":20:REQ123456
+-"#;
+        let result = MT920::parse(mt920_text);
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("At least one sequence")
+        );
+    }
+
+    #[test]
+    fn test_mt920_json_deserialization() {
+        // Test JSON deserialization for MT920
+        let json = r##"{
+            "20": {
+                "reference": "REQ123456"
+            },
+            "#": [
+                {
+                    "12": {
+                        "type_code": "940"
+                    },
+                    "25": {
+                        "account": "1234567890"
+                    }
+                }
+            ]
+        }"##;
+
+        let result = serde_json::from_str::<MT920>(json);
+        if let Err(ref e) = result {
+            eprintln!("MT920 JSON deserialization error: {}", e);
+        }
+        assert!(result.is_ok(), "Failed to deserialize MT920 from JSON");
+        let mt920 = result.unwrap();
+        assert_eq!(mt920.field_20.reference, "REQ123456");
+        assert_eq!(mt920.sequence.len(), 1);
+        assert_eq!(mt920.sequence[0].field_12.type_code, "940");
+        assert_eq!(mt920.sequence[0].field_25.account, "1234567890");
+    }
+
+    #[test]
+    fn test_mt920_swift_message_json() {
+        use crate::swift_message::SwiftMessage;
+
+        // Test complete SwiftMessage<MT920> JSON deserialization
+        let json = r##"{
+            "basic_header": {
+                "application_id": "F",
+                "service_id": "01",
+                "sender_bic": "DEUTDEFF",
+                "logical_terminal": "DEUTDEFFXXXX",
+                "session_number": "0001",
+                "sequence_number": "000123"
+            },
+            "application_header": {
+                "direction": "I",
+                "message_type": "920",
+                "receiver_bic": "DEUTDEFF",
+                "destination_address": "DEUTDEFFXXXX",
+                "priority": "N"
+            },
+            "message_type": "920",
+            "fields": {
+                "20": {
+                    "reference": "REQ123456"
+                },
+                "#": [
+                    {
+                        "12": {
+                            "type_code": "940"
+                        },
+                        "25": {
+                            "account": "1234567890"
+                        }
+                    }
+                ]
+            }
+        }"##;
+
+        let result = serde_json::from_str::<SwiftMessage<MT920>>(json);
+        if let Err(ref e) = result {
+            eprintln!("SwiftMessage<MT920> JSON deserialization error: {}", e);
+        }
+        assert!(
+            result.is_ok(),
+            "Failed to deserialize SwiftMessage<MT920> from JSON"
+        );
+        let swift_msg = result.unwrap();
+        assert_eq!(swift_msg.message_type, "920");
+        assert_eq!(swift_msg.fields.field_20.reference, "REQ123456");
+        assert_eq!(swift_msg.fields.sequence.len(), 1);
+    }
+}

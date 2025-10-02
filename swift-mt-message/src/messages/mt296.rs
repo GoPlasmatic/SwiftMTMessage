@@ -1,144 +1,183 @@
+use crate::errors::{ParseError, ParseResult, ParserConfig};
 use crate::fields::*;
+use crate::message_parser::MessageParser;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use std::collections::HashMap;
 
-/// MT296: Answers (Category 2 - Financial Institution Transfers)
+/// MT296 - Answers
 ///
-/// ## Purpose
-/// Used to provide answers or responses to various queries and requests related to Category 2
-/// financial institution transfers. This message responds to different types of inquiries,
-/// including cancellation requests (MT292) and other operational queries.
-///
-/// ## Scope
-/// This message is:
-/// - Sent in response to MT292 cancellation requests and other Category 2 inquiries
-/// - Used to provide structured answers with detailed status information
-/// - Contains response codes and explanatory text for institutional transfer queries
-/// - Supports various inquiry types with flexible narrative content
-/// - Essential for treasury operations and institutional transfer management
-///
-/// ## Key Features
-/// - **Query Response**: Structured response to various types of institutional transfer inquiries
-/// - **Reference Tracking**: Links to original query or request message through field 21
-/// - **Answer Codes**: Field 76 provides structured answers with specific codes
-/// - **Status Information**: Clear indication of query resolution and outcome
-/// - **Flexible Format**: Adaptable to different types of institutional transfer inquiries
-/// - **Optional Narrative**: Field 79 for additional explanatory information
-///
-/// ## Common Use Cases
-/// - Response to MT292 cancellation requests (accept/reject/partial)
-/// - Status updates on institutional transfer processing
-/// - Inquiry responses about transaction details and settlement status
-/// - Error resolution and clarification messages for treasury operations
-/// - Settlement system status communications
-/// - Correspondent banking operational responses
-/// - Cross-border institutional transfer confirmations
-///
-/// ## Field Structure
-/// - **20**: Sender's Reference (mandatory) - Reference for this answer message
-/// - **21**: Related Reference (mandatory) - Reference to original inquiry/request
-/// - **76**: Answers (mandatory) - Structured answer codes and information
-/// - **77A**: Optional Query Section (optional) - Additional query details
-/// - **11**: MT and Date Reference (optional) - Reference to specific original message
-/// - **79**: Narrative (optional) - Additional explanatory text
-///
-/// ## Field 76 Answer Codes
-/// The Field 76 contains structured answer codes that may include:
-/// - **ACCEPTED**: Request has been accepted and processed
-/// - **REJECTED**: Request has been rejected with reason
-/// - **PARTIAL**: Partial acceptance/processing of request
-/// - **PENDING**: Request is under review/processing
-/// - **COMPLETED**: Processing has been completed
-/// - **ERROR**: Error encountered during processing
-/// - **TIMEOUT**: Request timed out or expired
-/// - **DUPLICATE**: Duplicate request detected
-/// - **INVALID**: Invalid request format or content
-///
-/// ## Network Validation Rules
-/// - **C1 Rule**: Field 79 or copy of original message fields may be present, but not both
-/// - **Reference Format**: All reference fields must follow SWIFT formatting conventions
-/// - **Field 11A Format**: When present, must have proper format with valid MT reference
-/// - **Required Fields**: All mandatory fields must be present and non-empty
-/// - **Answer Code Validation**: Field 76 must contain valid, recognizable answer codes
-/// - **Conditional Fields**: Optional fields must follow proper conditional logic
-///
-/// ## Answer Processing Types
-/// ### Cancellation Responses (to MT292)
-/// - **CANC**: Cancellation accepted and processed
-/// - **RJCT**: Cancellation rejected (payment already processed)
-/// - **PART**: Partial cancellation (only some transactions cancelled)
-/// - **NPAY**: No payment found matching cancellation request
-///
-/// ### Status Responses
-/// - **ACPT**: Message accepted for processing
-/// - **PROC**: Currently processing
-/// - **SETT**: Settlement completed
-/// - **FAIL**: Processing failed
-///
-/// ### Information Responses
-/// - **INFO**: Informational response provided
-/// - **CONF**: Confirmation of status or details
-/// - **NFND**: Requested information not found
-/// - **RSTR**: Restricted information (access denied)
-///
-/// ## Processing Considerations
-/// - **Timely Response**: Should be sent promptly after receiving inquiry
-/// - **Accurate Status**: Must reflect current and accurate status information
-/// - **Clear Communication**: Answer codes should be unambiguous
-/// - **Audit Trail**: Maintains record of all query-response interactions
-/// - **Follow-up**: May trigger additional operational actions
-///
-/// ## SRG2025 Status
-/// - **Structural Changes**: None - MT296 format remains unchanged in SRG2025
-/// - **Validation Updates**: Enhanced validation for institutional transfer responses
-/// - **Processing Improvements**: Improved validation for answer code consistency
-/// - **Compliance Notes**: Better integration with modern settlement systems
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Compatible with treasury management and customer service systems
-/// - **API Integration**: RESTful API support for modern institutional transfer response platforms
-/// - **Processing Requirements**: Supports real-time response generation with audit capabilities
-/// - **Compliance Integration**: Built-in validation for regulatory response requirements
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Directly triggered by MT292 cancellation requests and Category 2 inquiries
-/// - **Responses**: Provides definitive responses to institutional transfer requests
-/// - **Related**: Works with Category 2 messages and operational workflow systems
-/// - **Alternatives**: Direct system notifications for internal processing status updates
-/// - **Status Updates**: Final response message in institutional transfer inquiry lifecycle
-
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT296_VALIDATION_RULES)]
+/// Used to respond to MT295 (Queries) or MT292 (Request for Cancellation)
+/// or any message without a dedicated response type.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT296 {
-    #[field("20")]
-    pub field_20: Field20,
+    /// Field 20 - Transaction Reference Number (Mandatory)
+    #[serde(rename = "20")]
+    pub transaction_reference: Field20,
 
-    #[field("21")]
-    pub field_21: Field21NoOption,
+    /// Field 21 - Related Reference (Mandatory)
+    /// Reference of the original message being responded to
+    #[serde(rename = "21")]
+    pub related_reference: Field21NoOption,
 
-    #[field("76")]
-    pub field_76: Field76,
+    /// Field 76 - Answers (Mandatory)
+    #[serde(rename = "76")]
+    pub answers: Field76,
 
-    #[field("77A")]
-    pub field_77a: Option<Field77A>,
+    /// Field 77A - Narrative (Optional)
+    #[serde(rename = "77A", skip_serializing_if = "Option::is_none")]
+    pub narrative: Option<Field77A>,
 
-    #[field("11")]
-    pub field_11: Option<Field11>,
+    /// Field 11R - MT and Date of the Original Message - Received (Optional)
+    #[serde(rename = "11R", skip_serializing_if = "Option::is_none")]
+    pub original_message_type_r: Option<Field11R>,
 
-    #[field("79")]
-    pub field_79: Option<Field79>,
+    /// Field 11S - MT and Date of the Original Message - Sent (Optional)
+    #[serde(rename = "11S", skip_serializing_if = "Option::is_none")]
+    pub original_message_type_s: Option<Field11S>,
+
+    /// Field 79 - Narrative Description of Original Message (Conditional)
+    #[serde(rename = "79", skip_serializing_if = "Option::is_none")]
+    pub narrative_description: Option<Field79>,
+
+    /// Copy of mandatory fields from the original message (Conditional)
+    /// Stored as additional fields that were part of the original message
+    #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
+    pub original_fields: HashMap<String, serde_json::Value>,
 }
 
-/// Enhanced validation rules for MT296
-const MT296_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "Only one of the following may be present: Field 79, or a copy of mandatory fields of the original message",
-      "condition": {
-        "!": {"exists": ["fields", "79"]}
-      }
+impl MT296 {
+    /// Parse MT296 from a raw SWIFT message string
+    pub fn parse_from_block4(block4: &str) -> Result<Self, ParseError> {
+        let mut parser = MessageParser::new(block4, "296");
+
+        // Parse mandatory fields
+        let transaction_reference = parser.parse_field::<Field20>("20")?;
+        let related_reference = parser.parse_field::<Field21NoOption>("21")?;
+        let answers = parser.parse_field::<Field76>("76")?;
+
+        // Parse optional Field 77A
+        let narrative = parser.parse_optional_field::<Field77A>("77A")?;
+
+        // Parse optional Field 11R or 11S
+        let original_message_type_r = parser.parse_optional_field::<Field11R>("11R")?;
+        let original_message_type_s = parser.parse_optional_field::<Field11S>("11S")?;
+
+        // Parse optional/conditional Field 79
+        let narrative_description = parser.parse_optional_field::<Field79>("79")?;
+
+        // Collect any remaining fields as original message fields
+        // This would need to be implemented in MessageParser but for now use empty HashMap
+        let original_fields = HashMap::new();
+
+        // Validation: Only one of Field 79 or original fields should be present (C1)
+        if narrative_description.is_some() && !original_fields.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "MT296: Only one of Field 79 or copy of original message fields should be present (C1)".to_string(),
+            });
+        }
+
+        Ok(MT296 {
+            transaction_reference,
+            related_reference,
+            answers,
+            narrative,
+            original_message_type_r,
+            original_message_type_s,
+            narrative_description,
+            original_fields,
+        })
     }
-  ]
-}"#;
+
+    /// Static validation rules for MT296
+    pub fn validate() -> &'static str {
+        r#"{"rules": []}"#
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT296 {
+    fn message_type() -> &'static str {
+        "296"
+    }
+
+    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
+        // Reconstruct block4 from fields
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position
+        all_fields.sort_by_key(|f| f.2);
+
+        // Build block4
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}
+", tag, value));
+        }
+
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: HashMap<String, Vec<(String, usize)>>,
+        _config: &ParserConfig,
+    ) -> Result<ParseResult<Self>, ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(ParseResult::Success(msg)),
+            Err(e) => Err(e)
+        }
+    }
+
+    fn to_fields(&self) -> HashMap<String, Vec<String>> {
+        let mut fields = HashMap::new();
+
+        fields.insert("20".to_string(), vec![self.transaction_reference.to_swift_string()]);
+        fields.insert("21".to_string(), vec![self.related_reference.to_swift_string()]);
+        fields.insert("76".to_string(), vec![self.answers.to_swift_string()]);
+
+        if let Some(ref narr) = self.narrative {
+            fields.insert("77A".to_string(), vec![narr.to_swift_string()]);
+        }
+
+        if let Some(ref orig_msg_r) = self.original_message_type_r {
+            fields.insert("11R".to_string(), vec![orig_msg_r.to_swift_string()]);
+        }
+
+        if let Some(ref orig_msg_s) = self.original_message_type_s {
+            fields.insert("11S".to_string(), vec![orig_msg_s.to_swift_string()]);
+        }
+
+        if let Some(ref narrative) = self.narrative_description {
+            fields.insert("79".to_string(), vec![narrative.to_swift_string()]);
+        }
+
+        // Add original message fields
+        for (key, value) in &self.original_fields {
+            if let Some(str_val) = value.as_str() {
+                fields.insert(key.clone(), vec![str_val.to_string()]);
+            } else if let Some(arr_val) = value.as_array() {
+                let str_vals: Vec<String> = arr_val
+                    .iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect();
+                if !str_vals.is_empty() {
+                    fields.insert(key.clone(), str_vals);
+                }
+            }
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "21", "76"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["77A", "11", "79"]
+    }
+}

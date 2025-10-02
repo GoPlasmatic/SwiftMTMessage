@@ -73,7 +73,6 @@
                 {
                     "23": {
                         "function_code": "DEP",
-                        "days": 1,
                         "reference": "DEPRATE025"
                     },
                     "30": {
@@ -93,7 +92,6 @@
                 {
                     "23": {
                         "function_code": "CUR",
-                        "days": 1,
                         "reference": "SAVRATE025"
                     },
                     "30": {
@@ -113,7 +111,6 @@
                 {
                     "23": {
                         "function_code": "PRM",
-                        "days": 1,
                         "reference": "CRDRATE025"
                     },
                     "30": {
@@ -133,7 +130,6 @@
                 {
                     "23": {
                         "function_code": "CAL",
-                        "days": 1,
                         "reference": "MMRATE2025"
                     },
                     "30": {

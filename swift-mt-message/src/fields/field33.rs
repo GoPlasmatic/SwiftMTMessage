@@ -1,6 +1,7 @@
+use super::swift_utils::{parse_amount, parse_currency};
+use crate::errors::ParseError;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::SwiftField;
-use swift_mt_message_macros::serde_swift_fields;
 
 ///   **Field 33B: Currency / Instructed Amount**
 ///
@@ -118,20 +119,102 @@ use swift_mt_message_macros::serde_swift_fields;
 ///
 /// Contains the original instructed currency and amount before conversion
 /// and charge applications.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field33B {
     /// Currency code of original instruction
     ///
     /// Format: 3!a - ISO 4217 currency code (USD, EUR, GBP, etc.)
     /// Must be valid and supported currency for cross-border transactions
-    #[component("3!a")]
     pub currency: String,
 
     /// Original instructed amount
     ///
     /// Format: 15d - Decimal amount with comma separator
     /// Precision must match currency requirements (JPY=0, BHD=3, most=2)
-    #[component("15d")]
     pub amount: f64,
+}
+
+impl SwiftField for Field33B {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Field33B format: 3!a15d (currency + amount)
+        if input.len() < 4 {
+            // Minimum: 3 chars currency + 1 digit amount
+            return Err(ParseError::InvalidFormat {
+                message: format!(
+                    "Field 33B must be at least 4 characters, found {}",
+                    input.len()
+                ),
+            });
+        }
+
+        // Parse currency code (first 3 characters)
+        let currency = parse_currency(&input[0..3])?;
+
+        // Parse amount (remaining characters)
+        let amount_str = &input[3..];
+        if amount_str.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 33B amount cannot be empty".to_string(),
+            });
+        }
+
+        let amount = parse_amount(amount_str)?;
+
+        // Amount must be positive
+        if amount <= 0.0 {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 33B amount must be greater than zero".to_string(),
+            });
+        }
+
+        Ok(Field33B { currency, amount })
+    }
+
+    fn to_swift_string(&self) -> String {
+        format!(
+            ":33B:{}{}",
+            self.currency,
+            self.amount.to_string().replace('.', ",")
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field33b_valid() {
+        let field = Field33B::parse("USD1250,00").unwrap();
+        assert_eq!(field.currency, "USD");
+        assert_eq!(field.amount, 1250.00);
+        assert_eq!(field.to_swift_string(), ":33B:USD1250");
+
+        let field = Field33B::parse("EUR950,50").unwrap();
+        assert_eq!(field.currency, "EUR");
+        assert_eq!(field.amount, 950.50);
+
+        let field = Field33B::parse("JPY125000").unwrap();
+        assert_eq!(field.currency, "JPY");
+        assert_eq!(field.amount, 125000.0);
+    }
+
+    #[test]
+    fn test_field33b_invalid() {
+        // Invalid currency
+        assert!(Field33B::parse("12A100").is_err());
+        assert!(Field33B::parse("US100").is_err());
+
+        // Zero amount
+        assert!(Field33B::parse("USD0").is_err());
+
+        // Negative amount
+        assert!(Field33B::parse("USD-100").is_err());
+
+        // Missing amount
+        assert!(Field33B::parse("USD").is_err());
+    }
 }

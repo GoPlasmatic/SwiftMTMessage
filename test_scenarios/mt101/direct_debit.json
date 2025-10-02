@@ -1,246 +1,220 @@
 {
-    "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "message_ref": {
-            "cat": [
-                "PAY",
-                100000000000
-            ]
-        },
-        "dd_mandate_ref": "DD-MANDATE-2024",
-        "execution_date": "2024-12-20",
-        "session_num": "0001",
-        "sequence_num": "000890",
-        "currency": "USD",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+  "variables": {
+    "sender_bic": "DEUTDEFF",
+    "receiver_bic": "DEUTDEFF",
+    "message_ref": {
+      "cat": [
+        "PAY",
+        100000000000
+      ]
     },
-    "schema": {
-        "basic_header": {
-            "application_id": "F",
-            "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
-        },
-        "application_header": {
-            "direction": "I",
-            "message_type": "101",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
-            "priority": "N"
-        },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
-            "validation_flag": "STP"
-        },
-        "message_type": "101",
-        "fields": {
-            "20": {
-                "reference": {
-                    "var": "message_ref"
-                }
-            },
-            "21R": {
-                "reference": {
-                    "var": "dd_mandate_ref"
-                }
-            },
-            "28D": {
-                "index": 1,
-                "total": 1
-            },
-            "instructing_party": {
-                "L": {
-                    "party_identifier": "ACME CORPORATION"
-                }
-            },
-            "ordering_customer": {
-                "F": {
-                    "account": "DD/COLLECTOR",
-                    "bic": "DEUTDEFF"
-                }
-            },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "receiver_bic"
-                    }
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "execution_date"
-                }
-            },
-            "#": [
-                {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "DD",
-                                10000000000000
-                            ]
-                        }
-                    },
-                    "23E": [
-                        {
-                            "instruction_code": "INTC"
-                        }
-                    ],
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
-                            }
-                        }
-                    },
-                    "59": {
-                        "NoOption": {
-                            "account": "COLLECTION-ACCOUNT",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "COLLECTIONS",
-                                "NEW YORK",
-                                "USA"
-                            ]
-                        }
-                    },
-                    "70": {
-                        "narrative": [
-                            "DIRECT DEBIT COLLECTION",
-                            "MANDATE: DD-12345",
-                            "SUBSCRIPTION FEE",
-                            "MONTHLY CHARGE"
-                        ]
-                    },
-                    "71A": {
-                        "code": "SHA"
-                    }
-                },
-                {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "DD",
-                                10000000000000
-                            ]
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
-                            }
-                        }
-                    },
-                    "59": {
-                        "NoOption": {
-                            "account": "COLLECTION-ACCOUNT",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "COLLECTIONS",
-                                "NEW YORK",
-                                "USA"
-                            ]
-                        }
-                    },
-                    "70": {
-                        "narrative": [
-                            "DIRECT DEBIT COLLECTION",
-                            "MANDATE: DD-67890",
-                            "UTILITY PAYMENT",
-                            "ELECTRICITY BILL"
-                        ]
-                    },
-                    "71A": {
-                        "code": "SHA"
-                    }
-                },
-                {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "DD",
-                                10000000000000
-                            ]
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
-                            }
-                        }
-                    },
-                    "59": {
-                        "NoOption": {
-                            "account": "COLLECTION-ACCOUNT",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "COLLECTIONS",
-                                "NEW YORK",
-                                "USA"
-                            ]
-                        }
-                    },
-                    "70": {
-                        "narrative": [
-                            "DIRECT DEBIT COLLECTION",
-                            "MANDATE: DD-11111",
-                            "INSURANCE PREMIUM",
-                            "MONTHLY INSTALLMENT"
-                        ]
-                    },
-                    "71A": {
-                        "code": "SHA"
-                    }
-                }
-            ]
+    "dd_mandate_ref": "DD-MANDATE-2024",
+    "execution_date": "2024-12-20",
+    "session_num": "0001",
+    "sequence_num": "000890",
+    "currency": "USD",
+    "uetr": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "101",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
+    },
+    "message_type": "101",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "message_ref"
         }
+      },
+      "28D": {
+        "index": 1,
+        "total": 1
+      },
+      "30": {
+        "execution_date": {
+          "var": "execution_date"
+        }
+      },
+      "#": [
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "DD",
+                10000000000000
+              ]
+            }
+          },
+          "23E": [
+            {
+              "instruction_code": "INTC"
+            }
+          ],
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": 10000
+          },
+          "59": {
+            "account": "COLLECTION-ACCOUNT",
+            "name_and_address": [
+              "ACME CORPORATION",
+              "COLLECTIONS",
+              "NEW YORK",
+              "USA"
+            ]
+          },
+          "70": {
+            "narrative": [
+              "DIRECT DEBIT COLLECTION",
+              "MANDATE: DD-12345",
+              "SUBSCRIPTION FEE",
+              "MONTHLY CHARGE"
+            ]
+          },
+          "71A": {
+            "code": "SHA"
+          },
+          "57A": {
+            "bic": {
+              "var": "receiver_bic"
+            }
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "DD",
+                10000000000000
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": 10000
+          },
+          "59": {
+            "account": "COLLECTION-ACCOUNT",
+            "name_and_address": [
+              "ACME CORPORATION",
+              "COLLECTIONS",
+              "NEW YORK",
+              "USA"
+            ]
+          },
+          "70": {
+            "narrative": [
+              "DIRECT DEBIT COLLECTION",
+              "MANDATE: DD-67890",
+              "UTILITY PAYMENT",
+              "ELECTRICITY BILL"
+            ]
+          },
+          "71A": {
+            "code": "SHA"
+          },
+          "57A": {
+            "bic": {
+              "var": "receiver_bic"
+            }
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "DD",
+                10000000000000
+              ]
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": 10000
+          },
+          "59": {
+            "account": "COLLECTION-ACCOUNT",
+            "name_and_address": [
+              "ACME CORPORATION",
+              "COLLECTIONS",
+              "NEW YORK",
+              "USA"
+            ]
+          },
+          "70": {
+            "narrative": [
+              "DIRECT DEBIT COLLECTION",
+              "MANDATE: DD-11111",
+              "INSURANCE PREMIUM",
+              "MONTHLY INSTALLMENT"
+            ]
+          },
+          "71A": {
+            "code": "SHA"
+          },
+          "57A": {
+            "bic": {
+              "var": "receiver_bic"
+            }
+          }
+        }
+      ],
+      "50F": {
+        "account": "DD/COLLECTOR",
+        "bic": "DEUTDEFF"
+      },
+      "52A": {
+        "bic": {
+          "var": "receiver_bic"
+        }
+      }
     }
+  }
 }

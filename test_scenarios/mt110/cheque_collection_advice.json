@@ -90,18 +90,14 @@
                     "var": "message_ref"
                 }
             },
-            "53": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
+            "53A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
-            "54": {
-                "A": {
-                    "bic": {
-                        "var": "receiver_bic"
-                    }
+            "54A": {
+                "bic": {
+                    "var": "receiver_bic"
                 }
             },
             "72": {
@@ -125,43 +121,34 @@
                             "var": "cheque1_date"
                         }
                     },
-                    "32": {
-                        "B": {
-                            "currency": {
-                                "var": "currency"
-                            },
-                            "amount": {
-                                "var": "cheque1_amount"
-                            }
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": {
+                            "var": "cheque1_amount"
                         }
                     },
-                    "50": {
-                        "K": {
-                            "account": "1234567890",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "123 MAIN STREET",
-                                "NEW YORK",
-                                "USA"
-                            ]
+                    "50K": {
+                        "account": "1234567890",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "123 MAIN STREET",
+                            "NEW YORK",
+                            "USA"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                           "var": "drawer_bic"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "drawer_bic"
-                            }
-                        }
-                    },
-                    "59": {
-                        "NoOption": {
-                            "account": "9876543210",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "123 MAIN STREET",
-                                "NEW YORK"
-                            ]
-                        }
+                    "59F": {
+                        "name_and_address": [
+                            "1/ACME CORPORATION",
+                            "2/123 MAIN STREET",
+                            "3/NEW YORK/US"
+                        ]
                     }
                 },
                 {
@@ -175,47 +162,38 @@
                             "var": "cheque2_date"
                         }
                     },
-                    "32": {
-                        "B": {
-                            "currency": {
-                                "var": "currency"
-                            },
-                            "amount": {
-                                "var": "cheque2_amount"
-                            }
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": {
+                            "var": "cheque2_amount"
                         }
                     },
-                    "50": {
-                        "A": {
-                            "party_identifier": "US/123456789",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "123 MAIN STREET",
-                                "NEW YORK",
-                                "USA"
-                            ]
-                        }
+                    "50A": {
+                        "party_identifier": "US/123456789",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "123 MAIN STREET",
+                            "NEW YORK",
+                            "USA"
+                        ]
                     },
-                    "52": {
-                        "D": {
-                            "party_identifier": "NATL123456",
-                            "name_and_address": [
-                                "REGIONAL BANK",
-                                "CLEARING HOUSE MEMBER",
-                                "NEW YORK",
-                                "USA"
-                            ]
-                        }
+                    "52D": {
+                        "party_identifier": "NATL123456",
+                        "name_and_address": [
+                            "REGIONAL BANK",
+                            "CLEARING HOUSE MEMBER",
+                            "NEW YORK",
+                            "USA"
+                        ]
                     },
-                    "59": {
-                        "NoOption": {
-                            "account": "9876543211",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "123 MAIN STREET",
-                                "NEW YORK"
-                            ]
-                        }
+                    "59F": {
+                        "name_and_address": [
+                            "1/ACME CORPORATION",
+                            "2/123 MAIN STREET",
+                            "3/NEW YORK/US"
+                        ]
                     }
                 },
                 {
@@ -229,44 +207,35 @@
                             "var": "cheque3_date"
                         }
                     },
-                    "32": {
-                        "B": {
-                            "currency": {
-                                "var": "currency"
-                            },
-                            "amount": {
-                                "var": "cheque3_amount"
-                            }
+                    "32B": {
+                        "currency": {
+                            "var": "currency"
+                        },
+                        "amount": {
+                            "var": "cheque3_amount"
                         }
                     },
-                    "50": {
-                        "K": {
-                            "account": "2222333344",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "123 MAIN STREET",
-                                "NEW YORK",
-                                "USA"
-                            ]
+                    "50K": {
+                        "account": "2222333344",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "123 MAIN STREET",
+                            "NEW YORK",
+                            "USA"
+                        ]
+                    },
+                    "52A": {
+                       "bic": {
+                           "var": "drawer_bic"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "drawer_bic"
-                            }
-                        }
-                    },
-                    "59": {
-                        "NoOption": {
-                            "account": "9876543212",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "TREASURY DEPARTMENT",
-                                "123 MAIN STREET",
-                                "NEW YORK"
-                            ]
-                        }
+                    "59F": {
+                        "name_and_address": [
+                            "1/ACME CORPORATION",
+                            "2/TREASURY DEPARTMENT",
+                            "3/123 MAIN STREET",
+                            "4/NEW YORK/US"
+                        ]
                     }
                 }
             ]

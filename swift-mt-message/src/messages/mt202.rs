@@ -1,253 +1,305 @@
+use crate::errors::{ParseError, ParseResult, ParserConfig};
 use crate::fields::*;
+use crate::message_parser::MessageParser;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use std::collections::HashMap;
 
-/// MT202: General Financial Institution Transfer
+/// MT202 - General Financial Institution Transfer
 ///
-/// ## Purpose
-/// Used for financial institution-to-financial institution payments where both the ordering
-/// and beneficiary customers are financial institutions. This message facilitates transfers
-/// of funds between institutions for their own account or on behalf of third parties.
-///
-/// ## Scope
-/// This message is:
-/// - Sent between financial institutions for interbank transfers
-/// - Used for settlement of obligations between financial institutions
-/// - Applicable for both cover payments (with underlying customer details) and direct institution transfers
-/// - Compatible with real-time gross settlement (RTGS) systems
-/// - Subject to SRG2025 contingency processing for FI-to-FI transfers
-///
-/// ## Key Features
-/// - **Dual Sequence Structure**:
-///   - Sequence A: Basic interbank transfer details
-///   - Sequence B: Cover payment details (when applicable)
-/// - **Flexible Routing**: Support for correspondent banking chains through fields 52-57
-/// - **Cover Payment Detection**: Automatic identification of cover vs. direct transfers
-/// - **Reject/Return Handling**: Built-in support for payment exception processing
-/// - **Settlement Integration**: Compatible with various settlement methods and systems
-/// - **SRG2025 Compliance**: Enhanced network validation rules for contingency processing
-///
-/// ## Common Use Cases
-/// - Interbank settlement transactions
-/// - Cover payments for underlying customer transfers
-/// - Foreign exchange settlement
-/// - Correspondent banking transfers
-/// - Central bank operations
-/// - Cross-border payment settlement
-/// - SWIFT gpi (global payments innovation) transactions
-///
-/// ## Message Structure
-/// ### Sequence A (Mandatory)
-/// - **Field 20**: Transaction Reference (mandatory) - Unique sender reference
-/// - **Field 21**: Related Reference (mandatory) - Reference to related message/transaction
-/// - **Field 13C**: Time Indication (optional, repetitive) - Processing time constraints
-/// - **Field 32A**: Value Date/Currency/Amount (mandatory) - Settlement details
-/// - **Field 52**: Ordering Institution (optional) - Institution initiating the transfer
-/// - **Field 53**: Sender's Correspondent (optional) - Sender's correspondent bank
-/// - **Field 54**: Receiver's Correspondent (optional) - Receiver's correspondent bank
-/// - **Field 56**: Intermediary Institution (optional) - Intermediary in the payment chain
-/// - **Field 57**: Account With Institution (optional) - Final crediting institution
-/// - **Field 58**: Beneficiary Institution (mandatory) - Final beneficiary institution
-/// - **Field 72**: Sender to Receiver Information (optional) - Additional instructions
-///
-/// ### Sequence B (Optional - Cover Payment Details)
-/// - **Field 50**: Ordering Customer (optional) - Underlying ordering customer
-/// - **Field 52**: Ordering Institution (optional) - Ordering institution details for cover
-/// - **Field 56**: Intermediary Institution (optional) - Intermediary for cover payment
-/// - **Field 57**: Account With Institution (optional) - Account details for cover
-/// - **Field 59**: Beneficiary Customer (optional) - Underlying beneficiary customer
-/// - **Field 70**: Remittance Information (optional) - Payment purpose/details
-/// - **Field 72**: Sender to Receiver Info (optional) - Cover-specific instructions
-/// - **Field 33B**: Currency/Instructed Amount (optional) - Original instructed amount
-///
-/// ## Network Validation Rules
-/// - **Intermediary Chain Validation**: If field 56 is present, field 57 becomes mandatory
-/// - **Cover Payment Structure**: Validation of Sequence B customer fields for cover detection
-/// - **Cross-border Compliance**: Enhanced validation for contingency processing (SRG2025)
-/// - **Settlement Method Validation**: Proper correspondent banking chain validation
-/// - **Time Indication Compliance**: CLS/TARGET timing constraint validation
-/// - **Reference Format Validation**: Proper format validation for all reference fields
-/// - **REJT/RETN Indicators**: Structured validation of reject/return codes in field 72
-///
-/// ## SRG2025 Status
-/// - **Structural Changes**: Enhanced - Additional network validated rules for contingency processing
-/// - **Validation Updates**: Contingency processing applicable to FI-to-FI transfers
-/// - **Processing Improvements**: ISO 20022 automatic conversion for compliant messages
-/// - **Compliance Notes**: Scope includes FI-to-FI including MA-CUGs (excludes SCORE, MI-CUGs)
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Compatible with real-time gross settlement (RTGS) systems and net settlement systems
-/// - **API Integration**: RESTful API support for modern interbank payment platforms
-/// - **Processing Requirements**: Supports correspondent banking arrangements and central bank settlement
-/// - **Compliance Integration**: Built-in support for cross-currency settlement and regulatory reporting
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Often triggered by MT103 customer payments requiring cover or institutional settlement
-/// - **Responses**: May generate MT900/MT910 (confirmations) or MT292/MT296 (reject notifications)
-/// - **Related**: Works with MT205 (with mandatory ordering institution) and account reporting messages
-/// - **Alternatives**: MT205 for transfers requiring explicit ordering institution identification
-/// - **Status Updates**: May receive MT192/MT196/MT199 for status notifications and inquiry responses
-
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT202_VALIDATION_RULES)]
+/// Used for bank-to-bank transfers on behalf of a customer or another financial institution.
+/// Can be used for both direct transfers and cover payments.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT202 {
-    #[field("20")]
-    pub field_20: Field20,
+    /// Field 20 - Transaction Reference Number (Mandatory)
+    #[serde(rename = "20")]
+    pub transaction_reference: Field20,
 
-    #[field("21")]
-    pub field_21: Field21NoOption,
+    /// Field 21 - Related Reference (Mandatory)
+    #[serde(rename = "21")]
+    pub related_reference: Field21NoOption,
 
-    #[field("13C")]
-    pub field_13c: Option<Vec<Field13C>>,
+    /// Field 13C - Time Indication (Optional, Repetitive)
+    #[serde(rename = "13C", skip_serializing_if = "Option::is_none")]
+    pub time_indication: Option<Vec<Field13C>>,
 
-    #[field("32A")]
-    pub field_32a: Field32A,
+    /// Field 32A - Value Date, Currency Code, Amount (Mandatory)
+    #[serde(rename = "32A")]
+    pub value_date_amount: Field32A,
 
-    #[field("52")]
-    pub field_52: Option<Field52OrderingInstitution>,
+    /// Field 52 - Ordering Institution (Optional)
+    /// Can be 52A or 52D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub ordering_institution: Option<Field52OrderingInstitution>,
 
-    #[field("53")]
-    pub field_53: Option<Field53SenderCorrespondent>,
+    /// Field 53 - Sender's Correspondent (Optional)
+    /// Can be 53A, 53B, or 53D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub senders_correspondent: Option<Field53>,
 
-    #[field("54")]
-    pub field_54: Option<Field54ReceiverCorrespondent>,
+    /// Field 54 - Receiver's Correspondent (Optional)
+    /// Can be 54A, 54B, or 54D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub receivers_correspondent: Option<Field54>,
 
-    #[field("56")]
-    pub field_56: Option<Field56Intermediary>,
+    /// Field 56 - Intermediary Institution (Optional)
+    /// Can be 56A or 56D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub intermediary: Option<Field56>,
 
-    #[field("57")]
-    pub field_57: Option<Field57AccountWithInstitution>,
+    /// Field 57 - Account With Institution (Optional)
+    /// Can be 57A, 57B, or 57D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub account_with_institution: Option<Field57>,
 
-    #[field("58")]
-    pub field_58: Field58,
+    /// Field 58 - Beneficiary Institution (Mandatory)
+    /// Can be 58A or 58D
+    #[serde(flatten)]
+    pub beneficiary_institution: Field58,
 
-    #[field("72")]
-    pub field_72: Option<Field72>,
-
-    #[field("50", name = "ordering_customer_b")]
-    pub ordering_customer_b: Option<Field50OrderingCustomerAFK>,
-
-    #[field("52", name = "ordering_institution_b")]
-    pub ordering_institution_b: Option<Field52OrderingInstitution>,
-
-    #[field("56", name = "intermediary_b")]
-    pub intermediary_b: Option<Field56Intermediary>,
-
-    #[field("57", name = "account_with_institution_b")]
-    pub account_with_institution_b: Option<Field57AccountWithInstitution>,
-
-    #[field("59", name = "beneficiary_customer_b")]
-    pub beneficiary_customer_b: Option<Field59>,
-
-    #[field("70", name = "remittance_information_b")]
-    pub remittance_information_b: Option<Field70>,
-
-    #[field("72", name = "sender_to_receiver_information_b")]
-    pub sender_to_receiver_information_b: Option<Field72>,
-
-    #[field("33B", name = "currency_amount_b")]
-    pub currency_amount_b: Option<Field33B>,
+    /// Field 72 - Sender to Receiver Information (Optional)
+    #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
+    pub sender_to_receiver: Option<Field72>,
 }
 
 impl MT202 {
-    /// Check if this MT202 message contains reject codes
-    ///
-    /// Reject messages are identified by checking:
-    /// 1. Field 20 (Transaction Reference) for "REJT" prefix or content
-    /// 2. Field 72 (Sender to Receiver Information) containing `/REJT/` codes
-    /// 3. Additional structured reject information in field 72
+    /// Parse MT202 from a raw SWIFT message string
+    pub fn parse_from_block4(block4: &str) -> Result<Self, ParseError> {
+        let mut parser = MessageParser::new(block4, "202");
+
+        // Parse mandatory fields
+        let transaction_reference = parser.parse_field::<Field20>("20")?;
+        let related_reference = parser.parse_field::<Field21NoOption>("21")?;
+
+        // Parse optional Field 13C (can be repeated)
+        let mut time_indications = Vec::new();
+        while let Ok(field) = parser.parse_field::<Field13C>("13C") {
+            time_indications.push(field);
+        }
+        let time_indication = if time_indications.is_empty() {
+            None
+        } else {
+            Some(time_indications)
+        };
+
+        // Parse mandatory Field 32A
+        let value_date_amount = parser.parse_field::<Field32A>("32A")?;
+
+        // Parse optional fields
+        let ordering_institution =
+            parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+        let senders_correspondent = parser.parse_optional_variant_field::<Field53>("53")?;
+        let receivers_correspondent = parser.parse_optional_variant_field::<Field54>("54")?;
+        let intermediary = parser.parse_optional_variant_field::<Field56>("56")?;
+        let account_with_institution = parser.parse_optional_variant_field::<Field57>("57")?;
+
+        // Parse mandatory Field 58 - Beneficiary Institution
+        let beneficiary_institution = parser.parse_variant_field::<Field58>("58")?;
+
+        // Parse optional Field 72
+        let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
+
+        Ok(MT202 {
+            transaction_reference,
+            related_reference,
+            time_indication,
+            value_date_amount,
+            ordering_institution,
+            senders_correspondent,
+            receivers_correspondent,
+            intermediary,
+            account_with_institution,
+            beneficiary_institution,
+            sender_to_receiver,
+        })
+    }
+
+    /// Static validation rules for MT202
+    pub fn validate() -> &'static str {
+        r#"{"rules": []}"#
+    }
+
+    /// Check if this message has reject codes
     pub fn has_reject_codes(&self) -> bool {
-        // Check field 20 (transaction reference)
-        if self.field_20.reference.to_uppercase().contains("REJT") {
-            return true;
+        if let Some(ref info) = self.sender_to_receiver {
+            info.information
+                .iter()
+                .any(|line| line.contains("/REJT/") || line.contains("/RJT/"))
+        } else {
+            false
         }
-
-        // Check field 72 for structured reject codes
-        if let Some(field_72) = &self.field_72 {
-            let content = field_72.information.join(" ").to_uppercase();
-            if content.contains("/REJT/") || content.contains("REJT") {
-                return true;
-            }
-        }
-
-        false
     }
 
-    /// Check if this MT202 message contains return codes
-    ///
-    /// Return messages are identified by checking:
-    /// 1. Field 20 (Transaction Reference) for "RETN" prefix or content
-    /// 2. Field 72 (Sender to Receiver Information) containing `/RETN/` codes
-    /// 3. Additional structured return information in field 72
+    /// Check if this message has return codes
     pub fn has_return_codes(&self) -> bool {
-        // Check field 20 (transaction reference)
-        if self.field_20.reference.to_uppercase().contains("RETN") {
-            return true;
+        if let Some(ref info) = self.sender_to_receiver {
+            info.information
+                .iter()
+                .any(|line| line.contains("/RETN/") || line.contains("/RET/"))
+        } else {
+            false
         }
-
-        // Check field 72 for structured return codes
-        if let Some(field_72) = &self.field_72 {
-            let content = field_72.information.join(" ").to_uppercase();
-            if content.contains("/RETN/") || content.contains("RETN") {
-                return true;
-            }
-        }
-
-        false
     }
 
-    /// Check if this MT202 message is a Cover (COV) message
-    ///
-    /// COV messages are distinguished by:
-    /// - Presence of customer fields (50A/50 and 59A/59) indicating underlying customer details
-    /// - Field 121 (UETR) in Block 3 is typically mandatory for COV messages
+    /// Check if this is a cover message
     pub fn is_cover_message(&self) -> bool {
-        // COV messages contain customer fields that indicate underlying customer credit transfer details
-        self.ordering_customer_b.is_some() && (self.beneficiary_customer_b.is_some())
+        if let Some(ref info) = self.sender_to_receiver {
+            info.information
+                .iter()
+                .any(|line| line.contains("/COV/") || line.contains("/COVER/"))
+        } else {
+            false
+        }
     }
 }
 
-const MT202_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "If field 56a is present, then field 57a must also be present",
-      "condition": {
-        "if": [
-          {"exists": ["fields", "56"]},
-          {"exists": ["fields", "57"]},
-          true
-        ]
-      }
-    },
-    {
-      "id": "C2",
-      "description": "If field 56a is present in Sequence B, then field 57a must also be present",
-      "condition": {
-        "if": [
-          {"exists": ["fields", "intermediary_b"]},
-          {"exists": ["fields", "account_with_institution_b"]},
-          true
-        ]
-      }
-    },
-    {
-      "id": "COV_FIELDS",
-      "description": "MT202 COV must include both field 50a (Ordering Customer) and 59a (Beneficiary)",
-      "condition": {
-        "if": [
-          {"or": [
-            {"exists": ["fields", "ordering_customer_b"]},
-            {"exists": ["fields", "beneficiary_customer_b"]}
-          ]},
-          {"and": [
-            {"exists": ["fields", "ordering_customer_b"]},
-            {"exists": ["fields", "beneficiary_customer_b"]}
-          ]},
-          true
-        ]
-      }
+impl crate::traits::SwiftMessageBody for MT202 {
+    fn message_type() -> &'static str {
+        "202"
     }
-  ]
-}"#;
+
+    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
+        // Reconstruct block4 from fields
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position
+        all_fields.sort_by_key(|f| f.2);
+
+        // Build block4
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: HashMap<String, Vec<(String, usize)>>,
+        _config: &ParserConfig,
+    ) -> Result<ParseResult<Self>, ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> HashMap<String, Vec<String>> {
+        let mut fields = HashMap::new();
+
+        fields.insert(
+            "20".to_string(),
+            vec![self.transaction_reference.to_swift_string()],
+        );
+        fields.insert(
+            "21".to_string(),
+            vec![self.related_reference.to_swift_string()],
+        );
+
+        if let Some(ref time_vec) = self.time_indication {
+            let time_strings: Vec<String> = time_vec.iter().map(|t| t.to_swift_string()).collect();
+            if !time_strings.is_empty() {
+                fields.insert("13C".to_string(), time_strings);
+            }
+        }
+
+        fields.insert(
+            "32A".to_string(),
+            vec![self.value_date_amount.to_swift_string()],
+        );
+
+        if let Some(ref ord_inst) = self.ordering_institution {
+            match ord_inst {
+                Field52OrderingInstitution::A(f) => {
+                    fields.insert("52A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field52OrderingInstitution::D(f) => {
+                    fields.insert("52D".to_string(), vec![f.to_swift_string()]);
+                }
+            }
+        }
+
+        if let Some(ref corr) = self.senders_correspondent {
+            match corr {
+                Field53::A(f) => {
+                    fields.insert("53A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field53::B(f) => {
+                    fields.insert("53B".to_string(), vec![f.to_swift_string()]);
+                }
+                Field53::D(f) => {
+                    fields.insert("53D".to_string(), vec![f.to_swift_string()]);
+                }
+            }
+        }
+
+        if let Some(ref rec_corr) = self.receivers_correspondent {
+            match rec_corr {
+                Field54::A(f) => {
+                    fields.insert("54A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field54::B(f) => {
+                    fields.insert("54B".to_string(), vec![f.to_swift_string()]);
+                }
+                Field54::D(f) => {
+                    fields.insert("54D".to_string(), vec![f.to_swift_string()]);
+                }
+            }
+        }
+
+        if let Some(ref inter) = self.intermediary {
+            match inter {
+                Field56::A(f) => {
+                    fields.insert("56A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field56::D(f) => {
+                    fields.insert("56D".to_string(), vec![f.to_swift_string()]);
+                }
+                _ => {}
+            }
+        }
+
+        if let Some(ref acc_with) = self.account_with_institution {
+            match acc_with {
+                Field57::A(f) => {
+                    fields.insert("57A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field57::B(f) => {
+                    fields.insert("57B".to_string(), vec![f.to_swift_string()]);
+                }
+                Field57::D(f) => {
+                    fields.insert("57D".to_string(), vec![f.to_swift_string()]);
+                }
+                _ => {}
+            }
+        }
+
+        match &self.beneficiary_institution {
+            Field58::A(f) => {
+                fields.insert("58A".to_string(), vec![f.to_swift_string()]);
+            }
+            Field58::D(f) => {
+                fields.insert("58D".to_string(), vec![f.to_swift_string()]);
+            }
+        }
+
+        if let Some(ref sender_info) = self.sender_to_receiver {
+            fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "21", "32A", "58"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["13C", "52", "53", "54", "56", "57", "72"]
+    }
+}

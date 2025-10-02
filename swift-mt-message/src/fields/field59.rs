@@ -1,6 +1,8 @@
+use super::field_utils::{parse_name_and_address, parse_party_identifier};
+use super::swift_utils::{parse_bic, parse_swift_chars};
+use crate::errors::ParseError;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::SwiftField;
-use swift_mt_message_macros::serde_swift_fields;
 
 ///   **Field 59F: Beneficiary Customer (Option F)**
 ///
@@ -104,15 +106,12 @@ use swift_mt_message_macros::serde_swift_fields;
 /// - Swift FIN User Handbook: Option F Beneficiary Specifications
 /// - KYC Guidelines: Enhanced Customer Identification Requirements
 /// - Regulatory Compliance: Beneficiary Documentation Standards
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field59F {
     /// Party identifier
-    #[component("[/34x]")]
     pub party_identifier: Option<String>,
 
     /// Name and address lines
-    #[component("4*(1!n/33x)")]
     pub name_and_address: Vec<String>,
 }
 
@@ -233,14 +232,11 @@ pub struct Field59F {
 /// - Swift FIN User Handbook: Option A Beneficiary Specifications
 /// - ISO 9362 Standard: BIC Code Structure and Validation
 /// - STP Implementation Guide: Beneficiary Identification Best Practices
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field59A {
     /// Account number (optional)
-    #[component("[/34x]")]
     pub account: Option<String>,
     /// BIC code
-    #[component("4!a2!a2!c[3!c]")]
     pub bic: String,
 }
 
@@ -254,21 +250,18 @@ pub struct Field59A {
 /// - Name and address lines (4*35x)
 ///
 /// For complete documentation, see the [Field 59 module](index.html).
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field59NoOption {
     /// Account number (optional)
     ///
     /// Format: [/34x] - Optional account identifier up to 34 characters
     /// Used for IBAN, domestic account numbers, or special identifiers
-    #[component("[/34x]")]
     pub account: Option<String>,
 
     /// Name and address lines
     ///
     /// Format: 4*35x - Up to 4 lines of 35 characters each
     /// Contains beneficiary name and address information in flexible format
-    #[component("4*35x")]
     pub name_and_address: Vec<String>,
 }
 
@@ -345,25 +338,381 @@ pub struct Field59NoOption {
 /// - FATF Guidelines: Customer Due Diligence Requirements
 /// - Regional Payment Guides: Country-specific beneficiary requirements
 /// - AML/CFT Compliance: Beneficiary Screening Best Practices
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field59 {
     /// Option A: BIC-based identification with optional account
     /// Preferred for STP processing with structured bank identification
+    #[serde(rename = "59A")]
     A(Field59A),
 
     /// Option F: Party identifier with detailed name and address
     /// Used when enhanced beneficiary identification is required
+    #[serde(rename = "59F")]
     F(Field59F),
 
     /// No option: Account and name/address in flexible format
     /// Most common option providing balance of structure and flexibility
+    #[serde(rename = "59")]
     NoOption(Field59NoOption),
 }
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+impl SwiftField for Field59F {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        let lines: Vec<&str> = input.lines().collect();
+
+        if lines.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 59F cannot be empty".to_string(),
+            });
+        }
+
+        let mut party_identifier = None;
+        let mut start_idx = 0;
+
+        // Check for party identifier on first line
+        if let Some(party_id) = parse_party_identifier(lines[0])? {
+            party_identifier = Some(party_id);
+            start_idx = 1;
+        }
+
+        // Parse name and address lines with line number format: 1!n/33x
+        let mut name_and_address = Vec::new();
+        for (i, line) in lines.iter().enumerate().skip(start_idx) {
+            // Check for line number format (1!n/33x)
+            let mut chars = line.chars();
+            let first_char = chars.next();
+            let second_char = chars.next();
+            if line.len() < 2 || !first_char.unwrap().is_ascii_digit() || second_char != Some('/') {
+                return Err(ParseError::InvalidFormat {
+                    message: format!(
+                        "Field 59F line {} must start with line number and slash (e.g., '1/')",
+                        i - start_idx + 1
+                    ),
+                });
+            }
+
+            let line_num = first_char.unwrap().to_digit(10).unwrap() as usize;
+            let expected_line_num = i - start_idx + 1;
+
+            if line_num != expected_line_num {
+                return Err(ParseError::InvalidFormat {
+                    message: format!(
+                        "Field 59F line number {} doesn't match expected {}",
+                        line_num, expected_line_num
+                    ),
+                });
+            }
+
+            let content = &line[2..];
+            if content.len() > 33 {
+                return Err(ParseError::InvalidFormat {
+                    message: format!("Field 59F line {} content exceeds 33 characters", line_num),
+                });
+            }
+
+            parse_swift_chars(content, &format!("Field 59F line {}", line_num))?;
+            name_and_address.push(line.to_string());
+        }
+
+        if name_and_address.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 59F must have at least one name/address line".to_string(),
+            });
+        }
+
+        if name_and_address.len() > 4 {
+            return Err(ParseError::InvalidFormat {
+                message: format!(
+                    "Field 59F cannot have more than 4 name/address lines, found {}",
+                    name_and_address.len()
+                ),
+            });
+        }
+
+        Ok(Field59F {
+            party_identifier,
+            name_and_address,
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        let mut result = String::from(":59F:");
+
+        if let Some(ref id) = self.party_identifier {
+            result.push_str(&format!("/{}\n", id));
+        }
+
+        for (i, line) in self.name_and_address.iter().enumerate() {
+            if i > 0 || self.party_identifier.is_some() {
+                result.push('\n');
+            }
+            result.push_str(line);
+        }
+
+        result
+    }
+}
+
+impl SwiftField for Field59A {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        let lines: Vec<&str> = input.lines().collect();
+
+        if lines.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 59A cannot be empty".to_string(),
+            });
+        }
+
+        let mut account = None;
+        let bic_line_idx;
+
+        // Check if first line is account (/...)
+        if lines[0].starts_with('/') {
+            let identifier = &lines[0][1..];
+            if identifier.len() <= 34 {
+                parse_swift_chars(identifier, "Field 59A account")?;
+                account = Some(identifier.to_string());
+                bic_line_idx = 1;
+            } else {
+                bic_line_idx = 0;
+            }
+        } else {
+            bic_line_idx = 0;
+        }
+
+        // Parse BIC
+        if bic_line_idx >= lines.len() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 59A missing BIC code".to_string(),
+            });
+        }
+
+        let bic = parse_bic(lines[bic_line_idx])?;
+
+        Ok(Field59A { account, bic })
+    }
+
+    fn to_swift_string(&self) -> String {
+        let mut result = String::from(":59A:");
+
+        if let Some(ref acc) = self.account {
+            result.push_str(&format!("/{}\n", acc));
+        }
+
+        result.push_str(&self.bic);
+        result
+    }
+}
+
+impl SwiftField for Field59NoOption {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        let lines: Vec<&str> = input.lines().collect();
+
+        if lines.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 59 (No Option) cannot be empty".to_string(),
+            });
+        }
+
+        let mut account = None;
+        let mut start_idx = 0;
+
+        // Check for account
+        if lines[0].starts_with('/') {
+            let identifier = &lines[0][1..];
+            if identifier.len() <= 34 {
+                parse_swift_chars(identifier, "Field 59 account")?;
+                account = Some(identifier.to_string());
+                start_idx = 1;
+            }
+        }
+
+        // Parse remaining lines as name and address
+        let name_and_address = parse_name_and_address(&lines, start_idx, "Field59NoOption")?;
+
+        Ok(Field59NoOption {
+            account,
+            name_and_address,
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        let mut result = String::from(":59:");
+
+        if let Some(ref acc) = self.account {
+            result.push_str(&format!("/{}", acc));
+        }
+
+        for (i, line) in self.name_and_address.iter().enumerate() {
+            if i > 0 || (i == 0 && self.account.is_some()) {
+                result.push('\n');
+            }
+            result.push_str(line);
+        }
+
+        result
+    }
+}
+
+impl SwiftField for Field59 {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Try Option A (BIC-based) first
+        if let Ok(field) = Field59A::parse(input) {
+            return Ok(Field59::A(field));
+        }
+
+        // Try Option F (structured name/address with line numbers)
+        // This is identifiable by the line number format (1/content, 2/content, etc.)
+        let lines: Vec<&str> = input.lines().collect();
+        if !lines.is_empty() {
+            // Check if any line (after optional account) has line number format
+            let check_start = if lines[0].starts_with('/') { 1 } else { 0 };
+            if check_start < lines.len() {
+                let test_line = lines[check_start];
+                let mut chars = test_line.chars();
+                if test_line.len() >= 2
+                    && chars.next().unwrap().is_ascii_digit()
+                    && chars.next() == Some('/')
+                    && let Ok(field) = Field59F::parse(input)
+                {
+                    return Ok(Field59::F(field));
+                }
+            }
+        }
+
+        // Try No Option (account + name/address)
+        if let Ok(field) = Field59NoOption::parse(input) {
+            return Ok(Field59::NoOption(field));
+        }
+
+        Err(ParseError::InvalidFormat {
+            message: "Field 59 could not be parsed as option A, F, or No Option".to_string(),
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        match self {
+            Field59::A(field) => field.to_swift_string(),
+            Field59::F(field) => field.to_swift_string(),
+            Field59::NoOption(field) => field.to_swift_string(),
+        }
+    }
+
+    fn get_variant_tag(&self) -> Option<&'static str> {
+        match self {
+            Field59::A(_) => Some("A"),
+            Field59::F(_) => Some("F"),
+            Field59::NoOption(_) => None, // No option doesn't have a variant letter
+        }
+    }
+}
+
+impl SwiftField for Field59Debtor {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Try Option A (BIC-based) first
+        if let Ok(field) = Field59A::parse(input) {
+            return Ok(Field59Debtor::A(field));
+        }
+
+        // Try No Option (account + name/address)
+        if let Ok(field) = Field59NoOption::parse(input) {
+            return Ok(Field59Debtor::NoOption(field));
+        }
+
+        Err(ParseError::InvalidFormat {
+            message: "Field 59 Debtor could not be parsed as option A or No Option".to_string(),
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        match self {
+            Field59Debtor::A(field) => field.to_swift_string(),
+            Field59Debtor::NoOption(field) => field.to_swift_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field59Debtor {
+    #[serde(rename = "59A")]
     A(Field59A),
+    #[serde(rename = "59")]
     NoOption(Field59NoOption),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field59f() {
+        // With party identifier
+        let field = Field59F::parse("/GB82WEST12345698765432\n1/ACME CORPORATION LIMITED\n2/INTERNATIONAL TRADE DIVISION\n3/123 BUSINESS PARK AVENUE\n4/LONDON EC1A 1BB UNITED KINGDOM").unwrap();
+        assert_eq!(
+            field.party_identifier,
+            Some("GB82WEST12345698765432".to_string())
+        );
+        assert_eq!(field.name_and_address.len(), 4);
+        assert_eq!(field.name_and_address[0], "1/ACME CORPORATION LIMITED");
+
+        // Without party identifier
+        let field =
+            Field59F::parse("1/JOHN SMITH\n2/123 MAIN STREET\n3/LONDON\n4/UNITED KINGDOM").unwrap();
+        assert_eq!(field.party_identifier, None);
+        assert_eq!(field.name_and_address.len(), 4);
+    }
+
+    #[test]
+    fn test_field59a() {
+        // With account
+        let field = Field59A::parse("/GB82WEST12345698765432\nMIDLGB22XXX").unwrap();
+        assert_eq!(field.account, Some("GB82WEST12345698765432".to_string()));
+        assert_eq!(field.bic, "MIDLGB22XXX");
+
+        // Without account
+        let field = Field59A::parse("CHASUS33XXX").unwrap();
+        assert_eq!(field.account, None);
+        assert_eq!(field.bic, "CHASUS33XXX");
+    }
+
+    #[test]
+    fn test_field59_no_option() {
+        // With account
+        let field = Field59NoOption::parse("/GB82WEST12345698765432\nJOHN SMITH\n456 RESIDENTIAL AVENUE\nMANCHESTER M1 1AA\nUNITED KINGDOM").unwrap();
+        assert_eq!(field.account, Some("GB82WEST12345698765432".to_string()));
+        assert_eq!(field.name_and_address.len(), 4);
+        assert_eq!(field.name_and_address[0], "JOHN SMITH");
+
+        // Without account
+        let field = Field59NoOption::parse("JANE DOE\n789 MAIN STREET\nLONDON").unwrap();
+        assert_eq!(field.account, None);
+        assert_eq!(field.name_and_address.len(), 3);
+    }
+
+    #[test]
+    fn test_field59_invalid() {
+        // Invalid BIC
+        assert!(Field59A::parse("INVALID").is_err());
+
+        // Invalid line number in 59F
+        assert!(Field59F::parse("2/WRONG LINE NUMBER").is_err());
+
+        // Too many lines
+        assert!(Field59NoOption::parse("LINE1\nLINE2\nLINE3\nLINE4\nLINE5").is_err());
+    }
 }

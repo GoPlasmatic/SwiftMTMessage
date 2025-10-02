@@ -47,6 +47,7 @@
 pub mod errors;
 pub mod fields;
 pub mod headers;
+pub mod message_parser;
 pub mod messages;
 pub mod parsed_message;
 pub mod parser;
@@ -81,9 +82,6 @@ pub use utils::{
     get_field_tag_for_mt, get_field_tag_with_variant, is_numbered_field, map_variant_to_numbered,
 };
 pub use validation_result::ValidationResult;
-
-// Re-export derive macros
-pub use swift_mt_message_macros::{SwiftField, SwiftMessage, serde_swift_fields};
 
 // Re-export sample generation
 pub use sample::{SampleGenerator, generate_sample, generate_sample_with_config};

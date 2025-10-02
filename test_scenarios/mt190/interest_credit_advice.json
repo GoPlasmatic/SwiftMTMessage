@@ -89,30 +89,24 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
-            "32": {
-                "C": {
-                    "value_date": {
-                        "var": "value_date"
-                    },
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "interest_amount"
-                    }
+            "32C": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "interest_amount"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "ordering_bic"
-                    }
+            "52A": {
+                "bic": {
+                    "var": "ordering_bic"
                 }
             },
             "71B": {

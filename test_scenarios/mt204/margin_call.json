@@ -1,164 +1,158 @@
 {
-    "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "main_ref": {
-            "cat": [
-                "MARG",
-                10000000
-            ]
-        },
-        "transaction_ref1": {
-            "cat": [
-                "MC",
-                10000
-            ]
-        },
-        "transaction_ref2": {
-            "cat": [
-                "MC",
-                10000
-            ]
-        },
-        "currency": "USD",
-        "total_amount": 200000,
-        "transaction_amount": 100000,
-        "value_date": "2025-01-20",
-        "session_num": "0001",
-        "sequence_num": "567890"
+  "variables": {
+    "sender_bic": "DEUTDEFF",
+    "receiver_bic": "DEUTDEFF",
+    "main_ref": {
+      "cat": [
+        "MARG",
+        10000000
+      ]
     },
-    "schema": {
-        "basic_header": {
-            "application_id": "F",
-            "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
-        },
-        "application_header": {
-            "direction": "I",
-            "message_type": "204",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
-            "priority": "U"
-        },
-        "message_type": "204",
-        "fields": {
-            "20": {
-                "reference": {
-                    "var": "main_ref"
-                }
-            },
-            "19": {
-                "amount": {
-                    "var": "total_amount"
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "value_date"
-                }
-            },
-            "58": {
-                "D": {
-                    "party_identifier": "CLEARING",
-                    "name_and_address": [
-                        "DERIVATIVES CLEARING HOUSE",
-                        "100 WALL STREET",
-                        "NEW YORK NY 10005",
-                        "UNITED STATES"
-                    ]
-                }
-            },
-            "72": {
-                "information": [
-                    "/INS/MARGIN CALL",
-                    "/REF/DERIVATIVES"
-                ]
-            },
-            "#": [
-                {
-                    "20": {
-                        "reference": {
-                            "var": "transaction_ref1"
-                        }
-                    },
-                    "21": {
-                        "reference": "FUTURES001"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "transaction_amount"
-                        }
-                    },
-                    "53": {
-                        "B": {
-                            "party_identifier": "MEMBER001",
-                            "location": "NEW YORK"
-                        }
-                    },
-                    "72": {
-                        "information": [
-                            "/MARG/INITIAL"
-                        ]
-                    }
-                },
-                {
-                    "20": {
-                        "reference": {
-                            "var": "transaction_ref2"
-                        }
-                    },
-                    "21": {
-                        "reference": "OPTIONS002"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "transaction_amount"
-                        }
-                    },
-                    "53": {
-                        "B": {
-                            "party_identifier": "MEMBER002",
-                            "location": "CHICAGO"
-                        }
-                    },
-                    "72": {
-                        "information": [
-                            "/MARG/VARIATION"
-                        ]
-                    }
-                }
-            ]
+    "transaction_ref1": {
+      "cat": [
+        "MC",
+        10000
+      ]
+    },
+    "transaction_ref2": {
+      "cat": [
+        "MC",
+        10000
+      ]
+    },
+    "currency": "USD",
+    "total_amount": 200000,
+    "transaction_amount": 100000,
+    "value_date": "2025-01-20",
+    "session_num": "0001",
+    "sequence_num": "567890"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "204",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "U"
+    },
+    "message_type": "204",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "main_ref"
         }
+      },
+      "19": {
+        "amount": {
+          "var": "total_amount"
+        }
+      },
+      "30": {
+        "execution_date": {
+          "var": "value_date"
+        }
+      },
+      "72": {
+        "information": [
+          "/INS/MARGIN CALL",
+          "/REF/DERIVATIVES"
+        ]
+      },
+      "#": [
+        {
+          "20": {
+            "reference": {
+              "var": "transaction_ref1"
+            }
+          },
+          "21": {
+            "reference": "FUTURES001"
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "var": "transaction_amount"
+            }
+          },
+          "72": {
+            "information": [
+              "/MARG/INITIAL"
+            ]
+          },
+          "53B": {
+            "party_identifier": "MEMBER001",
+            "location": "NEW YORK"
+          }
+        },
+        {
+          "20": {
+            "reference": {
+              "var": "transaction_ref2"
+            }
+          },
+          "21": {
+            "reference": "OPTIONS002"
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "var": "transaction_amount"
+            }
+          },
+          "72": {
+            "information": [
+              "/MARG/VARIATION"
+            ]
+          },
+          "53B": {
+            "party_identifier": "MEMBER002",
+            "location": "CHICAGO"
+          }
+        }
+      ],
+      "58D": {
+        "party_identifier": "CLEARING",
+        "name_and_address": [
+          "DERIVATIVES CLEARING HOUSE",
+          "100 WALL STREET",
+          "NEW YORK NY 10005",
+          "UNITED STATES"
+        ]
+      }
     }
+  }
 }

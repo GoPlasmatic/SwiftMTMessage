@@ -1,263 +1,158 @@
 {
-    "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "intermediary1_bic": "DEUTDEFF",
-        "intermediary2_bic": "DEUTDEFF",
-        "intermediary3_bic": "DEUTDEFF",
-        "account_with_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "CRX",
-                100000000000
-            ]
-        },
-        "related_ref": {
-            "cat": [
-                "MT103",
-                1000000000
-            ]
-        },
-        "settlement_currency": "USD",
-        "original_currency": "EUR",
-        "settlement_amount": 10000,
-        "instructed_amount": 10000,
-        "exchange_rate": 10000,
-        "value_date": "2024-12-20",
-        "session_num": "0001",
-        "sequence_num": "004567",
-        "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "receiver_lei": "LEIZBQR12345HKLMNOP678",
-        "intermediary1_lei": "LEIXG8HWVXGGR1B2V6L894",
-        "intermediary2_lei": "LEIXG8HWVXGGR1B2V7M895",
-        "purpose_code": "TRAD",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+  "variables": {
+    "sender_bic": "DEUTDEFF",
+    "receiver_bic": "DEUTDEFF",
+    "intermediary1_bic": "DEUTDEFF",
+    "intermediary2_bic": "DEUTDEFF",
+    "intermediary3_bic": "DEUTDEFF",
+    "account_with_bic": "DEUTDEFF",
+    "transaction_ref": {
+      "cat": [
+        "CRX",
+        100000000000
+      ]
     },
-    "schema": {
-        "basic_header": {
-            "application_id": "F",
-            "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
-        },
-        "application_header": {
-            "direction": "I",
-            "message_type": "202",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
-            "priority": "U"
-        },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
-            "validation_flag": "STP"
-        },
-        "message_type": "202",
-        "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "related_ref"
-                }
-            },
-            "13C": [
-                {
-                    "code": "SNDTIME",
-                    "time": "1200",
-                    "sign": "+",
-                    "offset": "0100"
-                },
-                {
-                    "code": "RNCTIME",
-                    "time": "1600",
-                    "sign": "+",
-                    "offset": "0500"
-                }
-            ],
-            "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "settlement_currency"
-                },
-                "amount": {
-                    "var": "settlement_amount"
-                }
-            },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
-                }
-            },
-            "53": {
-                "A": {
-                    "bic": {
-                        "var": "intermediary1_bic"
-                    }
-                }
-            },
-            "54": {
-                "A": {
-                    "bic": {
-                        "var": "intermediary2_bic"
-                    }
-                }
-            },
-            "56": {
-                "A": {
-                    "bic": {
-                        "var": "intermediary3_bic"
-                    }
-                }
-            },
-            "57": {
-                "A": {
-                    "bic": {
-                        "var": "account_with_bic"
-                    }
-                }
-            },
-            "58": {
-                "A": {
-                    "bic": {
-                        "var": "receiver_bic"
-                    }
-                }
-            },
-            "72": {
-                "information": [
-                    "/ACC/CBPR+ COMPLEX ROUTING",
-                    "/UETR/c8bb451b-b6a2-419b-b0d1",
-                    "/INS/FX CONVERSION APPLIED",
-                    "/EXCH/EUR/USD/1.0916"
-                ]
-            },
-            "ordering_customer_b": {
-                "K": {
-                    "account": "FR1420041010050500013M02606",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        {
-                            "cat": [
-                                "/LEI/",
-                                {
-                                    "var": "sender_lei"
-                                }
-                            ]
-                        },
-                        "123 MAIN STREET",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
-                }
-            },
-            "intermediary_b": {
-                "A": {
-                    "bic": {
-                        "var": "intermediary3_bic"
-                    }
-                }
-            },
-            "account_with_institution_b": {
-                "A": {
-                    "bic": {
-                        "var": "account_with_bic"
-                    }
-                }
-            },
-            "beneficiary_customer_b": {
-                "NoOption": {
-                    "account": "US64SVBK12345678901234567890",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        {
-                            "cat": [
-                                "/LEI/",
-                                {
-                                    "var": "receiver_lei"
-                                }
-                            ]
-                        },
-                        "123 MAIN STREET",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
-                }
-            },
-            "remittance_information_b": {
-                "narrative": [
-                    {
-                        "cat": [
-                            "/PURP/",
-                            {
-                                "var": "purpose_code"
-                            }
-                        ]
-                    },
-                    "/RFB/TRADE-SETTLEMENT-2024",
-                    "CROSS-BORDER TRADE PAYMENT",
-                    "MULTI-CURRENCY SETTLEMENT"
-                ]
-            },
-            "currency_amount_b": {
-                "currency": {
-                    "var": "original_currency"
-                },
-                "amount": {
-                    "var": "instructed_amount"
-                }
-            },
-            "sender_to_receiver_information_b": {
-                "information": [
-                    "/ACC/ROUTING TRANSPARENCY",
-                    "/R1/CHASUS33 CORRESPONDENT",
-                    "/R2/DEUTDEFF CLEARING",
-                    "/R3/BNPAFRPP SETTLEMENT"
-                ]
-            }
+    "related_ref": {
+      "cat": [
+        "MT103",
+        1000000000
+      ]
+    },
+    "settlement_currency": "USD",
+    "original_currency": "EUR",
+    "settlement_amount": 10000,
+    "instructed_amount": 10000,
+    "exchange_rate": 10000,
+    "value_date": "2024-12-20",
+    "session_num": "0001",
+    "sequence_num": "004567",
+    "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+    "receiver_lei": "LEIZBQR12345HKLMNOP678",
+    "intermediary1_lei": "LEIXG8HWVXGGR1B2V6L894",
+    "intermediary2_lei": "LEIXG8HWVXGGR1B2V7M895",
+    "purpose_code": "TRAD",
+    "uetr": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "202",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "U"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
+    },
+    "message_type": "202",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
         }
+      },
+      "21": {
+        "reference": {
+          "var": "related_ref"
+        }
+      },
+      "13C": [
+        {
+          "code": "SNDTIME",
+          "time": "1200",
+          "sign": "+",
+          "offset": "0100"
+        },
+        {
+          "code": "RNCTIME",
+          "time": "1600",
+          "sign": "+",
+          "offset": "0500"
+        }
+      ],
+      "32A": {
+        "value_date": {
+          "var": "value_date"
+        },
+        "currency": {
+          "var": "settlement_currency"
+        },
+        "amount": {
+          "var": "settlement_amount"
+        }
+      },
+      "52A": {
+        "bic": {
+          "var": "sender_bic"
+        }
+      },
+      "72": {
+        "information": [
+          "/ACC/CBPR+ COMPLEX ROUTING",
+          "/UETR/c8bb451b-b6a2-419b-b0d1",
+          "/INS/FX CONVERSION APPLIED",
+          "/EXCH/EUR/USD/1.0916"
+        ]
+      },
+      "53A": {
+        "bic": {
+          "var": "intermediary1_bic"
+        }
+      },
+      "54A": {
+        "bic": {
+          "var": "intermediary2_bic"
+        }
+      },
+      "56A": {
+        "bic": {
+          "var": "intermediary3_bic"
+        }
+      },
+      "57A": {
+        "bic": {
+          "var": "account_with_bic"
+        }
+      },
+      "58A": {
+        "bic": {
+          "var": "receiver_bic"
+        }
+      }
     }
+  }
 }

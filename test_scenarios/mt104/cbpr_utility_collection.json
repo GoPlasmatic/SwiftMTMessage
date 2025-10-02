@@ -97,30 +97,16 @@
                             "var": "amount1"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "BNPAFRPPXXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "ELECTRICITE DE FRANCE",
-                                "SERVICE RECOUVREMENT",
-                                "92050 PARIS LA DEFENSE",
-                                "FRANCE"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "ELECTRICITE DE FRANCE",
+                            "SERVICE RECOUVREMENT",
+                            "92050 PARIS LA DEFENSE",
+                            "FRANCE"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -140,16 +126,22 @@
                             "/PURPOSE/ELEC BILL DEC-2024"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "FR7612345678901234567890123",
-                            "name_and_address": [
-                                "DUPONT, MARIE",
-                                "15 RUE DE LA PAIX",
-                                "75002 PARIS",
-                                "FRANCE"
-                            ]
+                    "50K": {
+                        "account": "FR7612345678901234567890123",
+                        "name_and_address": [
+                            "DUPONT, MARIE",
+                            "15 RUE DE LA PAIX",
+                            "75002 PARIS",
+                            "FRANCE"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "BNPAFRPPXXX"
                     }
                 },
                 {
@@ -164,30 +156,16 @@
                             "var": "amount2"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "CRLYFRPPXXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "GAZ DE FRANCE SUEZ",
-                                "CENTRE ENCAISSEMENT",
-                                "59000 LILLE",
-                                "FRANCE"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "GAZ DE FRANCE SUEZ",
+                            "CENTRE ENCAISSEMENT",
+                            "59000 LILLE",
+                            "FRANCE"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -207,16 +185,22 @@
                             "/PURPOSE/GAS BILL DEC-2024"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "FR9876543210987654321098765",
-                            "name_and_address": [
-                                "MARTIN, JACQUES",
-                                "45 AVENUE VICTOR HUGO",
-                                "69006 LYON",
-                                "FRANCE"
-                            ]
+                    "50K": {
+                        "account": "FR9876543210987654321098765",
+                        "name_and_address": [
+                            "MARTIN, JACQUES",
+                            "45 AVENUE VICTOR HUGO",
+                            "69006 LYON",
+                            "FRANCE"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "CRLYFRPPXXX"
                     }
                 },
                 {
@@ -231,30 +215,16 @@
                             "var": "amount3"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "SOGEFRPPXXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "VEOLIA EAU ILE DE FRANCE",
-                                "SERVICE CLIENTS",
-                                "94400 VITRY SUR SEINE",
-                                "FRANCE"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "VEOLIA EAU ILE DE FRANCE",
+                            "SERVICE CLIENTS",
+                            "94400 VITRY SUR SEINE",
+                            "FRANCE"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -274,16 +244,22 @@
                             "/PURPOSE/WATER BILL Q4-2024"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "FR1122334455667788990011223",
-                            "name_and_address": [
-                                "BERNARD, SOPHIE",
-                                "78 RUE DE RIVOLI",
-                                "75004 PARIS",
-                                "FRANCE"
-                            ]
+                    "50K": {
+                        "account": "FR1122334455667788990011223",
+                        "name_and_address": [
+                            "BERNARD, SOPHIE",
+                            "78 RUE DE RIVOLI",
+                            "75004 PARIS",
+                            "FRANCE"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "SOGEFRPPXXX"
                     }
                 }
             ],

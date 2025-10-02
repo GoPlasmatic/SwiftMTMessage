@@ -104,58 +104,52 @@
                     "var": "amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "INTEREST-PAYABLE",
-                    "name_and_address": [
-                        {
-                            "var": "bank_name"
-                        },
-                        {
-                            "cat": [
-                                "/LEI/",
-                                {
-                                    "var": "bank_lei"
-                                }
-                            ]
-                        },
-                        "TREASURY DEPARTMENT",
-                        "HEAD OFFICE"
-                    ]
+            "50K": {
+                "account": "INTEREST-PAYABLE",
+                "name_and_address": [
+                    {
+                        "var": "bank_name"
+                    },
+                    {
+                        "cat": [
+                            "/LEI/",
+                            {
+                                "var": "bank_lei"
+                            }
+                        ]
+                    },
+                    "TREASURY DEPARTMENT",
+                    "HEAD OFFICE"
+                ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
-                }
-            },
-            "57": {
-                "A": {
-                    "bic": {
-                        "var": "customer_bank_bic"
-                    }
+            "57A": {
+                "bic": {
+                    "var": "customer_bank_bic"
                 }
             },
             "59": {
-                "NoOption": {
-                    "account": {"var": "account_number"},
-                    "name_and_address": [
-                        {
-                            "var": "customer_name"
-                        },
-                        {
-                            "var": "customer_address"
-                        },
-                        {
-                            "var": "customer_city"
-                        },
-                        {
-                            "var": "customer_country"
-                        }
-                    ]
-                }
+                "account": {
+                    "var": "account_number"
+                },
+                "name_and_address": [
+                    {
+                        "var": "customer_name"
+                    },
+                    {
+                        "var": "customer_address"
+                    },
+                    {
+                        "var": "customer_city"
+                    },
+                    {
+                        "var": "customer_country"
+                    }
+                ]
             },
             "70": {
                 "narrative": [

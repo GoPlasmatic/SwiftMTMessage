@@ -100,14 +100,6 @@
                 "statement_number": 999,
                 "sequence_number": 1
             },
-            "60": {
-                "M": {
-                    "debit_credit_mark": "C",
-                    "value_date": "2024-12-20",
-                    "currency": "GBP",
-                    "amount": 5000000
-                }
-            },
             "61": [
                 {
                     "value_date": "2024-12-20",
@@ -134,6 +126,20 @@
                     "bank_reference": "BA3-1234567890"
                 }
             ],
+            "64": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-20",
+                "currency": "GBP",
+                "amount": 4500000
+            },
+            "60": {
+                "M": {
+                    "debit_credit_mark": "C",
+                    "value_date": "2024-12-20",
+                    "currency": "GBP",
+                    "amount": 5000000
+                }
+            },
             "62": {
                 "M": {
                     "debit_credit_mark": "C",
@@ -141,12 +147,6 @@
                     "currency": "GBP",
                     "amount": 4773000
                 }
-            },
-            "64": {
-                "debit_credit_mark": "C",
-                "value_date": "2024-12-20",
-                "currency": "GBP",
-                "amount": 4500000
             }
         }
     }

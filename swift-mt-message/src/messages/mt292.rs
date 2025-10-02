@@ -1,125 +1,199 @@
+use crate::errors::{ParseError, ParseResult, ParserConfig};
 use crate::fields::*;
+use crate::message_parser::MessageParser;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use std::collections::HashMap;
 
-/// MT292: Request for Cancellation (Category 2 - Financial Institution Transfers)
+/// MT292 - Request for Cancellation
 ///
-/// ## Purpose
-/// Used to request the cancellation of a previously sent financial institution transfer message
-/// (Category 2). This message provides reference information to identify the specific message
-/// to be cancelled and includes reasons for the cancellation request.
-///
-/// ## Scope
-/// This message is:
-/// - Sent by the originator of a Category 2 financial institution transfer to request its cancellation
-/// - Used for MT200, MT202, MT205, MT210, and other Category 2 messages
-/// - Applied when an institutional transfer needs to be cancelled before execution
-/// - Contains precise identifying information of the original message
-/// - May include structured reason codes for the cancellation
-///
-/// ## Key Features
-/// - **Message Identification**: Field 11S provides precise reference to original message
-/// - **Treasury Focus**: Specifically designed for financial institution transfer cancellations
-/// - **Cancellation Control**: Request processing before payment settlement
-/// - **Reference Tracking**: Links to original message through transaction references
-/// - **Reason Documentation**: Optional structured cancellation reasons in field 79
-/// - **Session-Based Tracking**: Field 11S includes session and sequence number details
-///
-/// ## Common Use Cases
-/// - Cancellation of MT202/MT205 institutional transfers
-/// - Prevention of duplicate institutional payments
-/// - Correction of erroneous transfer instructions
-/// - Liquidity management adjustments
-/// - Settlement system error recovery
-/// - Treasury operation corrections
-/// - Cross-border institutional payment cancellations
-///
-/// ## Field Structure
-/// - **20**: Sender's Reference (mandatory) - Message reference for this cancellation request
-/// - **21**: Related Reference (mandatory) - Reference to the original message being cancelled
-/// - **11S**: MT and Date Reference (mandatory) - Precise identification of original message
-/// - **79**: Narrative (optional) - Cancellation reasons and additional information
-///
-/// ## Field 11S Structure
-/// The Field 11S contains critical information for identifying the original message:
-/// - **Message Type**: 3-digit MT number (200, 202, 205, 210, etc.)
-/// - **Date**: 6-digit date (YYMMDD) when original message was sent
-/// - **Session Number**: 4-digit session identifier
-/// - **Input Sequence Number**: 4-digit sequence number within the session
-///
-/// ## Network Validation Rules
-/// - **C1 Rule**: Either field 79 or copy of original message fields must be present
-/// - **Reference Format**: All reference fields must follow SWIFT formatting rules
-/// - **Field 11S Format**: Must contain valid MT type, date, session, and sequence numbers
-/// - **Treasury Message Types**: Field 11S should reference valid Category 2 message types
-/// - **Mandatory Fields**: All required fields must be present and properly formatted
-/// - **Reason Codes**: If field 79 present, should contain valid cancellation reason codes
-///
-/// ## Cancellation Reason Codes
-/// When field 79 is used, it may contain standardized reason codes such as:
-/// - **AGNT**: Agent/Institution Error
-/// - **AM09**: Wrong Amount
-/// - **COVR**: Cover Payment Issue
-/// - **CURR**: Currency Error
-/// - **CUST**: Customer Request
-/// - **CUTA**: Cut-off Time
-/// - **DUPL**: Duplicate Payment
-/// - **FRAD**: Fraud
-/// - **TECH**: Technical Problem
-/// - **UPAY**: Undue Payment
-///
-/// ## Processing Considerations
-/// - **Timing Critical**: Should be sent as soon as possible after error detection
-/// - **Settlement Impact**: Cancellation success depends on settlement timing
-/// - **Institution Coordination**: May require coordination between multiple institutions
-/// - **Audit Trail**: Maintains complete record of cancellation requests
-/// - **Response Required**: Typically followed by MT296 (Answers) message
-///
-/// ## SRG2025 Status
-/// - **Structural Changes**: None - MT292 format remains unchanged in SRG2025
-/// - **Validation Updates**: Enhanced validation for institutional transfer cancellations
-/// - **Processing Improvements**: Improved integration with modern settlement systems
-/// - **Compliance Notes**: Enhanced validation for cross-border and international cancellations
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Compatible with treasury management and settlement systems
-/// - **API Integration**: RESTful API support for modern institutional transfer platforms
-/// - **Processing Requirements**: Supports urgent processing with time-sensitive cancellation capabilities
-/// - **Compliance Integration**: Built-in validation for regulatory cancellation requirements
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Triggered by treasury systems or institutional transfer processing errors
-/// - **Responses**: Generates MT296 (Answers) response messages with cancellation status
-/// - **Related**: Works with original Category 2 messages (MT200, MT202, MT205, MT210, etc.)
-/// - **Alternatives**: Direct system-level cancellation for internal processing corrections
-/// - **Status Updates**: May be followed by replacement transfer if correction needed
-
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT292_VALIDATION_RULES)]
+/// Used to request a cancellation of a previously sent SWIFT message.
+/// Can be used for full or partial cancellation.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT292 {
-    #[field("20")]
-    pub field_20: Field20,
+    /// Field 20 - Transaction Reference Number (Mandatory)
+    #[serde(rename = "20")]
+    pub transaction_reference: Field20,
 
-    #[field("21")]
-    pub field_21: Field21NoOption,
+    /// Field 21 - Related Reference (Mandatory)
+    #[serde(rename = "21")]
+    pub related_reference: Field21NoOption,
 
-    #[field("11S")]
-    pub field_11s: Field11S,
+    /// Field 11S - MT and Date of the Original Message (Mandatory)
+    #[serde(rename = "11S")]
+    pub original_message_type: Field11S,
 
-    #[field("79")]
-    pub field_79: Option<Field79>,
+    /// Field 79 - Narrative Description of Original Message (Conditional)
+    /// Must be present if copy of original message fields is not included
+    #[serde(rename = "79", skip_serializing_if = "Option::is_none")]
+    pub narrative_description: Option<Field79>,
+
+    /// Copy of mandatory fields from the original message (Conditional)
+    /// Stored as additional fields that were part of the original message
+    #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
+    pub original_fields: HashMap<String, serde_json::Value>,
 }
 
-/// Enhanced validation rules for MT292
-const MT292_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "Either Field 79 or a copy of mandatory fields from the original message (or both) must be present",
-      "condition": {
-        "!!": {"var": "fields.79"}
-      }
+impl MT292 {
+    /// Parse MT292 from a raw SWIFT message string
+    pub fn parse_from_block4(block4: &str) -> Result<Self, ParseError> {
+        let mut parser = MessageParser::new(block4, "292");
+
+        // Parse mandatory fields
+        let transaction_reference = parser.parse_field::<Field20>("20")?;
+        let related_reference = parser.parse_field::<Field21NoOption>("21")?;
+        let original_message_type = parser.parse_field::<Field11S>("11S")?;
+
+        // Parse optional/conditional Field 79
+        let narrative_description = parser.parse_optional_field::<Field79>("79")?;
+
+        // Collect any remaining fields as original message fields
+        // This would need to be implemented in MessageParser but for now use empty HashMap
+        let original_fields = HashMap::new();
+
+        // Validation: Either Field 79 or original fields must be present
+        if narrative_description.is_none() && original_fields.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "MT292: Either Field 79 or copy of original message fields must be present".to_string(),
+            });
+        }
+
+        Ok(MT292 {
+            transaction_reference,
+            related_reference,
+            original_message_type,
+            narrative_description,
+            original_fields,
+        })
     }
-  ]
-}"#;
+
+    /// Static validation rules for MT292
+    pub fn validate() -> &'static str {
+        r#"{"rules": []}"#
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT292 {
+    fn message_type() -> &'static str {
+        "292"
+    }
+
+    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
+        // Reconstruct block4 from fields
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position
+        all_fields.sort_by_key(|f| f.2);
+
+        // Build block4
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}
+", tag, value));
+        }
+
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: HashMap<String, Vec<(String, usize)>>,
+        _config: &ParserConfig,
+    ) -> Result<ParseResult<Self>, ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(ParseResult::Success(msg)),
+            Err(e) => Err(e)
+        }
+    }
+
+    fn to_fields(&self) -> HashMap<String, Vec<String>> {
+        let mut fields = HashMap::new();
+
+        // Note: Field order matters in SWIFT - 20 and 21 must come before 11S
+        fields.insert("20".to_string(), vec![self.transaction_reference.to_swift_string()]);
+        fields.insert("21".to_string(), vec![self.related_reference.to_swift_string()]);
+        fields.insert("11S".to_string(), vec![self.original_message_type.to_swift_string()]);
+
+        if let Some(ref narrative) = self.narrative_description {
+            fields.insert("79".to_string(), vec![narrative.to_swift_string()]);
+        }
+
+        // Add original message fields
+        for (key, value) in &self.original_fields {
+            if let Some(str_val) = value.as_str() {
+                fields.insert(key.clone(), vec![str_val.to_string()]);
+            } else if let Some(arr_val) = value.as_array() {
+                let str_vals: Vec<String> = arr_val
+                    .iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect();
+                if !str_vals.is_empty() {
+                    fields.insert(key.clone(), str_vals);
+                }
+            }
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "21", "11S"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["79"]
+    }
+
+    fn to_ordered_fields(&self) -> Vec<(String, String)> {
+        // MT292 has specific field order requirements:
+        // Fields 20 and 21 must come before Field 11S
+        let mut ordered_fields = Vec::new();
+        let field_map = self.to_fields();
+
+        // Add fields in the correct SWIFT order
+        if let Some(values) = field_map.get("20") {
+            for value in values {
+                ordered_fields.push(("20".to_string(), value.clone()));
+            }
+        }
+
+        if let Some(values) = field_map.get("21") {
+            for value in values {
+                ordered_fields.push(("21".to_string(), value.clone()));
+            }
+        }
+
+        if let Some(values) = field_map.get("11S") {
+            for value in values {
+                ordered_fields.push(("11S".to_string(), value.clone()));
+            }
+        }
+
+        if let Some(values) = field_map.get("79") {
+            for value in values {
+                ordered_fields.push(("79".to_string(), value.clone()));
+            }
+        }
+
+        // Add any other fields (from original_fields) in numeric order
+        let mut other_tags: Vec<String> = field_map.keys()
+            .filter(|k| !["20", "21", "11S", "79"].contains(&k.as_str()))
+            .cloned()
+            .collect();
+        other_tags.sort();
+
+        for tag in other_tags {
+            if let Some(values) = field_map.get(&tag) {
+                for value in values {
+                    ordered_fields.push((tag.clone(), value.clone()));
+                }
+            }
+        }
+
+        ordered_fields
+    }
+}

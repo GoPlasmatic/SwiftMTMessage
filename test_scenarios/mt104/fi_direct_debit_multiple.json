@@ -101,33 +101,24 @@
                         "amount": 250
                     },
                     "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                {
-                                    "cat": [
-                                        "CUSTOMER ID ",
-                                        100000
-                                    ]
-                                },
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
+                        "account": "1000000000000000",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            {
+                                "cat": [
+                                    "CUSTOMER ID ",
+                                    100000
+                                ]
+                            },
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
                             }
-                        }
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -151,22 +142,17 @@
                             "var": "charges"
                         }
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "UTILITY-COMPANY-001",
-                            "name_and_address": [
-                                "GLOBAL UTILITIES INC",
-                                {
-                                    "cat": [
-                                        "UTILITY PROVIDER/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "100 ENERGY BOULEVARD",
-                                "NEW YORK, NY US"
-                            ]
+                    "50K": {
+                        "account": "UTILITY-COMPANY-001",
+                        "name_and_address": [
+                            "GLOBAL UTILITIES INC",
+                            "100 ENERGY BOULEVARD",
+                            "NEW YORK, NY US"
+                        ]
+                    },
+                    "57A": {
+                        "bic": {
+                            "var": "receiver_bic"
                         }
                     }
                 },
@@ -190,33 +176,24 @@
                         "amount": 350
                     },
                     "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                {
-                                    "cat": [
-                                        "CUSTOMER ID ",
-                                        100000
-                                    ]
-                                },
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
+                        "account": "1000000000000000",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            {
+                                "cat": [
+                                    "CUSTOMER ID ",
+                                    100000
+                                ]
+                            },
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
                             }
-                        }
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -240,22 +217,17 @@
                             "var": "charges"
                         }
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "UTILITY-COMPANY-001",
-                            "name_and_address": [
-                                "GLOBAL UTILITIES INC",
-                                {
-                                    "cat": [
-                                        "UTILITY PROVIDER/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "100 ENERGY BOULEVARD",
-                                "NEW YORK, NY US"
-                            ]
+                    "50K": {
+                        "account": "UTILITY-COMPANY-001",
+                        "name_and_address": [
+                            "GLOBAL UTILITIES INC",
+                            "100 ENERGY BOULEVARD",
+                            "NEW YORK, NY US"
+                        ]
+                    },
+                    "57A": {
+                        "bic": {
+                            "var": "receiver_bic"
                         }
                     }
                 },
@@ -279,33 +251,24 @@
                         "amount": 400
                     },
                     "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                {
-                                    "cat": [
-                                        "BUSINESS CUSTOMER ",
-                                        100000
-                                    ]
-                                },
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
+                        "account": "1000000000000000",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            {
+                                "cat": [
+                                    "BUSINESS CUSTOMER ",
+                                    100000
+                                ]
+                            },
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
                             }
-                        }
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -329,26 +292,29 @@
                             "var": "charges"
                         }
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "UTILITY-COMPANY-001",
-                            "name_and_address": [
-                                "GLOBAL UTILITIES INC",
-                                {
-                                    "cat": [
-                                        "UTILITY PROVIDER/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "100 ENERGY BOULEVARD",
-                                "NEW YORK, NY US"
-                            ]
+                    "50K": {
+                        "account": "UTILITY-COMPANY-001",
+                        "name_and_address": [
+                            "GLOBAL UTILITIES INC",
+                            "100 ENERGY BOULEVARD",
+                            "NEW YORK, NY US"
+                        ]
+                    },
+                    "57A": {
+                        "bic": {
+                            "var": "receiver_bic"
                         }
                     }
                 }
             ],
+            "32B": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "total_amount"
+                }
+            },
             "19": {
                 "amount": {
                     "var": "total_amount"

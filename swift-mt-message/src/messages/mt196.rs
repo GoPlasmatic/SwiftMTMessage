@@ -1,107 +1,175 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// MT196: Answers
-///
-/// ## Purpose
-/// Used to provide comprehensive answers and responses to various queries and requests related to customer
-/// payments and transactions. This flexible message format serves as the standard response mechanism for
-/// payment inquiries, cancellation requests, and status updates in the SWIFT payment ecosystem.
-///
-/// ## Scope
-/// This message is:
-/// - Used for responses to queries about payment status, cancellation requests, and transaction inquiries
-/// - Applicable for structured answers with detailed information and resolution status
-/// - Designed for flexible narrative content supporting various inquiry types
-/// - Compatible with automated and manual response generation systems
-/// - Subject to validation rules for proper reference tracking and response formatting
-/// - Integrated with customer service and payment processing workflow systems
-///
-/// ## Key Features
-/// - **Comprehensive Query Response**: Structured response to various types of payment inquiries and requests
-/// - **Reference Tracking System**: Direct links to original query or request messages
-/// - **Detailed Narrative Content**: Field 76 for comprehensive explanatory information and answers
-/// - **Status Resolution Information**: Clear indication of query resolution and processing outcomes
-/// - **Flexible Response Format**: Adaptable to different types of customer payment inquiries and scenarios
-/// - **Audit Trail Support**: Complete documentation of inquiry resolution for compliance and tracking
-///
-/// ## Common Use Cases
-/// - Response to MT192 cancellation requests with approval or rejection status
-/// - Status updates on payment processing and execution outcomes
-/// - Detailed inquiry responses about transaction details and processing steps
-/// - Error resolution and clarification messages for payment issues
-/// - Customer service communications for payment-related questions
-/// - Regulatory inquiry responses for compliance and audit purposes
-/// - Technical problem resolution and system status communications
-///
-/// ## Message Structure
-/// - **Field 20**: Sender's Reference (mandatory) - Unique reference for response message
-/// - **Field 21**: Related Reference (mandatory) - Reference to original query or request message
-/// - **Field 76**: Answers (mandatory) - Detailed response content and status information
-/// - **Field 77A**: Proprietary Message (optional) - Additional proprietary information for specific scenarios
-/// - **Field 11**: Message Type and Date (optional) - Reference to original message type and processing date
-/// - **Field 79**: Narrative (optional) - Additional explanatory text and detailed information
-///
-/// ## Network Validation Rules
-/// - **Reference Format Validation**: Reference fields must not start/end with '/' or contain '//'
-/// - **Mutual Exclusivity**: Field 79 and original message field copies cannot both be present
-/// - **Field 11 Format**: Field 11 must have proper format when present (minimum 8 characters)
-/// - **Answer Content Validation**: Field 76 must contain valid answer codes and non-empty content
-/// - **Reference Consistency**: All references must be consistent with original inquiry message
-/// - **Response Completeness**: All mandatory fields must be present with valid content
-/// - **Format Compliance**: All fields must comply with SWIFT format specifications
-///
-/// ## SRG2025 Status
-/// - **Structural Changes**: None - MT196 format remains stable for answer and response processing
-/// - **Validation Updates**: Enhanced validation for response completeness and reference accuracy
-/// - **Processing Improvements**: Improved handling of automated response generation
-/// - **Compliance Notes**: Strengthened requirements for audit trail and regulatory response documentation
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Compatible with customer service systems and payment processing platforms
-/// - **API Integration**: RESTful API support for modern digital banking response systems
-/// - **Processing Requirements**: Supports both automated and manual response generation workflows
-/// - **Compliance Integration**: Built-in validation for regulatory response requirements and documentation
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Directly triggered by MT192 cancellation requests and various payment inquiry messages
-/// - **Responses**: Provides definitive responses to inquiries, completing request-response workflows
-/// - **Related**: Works with payment messages, customer service systems, and audit platforms
-/// - **Alternatives**: Direct system notifications for internal processing status updates
-/// - **Status Updates**: Final response message in inquiry and request resolution lifecycle
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT196_VALIDATION_RULES)]
+// MT196: Answers
+// Used to provide comprehensive answers and responses to various queries and
+// requests related to customer payments and transactions.
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT196 {
-    #[field("20")]
+    // Sender's Reference
+    #[serde(rename = "20")]
     pub field_20: Field20,
 
-    #[field("21")]
+    // Related Reference
+    #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    #[field("76")]
+    // Answers (mandatory)
+    #[serde(rename = "76")]
     pub field_76: Field76,
 
-    #[field("77A")]
+    // Proprietary Message (optional)
+    #[serde(rename = "77A", skip_serializing_if = "Option::is_none")]
     pub field_77a: Option<Field77A>,
 
-    #[field("11")]
+    // Message Type and Date (optional)
+    #[serde(rename = "11", skip_serializing_if = "Option::is_none")]
     pub field_11: Option<Field11>,
 
-    #[field("79")]
+    // Narrative (optional)
+    #[serde(rename = "79", skip_serializing_if = "Option::is_none")]
     pub field_79: Option<Field79>,
 }
 
-/// Enhanced validation rules for MT196
-const MT196_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "Only one of the following may be present: Field 79, or a copy of mandatory fields of the original message",
-      "condition": {
-        "!!": {"var": "fields.79"}
-      }
+impl MT196 {
+    /// Parse message from Block 4 content
+    pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        let mut parser = crate::message_parser::MessageParser::new(block4, "196");
+
+        // Parse mandatory fields
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_21 = parser.parse_field::<Field21NoOption>("21")?;
+        let field_76 = parser.parse_field::<Field76>("76")?;
+
+        // Parse optional fields
+        let field_77a = parser.parse_optional_field::<Field77A>("77A")?;
+        let field_11 = parser.parse_optional_field::<Field11>("11")?;
+        let field_79 = parser.parse_optional_field::<Field79>("79")?;
+
+        Ok(MT196 {
+            field_20,
+            field_21,
+            field_76,
+            field_77a,
+            field_11,
+            field_79,
+        })
     }
-  ]
-}"#;
+
+    /// Static validation rules for MT196
+    pub fn validate() -> &'static str {
+        r#"{"rules": [
+            {"id": "F20", "description": "Field 20 must not start or end with '/', and must not contain '//'"},
+            {"id": "F21", "description": "Field 21 must not start or end with '/', and must not contain '//'"},
+            {"id": "F76", "description": "Field 76 must contain at least one line of answer information"},
+            {"id": "C1", "description": "Only one of the following may be present: Field 79, or a copy of mandatory fields of the original message"}
+        ]}"#
+    }
+
+    /// Validate the message instance according to MT196 rules
+    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
+        // Validate Field 20 - must not start/end with '/' or contain '//'
+        let reference = &self.field_20.reference;
+        if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT196: Field 20 must not start or end with '/', and must not contain '//'".to_string(),
+            });
+        }
+
+        // Validate Field 21 - same rules as Field 20
+        let related_ref = &self.field_21.reference;
+        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//") {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT196: Field 21 must not start or end with '/', and must not contain '//'".to_string(),
+            });
+        }
+
+        // Validate Field 76 has content
+        if self.field_76.information.is_empty() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT196: Field 76 must contain at least one line of answer information".to_string(),
+            });
+        }
+
+        Ok(())
+    }
+}
+
+// Implement the SwiftMessageBody trait for MT196
+impl crate::traits::SwiftMessageBody for MT196 {
+    fn message_type() -> &'static str {
+        "196"
+    }
+
+    fn from_fields(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+    ) -> crate::SwiftResult<Self> {
+        // Collect all fields with their positions
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position to preserve field order
+        all_fields.sort_by_key(|(_, _, pos)| *pos);
+
+        // Reconstruct block4 in the correct order
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+        _config: &crate::errors::ParserConfig,
+    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+        use chrono::Datelike;
+        let mut fields = std::collections::HashMap::new();
+
+        // Add mandatory fields
+        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
+        fields.insert("21".to_string(), vec![self.field_21.reference.clone()]);
+        fields.insert("76".to_string(), vec![self.field_76.information.join("\n")]);
+
+        // Add optional fields
+        if let Some(ref field_77a) = self.field_77a {
+            fields.insert("77A".to_string(), vec![field_77a.narrative.join("\n")]);
+        }
+
+        if let Some(ref field_11) = self.field_11 {
+            let field_11_value = format!("{}{:02}{:02}{:02}",
+                field_11.message_type,
+                field_11.date.year() % 100,
+                field_11.date.month(),
+                field_11.date.day()
+            );
+            fields.insert("11".to_string(), vec![field_11_value]);
+        }
+
+        if let Some(ref field_79) = self.field_79 {
+            fields.insert("79".to_string(), vec![field_79.information.join("\n")]);
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "21", "76"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["77A", "11", "79"]
+    }
+}

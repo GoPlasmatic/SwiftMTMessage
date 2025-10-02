@@ -1,221 +1,211 @@
 {
-    "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "main_ref": {
-            "cat": [
-                "CLR",
-                10000000
-            ]
-        },
-        "transaction_ref1": {
-            "cat": [
-                "FEE",
-                1000
-            ]
-        },
-        "transaction_ref2": {
-            "cat": [
-                "FEE",
-                1000
-            ]
-        },
-        "transaction_ref3": {
-            "cat": [
-                "FEE",
-                1000
-            ]
-        },
-        "transaction_ref4": {
-            "cat": [
-                "FEE",
-                1000
-            ]
-        },
-        "currency": "GBP",
-        "transaction_amount": 1000,
-        "value_date": "2025-01-20",
-        "session_num": "0001",
-        "sequence_num": "678901"
+  "variables": {
+    "sender_bic": "DEUTDEFF",
+    "receiver_bic": "DEUTDEFF",
+    "main_ref": {
+      "cat": [
+        "CLR",
+        10000000
+      ]
     },
-    "schema": {
-        "basic_header": {
-            "application_id": "F",
-            "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
-        },
-        "application_header": {
-            "direction": "I",
-            "message_type": "204",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
-            "priority": "N"
-        },
-        "message_type": "204",
-        "fields": {
-            "20": {
-                "reference": {
-                    "var": "main_ref"
-                }
-            },
-            "19": {
-                "amount": {
-                    "*": [
-                        {
-                            "var": "transaction_amount"
-                        },
-                        4
-                    ]
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "value_date"
-                }
-            },
-            "57": {
-                "B": {
-                    "party_identifier": "/C/LCHCLEAR",
-                    "location": "LONDON"
-                }
-            },
-            "72": {
-                "information": [
-                    "/INS/CLEARING FEES",
-                    "/REF/MONTHLY SETTLEMENT"
-                ]
-            },
-            "#": [
-                {
-                    "20": {
-                        "reference": {
-                            "var": "transaction_ref1"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "transaction_amount"
-                        }
-                    },
-                    "53": {
-                        "A": {
-                            "party_identifier": "MEMBER/001",
-                            "bic": "DEUTDEFF"
-                        }
-                    },
-                    "72": {
-                        "information": [
-                            "/FEE/CLEARING"
-                        ]
-                    }
-                },
-                {
-                    "20": {
-                        "reference": {
-                            "var": "transaction_ref2"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "transaction_amount"
-                        }
-                    },
-                    "53": {
-                        "A": {
-                            "party_identifier": "MEMBER/002",
-                            "bic": "DEUTDEFF"
-                        }
-                    },
-                    "72": {
-                        "information": [
-                            "/FEE/SETTLEMENT"
-                        ]
-                    }
-                },
-                {
-                    "20": {
-                        "reference": {
-                            "var": "transaction_ref3"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "transaction_amount"
-                        }
-                    },
-                    "53": {
-                        "A": {
-                            "party_identifier": "MEMBER/003",
-                            "bic": "DEUTDEFF"
-                        }
-                    },
-                    "72": {
-                        "information": [
-                            "/FEE/MEMBERSHIP"
-                        ]
-                    }
-                },
-                {
-                    "20": {
-                        "reference": {
-                            "var": "transaction_ref4"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "transaction_amount"
-                        }
-                    },
-                    "53": {
-                        "A": {
-                            "party_identifier": "MEMBER/004",
-                            "bic": "DEUTDEFF"
-                        }
-                    },
-                    "72": {
-                        "information": [
-                            "/FEE/REGULATORY"
-                        ]
-                    }
-                }
-            ]
+    "transaction_ref1": {
+      "cat": [
+        "FEE",
+        1000
+      ]
+    },
+    "transaction_ref2": {
+      "cat": [
+        "FEE",
+        1000
+      ]
+    },
+    "transaction_ref3": {
+      "cat": [
+        "FEE",
+        1000
+      ]
+    },
+    "transaction_ref4": {
+      "cat": [
+        "FEE",
+        1000
+      ]
+    },
+    "currency": "GBP",
+    "transaction_amount": 1000,
+    "value_date": "2025-01-20",
+    "session_num": "0001",
+    "sequence_num": "678901"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "204",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "message_type": "204",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "main_ref"
         }
+      },
+      "19": {
+        "amount": {
+          "*": [
+            {
+              "var": "transaction_amount"
+            },
+            4
+          ]
+        }
+      },
+      "30": {
+        "execution_date": {
+          "var": "value_date"
+        }
+      },
+      "72": {
+        "information": [
+          "/INS/CLEARING FEES",
+          "/REF/MONTHLY SETTLEMENT"
+        ]
+      },
+      "#": [
+        {
+          "20": {
+            "reference": {
+              "var": "transaction_ref1"
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "var": "transaction_amount"
+            }
+          },
+          "72": {
+            "information": [
+              "/FEE/CLEARING"
+            ]
+          },
+          "53A": {
+            "party_identifier": "MEMBER/001",
+            "bic": "DEUTDEFF"
+          }
+        },
+        {
+          "20": {
+            "reference": {
+              "var": "transaction_ref2"
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "var": "transaction_amount"
+            }
+          },
+          "72": {
+            "information": [
+              "/FEE/SETTLEMENT"
+            ]
+          },
+          "53A": {
+            "party_identifier": "MEMBER/002",
+            "bic": "DEUTDEFF"
+          }
+        },
+        {
+          "20": {
+            "reference": {
+              "var": "transaction_ref3"
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "var": "transaction_amount"
+            }
+          },
+          "72": {
+            "information": [
+              "/FEE/MEMBERSHIP"
+            ]
+          },
+          "53A": {
+            "party_identifier": "MEMBER/003",
+            "bic": "DEUTDEFF"
+          }
+        },
+        {
+          "20": {
+            "reference": {
+              "var": "transaction_ref4"
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "var": "transaction_amount"
+            }
+          },
+          "72": {
+            "information": [
+              "/FEE/REGULATORY"
+            ]
+          },
+          "53A": {
+            "party_identifier": "MEMBER/004",
+            "bic": "DEUTDEFF"
+          }
+        }
+      ],
+      "57B": {
+        "party_identifier": "/C/LCHCLEAR",
+        "location": "LONDON"
+      }
     }
+  }
 }

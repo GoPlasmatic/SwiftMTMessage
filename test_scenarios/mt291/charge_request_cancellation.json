@@ -93,20 +93,6 @@
                     "var": "charge_amount"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "ordering_bic"
-                    }
-                }
-            },
-            "57": {
-                "A": {
-                    "bic": {
-                        "var": "account_bic"
-                    }
-                }
-            },
             "71B": {
                 "details": [
                     "CANCELLATION OF CHARGE REQUEST",
@@ -148,6 +134,16 @@
                     "/REF/ALREADY PROCESSED",
                     "/ACT/NO ACTION REQUIRED"
                 ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "ordering_bic"
+                }
+            },
+            "57A": {
+                "bic": {
+                    "var": "account_bic"
+                }
             }
         }
     }

@@ -72,7 +72,6 @@
                 {
                     "23": {
                         "function_code": "DEP",
-                        "days": 1,
                         "reference": "CBRATE2024"
                     },
                     "30": {

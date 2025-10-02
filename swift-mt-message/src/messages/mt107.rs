@@ -1,722 +1,694 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// MT107: General Direct Debit Message
-///
-/// ## Purpose
-/// Used for general direct debit instructions where a creditor requests the debit of multiple debtor accounts.
-/// This message provides more flexibility than MT104 for complex direct debit scenarios with enhanced authorization
-/// control and flexible party identification options.
-///
-/// ## Scope
-/// This message is:
-/// - Used for general direct debit processing between financial institutions
-/// - Applicable for bulk direct debit operations with flexible authorization control
-/// - Designed for complex direct debit scenarios requiring detailed transaction control
-/// - Compatible with both domestic and cross-border direct debit schemes
-/// - Subject to authorization validation rules for debtor consent management
-/// - Integrated with return processing mechanisms for failed direct debits
-///
-/// ## Key Features
-/// - **Enhanced Flexibility**: More sophisticated than MT104 for complex direct debit scenarios
-/// - **Authorization Management**: Field 23E supports AUTH/NAUT/OTHR authorization status codes
-/// - **Party Identification Options**: Instructing party can appear in Sequence A or individual transactions
-/// - **Return Processing Support**: Special handling for returned direct debits with RTND codes
-/// - **Settlement Consolidation**: Optional settlement sequence for consolidated settlement details
-/// - **Multi-Transaction Support**: Supports multiple debtor accounts in single message
-///
-/// ## Common Use Cases
-/// - Corporate direct debit collections for subscription services and utilities
-/// - Bulk salary and pension direct debit processing
-/// - Recurring payment collections for insurance and loan payments
-/// - Cross-border direct debit schemes for international service providers
-/// - Return processing for previously failed direct debit attempts
-/// - Multi-party direct debit scenarios with complex authorization requirements
-/// - Government tax and fee collection via direct debit
-///
-/// ## Message Structure
-/// ### Sequence A (General Information)
-/// - **Field 20**: Transaction Reference (mandatory) - Unique message identifier
-/// - **Field 23E**: Instruction Code (optional) - Authorization status (AUTH/NAUT/OTHR/RTND)
-/// - **Field 21E**: Related Reference (optional) - Reference to related message
-/// - **Field 30**: Execution Date (mandatory) - Date for direct debit execution
-/// - **Field 51A**: Sending Institution (optional) - Institution sending the message
-/// - **Field 50**: Instructing Party/Creditor (optional) - Party requesting direct debits
-/// - **Field 52**: Creditor Bank (optional) - Bank of the creditor
-/// - **Field 26T**: Transaction Type Code (optional) - Classification of direct debit type
-/// - **Field 77B**: Regulatory Reporting (optional) - Compliance reporting information
-/// - **Field 71A**: Details of Charges (optional) - Charge allocation instructions
-/// - **Field 72**: Sender to Receiver Information (optional) - Additional processing instructions
-///
-/// ### Sequence B (Transaction Details - Repetitive)
-/// - **Field 21**: Transaction Reference (mandatory) - Unique reference for each direct debit
-/// - **Field 32B**: Currency/Amount (mandatory) - Amount to be debited from each account
-/// - **Field 59**: Debtor (mandatory) - Account and details of party being debited
-/// - **Field 23E**: Instruction Code (optional) - Transaction-level authorization status
-/// - **Field 50**: Instructing Party/Creditor (optional) - Transaction-level party identification
-/// - **Field 57**: Debtor Bank (optional) - Bank holding the debtor account
-/// - **Field 70**: Remittance Information (optional) - Purpose and details of direct debit
-/// - **Field 33B/36**: Currency conversion fields for cross-currency direct debits
-///
-/// ### Sequence C (Settlement Information - Optional)
-/// - **Field 32B**: Settlement Amount (optional) - Total settlement amount
-/// - **Field 19**: Sum of Amounts (optional) - Control total for validation
-/// - **Field 71F/71G**: Charges (optional) - Settlement charges information
-/// - **Field 53**: Sender's Correspondent (optional) - Settlement correspondent
-///
-/// ## Network Validation Rules
-/// - **Authorization Consistency**: If 23E is AUTH/NAUT/OTHR in Sequence A, same restriction applies to Sequence B
-/// - **Party Identification**: Instructing party must appear in exactly one sequence (A or B per transaction)
-/// - **Return Processing**: Field 72 required when 23E = RTND for returned direct debit details
-/// - **Currency Conversion**: Exchange rate (36) required when 33B currency differs from 32B
-/// - **Transaction Limits**: Maximum transaction count per message enforced
-/// - **Reference Validation**: All transaction references must be unique within message
-/// - **Authorization Validation**: Authorization codes must be consistent with regulatory requirements
-///
-/// ## SRG2025 Status
-/// - **Structural Changes**: None - MT107 format remains stable
-/// - **Validation Updates**: Enhanced authorization validation for regulatory compliance
-/// - **Processing Improvements**: Improved handling of return processing scenarios
-/// - **Compliance Notes**: Strengthened regulatory reporting requirements for cross-border transactions
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Compatible with direct debit processing engines and mandate management systems
-/// - **API Integration**: RESTful API support for modern direct debit collection platforms
-/// - **Processing Requirements**: Supports batch processing with individual transaction validation
-/// - **Compliance Integration**: Built-in mandate validation and regulatory reporting capabilities
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Often triggered by direct debit collection schedules or mandate execution systems
-/// - **Responses**: May generate MT900/MT910 (confirmations) or status notification messages
-/// - **Related**: Works with MT104 (simplified direct debits) and account reporting messages
-/// - **Alternatives**: MT104 for simpler direct debit scenarios without complex authorization
-/// - **Status Updates**: May receive return or reject messages for failed direct debit attempts
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT107_VALIDATION_RULES)]
-pub struct MT107 {
-    #[field("20")]
-    pub field_20: Field20,
+// MT107: General Direct Debit Message
+// Used for general direct debit instructions, similar to MT104 but with additional flexibility
 
-    #[field("23E")]
-    pub field_23e: Option<Field23E>,
-
-    #[field("21E")]
-    pub field_21e: Option<Field21E>,
-
-    #[field("30")]
-    pub field_30: Field30,
-
-    #[field("51A")]
-    pub field_51a: Option<Field51A>,
-
-    #[field("50", name = "instructing_party")]
-    pub instructing_party: Option<Field50InstructingParty>,
-
-    #[field("50", name = "creditor")]
-    pub creditor: Option<Field50Creditor>,
-
-    #[field("52")]
-    pub field_52: Option<Field52CreditorBank>,
-
-    #[field("26T")]
-    pub field_26t: Option<Field26T>,
-
-    #[field("77B")]
-    pub field_77b: Option<Field77B>,
-
-    #[field("71A")]
-    pub field_71a: Option<Field71A>,
-
-    #[field("72")]
-    pub field_72: Option<Field72>,
-
-    #[field("#")]
-    pub transactions: Vec<MT107Transaction>,
-
-    #[field("32B")]
-    pub field_32b: Option<Field32B>,
-
-    #[field("19")]
-    pub field_19: Option<Field19>,
-
-    #[field("71F")]
-    pub field_71f: Option<Field71F>,
-
-    #[field("71G")]
-    pub field_71g: Option<Field71G>,
-
-    #[field("53")]
-    pub field_53: Option<Field53SenderCorrespondent>,
-}
-
-/// MT107 Transaction (Sequence B)
-///
-/// ## Purpose
-/// Represents a single direct debit transaction within an MT107 message. Each occurrence
-/// provides details for one direct debit request with flexible authorization and processing
-/// options.
-///
-/// ## Field Details
-/// - **21**: Transaction Reference (mandatory) - Unique reference for this direct debit
-/// - **32B**: Currency/Transaction Amount (mandatory) - Amount to be debited
-/// - **59**: Debtor (mandatory) - Account and details of party being debited
-/// - **23E**: Instruction Code - Authorization status (AUTH/NAUT/OTHR) or processing instructions
-/// - **21C/21D/21E**: Various reference fields for transaction linking
-/// - **50**: Instructing Party/Creditor - Can be at transaction level if not in Sequence A
-/// - **33B/36**: Currency conversion fields when amounts differ
-///
-/// ## Authorization Types (23E)
-/// - **AUTH**: Authorized direct debit - pre-authorized by debtor
-/// - **NAUT**: Non-authorized direct debit - requires special handling
-/// - **OTHR**: Other processing instruction - specific business rules apply
-/// - **RTND**: Returned direct debit - previously failed transaction
-///
-/// ## Validation Notes
-/// - Transaction reference (21) must be unique within the message
-/// - If 33B present and amount differs from 32B, exchange rate (36) required
-/// - Authorization status in 23E must be consistent with Sequence A if specified there
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT107Transaction {
-    #[field("21")]
+    // Transaction Reference
+    #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    #[field("23E")]
+    // Instruction Code (optional)
+    #[serde(rename = "23E", skip_serializing_if = "Option::is_none")]
     pub field_23e: Option<Field23E>,
 
-    #[field("21C")]
+    // Mandate Reference (optional)
+    #[serde(rename = "21C", skip_serializing_if = "Option::is_none")]
     pub field_21c: Option<Field21C>,
 
-    #[field("21D")]
+    // Direct Debit Reference (optional)
+    #[serde(rename = "21D", skip_serializing_if = "Option::is_none")]
     pub field_21d: Option<Field21D>,
 
-    #[field("21E")]
+    // Registration Reference (optional)
+    #[serde(rename = "21E", skip_serializing_if = "Option::is_none")]
     pub field_21e: Option<Field21E>,
 
-    #[field("32B")]
+    // Transaction Amount
+    #[serde(rename = "32B")]
     pub field_32b: Field32B,
 
-    #[field("50", name = "instructing_party_tx")]
-    pub instructing_party_tx: Option<Field50InstructingParty>,
+    // Instructing Party (optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_50_instructing: Option<Field50InstructingParty>,
 
-    #[field("50", name = "creditor_tx")]
-    pub creditor_tx: Option<Field50Creditor>,
+    // Creditor (optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_50_creditor: Option<Field50Creditor>,
 
-    #[field("52")]
-    pub field_52: Option<Field52CreditorBank>,
+    // Creditor's Bank (optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_52: Option<Field52OrderingInstitution>,
 
-    #[field("57")]
-    pub field_57: Option<Field57DebtorBank>,
+    // Debtor's Bank (optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_57: Option<Field57>,
 
-    #[field("59")]
+    // Debtor (mandatory)
+    #[serde(flatten)]
     pub field_59: Field59,
 
-    #[field("70")]
+    // Remittance Information (optional)
+    #[serde(rename = "70", skip_serializing_if = "Option::is_none")]
     pub field_70: Option<Field70>,
 
-    #[field("26T")]
+    // Transaction Type Code (optional)
+    #[serde(rename = "26T", skip_serializing_if = "Option::is_none")]
     pub field_26t: Option<Field26T>,
 
-    #[field("77B")]
+    // Regulatory Reporting (optional)
+    #[serde(rename = "77B", skip_serializing_if = "Option::is_none")]
     pub field_77b: Option<Field77B>,
 
-    #[field("33B")]
+    // Original Ordered Amount (optional)
+    #[serde(rename = "33B", skip_serializing_if = "Option::is_none")]
     pub field_33b: Option<Field33B>,
 
-    #[field("71A")]
+    // Details of Charges (optional)
+    #[serde(rename = "71A", skip_serializing_if = "Option::is_none")]
     pub field_71a: Option<Field71A>,
 
-    #[field("71F")]
+    // Sender's Charges (optional)
+    #[serde(rename = "71F", skip_serializing_if = "Option::is_none")]
     pub field_71f: Option<Field71F>,
 
-    #[field("71G")]
+    // Receiver's Charges (optional)
+    #[serde(rename = "71G", skip_serializing_if = "Option::is_none")]
     pub field_71g: Option<Field71G>,
 
-    #[field("36")]
+    // Exchange Rate (optional)
+    #[serde(rename = "36", skip_serializing_if = "Option::is_none")]
     pub field_36: Option<Field36>,
 }
 
-/// Enhanced validation rules with forEach support for repetitive sequences
-const MT107_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "Field 23E and field 50a (option A or K) must appear in Sequence A OR each Sequence B, not both",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"exists": ["fields", "23E"]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"!": {"exists": ["fields", "23E"]}}
-                ]
-              },
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "creditor"]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"!": {"exists": ["fields", "creditor"]}}
-                ]
-              },
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C2",
-      "description": "Fields 21E, 26T, 77B, 71A, 52a, 50a (option C/L) must appear only in Sequence A or Sequence B, not both",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"exists": ["fields", "21E"]},
-              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "21E"]}}]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "26T"]},
-              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "26T"]}}]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "77B"]},
-              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "77B"]}}]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71A"]},
-              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "71A"]}}]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "52"]},
-              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "52"]}}]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "instructing_party"]},
-              {"all": [{"var": "fields.#"}, {"!": {"exists": ["fields", "instructing_party"]}}]},
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C3",
-      "description": "If 21E is present, then 50a (option A/K) must also be present in the same sequence",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"exists": ["fields", "21E"]},
-              {"exists": ["fields", "creditor"]},
-              true
-            ]
-          },
-          {
-            "all": [
-              {"var": "fields.#"},
-              {
-                "if": [
-                  {"exists": ["fields", "21E"]},
-                  {"exists": ["fields", "creditor"]},
-                  true
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C4",
-      "description": "If 23E = RTND in Sequence A, Field 72 is mandatory; otherwise, 72 is not allowed",
-      "condition": {
-        "if": [
-          {"and": [
-            {"exists": ["fields", "23E"]},
-            {"==": [{"var": "fields.23E.instruction_code"}, "RTND"]}
-          ]},
-          {"exists": ["fields", "72"]},
-          {"!": {"exists": ["fields", "72"]}}
-        ]
-      }
-    },
-    {
-      "id": "C5",
-      "description": "If 71F or 71G present in any B, must also be in Sequence C, and vice versa",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"some": [{"var": "fields.#"}, {"exists": ["fields", "71F"]}]},
-              {"exists": ["fields", "71F"]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"some": [{"var": "fields.#"}, {"exists": ["fields", "71G"]}]},
-              {"exists": ["fields", "71G"]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71F"]},
-              {"some": [{"var": "fields.#"}, {"exists": ["fields", "71F"]}]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71G"]},
-              {"some": [{"var": "fields.#"}, {"exists": ["fields", "71G"]}]},
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C6",
-      "description": "If 33B is present in Sequence B, must differ in either currency or amount from 32B",
-      "condition": {
-        "all": [
-          {"var": "fields.#"},
-          {
-            "if": [
-              {"exists": ["fields", "33B"]},
-              {
-                "or": [
-                  {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
-                  {"!=": [{"var": "33B.amount"}, {"var": "32B.amount"}]}
-                ]
-              },
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C7",
-      "description": "If 33B and 32B currency differs, then 36 (Exchange Rate) is mandatory; otherwise, 36 must not be present",
-      "condition": {
-        "all": [
-          {"var": "fields.#"},
-          {
-            "if": [
-              {"exists": ["fields", "33B"]},
-              {
-                "if": [
-                  {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
-                  {"exists": ["fields", "36"]},
-                  {"!": {"exists": ["fields", "36"]}}
-                ]
-              },
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C8",
-      "description": "The sum of 32B amounts in B must appear either in C/32B (no charges) or in C/19 (with charges)",
-      "condition": {
-        "or": [
-          {
-            "and": [
-              {"exists": ["fields", "32B"]},
-              {"!": {"exists": ["fields", "19"]}},
-              {
-                "==": [
-                  {"var": "fields.32B.amount"},
-                  {
-                    "reduce": [
-                      {"var": "fields.#"},
-                      {"+": [{"var": "accumulator"}, {"var": "current.32B.amount"}]},
-                      0
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "and": [
-              {"exists": ["fields", "19"]},
-              {"!": {"exists": ["fields", "32B"]}},
-              {
-                "==": [
-                  {"var": "fields.19.amount"},
-                  {
-                    "reduce": [
-                      {"var": "fields.#"},
-                      {"+": [{"var": "accumulator"}, {"var": "current.32B.amount"}]},
-                      0
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "and": [
-              {"!": {"exists": ["fields", "32B"]}},
-              {"!": {"exists": ["fields", "19"]}}
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C9",
-      "description": "Currency must be consistent across all instances of 32B, 71F, 71G in B and C",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"and": [{"exists": ["fields", "32B"]}, {">=": [{"length": {"var": "fields.#"}}, 1]}]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"==": [{"var": "32B.currency"}, {"var": "fields.#.0.32B.currency"}]}
-                ]
-              },
-              true
-            ]
-          },
-          {
-            "if": [
-              {"and": [{"exists": ["fields", "71F"]}, {"some": [{"var": "fields.#"}, {"exists": ["fields", "71F"]}]}]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {
-                    "if": [
-                      {"exists": ["fields", "71F"]},
-                      {"==": [{"var": "71F.currency"}, {"var": "fields.71F.currency"}]},
-                      true
-                    ]
-                  }
-                ]
-              },
-              true
-            ]
-          },
-          {
-            "if": [
-              {"and": [{"exists": ["fields", "71G"]}, {"some": [{"var": "fields.#"}, {"exists": ["fields", "71G"]}]}]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {
-                    "if": [
-                      {"exists": ["fields", "71G"]},
-                      {"==": [{"var": "71G.currency"}, {"var": "fields.71G.currency"}]},
-                      true
-                    ]
-                  }
-                ]
-              },
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "TXN_MIN",
-      "description": "At least one transaction required",
-      "condition": {
-        ">=": [{"length": {"var": "fields.#"}}, 1]
-      }
-    },
-    {
-      "id": "REFERENCE_FORMAT",
-      "description": "Reference fields must not contain invalid patterns",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "fields.20.reference"}, ""]},
-          {"!": {"in": ["//", {"var": "fields.20.reference"}]}},
-          {
-            "all": [
-              {"var": "fields.#"},
-              {
-                "and": [
-                  {"!=": [{"var": "21.reference"}, ""]},
-                  {"!": {"in": ["//", {"var": "21.reference"}]}}
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "CURRENCY_CODE_VALIDATION",
-      "description": "All currency codes must be valid ISO 4217 3-letter codes",
-      "condition": {
-        "and": [
-          {
-            "all": [
-              {"var": "fields.#"},
-              {
-                "and": [
-                  {"!=": [{"var": "32B.currency"}, ""]},
-                  {
-                    "if": [
-                      {"exists": ["fields", "33B"]},
-                      {"!=": [{"var": "33B.currency"}, ""]},
-                      true
-                    ]
-                  },
-                  {
-                    "if": [
-                      {"exists": ["fields", "71F"]},
-                      {"!=": [{"var": "71F.currency"}, ""]},
-                      true
-                    ]
-                  },
-                  {
-                    "if": [
-                      {"exists": ["fields", "71G"]},
-                      {"!=": [{"var": "71G.currency"}, ""]},
-                      true
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "32B"]},
-              {"!=": [{"var": "fields.32B.currency"}, ""]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71F"]},
-              {"!=": [{"var": "fields.71F.currency"}, ""]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71G"]},
-              {"!=": [{"var": "fields.71G.currency"}, ""]},
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "AMOUNT_CONSISTENCY",
-      "description": "All amounts must be properly formatted",
-      "condition": {
-        "and": [
-          {
-            "all": [
-              {"var": "fields.#"},
-              {
-                "and": [
-                  {">": [{"var": "32B.amount"}, -1]},
-                  {
-                    "if": [
-                      {"exists": ["fields", "33B"]},
-                      {">": [{"var": "33B.amount"}, -1]},
-                      true
-                    ]
-                  },
-                  {
-                    "if": [
-                      {"exists": ["fields", "71F"]},
-                      {">": [{"var": "71F.amount"}, -1]},
-                      true
-                    ]
-                  },
-                  {
-                    "if": [
-                      {"exists": ["fields", "71G"]},
-                      {">": [{"var": "71G.amount"}, -1]},
-                      true
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "32B"]},
-              {">": [{"var": "fields.32B.amount"}, -1]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "19"]},
-              {">": [{"var": "fields.19.amount"}, -1]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71F"]},
-              {">": [{"var": "fields.71F.amount"}, -1]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71G"]},
-              {">": [{"var": "fields.71G.amount"}, -1]},
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "EXECUTION_DATE",
-      "description": "Requested execution date must be valid",
-      "condition": {
-        "and": [
-          {"exists": ["fields", "30"]},
-          {"!=": [{"var": "fields.30.execution_date"}, ""]}
-        ]
-      }
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MT107 {
+    // Sender's Reference
+    #[serde(rename = "20")]
+    pub field_20: Field20,
+
+    // Instruction Code (optional)
+    #[serde(rename = "23E", skip_serializing_if = "Option::is_none")]
+    pub field_23e: Option<Field23E>,
+
+    // Registration Reference (optional)
+    #[serde(rename = "21E", skip_serializing_if = "Option::is_none")]
+    pub field_21e: Option<Field21E>,
+
+    // Requested Execution Date
+    #[serde(rename = "30")]
+    pub field_30: Field30,
+
+    // Sending Institution (optional)
+    #[serde(rename = "51A", skip_serializing_if = "Option::is_none")]
+    pub field_51a: Option<Field51A>,
+
+    // Instructing Party (message level, optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_50_instructing: Option<Field50InstructingParty>,
+
+    // Creditor (message level, optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_50_creditor: Option<Field50Creditor>,
+
+    // Creditor's Bank (optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_52: Option<Field52OrderingInstitution>,
+
+    // Transaction Type Code (optional)
+    #[serde(rename = "26T", skip_serializing_if = "Option::is_none")]
+    pub field_26t: Option<Field26T>,
+
+    // Regulatory Reporting (optional)
+    #[serde(rename = "77B", skip_serializing_if = "Option::is_none")]
+    pub field_77b: Option<Field77B>,
+
+    // Details of Charges (optional)
+    #[serde(rename = "71A", skip_serializing_if = "Option::is_none")]
+    pub field_71a: Option<Field71A>,
+
+    // Sender to Receiver Information (optional)
+    #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
+    pub field_72: Option<Field72>,
+
+    // Transaction Details (repeating sequence)
+    #[serde(rename = "#")]
+    pub transactions: Vec<MT107Transaction>,
+
+    // Settlement Amount (Sequence C - mandatory)
+    #[serde(rename = "32B")]
+    pub field_32b: Field32B,
+
+    // Sum of Amounts (Sequence C - optional)
+    #[serde(rename = "19", skip_serializing_if = "Option::is_none")]
+    pub field_19: Option<Field19>,
+
+    // Sum of Sender's Charges (Sequence C - optional)
+    #[serde(rename = "71F", skip_serializing_if = "Option::is_none")]
+    pub field_71f: Option<Field71F>,
+
+    // Sum of Receiver's Charges (Sequence C - optional)
+    #[serde(rename = "71G", skip_serializing_if = "Option::is_none")]
+    pub field_71g: Option<Field71G>,
+
+    // Sender's Correspondent (Sequence C - optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_53: Option<Field53SenderCorrespondent>,
+}
+
+impl MT107 {
+    /// Parse message from Block 4 content
+    pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        let mut parser = crate::message_parser::MessageParser::new(block4, "107");
+
+        // Parse Sequence A - General Information
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_23e = parser.parse_optional_field::<Field23E>("23E")?;
+        let field_21e = parser.parse_optional_field::<Field21E>("21E")?;
+        let field_30 = parser.parse_field::<Field30>("30")?;
+        let field_51a = parser.parse_optional_field::<Field51A>("51A")?;
+
+        // Try to parse field 50 - could be instructing party (C/L) or creditor (A/K)
+        // We'll need to detect the variant and determine which type
+        let (field_50_instructing, field_50_creditor) = Self::parse_field_50(&mut parser)?;
+
+        let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+        let field_26t = parser.parse_optional_field::<Field26T>("26T")?;
+        let field_77b = parser.parse_optional_field::<Field77B>("77B")?;
+        let field_71a = parser.parse_optional_field::<Field71A>("71A")?;
+        let field_72 = parser.parse_optional_field::<Field72>("72")?;
+
+        // Parse Sequence B - Transaction Details (repeating)
+        let mut transactions = Vec::new();
+        parser = parser.with_duplicates(true);
+
+        while parser.detect_field("21") {
+            let txn_field_21 = parser.parse_field::<Field21NoOption>("21")?;
+            let txn_field_23e = parser.parse_optional_field::<Field23E>("23E")?;
+            let txn_field_21c = parser.parse_optional_field::<Field21C>("21C")?;
+            let txn_field_21d = parser.parse_optional_field::<Field21D>("21D")?;
+            let txn_field_21e = parser.parse_optional_field::<Field21E>("21E")?;
+            let txn_field_32b = parser.parse_field::<Field32B>("32B")?;
+
+            let (txn_field_50_instructing, txn_field_50_creditor) = Self::parse_field_50(&mut parser)?;
+
+            let txn_field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+            let txn_field_57 = parser.parse_optional_variant_field::<Field57>("57")?;
+            let txn_field_59 = parser.parse_variant_field::<Field59>("59")?;
+            let txn_field_70 = parser.parse_optional_field::<Field70>("70")?;
+            let txn_field_26t = parser.parse_optional_field::<Field26T>("26T")?;
+            let txn_field_77b = parser.parse_optional_field::<Field77B>("77B")?;
+            let txn_field_33b = parser.parse_optional_field::<Field33B>("33B")?;
+            let txn_field_71a = parser.parse_optional_field::<Field71A>("71A")?;
+            let txn_field_71f = parser.parse_optional_field::<Field71F>("71F")?;
+            let txn_field_71g = parser.parse_optional_field::<Field71G>("71G")?;
+            let txn_field_36 = parser.parse_optional_field::<Field36>("36")?;
+
+            transactions.push(MT107Transaction {
+                field_21: txn_field_21,
+                field_23e: txn_field_23e,
+                field_21c: txn_field_21c,
+                field_21d: txn_field_21d,
+                field_21e: txn_field_21e,
+                field_32b: txn_field_32b,
+                field_50_instructing: txn_field_50_instructing,
+                field_50_creditor: txn_field_50_creditor,
+                field_52: txn_field_52,
+                field_57: txn_field_57,
+                field_59: txn_field_59,
+                field_70: txn_field_70,
+                field_26t: txn_field_26t,
+                field_77b: txn_field_77b,
+                field_33b: txn_field_33b,
+                field_71a: txn_field_71a,
+                field_71f: txn_field_71f,
+                field_71g: txn_field_71g,
+                field_36: txn_field_36,
+            });
+        }
+
+        // Parse Sequence C - Settlement Details
+        // Note: duplicates remain enabled to allow parsing field 32B again
+        let settlement_field_32b = parser.parse_field::<Field32B>("32B")?;
+        let settlement_field_19 = parser.parse_optional_field::<Field19>("19")?;
+        let settlement_field_71f = parser.parse_optional_field::<Field71F>("71F")?;
+        let settlement_field_71g = parser.parse_optional_field::<Field71G>("71G")?;
+        let settlement_field_53 = parser.parse_optional_variant_field::<Field53SenderCorrespondent>("53")?;
+
+        // Verify all content is consumed
+        if !parser.is_complete() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "Unparsed content remaining in message: {}",
+                    parser.remaining()
+                ),
+            });
+        }
+
+        Ok(Self {
+            field_20,
+            field_23e,
+            field_21e,
+            field_30,
+            field_51a,
+            field_50_instructing,
+            field_50_creditor,
+            field_52,
+            field_26t,
+            field_77b,
+            field_71a,
+            field_72,
+            transactions,
+            field_32b: settlement_field_32b,
+            field_19: settlement_field_19,
+            field_71f: settlement_field_71f,
+            field_71g: settlement_field_71g,
+            field_53: settlement_field_53,
+        })
     }
-  ],
-  "constants": {
-    "VALID_CHARGE_CODES": ["OUR", "SHA", "BEN"],
-    "VALID_INSTRUCTION_CODES_MT107": ["AUTH", "NAUT", "OTHR", "RTND", "SDVA", "INTC", "CORT"]
-  }
-}"#;
+
+    /// Helper to parse field 50 which can be either instructing party (C/L) or creditor (A/K)
+    fn parse_field_50(
+        parser: &mut crate::message_parser::MessageParser,
+    ) -> Result<(Option<Field50InstructingParty>, Option<Field50Creditor>), crate::errors::ParseError> {
+        // Detect which variant of field 50 is present
+        let remaining = parser.remaining();
+        let trimmed = remaining.trim_start_matches(|c: char| c.is_whitespace());
+
+        // Check for instructing party variants (C, L)
+        if trimmed.starts_with(":50C:") {
+            let field_50_instructing = parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
+            return Ok((field_50_instructing, None));
+        }
+        if trimmed.starts_with(":50L:") {
+            let field_50_instructing = parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
+            return Ok((field_50_instructing, None));
+        }
+
+        // Check for creditor variants (A, K)
+        if trimmed.starts_with(":50A:") || trimmed.starts_with(":50K:") {
+            let field_50_creditor = parser.parse_optional_variant_field::<Field50Creditor>("50")?;
+            return Ok((None, field_50_creditor));
+        }
+
+        // No field 50 present
+        Ok((None, None))
+    }
+
+    /// Validation rules for the message
+    pub fn validate() -> &'static str {
+        r#"{"rules": [{"id": "BASIC", "description": "Basic validation", "condition": true}]}"#
+    }
+
+    /// Parse from SWIFT MT text format
+    pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
+        // If input starts with block headers, extract Block 4
+        let block4 = if input.starts_with("{") {
+            crate::parser::SwiftParser::extract_block(input, 4)?.ok_or_else(|| {
+                crate::errors::ParseError::InvalidFormat {
+                    message: "Block 4 not found".to_string(),
+                }
+            })?
+        } else {
+            // Assume input is already block 4 content
+            input.to_string()
+        };
+
+        Self::parse_from_block4(&block4)
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT107 {
+    fn message_type() -> &'static str {
+        "107"
+    }
+
+    fn from_fields(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+    ) -> Result<Self, crate::errors::ParseError> {
+        // Collect all fields with their positions
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position to preserve field order
+        all_fields.sort_by_key(|(_, _, pos)| *pos);
+
+        // Reconstruct block4 in the correct order
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+        _config: &crate::errors::ParserConfig,
+    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+        use crate::traits::SwiftField;
+        let mut fields = std::collections::HashMap::new();
+
+        fields.insert("20".to_string(), vec![self.field_20.to_swift_value()]);
+
+        if let Some(ref field_23e) = self.field_23e {
+            fields.insert("23E".to_string(), vec![field_23e.to_swift_value()]);
+        }
+
+        if let Some(ref field_21e) = self.field_21e {
+            fields.insert("21E".to_string(), vec![field_21e.to_swift_value()]);
+        }
+
+        fields.insert("30".to_string(), vec![self.field_30.to_swift_value()]);
+
+        if let Some(ref field_51a) = self.field_51a {
+            fields.insert("51A".to_string(), vec![field_51a.to_swift_value()]);
+        }
+
+        if let Some(ref field_50) = self.field_50_instructing {
+            if let Some(variant_tag) = field_50.get_variant_tag() {
+                fields.insert(format!("50{}", variant_tag), vec![field_50.to_swift_value()]);
+            }
+        }
+
+        if let Some(ref field_50) = self.field_50_creditor {
+            if let Some(variant_tag) = field_50.get_variant_tag() {
+                fields.insert(format!("50{}", variant_tag), vec![field_50.to_swift_value()]);
+            }
+        }
+
+        if let Some(ref field_52) = self.field_52 {
+            if let Some(variant_tag) = field_52.get_variant_tag() {
+                fields.insert(format!("52{}", variant_tag), vec![field_52.to_swift_value()]);
+            }
+        }
+
+        if let Some(ref field_26t) = self.field_26t {
+            fields.insert("26T".to_string(), vec![field_26t.to_swift_value()]);
+        }
+
+        if let Some(ref field_77b) = self.field_77b {
+            fields.insert("77B".to_string(), vec![field_77b.to_swift_value()]);
+        }
+
+        if let Some(ref field_71a) = self.field_71a {
+            fields.insert("71A".to_string(), vec![field_71a.to_swift_value()]);
+        }
+
+        if let Some(ref field_72) = self.field_72 {
+            fields.insert("72".to_string(), vec![field_72.to_swift_value()]);
+        }
+
+        // Add transaction fields
+        for transaction in &self.transactions {
+            fields.entry("21".to_string()).or_default().push(transaction.field_21.to_swift_value());
+
+            if let Some(ref field_23e) = transaction.field_23e {
+                fields.entry("23E".to_string()).or_default().push(field_23e.to_swift_value());
+            }
+
+            if let Some(ref field_21c) = transaction.field_21c {
+                fields.entry("21C".to_string()).or_default().push(field_21c.to_swift_value());
+            }
+
+            if let Some(ref field_21d) = transaction.field_21d {
+                fields.entry("21D".to_string()).or_default().push(field_21d.to_swift_value());
+            }
+
+            if let Some(ref field_21e) = transaction.field_21e {
+                fields.entry("21E".to_string()).or_default().push(field_21e.to_swift_value());
+            }
+
+            fields.entry("32B".to_string()).or_default().push(transaction.field_32b.to_swift_value());
+
+            if let Some(ref field_50) = transaction.field_50_instructing {
+                if let Some(variant_tag) = field_50.get_variant_tag() {
+                    fields.entry(format!("50{}", variant_tag)).or_default().push(field_50.to_swift_value());
+                }
+            }
+
+            if let Some(ref field_50) = transaction.field_50_creditor {
+                if let Some(variant_tag) = field_50.get_variant_tag() {
+                    fields.entry(format!("50{}", variant_tag)).or_default().push(field_50.to_swift_value());
+                }
+            }
+
+            if let Some(ref field_52) = transaction.field_52 {
+                if let Some(variant_tag) = field_52.get_variant_tag() {
+                    fields.entry(format!("52{}", variant_tag)).or_default().push(field_52.to_swift_value());
+                }
+            }
+
+            if let Some(ref field_57) = transaction.field_57 {
+                if let Some(variant_tag) = field_57.get_variant_tag() {
+                    fields.entry(format!("57{}", variant_tag)).or_default().push(field_57.to_swift_value());
+                }
+            }
+
+            if let Some(variant_tag) = transaction.field_59.get_variant_tag() {
+                fields.entry(format!("59{}", variant_tag)).or_default().push(transaction.field_59.to_swift_value());
+            } else {
+                fields.entry("59".to_string()).or_default().push(transaction.field_59.to_swift_value());
+            }
+
+            if let Some(ref field_70) = transaction.field_70 {
+                fields.entry("70".to_string()).or_default().push(field_70.to_swift_value());
+            }
+
+            if let Some(ref field_26t) = transaction.field_26t {
+                fields.entry("26T".to_string()).or_default().push(field_26t.to_swift_value());
+            }
+
+            if let Some(ref field_77b) = transaction.field_77b {
+                fields.entry("77B".to_string()).or_default().push(field_77b.to_swift_value());
+            }
+
+            if let Some(ref field_33b) = transaction.field_33b {
+                fields.entry("33B".to_string()).or_default().push(field_33b.to_swift_value());
+            }
+
+            if let Some(ref field_71a) = transaction.field_71a {
+                fields.entry("71A".to_string()).or_default().push(field_71a.to_swift_value());
+            }
+
+            if let Some(ref field_71f) = transaction.field_71f {
+                fields.entry("71F".to_string()).or_default().push(field_71f.to_swift_value());
+            }
+
+            if let Some(ref field_71g) = transaction.field_71g {
+                fields.entry("71G".to_string()).or_default().push(field_71g.to_swift_value());
+            }
+
+            if let Some(ref field_36) = transaction.field_36 {
+                fields.entry("36".to_string()).or_default().push(field_36.to_swift_value());
+            }
+        }
+
+        // Add Sequence C fields
+        fields.entry("32B".to_string()).or_default().push(self.field_32b.to_swift_value());
+
+        if let Some(ref field_19) = self.field_19 {
+            fields.insert("19".to_string(), vec![field_19.to_swift_value()]);
+        }
+
+        if let Some(ref field_71f) = self.field_71f {
+            fields.insert("71F".to_string(), vec![field_71f.to_swift_value()]);
+        }
+
+        if let Some(ref field_71g) = self.field_71g {
+            fields.insert("71G".to_string(), vec![field_71g.to_swift_value()]);
+        }
+
+        if let Some(ref field_53) = self.field_53 {
+            if let Some(variant_tag) = field_53.get_variant_tag() {
+                fields.insert(format!("53{}", variant_tag), vec![field_53.to_swift_value()]);
+            }
+        }
+
+        fields
+    }
+
+    fn to_ordered_fields(&self) -> Vec<(String, String)> {
+        use crate::traits::SwiftField;
+        let mut ordered_fields = Vec::new();
+
+        // Sequence A - General Information
+        ordered_fields.push(("20".to_string(), self.field_20.to_swift_value()));
+
+        if let Some(ref field_23e) = self.field_23e {
+            ordered_fields.push(("23E".to_string(), field_23e.to_swift_value()));
+        }
+
+        if let Some(ref field_21e) = self.field_21e {
+            ordered_fields.push(("21E".to_string(), field_21e.to_swift_value()));
+        }
+
+        ordered_fields.push(("30".to_string(), self.field_30.to_swift_value()));
+
+        if let Some(ref field_51a) = self.field_51a {
+            ordered_fields.push(("51A".to_string(), field_51a.to_swift_value()));
+        }
+
+        if let Some(ref field_50) = self.field_50_instructing {
+            if let Some(variant_tag) = field_50.get_variant_tag() {
+                ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
+            }
+        }
+
+        if let Some(ref field_50) = self.field_50_creditor {
+            if let Some(variant_tag) = field_50.get_variant_tag() {
+                ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
+            }
+        }
+
+        if let Some(ref field_52) = self.field_52 {
+            if let Some(variant_tag) = field_52.get_variant_tag() {
+                ordered_fields.push((format!("52{}", variant_tag), field_52.to_swift_value()));
+            }
+        }
+
+        if let Some(ref field_26t) = self.field_26t {
+            ordered_fields.push(("26T".to_string(), field_26t.to_swift_value()));
+        }
+
+        if let Some(ref field_77b) = self.field_77b {
+            ordered_fields.push(("77B".to_string(), field_77b.to_swift_value()));
+        }
+
+        if let Some(ref field_71a) = self.field_71a {
+            ordered_fields.push(("71A".to_string(), field_71a.to_swift_value()));
+        }
+
+        if let Some(ref field_72) = self.field_72 {
+            ordered_fields.push(("72".to_string(), field_72.to_swift_value()));
+        }
+
+        // Sequence B - Transaction Details
+        for transaction in &self.transactions {
+            ordered_fields.push(("21".to_string(), transaction.field_21.to_swift_value()));
+
+            if let Some(ref field_23e) = transaction.field_23e {
+                ordered_fields.push(("23E".to_string(), field_23e.to_swift_value()));
+            }
+
+            if let Some(ref field_21c) = transaction.field_21c {
+                ordered_fields.push(("21C".to_string(), field_21c.to_swift_value()));
+            }
+
+            if let Some(ref field_21d) = transaction.field_21d {
+                ordered_fields.push(("21D".to_string(), field_21d.to_swift_value()));
+            }
+
+            if let Some(ref field_21e) = transaction.field_21e {
+                ordered_fields.push(("21E".to_string(), field_21e.to_swift_value()));
+            }
+
+            ordered_fields.push(("32B".to_string(), transaction.field_32b.to_swift_value()));
+
+            if let Some(ref field_50) = transaction.field_50_instructing {
+                if let Some(variant_tag) = field_50.get_variant_tag() {
+                    ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
+                }
+            }
+
+            if let Some(ref field_50) = transaction.field_50_creditor {
+                if let Some(variant_tag) = field_50.get_variant_tag() {
+                    ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
+                }
+            }
+
+            if let Some(ref field_52) = transaction.field_52 {
+                if let Some(variant_tag) = field_52.get_variant_tag() {
+                    ordered_fields.push((format!("52{}", variant_tag), field_52.to_swift_value()));
+                }
+            }
+
+            if let Some(ref field_57) = transaction.field_57 {
+                if let Some(variant_tag) = field_57.get_variant_tag() {
+                    ordered_fields.push((format!("57{}", variant_tag), field_57.to_swift_value()));
+                }
+            }
+
+            if let Some(variant_tag) = transaction.field_59.get_variant_tag() {
+                ordered_fields.push((format!("59{}", variant_tag), transaction.field_59.to_swift_value()));
+            } else {
+                ordered_fields.push(("59".to_string(), transaction.field_59.to_swift_value()));
+            }
+
+            if let Some(ref field_70) = transaction.field_70 {
+                ordered_fields.push(("70".to_string(), field_70.to_swift_value()));
+            }
+
+            if let Some(ref field_26t) = transaction.field_26t {
+                ordered_fields.push(("26T".to_string(), field_26t.to_swift_value()));
+            }
+
+            if let Some(ref field_77b) = transaction.field_77b {
+                ordered_fields.push(("77B".to_string(), field_77b.to_swift_value()));
+            }
+
+            if let Some(ref field_33b) = transaction.field_33b {
+                ordered_fields.push(("33B".to_string(), field_33b.to_swift_value()));
+            }
+
+            if let Some(ref field_71a) = transaction.field_71a {
+                ordered_fields.push(("71A".to_string(), field_71a.to_swift_value()));
+            }
+
+            if let Some(ref field_71f) = transaction.field_71f {
+                ordered_fields.push(("71F".to_string(), field_71f.to_swift_value()));
+            }
+
+            if let Some(ref field_71g) = transaction.field_71g {
+                ordered_fields.push(("71G".to_string(), field_71g.to_swift_value()));
+            }
+
+            if let Some(ref field_36) = transaction.field_36 {
+                ordered_fields.push(("36".to_string(), field_36.to_swift_value()));
+            }
+        }
+
+        // Sequence C - Settlement Details
+        ordered_fields.push(("32B".to_string(), self.field_32b.to_swift_value()));
+
+        if let Some(ref field_19) = self.field_19 {
+            ordered_fields.push(("19".to_string(), field_19.to_swift_value()));
+        }
+
+        if let Some(ref field_71f) = self.field_71f {
+            ordered_fields.push(("71F".to_string(), field_71f.to_swift_value()));
+        }
+
+        if let Some(ref field_71g) = self.field_71g {
+            ordered_fields.push(("71G".to_string(), field_71g.to_swift_value()));
+        }
+
+        if let Some(ref field_53) = self.field_53 {
+            if let Some(variant_tag) = field_53.get_variant_tag() {
+                ordered_fields.push((format!("53{}", variant_tag), field_53.to_swift_value()));
+            }
+        }
+
+        ordered_fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "30", "32B", "21", "59"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["23E", "21E", "51A", "50", "52", "26T", "77B", "71A", "72", "21C", "21D", "57", "70", "33B", "71F", "71G", "36", "19", "53"]
+    }
+}

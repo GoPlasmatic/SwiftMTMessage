@@ -1,5 +1,5 @@
 [workspace]
-members = ["swift-mt-message", "swift-mt-message-macros"]
+members = ["swift-mt-message"]
 resolver = "2"
 
 [workspace.dependencies]

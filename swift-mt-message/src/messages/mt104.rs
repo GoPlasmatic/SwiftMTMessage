@@ -1,829 +1,646 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// MT104: Direct Debit and Request for Debit Transfer Message
-///
-/// ## Purpose
-/// Used for customer direct debit instructions between financial institutions, allowing creditors to request debiting of debtor accounts through the banking network.
-/// This message enables efficient collection of payments through authorized direct debit arrangements.
-///
-/// ## Scope
-/// This message is:
-/// - Sent by corporate entities to their financial institutions for payment collection
-/// - Used to request direct debit of debtor accounts with proper authorization
-/// - Applicable for both domestic and international direct debit scenarios
-/// - Compatible with bulk processing of multiple direct debit transactions
-/// - Subject to strict authorization and regulatory compliance requirements
-/// - Used in conjunction with direct debit mandates and agreements
-///
-/// ## Key Features
-/// - **Multi-Transaction Support**: Single message can contain multiple direct debit requests
-/// - **Three-Sequence Architecture**: General info, transaction details, and settlement information
-/// - **Authorization Framework**: Built-in support for direct debit mandates and agreements
-/// - **Currency Flexibility**: Supports different currencies and exchange rate conversions
-/// - **Charge Allocation Options**: Configurable charge handling (OUR/SHA/BEN)
-/// - **Regulatory Compliance**: Comprehensive fields for regulatory reporting requirements
-///
-/// ## Common Use Cases
-/// - Utility companies collecting monthly bills from customer accounts
-/// - Insurance companies collecting premium payments via direct debit
-/// - Subscription service providers collecting recurring fees
-/// - Loan servicing companies collecting installment payments
-/// - Government agencies collecting taxes and fees
-/// - Corporate collection of accounts receivable from customers
-/// - Automated clearing house (ACH) equivalent processing
-///
-/// ## Message Structure
-/// ### Sequence A (General Information - Mandatory, Single)
-/// - **Field 20**: Sender's Reference (mandatory) - Unique message identifier
-/// - **Field 21R**: Customer Specified Reference (optional) - Creditor's batch reference
-/// - **Field 28D**: Message Index/Total (mandatory) - For chained messages
-/// - **Field 30**: Requested Execution Date (mandatory) - When debits should be executed
-/// - **Field 25**: Account Identification (optional) - Creditor's account for credits
-/// - **Field 50**: Instructing Party (optional) - Party authorizing the direct debits
-///
-/// ### Sequence B (Transaction Details - Mandatory, Repetitive)
-/// - **Field 21**: Transaction Reference (mandatory) - Unique transaction identifier
-/// - **Field 32B**: Currency/Amount (mandatory) - Amount to be debited
-/// - **Field 50**: Ordering Customer/Debtor (mandatory) - Account to be debited
-/// - **Field 52**: Account Servicing Institution (optional) - Debtor's bank
-/// - **Field 57**: Account With Institution (optional) - Intermediary institution
-/// - **Field 59**: Beneficiary/Creditor (mandatory) - Account to be credited
-/// - **Field 70**: Remittance Information (optional) - Payment purpose and details
-/// - **Field 77B**: Regulatory Reporting (optional) - Compliance information
-/// - **Field 71A**: Details of Charges (mandatory) - Charge allocation instructions
-///
-/// ### Sequence C (Settlement Information - Optional, Single)
-/// - **Field 32A**: Value Date/Currency/Total Amount (optional) - Settlement summary
-/// - **Field 19**: Sum of Amounts (optional) - Total amount of all transactions
-/// - **Field 71F**: Sender's Charges (optional) - Total charges claimed
-/// - **Field 71G**: Receiver's Charges (optional) - Total charges to be deducted
-///
-/// ## Network Validation Rules
-/// - **Authorization Validation**: Proper direct debit mandate verification required
-/// - **Transaction Limits**: Individual and batch transaction limit enforcement
-/// - **Currency Consistency**: Currency validation across sequences (Note: C11 requires custom implementation due to JSONLogic limitations)
-/// - **Charge Allocation**: Consistent charge handling across all transactions
-/// - **Settlement Totals**: Sequence C totals must match sum of Sequence B amounts
-/// - **Reference Uniqueness**: Transaction references must be unique within batch
-///
-/// ## SRG2025 Status
-/// - **Structural Changes**: None - MT104 format remains unchanged
-/// - **Enhanced Validation**: Strengthened authorization and mandate validation
-/// - **Regulatory Compliance**: Enhanced field 77B validation for reporting
-/// - **Processing Improvements**: Better support for modern direct debit frameworks
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Compatible with core banking and payment processing systems
-/// - **Authorization Systems**: Integration with direct debit mandate management systems
-/// - **API Integration**: RESTful API support for modern payment platforms
-/// - **Processing Requirements**: Supports batch processing with settlement coordination
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Often triggered by recurring payment schedules or collection processes
-/// - **Responses**: May generate MT103 (credit transfers) for creditor account credits
-/// - **Related**: Works with MT202 for settlement and MT940/MT950 for account reporting
-/// - **Alternatives**: MT101 for credit transfers, MT103 for individual payments
-/// - **Authorization**: Requires underlying direct debit mandates and agreements
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT104_VALIDATION_RULES)]
-pub struct MT104 {
-    #[field("20")]
-    pub field_20: Field20,
+// MT104: Direct Debit and Request for Debit Transfer Message
+// Used for direct debit instructions where the creditor instructs its bank
+// to collect funds from one or more debtors.
 
-    #[field("21R")]
-    pub field_21r: Option<Field21R>,
-
-    #[field("23E")]
-    pub field_23e: Option<Field23E>,
-
-    #[field("21E")]
-    pub field_21e: Option<Field21E>,
-
-    #[field("30")]
-    pub field_30: Field30,
-
-    #[field("51A")]
-    pub field_51a: Option<Field51A>,
-
-    #[field("50", name = "instructing_party")]
-    pub instructing_party: Option<Field50InstructingParty>,
-
-    #[field("50", name = "creditor")]
-    pub creditor: Option<Field50Creditor>,
-
-    #[field("52")]
-    pub field_52: Option<Field52CreditorBank>,
-
-    #[field("26T")]
-    pub field_26t: Option<Field26T>,
-
-    #[field("77B")]
-    pub field_77b: Option<Field77B>,
-
-    #[field("71A")]
-    pub field_71a: Option<Field71A>,
-
-    #[field("72")]
-    pub field_72: Option<Field72>,
-
-    #[field("#")]
-    pub transactions: Vec<MT104Transaction>,
-
-    #[field("32B")]
-    pub field_32b: Option<Field32B>,
-
-    #[field("19")]
-    pub field_19: Option<Field19>,
-
-    #[field("71F")]
-    pub field_71f: Option<Field71F>,
-
-    #[field("71G")]
-    pub field_71g: Option<Field71G>,
-
-    #[field("53")]
-    pub field_53: Option<Field53SenderCorrespondent>,
-}
-
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT104Transaction {
-    #[field("21")]
+    // Transaction Reference
+    #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    #[field("23E")]
+    // Instruction Code (optional)
+    #[serde(rename = "23E", skip_serializing_if = "Option::is_none")]
     pub field_23e: Option<Field23E>,
 
-    #[field("21C")]
-    pub field_21c: Option<Field21C>,
-
-    #[field("21D")]
-    pub field_21d: Option<Field21D>,
-
-    #[field("21E")]
-    pub field_21e: Option<Field21E>,
-
-    #[field("32B")]
+    // Transaction Amount
+    #[serde(rename = "32B")]
     pub field_32b: Field32B,
 
-    #[field("50", name = "instructing_party_tx")]
-    pub instructing_party_tx: Option<Field50InstructingParty>,
+    // Creditor (optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_50: Option<Field50Creditor>,
 
-    #[field("50", name = "creditor_tx")]
-    pub creditor_tx: Option<Field50Creditor>,
+    // Instructing Party (optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_52: Option<Field52OrderingInstitution>,
 
-    #[field("52")]
-    pub field_52: Option<Field52CreditorBank>,
+    // Account With Institution (optional)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_57: Option<Field57>,
 
-    #[field("57")]
-    pub field_57: Option<Field57DebtorBank>,
+    // Debtor
+    #[serde(flatten)]
+    pub field_59: Field59,
 
-    #[field("59")]
-    pub field_59: Field59Debtor,
-
-    #[field("70")]
+    // Remittance Information
+    #[serde(rename = "70", skip_serializing_if = "Option::is_none")]
     pub field_70: Option<Field70>,
 
-    #[field("26T")]
-    pub field_26t: Option<Field26T>,
-
-    #[field("77B")]
-    pub field_77b: Option<Field77B>,
-
-    #[field("33B")]
-    pub field_33b: Option<Field33B>,
-
-    #[field("71A")]
+    // Details of Charges (optional, mutually exclusive with message-level 71A per Rule C3)
+    #[serde(rename = "71A", skip_serializing_if = "Option::is_none")]
     pub field_71a: Option<Field71A>,
 
-    #[field("71F")]
-    pub field_71f: Option<Field71F>,
+    // Sender to Receiver Information
+    #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
+    pub field_72: Option<Field72>,
 
-    #[field("71G")]
-    pub field_71g: Option<Field71G>,
-
-    #[field("36")]
-    pub field_36: Option<Field36>,
+    // Regulatory Reporting (optional, mutually exclusive with message-level 77B per Rule C3)
+    #[serde(rename = "77B", skip_serializing_if = "Option::is_none")]
+    pub field_77b: Option<Field77B>,
 }
 
-/// Comprehensive MT104 validation rules based on SRG2025 specification
-const MT104_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "If field 23E is present in sequence A and contains RFDD then field 23E must be present in all occurrences of sequence B. If field 23E is present in sequence A and does not contain RFDD then field 23E must not be present in any occurrence of sequence B. If field 23E is not present in sequence A then field 23E must be present in all occurrences of sequence B",
-      "condition": {
-        "if": [
-          {"exists": ["fields", "23E"]},
-          {
-            "if": [
-              {"==": [{"var": "fields.23E.instruction_code"}, "RFDD"]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"var": "23E"}
-                ]
-              },
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"!": {"var": "23E"}}
-                ]
-              }
-            ]
-          },
-          {
-            "all": [
-              {"var": "fields.#"},
-              {"var": "23E"}
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C2",
-      "description": "Field 50a (option A or K) must be present in either sequence A or in each occurrence of sequence B, but must never be present in both sequences",
-      "condition": {
-        "or": [
-          {
-            "and": [
-              {"or": [
-                {"exists": ["fields", "creditor", "A"]},
-                {"exists": ["fields", "creditor", "K"]}
-              ]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {
-                    "and": [
-                      {"!": {"exists": ["creditor_tx", "A"]}},
-                      {"!": {"exists": ["creditor_tx", "K"]}}
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "and": [
-              {
-                "and": [
-                  {"!": {"exists": ["fields", "creditor", "A"]}},
-                  {"!": {"exists": ["fields", "creditor", "K"]}}
-                ]
-              },
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {
-                    "or": [
-                      {"exists": ["creditor_tx", "A"]},
-                      {"exists": ["creditor_tx", "K"]}
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C3",
-      "description": "When present in sequence A, fields 21E, 26T, 52a, 71A, 77B and 50a (option C or L) must not be present in any occurrence of sequence B",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"exists": ["fields", "21E"]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"!": {"exists": ["fields", "21E"]}}
-                ]
-              },
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "26T"]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"!": {"exists": ["fields", "26T"]}}
-                ]
-              },
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "52"]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"!": {"exists": ["fields", "52"]}}
-                ]
-              },
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71A"]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"!": {"exists": ["fields", "71A"]}}
-                ]
-              },
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "77B"]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {"!": {"exists": ["fields", "77B"]}}
-                ]
-              },
-              true
-            ]
-          },
-          {
-            "if": [
-              {"or": [
-                {"exists": ["fields", "instructing_party", "C"]},
-                {"exists": ["fields", "instructing_party", "L"]}
-              ]},
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {
-                    "and": [
-                      {"!": {"exists": ["fields", "instructing_party", "C"]}},
-                      {"!": {"exists": ["fields", "instructing_party", "L"]}}
-                    ]
-                  }
-                ]
-              },
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C4",
-      "description": "If field 21E is present in sequence A, field 50a (option A or K) must also be present in sequence A. In each occurrence of sequence B, if field 21E is present, then field 50a (option A or K) must also be present",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {"exists": ["fields", "21E"]},
-              {
-                "or": [
-                  {"exists": ["fields", "creditor", "A"]},
-                  {"exists": ["fields", "creditor", "K"]}
-                ]
-              },
-              true
-            ]
-          },
-          {
-            "all": [
-              {"var": "fields.#"},
-              {
-                "if": [
-                  {"exists": ["fields", "21E"]},
-                  {
-                    "or": [
-                      {"exists": ["fields", "creditor_tx", "A"]},
-                      {"exists": ["fields", "creditor_tx", "K"]}
-                    ]
-                  },
-                  true
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C5",
-      "description": "In sequence A, if field 23E is present and contains RTND then field 72 must be present",
-      "condition": {
-        "if": [
-          {"and": [
-            {"exists": ["fields", "23E"]},
-            {"==": [{"var": "fields.23E.instruction_code"}, "RTND"]}
-          ]},
-          {"exists": ["fields", "72"]},
-          {
-            "if": [
-              {"exists": ["fields", "23E"]},
-              {"!": {"exists": ["fields", "72"]}},
-              {"!": {"exists": ["fields", "72"]}}
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C6",
-      "description": "If field 71F is present in one or more occurrence of sequence B, then it must also be present in sequence C, and vice-versa. Same for field 71G",
-      "condition": {
-        "and": [
-          {
-            "if": [
-              {
-                "some": [
-                  {"var": "fields.#"},
-                  {"exists": ["fields", "71F"]}
-                ]
-              },
-              {"exists": ["fields", "71F"]},
-              {
-                "if": [
-                  {"exists": ["fields", "71F"]},
-                  {
-                    "some": [
-                      {"var": "fields.#"},
-                      {"exists": ["fields", "71F"]}
-                    ]
-                  },
-                  true
-                ]
-              }
-            ]
-          },
-          {
-            "if": [
-              {
-                "some": [
-                  {"var": "fields.#"},
-                  {"exists": ["fields", "71G"]}
-                ]
-              },
-              {"exists": ["fields", "71G"]},
-              {
-                "if": [
-                  {"exists": ["fields", "71G"]},
-                  {
-                    "some": [
-                      {"var": "fields.#"},
-                      {"exists": ["fields", "71G"]}
-                    ]
-                  },
-                  true
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C7",
-      "description": "In each occurrence of sequence B, if field 33B is present then the currency code or the amount, or both, must be different between fields 33B and 32B",
-      "condition": {
-        "all": [
-          {"var": "fields.#"},
-          {
-            "if": [
-              {"exists": ["fields", "33B"]},
-              {
-                "or": [
-                  {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
-                  {"!=": [{"var": "33B.amount"}, {"var": "32B.amount"}]}
-                ]
-              },
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C8",
-      "description": "In any occurrence of sequence B, if field 33B is present and the currency codes in fields 32B and 33B are different, then field 36 must be present",
-      "condition": {
-        "all": [
-          {"var": "fields.#"},
-          {
-            "if": [
-              {"exists": ["fields", "33B"]},
-              {
-                "if": [
-                  {"!=": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
-                  {"exists": ["fields", "36"]},
-                  {
-                    "if": [
-                      {"==": [{"var": "33B.currency"}, {"var": "32B.currency"}]},
-                      {"!": {"exists": ["fields", "36"]}},
-                      true
-                    ]
-                  }
-                ]
-              },
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C9",
-      "description": "If sequence C is present and if the amount in field 32B of sequence C is equal to the sum of the amounts of the fields 32B of sequence B, then field 19 must not be present",
-      "condition": {
-        "if": [
-          {"exists": ["fields", "32B"]},
-          {
-            "if": [
-              {"==": [
-                {"var": "fields.32B.amount"},
-                {
-                  "reduce": [
-                    {"var": "fields.#"},
-                    {"+": [{"var": "accumulator"}, {"var": "current.32B.amount"}]},
-                    0
-                  ]
-                }
-              ]},
-              {"!": {"exists": ["fields", "19"]}},
-              true
-            ]
-          },
-          true
-        ]
-      }
-    },
-    {
-      "id": "C10",
-      "description": "If field 19 is present in sequence C then it must be equal to the sum of the amounts in all occurrences of field 32B in sequence B",
-      "condition": {
-        "if": [
-          {"exists": ["fields", "19"]},
-          {"==": [
-            {"var": "fields.19.amount"}, 
-            {
-              "reduce": [
-                {"var": "fields.#"},
-                {"+": [{"var": "accumulator"}, {"var": "current.32B.amount"}]},
-                0
-              ]
-            }
-          ]},
-          true
-        ]
-      }
-    },
-    {
-      "id": "C11",
-      "description": "The currency code in fields 32B and 71G in sequences B and C must be the same for all occurrences. The currency code in fields 71F must be the same for all occurrences",
-      "condition": true
-    },
-    {
-      "id": "C12",
-      "description": "If field 23E in sequence A contains RFDD, then field 21R is optional, fields in sequence B are restricted, and sequence C must not be present",
-      "condition": {
-        "if": [
-          {"and": [
-            {"exists": ["fields", "23E"]},
-            {"==": [{"var": "fields.23E.instruction_code"}, "RFDD"]}
-          ]},
-          {
-            "and": [
-              {
-                "all": [
-                  {"var": "fields.#"},
-                  {
-                    "and": [
-                      {"!": {"exists": ["fields", "21E"]}},
-                      {"!": {"exists": ["fields", "creditor_tx", "A"]}},
-                      {"!": {"exists": ["fields", "creditor_tx", "K"]}},
-                      {"!": {"exists": ["fields", "52"]}},
-                      {"!": {"exists": ["fields", "71F"]}},
-                      {"!": {"exists": ["fields", "71G"]}}
-                    ]
-                  }
-                ]
-              },
-              {"!": {"exists": ["fields", "32B"]}},
-              {"!": {"exists": ["fields", "19"]}},
-              {"!": {"exists": ["fields", "71F"]}},
-              {"!": {"exists": ["fields", "71G"]}},
-              {"!": {"exists": ["fields", "53"]}}
-            ]
-          },
-          {
-            "and": [
-              {"!": {"exists": ["fields", "21R"]}},
-              {
-                "or": [
-                  {"exists": ["fields", "32B"]},
-                  {"exists": ["fields", "19"]},
-                  {"exists": ["fields", "71F"]},
-                  {"exists": ["fields", "71G"]},
-                  {"exists": ["fields", "53"]}
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "C13",
-      "description": "If field 23E in sequence A is present and contains RFDD, then field 119 of User Header must be present and contain RFDD",
-      "condition": {
-        "if": [
-          {"and": [
-            {"exists": ["fields", "23E"]},
-            {"==": [{"var": "fields.23E.instruction_code"}, "RFDD"]}
-          ]},
-          {"and": [
-            {"exists": ["user_header", "validation_flag"]},
-            {"==": [{"var": "user_header.validation_flag"}, "RFDD"]}
-          ]},
-          {"!": {"exists": ["user_header", "validation_flag"]}}
-        ]
-      }
-    },
-    {
-      "id": "TRANSACTION_MINIMUM",
-      "description": "At least one transaction must be present in sequence B",
-      "condition": true
-    },
-    {
-      "id": "CURRENCY_CODE_VALIDATION",
-      "description": "All currency codes must be valid ISO 4217 3-letter codes",
-      "condition": {
-        "and": [
-          {
-            "all": [
-              {"var": "fields.#"},
-              {
-                "and": [
-                  {"!=": [{"var": "32B.currency"}, ""]},
-                  {
-                    "if": [
-                      {"exists": ["fields", "33B"]},
-                      {"!=": [{"var": "33B.currency"}, ""]},
-                      true
-                    ]
-                  },
-                  {
-                    "if": [
-                      {"exists": ["fields", "71F"]},
-                      {"!=": [{"var": "71F.currency"}, ""]},
-                      true
-                    ]
-                  },
-                  {
-                    "if": [
-                      {"exists": ["fields", "71G"]},
-                      {"!=": [{"var": "71G.currency"}, ""]},
-                      true
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "32B"]},
-              {"!=": [{"var": "fields.32B.currency"}, ""]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71F"]},
-              {"!=": [{"var": "fields.71F.currency"}, ""]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71G"]},
-              {"!=": [{"var": "fields.71G.currency"}, ""]},
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "AMOUNT_CONSISTENCY",
-      "description": "All amounts must be properly formatted",
-      "condition": {
-        "and": [
-          {
-            "all": [
-              {"var": "fields.#"},
-              {
-                "and": [
-                  {">": [{"var": "32B.amount"}, -1]},
-                  {
-                    "if": [
-                      {"exists": ["fields", "33B"]},
-                      {">": [{"var": "33B.amount"}, -1]},
-                      true
-                    ]
-                  },
-                  {
-                    "if": [
-                      {"exists": ["fields", "71F"]},
-                      {">": [{"var": "71F.amount"}, -1]},
-                      true
-                    ]
-                  },
-                  {
-                    "if": [
-                      {"exists": ["fields", "71G"]},
-                      {">": [{"var": "71G.amount"}, -1]},
-                      true
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "32B"]},
-              {">": [{"var": "fields.32B.amount"}, -1]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "19"]},
-              {">": [{"var": "fields.19.amount"}, -1]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71F"]},
-              {">": [{"var": "fields.71F.amount"}, -1]},
-              true
-            ]
-          },
-          {
-            "if": [
-              {"exists": ["fields", "71G"]},
-              {">": [{"var": "fields.71G.amount"}, -1]},
-              true
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "REFERENCE_FORMAT",
-      "description": "Reference fields must not contain invalid patterns",
-      "condition": {
-        "and": [
-          {"!=": [{"var": "fields.20.reference"}, ""]},
-          {"!": {"in": ["//", {"var": "fields.20.reference"}]}},
-          {
-            "all": [
-              {"var": "fields.#"},
-              {
-                "and": [
-                  {"!=": [{"var": "21.reference"}, ""]},
-                  {"!": {"in": ["//", {"var": "21.reference"}]}}
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "id": "EXECUTION_DATE",
-      "description": "Requested execution date must be valid",
-      "condition": {
-        "and": [
-          {"exists": ["fields", "30"]},
-          {"!=": [{"var": "fields.30.execution_date"}, ""]}
-        ]
-      }
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MT104 {
+    // Message Reference
+    #[serde(rename = "20")]
+    pub field_20: Field20,
+
+    // Instruction Code (optional)
+    #[serde(rename = "23E", skip_serializing_if = "Option::is_none")]
+    pub field_23e: Option<Field23E>,
+
+    // Requested Execution Date
+    #[serde(rename = "30")]
+    pub field_30: Field30,
+
+    // Total Amount (summary)
+    #[serde(rename = "32B")]
+    pub field_32b: Field32B,
+
+    // Creditor (message level)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_50: Option<Field50Creditor>,
+
+    // Ordering Institution
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_52: Option<Field52OrderingInstitution>,
+
+    // Sender's Correspondent
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub field_53: Option<Field53SenderCorrespondent>,
+
+    // Details of Charges (optional, mutually exclusive with transaction-level 71A per Rule C3)
+    #[serde(rename = "71A", skip_serializing_if = "Option::is_none")]
+    pub field_71a: Option<Field71A>,
+
+    // Sender to Receiver Information
+    #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
+    pub field_72: Option<Field72>,
+
+    // Transaction Details (repeating sequence)
+    #[serde(rename = "#")]
+    pub transactions: Vec<MT104Transaction>,
+
+    // Sum of Amounts (Sequence C - optional, used when settlement amount differs from sum of transaction amounts)
+    #[serde(rename = "19", skip_serializing_if = "Option::is_none")]
+    pub field_19: Option<Field19>,
+
+    // Regulatory Reporting (Sequence A - optional at message level)
+    #[serde(rename = "77B", skip_serializing_if = "Option::is_none")]
+    pub field_77b: Option<Field77B>,
+}
+
+impl MT104 {
+    /// Parse message from Block 4 content
+    pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        let mut parser = crate::message_parser::MessageParser::new(block4, "104");
+
+        // Parse mandatory fields
+        eprintln!("DEBUG MT104: Starting message-level parsing");
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        eprintln!("DEBUG MT104: After field 20, position = {}", parser.position());
+
+        let field_23e = parser.parse_optional_field::<Field23E>("23E")?;
+        eprintln!("DEBUG MT104: After field 23E, position = {}", parser.position());
+
+        let field_30 = parser.parse_field::<Field30>("30")?;
+        eprintln!("DEBUG MT104: After field 30, position = {}, remaining: {:?}", parser.position(), parser.remaining().chars().take(100).collect::<String>());
+
+        // Parse optional fields before transactions
+        let field_50 = parser.parse_optional_variant_field::<Field50Creditor>("50")?;
+        eprintln!("DEBUG MT104: After msg field 50, position = {}, found: {}", parser.position(), field_50.is_some());
+
+        let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+        eprintln!("DEBUG MT104: After msg field 52, position = {}, found: {}", parser.position(), field_52.is_some());
+
+        let field_53 = parser.parse_optional_variant_field::<Field53SenderCorrespondent>("53")?;
+        eprintln!("DEBUG MT104: After msg field 53, position = {}, found: {}", parser.position(), field_53.is_some());
+
+        let field_71a = parser.parse_optional_field::<Field71A>("71A")?;
+        eprintln!("DEBUG MT104: After msg field 71A, position = {}, found: {}", parser.position(), field_71a.is_some());
+
+        let field_72 = parser.parse_optional_field::<Field72>("72")?;
+        eprintln!("DEBUG MT104: After msg field 72, position = {}, found: {}", parser.position(), field_72.is_some());
+
+        // Parse transactions - enable duplicates for repeating fields
+        let mut transactions = Vec::new();
+        parser = parser.with_duplicates(true);
+
+        eprintln!("DEBUG MT104: Starting transaction parsing loop at position {}", parser.position());
+
+        // Parse each transaction - they start with field 21
+        let mut txn_count = 0;
+        while parser.detect_field("21") {
+            txn_count += 1;
+            eprintln!("DEBUG MT104: === Transaction {} detected at position {} ===", txn_count, parser.position());
+            eprintln!("DEBUG MT104: Remaining content (first 150 chars): {:?}", parser.remaining().chars().take(150).collect::<String>());
+
+            let field_21 = parser.parse_field::<Field21NoOption>("21")?;
+            eprintln!("DEBUG MT104: After field 21, position = {}", parser.position());
+
+            let field_23e = parser.parse_optional_field::<Field23E>("23E")?;
+            eprintln!("DEBUG MT104: After field 23E, position = {}", parser.position());
+
+            let field_32b = parser.parse_field::<Field32B>("32B")?;
+            eprintln!("DEBUG MT104: After field 32B, position = {}", parser.position());
+
+            // Parse optional transaction fields
+            let field_50 = parser.parse_optional_variant_field::<Field50Creditor>("50")?;
+            eprintln!("DEBUG MT104: After field 50, position = {}", parser.position());
+
+            let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+            eprintln!("DEBUG MT104: After field 52, position = {}", parser.position());
+
+            let field_57 = parser.parse_optional_variant_field::<Field57>("57")?;
+            eprintln!("DEBUG MT104: After field 57, position = {}", parser.position());
+
+            let field_59 = parser.parse_variant_field::<Field59>("59")?;
+            eprintln!("DEBUG MT104: After field 59, position = {}", parser.position());
+
+            let field_70 = parser.parse_optional_field::<Field70>("70")?;
+            eprintln!("DEBUG MT104: After field 70, position = {}", parser.position());
+
+            let field_71a = parser.parse_optional_field::<Field71A>("71A")?;
+            eprintln!("DEBUG MT104: After field 71A, position = {}", parser.position());
+
+            let field_72 = parser.parse_optional_field::<Field72>("72")?;
+            eprintln!("DEBUG MT104: After field 72, position = {}", parser.position());
+
+            let field_77b = parser.parse_optional_field::<Field77B>("77B")?;
+            eprintln!("DEBUG MT104: After field 77B, position = {}", parser.position());
+            eprintln!("DEBUG MT104: Transaction {} complete. Remaining (first 80 chars): {:?}", txn_count, parser.remaining().chars().take(80).collect::<String>());
+
+            transactions.push(MT104Transaction {
+                field_21,
+                field_23e,
+                field_32b,
+                field_50,
+                field_52,
+                field_57,
+                field_59,
+                field_70,
+                field_71a,
+                field_72,
+                field_77b,
+            });
+        }
+
+        eprintln!("DEBUG MT104: Transaction loop exited. Parsed {} transactions. Current position = {}", txn_count, parser.position());
+        eprintln!("DEBUG MT104: Checking for next field 21: {}", parser.detect_field("21"));
+        eprintln!("DEBUG MT104: Remaining content (first 200 chars): {:?}", parser.remaining().chars().take(200).collect::<String>());
+
+        // Parse the summary amount field at the end (Sequence C)
+        let field_32b = parser.parse_field::<Field32B>("32B")?;
+
+        // Parse optional Sequence C fields
+        let field_19 = parser.parse_optional_field::<Field19>("19")?;
+        let field_77b = parser.parse_optional_field::<Field77B>("77B")?;
+
+        // Verify all content is consumed
+        if !parser.is_complete() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "Unparsed content remaining in message: {}",
+                    parser.remaining()
+                ),
+            });
+        }
+
+        Ok(Self {
+            field_20,
+            field_23e,
+            field_30,
+            field_32b,
+            field_50,
+            field_52,
+            field_53,
+            field_71a,
+            field_72,
+            transactions,
+            field_19,
+            field_77b,
+        })
     }
-  ],
-  "constants": {
-    "VALID_CHARGE_CODES": ["OUR", "SHA", "BEN"],
-    "VALID_INSTRUCTION_CODES_MT104": ["RFDD", "RTND", "SDVA", "INTC", "CORT"]
-  }
-}"#;
+
+    /// Validation rules for the message
+    pub fn validate() -> &'static str {
+        r#"{"rules": [{"id": "BASIC", "description": "Basic validation", "condition": true}]}"#
+    }
+
+    /// Parse from SWIFT MT text format
+    pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
+        // If input starts with block headers, extract Block 4
+        let block4 = if input.starts_with("{") {
+            crate::parser::SwiftParser::extract_block(input, 4)?.ok_or_else(|| {
+                crate::errors::ParseError::InvalidFormat {
+                    message: "Block 4 not found".to_string(),
+                }
+            })?
+        } else {
+            // Assume input is already block 4 content
+            input.to_string()
+        };
+        Self::parse_from_block4(&block4)
+    }
+
+    /// Convert to SWIFT MT text format
+    pub fn to_mt_string(&self) -> String {
+        use crate::traits::SwiftField;
+        let mut result = String::new();
+
+        // Add mandatory fields
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
+
+        if let Some(ref field_23e) = self.field_23e {
+            result.push_str(&field_23e.to_swift_string());
+            result.push_str("\r\n");
+        }
+
+        result.push_str(&self.field_30.to_swift_string());
+        result.push_str("\r\n");
+
+        // Add optional header fields
+        if let Some(ref field_50) = self.field_50 {
+            result.push_str(&field_50.to_swift_string());
+            result.push_str("\r\n");
+        }
+        if let Some(ref field_52) = self.field_52 {
+            result.push_str(&field_52.to_swift_string());
+            result.push_str("\r\n");
+        }
+        if let Some(ref field_53) = self.field_53 {
+            result.push_str(&field_53.to_swift_string());
+            result.push_str("\r\n");
+        }
+
+        if let Some(ref field_71a) = self.field_71a {
+            result.push_str(&field_71a.to_swift_string());
+            result.push_str("\r\n");
+        }
+
+        if let Some(ref field_72) = self.field_72 {
+            result.push_str(&field_72.to_swift_string());
+            result.push_str("\r\n");
+        }
+
+        // Add transactions
+        for transaction in &self.transactions {
+            result.push_str(&transaction.field_21.to_swift_string());
+            result.push_str("\r\n");
+
+            if let Some(ref field_23e) = transaction.field_23e {
+                result.push_str(&field_23e.to_swift_string());
+                result.push_str("\r\n");
+            }
+
+            result.push_str(&transaction.field_32b.to_swift_string());
+            result.push_str("\r\n");
+
+            if let Some(ref field_50) = transaction.field_50 {
+                result.push_str(&field_50.to_swift_string());
+                result.push_str("\r\n");
+            }
+            if let Some(ref field_52) = transaction.field_52 {
+                result.push_str(&field_52.to_swift_string());
+                result.push_str("\r\n");
+            }
+            if let Some(ref field_57) = transaction.field_57 {
+                result.push_str(&field_57.to_swift_string());
+                result.push_str("\r\n");
+            }
+
+            result.push_str(&transaction.field_59.to_swift_string());
+            result.push_str("\r\n");
+
+            if let Some(ref field_70) = transaction.field_70 {
+                result.push_str(&field_70.to_swift_string());
+                result.push_str("\r\n");
+            }
+            if let Some(ref field_72) = transaction.field_72 {
+                result.push_str(&field_72.to_swift_string());
+                result.push_str("\r\n");
+            }
+        }
+
+        // Add summary amount
+        result.push_str(&self.field_32b.to_swift_string());
+        result.push_str("\r\n");
+
+        result.push('-');
+        result
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT104 {
+    fn message_type() -> &'static str {
+        "104"
+    }
+
+    fn from_fields(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+    ) -> crate::SwiftResult<Self> {
+        // Flatten all fields with their positions into a single vec
+        let mut all_fields: Vec<(&String, &String, usize)> = Vec::new();
+        for (tag, values) in fields.iter() {
+            for (value, pos) in values {
+                all_fields.push((tag, value, *pos));
+            }
+        }
+
+        // Sort by position to maintain the original sequence order
+        all_fields.sort_by_key(|(_, _, pos)| *pos);
+
+        // Build block4 string in the correct order
+        let mut block4_parts = Vec::new();
+        for (tag, value, _) in all_fields {
+            block4_parts.push(format!(":{}:{}", tag, value));
+        }
+
+        let block4 = block4_parts.join("\n") + "\n-";
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+        _config: &crate::errors::ParserConfig,
+    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+        use crate::traits::SwiftField;
+        let mut fields = std::collections::HashMap::new();
+
+        fields.insert("20".to_string(), vec![self.field_20.to_swift_value()]);
+
+        if let Some(ref field_23e) = self.field_23e {
+            fields.insert("23E".to_string(), vec![field_23e.to_swift_value()]);
+        }
+
+        fields.insert("30".to_string(), vec![self.field_30.to_swift_value()]);
+
+        if let Some(ref field_50) = self.field_50 {
+            if let Some(variant_tag) = field_50.get_variant_tag() {
+                fields.insert(format!("50{}", variant_tag), vec![field_50.to_swift_value()]);
+            } else {
+                fields.insert("50".to_string(), vec![field_50.to_swift_value()]);
+            }
+        }
+
+        if let Some(ref field_52) = self.field_52 {
+            if let Some(variant_tag) = field_52.get_variant_tag() {
+                fields.insert(format!("52{}", variant_tag), vec![field_52.to_swift_value()]);
+            } else {
+                fields.insert("52".to_string(), vec![field_52.to_swift_value()]);
+            }
+        }
+
+        if let Some(ref field_53) = self.field_53 {
+            if let Some(variant_tag) = field_53.get_variant_tag() {
+                fields.insert(format!("53{}", variant_tag), vec![field_53.to_swift_value()]);
+            } else {
+                fields.insert("53".to_string(), vec![field_53.to_swift_value()]);
+            }
+        }
+
+        if let Some(ref field_71a) = self.field_71a {
+            fields.insert("71A".to_string(), vec![field_71a.to_swift_value()]);
+        }
+
+        if let Some(ref field_72) = self.field_72 {
+            fields.insert("72".to_string(), vec![field_72.to_swift_value()]);
+        }
+
+        // Add transaction fields
+        for transaction in &self.transactions {
+            fields.entry("21".to_string()).or_default().push(transaction.field_21.to_swift_value());
+
+            if let Some(ref field_23e) = transaction.field_23e {
+                fields.entry("23E".to_string()).or_default().push(field_23e.to_swift_value());
+            }
+
+            fields.entry("32B".to_string()).or_default().push(transaction.field_32b.to_swift_value());
+
+            if let Some(ref field_50) = transaction.field_50 {
+                if let Some(variant_tag) = field_50.get_variant_tag() {
+                    fields.entry(format!("50{}", variant_tag)).or_default().push(field_50.to_swift_value());
+                } else {
+                    fields.entry("50".to_string()).or_default().push(field_50.to_swift_value());
+                }
+            }
+
+            if let Some(ref field_52) = transaction.field_52 {
+                if let Some(variant_tag) = field_52.get_variant_tag() {
+                    fields.entry(format!("52{}", variant_tag)).or_default().push(field_52.to_swift_value());
+                } else {
+                    fields.entry("52".to_string()).or_default().push(field_52.to_swift_value());
+                }
+            }
+
+            if let Some(ref field_57) = transaction.field_57 {
+                if let Some(variant_tag) = field_57.get_variant_tag() {
+                    fields.entry(format!("57{}", variant_tag)).or_default().push(field_57.to_swift_value());
+                } else {
+                    fields.entry("57".to_string()).or_default().push(field_57.to_swift_value());
+                }
+            }
+
+            if let Some(variant_tag) = transaction.field_59.get_variant_tag() {
+                fields.entry(format!("59{}", variant_tag)).or_default().push(transaction.field_59.to_swift_value());
+            } else {
+                fields.entry("59".to_string()).or_default().push(transaction.field_59.to_swift_value());
+            }
+
+            if let Some(ref field_70) = transaction.field_70 {
+                fields.entry("70".to_string()).or_default().push(field_70.to_swift_value());
+            }
+
+            if let Some(ref field_72) = transaction.field_72 {
+                fields.entry("72".to_string()).or_default().push(field_72.to_swift_value());
+            }
+        }
+
+        // Add summary amount (Sequence C)
+        fields.entry("32B".to_string()).or_default().push(self.field_32b.to_swift_value());
+
+        // Add optional Sequence C fields
+        if let Some(ref field_19) = self.field_19 {
+            fields.insert("19".to_string(), vec![field_19.to_swift_value()]);
+        }
+
+        if let Some(ref field_77b) = self.field_77b {
+            fields.insert("77B".to_string(), vec![field_77b.to_swift_value()]);
+        }
+
+        fields
+    }
+
+    fn to_ordered_fields(&self) -> Vec<(String, String)> {
+        use crate::traits::SwiftField;
+        let mut ordered_fields = Vec::new();
+
+        // Add header fields in correct order
+        ordered_fields.push(("20".to_string(), self.field_20.to_swift_value()));
+
+        if let Some(ref field_23e) = self.field_23e {
+            ordered_fields.push(("23E".to_string(), field_23e.to_swift_value()));
+        }
+
+        ordered_fields.push(("30".to_string(), self.field_30.to_swift_value()));
+
+        // Add optional message-level fields
+        if let Some(ref field_50) = self.field_50 {
+            if let Some(variant_tag) = field_50.get_variant_tag() {
+                ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
+            } else {
+                ordered_fields.push(("50".to_string(), field_50.to_swift_value()));
+            }
+        }
+
+        if let Some(ref field_52) = self.field_52 {
+            if let Some(variant_tag) = field_52.get_variant_tag() {
+                ordered_fields.push((format!("52{}", variant_tag), field_52.to_swift_value()));
+            } else {
+                ordered_fields.push(("52".to_string(), field_52.to_swift_value()));
+            }
+        }
+
+        if let Some(ref field_53) = self.field_53 {
+            if let Some(variant_tag) = field_53.get_variant_tag() {
+                ordered_fields.push((format!("53{}", variant_tag), field_53.to_swift_value()));
+            } else {
+                ordered_fields.push(("53".to_string(), field_53.to_swift_value()));
+            }
+        }
+
+        if let Some(ref field_71a) = self.field_71a {
+            ordered_fields.push(("71A".to_string(), field_71a.to_swift_value()));
+        }
+
+        if let Some(ref field_72) = self.field_72 {
+            ordered_fields.push(("72".to_string(), field_72.to_swift_value()));
+        }
+
+        // Add transaction fields in order
+        for transaction in &self.transactions {
+            ordered_fields.push(("21".to_string(), transaction.field_21.to_swift_value()));
+
+            if let Some(ref field_23e) = transaction.field_23e {
+                ordered_fields.push(("23E".to_string(), field_23e.to_swift_value()));
+            }
+
+            ordered_fields.push(("32B".to_string(), transaction.field_32b.to_swift_value()));
+
+            if let Some(ref field_50) = transaction.field_50 {
+                if let Some(variant_tag) = field_50.get_variant_tag() {
+                    ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
+                } else {
+                    ordered_fields.push(("50".to_string(), field_50.to_swift_value()));
+                }
+            }
+
+            if let Some(ref field_52) = transaction.field_52 {
+                if let Some(variant_tag) = field_52.get_variant_tag() {
+                    ordered_fields.push((format!("52{}", variant_tag), field_52.to_swift_value()));
+                } else {
+                    ordered_fields.push(("52".to_string(), field_52.to_swift_value()));
+                }
+            }
+
+            if let Some(ref field_57) = transaction.field_57 {
+                if let Some(variant_tag) = field_57.get_variant_tag() {
+                    ordered_fields.push((format!("57{}", variant_tag), field_57.to_swift_value()));
+                } else {
+                    ordered_fields.push(("57".to_string(), field_57.to_swift_value()));
+                }
+            }
+
+            // Add field 59 with variant
+            if let Some(variant_tag) = transaction.field_59.get_variant_tag() {
+                ordered_fields.push((format!("59{}", variant_tag), transaction.field_59.to_swift_value()));
+            } else {
+                ordered_fields.push(("59".to_string(), transaction.field_59.to_swift_value()));
+            }
+
+            if let Some(ref field_70) = transaction.field_70 {
+                ordered_fields.push(("70".to_string(), field_70.to_swift_value()));
+            }
+
+            if let Some(ref field_71a) = transaction.field_71a {
+                ordered_fields.push(("71A".to_string(), field_71a.to_swift_value()));
+            }
+
+            if let Some(ref field_72) = transaction.field_72 {
+                ordered_fields.push(("72".to_string(), field_72.to_swift_value()));
+            }
+
+            if let Some(ref field_77b) = transaction.field_77b {
+                ordered_fields.push(("77B".to_string(), field_77b.to_swift_value()));
+            }
+        }
+
+        // Add summary amount field at the end (Sequence C)
+        ordered_fields.push(("32B".to_string(), self.field_32b.to_swift_value()));
+
+        // Add optional Sequence C fields
+        if let Some(ref field_19) = self.field_19 {
+            ordered_fields.push(("19".to_string(), field_19.to_swift_value()));
+        }
+
+        if let Some(ref field_77b) = self.field_77b {
+            ordered_fields.push(("77B".to_string(), field_77b.to_swift_value()));
+        }
+
+        ordered_fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "30", "32B", "71A", "21", "59"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["23E", "50", "52", "53", "57", "70", "72"]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_mt104_parse() {
+        let mt104_text = r#":20:DDREF001
+:30:241225
+:71A:SHA
+:21:TRANS001
+:32B:USD10000,00
+:59:/DE89370400440532013000
+DEBTOR NAME
+DEBTOR ADDRESS
+:32B:USD10000,00
+-"#;
+        let result = MT104::parse_from_block4(mt104_text);
+        assert!(result.is_ok());
+        let mt104 = result.unwrap();
+        assert_eq!(mt104.field_20.reference, "DDREF001");
+        assert_eq!(mt104.transactions.len(), 1);
+        assert_eq!(mt104.transactions[0].field_21.reference, "TRANS001");
+    }
+}

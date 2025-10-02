@@ -99,30 +99,16 @@
                             "var": "amount1"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "CHASUS33XXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "STREAMING PLUS INC",
-                                "SUBSCRIPTION SERVICES",
-                                "LOS ANGELES CA 90028",
-                                "UNITED STATES"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "STREAMING PLUS INC",
+                            "SUBSCRIPTION SERVICES",
+                            "LOS ANGELES CA 90028",
+                            "UNITED STATES"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -142,16 +128,22 @@
                             "/PURPOSE/STREAM SUB PREMIUM HD"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "US12345678901234567890",
-                            "name_and_address": [
-                                "SMITH, JOHN",
-                                "123 MAIN STREET APT 4B",
-                                "NEW YORK NY 10001",
-                                "UNITED STATES"
-                            ]
+                    "50K": {
+                        "account": "US12345678901234567890",
+                        "name_and_address": [
+                            "SMITH, JOHN",
+                            "123 MAIN STREET APT 4B",
+                            "NEW YORK NY 10001",
+                            "UNITED STATES"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "CHASUS33XXX"
                     }
                 },
                 {
@@ -166,30 +158,16 @@
                             "var": "amount2"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "WFBIUS6SXXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "CLOUD SOFTWARE CORP",
-                                "BILLING DEPARTMENT",
-                                "SEATTLE WA 98109",
-                                "UNITED STATES"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "CLOUD SOFTWARE CORP",
+                            "BILLING DEPARTMENT",
+                            "SEATTLE WA 98109",
+                            "UNITED STATES"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -209,16 +187,22 @@
                             "/PURPOSE/SAAS SUB BUSINESS PRO"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "US98765432109876543210",
-                            "name_and_address": [
-                                "JOHNSON, SARAH",
-                                "456 TECH AVENUE",
-                                "SAN FRANCISCO CA 94107",
-                                "UNITED STATES"
-                            ]
+                    "50K": {
+                        "account": "US98765432109876543210",
+                        "name_and_address": [
+                            "JOHNSON, SARAH",
+                            "456 TECH AVENUE",
+                            "SAN FRANCISCO CA 94107",
+                            "UNITED STATES"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "WFBIUS6SXXX"
                     }
                 },
                 {
@@ -233,30 +217,16 @@
                             "var": "amount3"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "BOFAUS3NXXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "FITNESS CLUB INTERNATIONAL",
-                                "MEMBERSHIP SERVICES",
-                                "MIAMI FL 33131",
-                                "UNITED STATES"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "FITNESS CLUB INTERNATIONAL",
+                            "MEMBERSHIP SERVICES",
+                            "MIAMI FL 33131",
+                            "UNITED STATES"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -276,16 +246,22 @@
                             "/PURPOSE/GYM PLATINUM ACCESS"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "US11223344556677889900",
-                            "name_and_address": [
-                                "DAVIS, MICHAEL",
-                                "789 HEALTH STREET",
-                                "BOSTON MA 02108",
-                                "UNITED STATES"
-                            ]
+                    "50K": {
+                        "account": "US11223344556677889900",
+                        "name_and_address": [
+                            "DAVIS, MICHAEL",
+                            "789 HEALTH STREET",
+                            "BOSTON MA 02108",
+                            "UNITED STATES"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "BOFAUS3NXXX"
                     }
                 },
                 {
@@ -300,30 +276,16 @@
                             "var": "amount4"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "PNBPUS3NXXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "DIGITAL NEWS CORPORATION",
-                                "SUBSCRIPTION BILLING",
-                                "NEW YORK NY 10036",
-                                "UNITED STATES"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "DIGITAL NEWS CORPORATION",
+                            "SUBSCRIPTION BILLING",
+                            "NEW YORK NY 10036",
+                            "UNITED STATES"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -343,16 +305,22 @@
                             "/PURPOSE/NEWS ALL ACCESS DIGITAL"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "US99887766554433221100",
-                            "name_and_address": [
-                                "WILSON, EMMA",
-                                "321 READER LANE",
-                                "WASHINGTON DC 20001",
-                                "UNITED STATES"
-                            ]
+                    "50K": {
+                        "account": "US99887766554433221100",
+                        "name_and_address": [
+                            "WILSON, EMMA",
+                            "321 READER LANE",
+                            "WASHINGTON DC 20001",
+                            "UNITED STATES"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "PNBPUS3NXXX"
                     }
                 }
             ],

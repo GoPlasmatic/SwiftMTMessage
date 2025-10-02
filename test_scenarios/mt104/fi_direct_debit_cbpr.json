@@ -108,36 +108,27 @@
                             "var": "loan_payment"
                         }
                     },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
-                            }
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                {
-                                    "cat": [
-                                        "BORROWER LEI/",
-                                        {
-                                            "var": "debtor_lei"
-                                        }
-                                    ]
-                                },
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
+                        "account": "1000000000000000",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            {
+                                "cat": [
+                                    "BORROWER LEI/",
+                                    {
+                                        "var": "debtor_lei"
+                                    }
+                                ]
+                            },
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
+                            }
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -166,30 +157,33 @@
                             "/PURP/LOAN REPAYMENT"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": {
-                                "var": "loan_account"
+                    "50K": {
+                        "account": {
+                            "var": "loan_account"
+                        },
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            {
+                                "cat": [
+                                    "LEI/",
+                                    {
+                                        "var": "debtor_lei"
+                                    }
+                                ]
                             },
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                {
-                                    "cat": [
-                                        "LEI/",
-                                        {
-                                            "var": "debtor_lei"
-                                        }
-                                    ]
-                                },
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
+                            }
+                        ]
+                    },
+                    "57A": {
+                        "bic": {
+                            "var": "receiver_bic"
                         }
                     }
                 }

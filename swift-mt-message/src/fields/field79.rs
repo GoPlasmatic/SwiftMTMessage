@@ -1,6 +1,7 @@
+use super::swift_utils::parse_swift_chars;
+use crate::errors::ParseError;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::SwiftField;
-use swift_mt_message_macros::serde_swift_fields;
 
 ///   **Field 79: Narrative**
 ///
@@ -42,113 +43,134 @@ use swift_mt_message_macros::serde_swift_fields;
 /// - **Code Validation**: Special validation for specific content codes
 /// - **Reference Patterns**: Restricted slash patterns for security
 ///
-/// ## Content Categories and Applications
-/// ### Transaction Documentation
-/// - **Detailed Descriptions**: Comprehensive transaction explanations
-/// - **Business Context**: Complete business rationale and background
-/// - **Regulatory Information**: Compliance and regulatory details
-/// - **Amendment Justifications**: Detailed reasons for transaction changes
-///
-/// ### Reason Codes and Explanations
-/// #### Common Reason Categories (from MT 292 integration)
-/// - **AGNT**: Agent/Intermediary related issues
-/// - **AM09**: Wrong amount scenarios
-/// - **COVR**: Cover payment problems
-/// - **CURR**: Currency-related issues
-/// - **CUST**: Customer-related matters
-/// - **CUTA**: Cut-off time violations
-/// - **DUPL**: Duplicate transaction handling
-/// - **FRAD**: Fraudulent transaction detection
-/// - **TECH**: Technical processing problems
-/// - **UPAY**: Unpaid transaction situations
-///
-/// ### Free Format Communication
-/// - **Institutional Messages**: Communication between financial institutions
-/// - **Customer Communications**: Detailed customer information
-/// - **Operational Instructions**: Complex operational procedures
-/// - **Exception Explanations**: Detailed exception handling explanations
-///
-/// ## Special Content Validation
-/// ### Prohibited Content Patterns
-/// - **Security Restrictions**: Certain slash patterns prohibited for security
-/// - **Code Validation**: `/REJT/` and `/RETN/` codes have specific rules
-/// - **Reference Restrictions**: Invalid reference patterns must be avoided
-/// - **Format Compliance**: Structured content must follow established patterns
-///
-/// ### Content Structure Guidelines
-/// ```logic
-/// :79:CATEGORY: [Description]
-/// Detailed explanation across multiple lines
-/// Additional context and information
-/// Supporting details and references
-/// Conclusion or summary information
-/// ```
-///
-/// ## Regional Considerations
-/// - **Global Standards**: Consistent narrative format across all SWIFT regions
-/// - **Local Requirements**: Regional regulatory narrative requirements
-/// - **Language Standards**: English language requirement for international messages
-/// - **Cultural Considerations**: Appropriate cultural sensitivity in narrative content
-///
-/// ## Content Quality Standards
-/// ### Clarity and Completeness
-/// - **Clear Communication**: Unambiguous and clear narrative content
-/// - **Complete Information**: Comprehensive coverage of relevant details
-/// - **Logical Structure**: Well-organized information presentation
-/// - **Professional Tone**: Appropriate professional communication style
-///
-/// ### Technical Requirements
-/// - **Character Limits**: Adherence to line and total character limits
-/// - **Format Compliance**: Proper formatting and structure
-/// - **Content Relevance**: Relevant and appropriate information only
-/// - **Reference Accuracy**: Accurate references and cross-references
-///
-/// ## Error Prevention Guidelines
-/// - **Content Review**: Thorough review of narrative content before transmission
-/// - **Format Verification**: Confirmation of proper format compliance
-/// - **Character Validation**: Verification of valid character set usage
-/// - **Length Checking**: Confirmation of line and total length compliance
-///
-/// ## Related Fields Integration
-/// - **Field 75**: Queries (extended query information)
-/// - **Field 76**: Answers (extended answer information)
-/// - **Field 77A/B**: Other narrative fields (complementary information)
-/// - **Field 20/21**: References (narrative context)
-/// - **Field 72**: Sender to Receiver Information (institutional context)
-///
-/// ## Compliance Framework
-/// - **Regulatory Documentation**: Meeting regulatory narrative requirements
-/// - **Audit Trail**: Complete narrative documentation for audit purposes
-/// - **Customer Communication**: Effective customer information provision
-/// - **Legal Documentation**: Proper legal and contractual documentation
-///
-/// ## Best Practices
-/// ### Content Development
-/// - **Structured Approach**: Organized and logical information presentation
-/// - **Completeness**: Comprehensive coverage of all relevant aspects
-/// - **Clarity**: Clear and unambiguous communication
-/// - **Professional Standards**: Appropriate professional communication style
-///
-/// ### Quality Assurance
-/// - **Content Review**: Multi-level review of narrative content
-/// - **Technical Validation**: Format and character set validation
-/// - **Relevance Check**: Confirmation of content relevance and appropriateness
-/// - **Compliance Verification**: Regulatory and standard compliance checking
-///
 /// ## See Also
 /// - Swift FIN User Handbook: Narrative Field Specifications
 /// - Free Format Message Standards: MT 199 and MT 299 Guidelines
 /// - Content Guidelines: Narrative Content Best Practices
 /// - Regulatory Standards: Narrative Documentation Requirements
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field79 {
     /// Extended narrative information
     ///
     /// Format: 35*50x - Up to 35 lines of 50 characters each (1,750 total characters)
     /// Contains comprehensive narrative information, explanations, and documentation
     /// Used for detailed transaction descriptions, reasons, and extended communication
-    #[component("35*50x")]
     pub information: Vec<String>,
+}
+
+impl SwiftField for Field79 {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        let mut lines = Vec::new();
+
+        // Parse up to 35 lines of 50 characters each
+        for line in input.lines().take(35) {
+            // Validate line length (max 50 characters)
+            if line.len() > 50 {
+                return Err(ParseError::InvalidFormat {
+                    message: format!("Field 79 line exceeds 50 characters: {}", line.len()),
+                });
+            }
+
+            // Validate SWIFT character set
+            parse_swift_chars(line, "Field 79 line")?;
+
+            lines.push(line.to_string());
+        }
+
+        if lines.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 79 must contain at least one line".to_string(),
+            });
+        }
+
+        Ok(Field79 { information: lines })
+    }
+
+    fn to_swift_string(&self) -> String {
+        let content = self.information.join("\n");
+        format!(":79:{}", content)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field79_parse_single_line() {
+        let field = Field79::parse("PAYMENT FOR INVOICE 12345 DATED 2023-12-01").unwrap();
+        assert_eq!(field.information.len(), 1);
+        assert_eq!(
+            field.information[0],
+            "PAYMENT FOR INVOICE 12345 DATED 2023-12-01"
+        );
+    }
+
+    #[test]
+    fn test_field79_parse_multiple_lines() {
+        let input = "PAYMENT DETAILS:\nINVOICE NUMBER: 12345\nSERVICES PROVIDED: CONSULTING\nPERIOD: DECEMBER 2023";
+        let field = Field79::parse(input).unwrap();
+        assert_eq!(field.information.len(), 4);
+        assert_eq!(field.information[0], "PAYMENT DETAILS:");
+        assert_eq!(field.information[1], "INVOICE NUMBER: 12345");
+        assert_eq!(field.information[2], "SERVICES PROVIDED: CONSULTING");
+        assert_eq!(field.information[3], "PERIOD: DECEMBER 2023");
+    }
+
+    #[test]
+    fn test_field79_line_too_long() {
+        let long_line = "THIS LINE IS MUCH TOO LONG TO BE ACCEPTED IN FIELD 79 AS IT EXCEEDS THE 50 CHARACTER LIMIT";
+        assert!(Field79::parse(long_line).is_err());
+    }
+
+    #[test]
+    fn test_field79_max_line_length() {
+        // Exactly 50 characters should work
+        let line_50_chars = "12345678901234567890123456789012345678901234567890";
+        let field = Field79::parse(line_50_chars).unwrap();
+        assert_eq!(field.information[0], line_50_chars);
+    }
+
+    #[test]
+    fn test_field79_empty_input() {
+        assert!(Field79::parse("").is_err());
+    }
+
+    #[test]
+    fn test_field79_to_swift_string() {
+        let field = Field79 {
+            information: vec![
+                "TRANSACTION DESCRIPTION:".to_string(),
+                "PAYMENT FOR SERVICES".to_string(),
+                "INVOICE: 2023-12345".to_string(),
+            ],
+        };
+        let expected = ":79:TRANSACTION DESCRIPTION:\nPAYMENT FOR SERVICES\nINVOICE: 2023-12345";
+        assert_eq!(field.to_swift_string(), expected);
+    }
+
+    #[test]
+    fn test_field79_single_line_to_swift_string() {
+        let field = Field79 {
+            information: vec!["SINGLE LINE NARRATIVE".to_string()],
+        };
+        assert_eq!(field.to_swift_string(), ":79:SINGLE LINE NARRATIVE");
+    }
+
+    #[test]
+    fn test_field79_max_lines() {
+        let mut lines = Vec::new();
+        for i in 1..=35 {
+            lines.push(format!("LINE {}", i));
+        }
+        let input = lines.join("\n");
+        let field = Field79::parse(&input).unwrap();
+        assert_eq!(field.information.len(), 35);
+        assert_eq!(field.information[0], "LINE 1");
+        assert_eq!(field.information[34], "LINE 35");
+    }
 }

@@ -67,10 +67,8 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
             "28": {

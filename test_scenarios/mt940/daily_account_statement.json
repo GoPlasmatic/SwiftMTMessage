@@ -79,10 +79,8 @@
                 "reference": "DAILY"
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_id"
-                    }
+                "authorisation": {
+                    "var": "account_id"
                 }
             },
             "28C": {
@@ -91,21 +89,39 @@
                 },
                 "sequence_number": 1
             },
-            "60": {
-                "F": {
-                    "debit_credit_mark": "C",
-                    "value_date": {
-                        "var": "value_date"
-                    },
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "opening_balance"
-                    }
+            "60F": {
+                "debit_credit_mark": "C",
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "opening_balance"
                 }
             },
-            "#": [
+            "62F": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-23",
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "closing_balance"
+                }
+            },
+            "64": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-23",
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "closing_balance"
+                }
+            },
+            "statement_lines": [
                 {
                     "61": {
                         "value_date": "2024-12-23",
@@ -209,29 +225,7 @@
                         ]
                     }
                 }
-            ],
-            "62": {
-                "F": {
-                    "debit_credit_mark": "C",
-                    "value_date": "2024-12-23",
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "closing_balance"
-                    }
-                }
-            },
-            "64": {
-                "debit_credit_mark": "C",
-                "value_date": "2024-12-23",
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "closing_balance"
-                }
-            }
+            ]
         }
     }
 }

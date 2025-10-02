@@ -99,10 +99,8 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_id"
-                    }
+                "authorisation": {
+                    "var": "account_id"
                 }
             },
             "28C": {
@@ -111,21 +109,29 @@
                 },
                 "sequence_number": 1
             },
-            "60": {
-                "F": {
-                    "debit_credit_mark": "C",
-                    "value_date": {
-                        "var": "value_date"
-                    },
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "opening_balance"
-                    }
+            "60F": {
+                "debit_credit_mark": "C",
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "opening_balance"
                 }
             },
-            "#": [
+            "62F": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-20",
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "opening_balance"
+                }
+            },
+            "statement_lines": [
                 {
                     "61": {
                         "value_date": "2024-12-20",
@@ -229,19 +235,7 @@
                         ]
                     }
                 }
-            ],
-            "62": {
-                "F": {
-                    "debit_credit_mark": "C",
-                    "value_date": "2024-12-20",
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "opening_balance"
-                    }
-                }
-            }
+            ]
         }
     }
 }

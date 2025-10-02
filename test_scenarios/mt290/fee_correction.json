@@ -86,23 +86,8 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
-                }
-            },
-            "32": {
-                "C": {
-                    "value_date": {
-                        "var": "value_date"
-                    },
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "incorrect_fee"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
             "71B": {
@@ -150,6 +135,17 @@
                     "/NEW/CORRECTED MT190 FOLLOWS",
                     "/REF/PRICING ERROR"
                 ]
+            },
+            "32C": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "incorrect_fee"
+                }
             }
         }
     }

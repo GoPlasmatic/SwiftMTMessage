@@ -123,18 +123,14 @@
                         }
                     },
                     "50": {
-                        "NoOption": {
-                            "name_and_address": [
-                                "ORDERING CUSTOMER NAME",
-                                "NEW YORK NY 10001"
-                            ]
-                        }
+                        "name_and_address": [
+                            "ORDERING CUSTOMER NAME",
+                            "NEW YORK NY 10001"
+                        ]
                     },
-                    "56": {
-                        "A": {
-                            "bic": {
-                                "var": "intermediary_bic"
-                            }
+                    "56A": {
+                        "bic": {
+                            "var": "intermediary_bic"
                         }
                     }
                 },
@@ -152,23 +148,19 @@
                             "var": "payment2_amount"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "ordering_bic"
-                            }
+                    "52A": {
+                        "bic": {
+                            "var": "ordering_bic"
                         }
                     },
-                    "56": {
-                        "D": {
-                            "party_identifier": "CLRHOUSE001",
-                            "name_and_address": [
-                                "CLEARING HOUSE",
-                                "SETTLEMENT SYSTEM",
-                                "NEW YORK",
-                                "USA"
-                            ]
-                        }
+                    "56D": {
+                        "party_identifier": "CLRHOUSE001",
+                        "name_and_address": [
+                            "CLEARING HOUSE",
+                            "SETTLEMENT SYSTEM",
+                            "NEW YORK",
+                            "USA"
+                        ]
                     }
                 },
                 {

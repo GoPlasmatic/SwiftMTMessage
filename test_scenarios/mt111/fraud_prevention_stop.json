@@ -83,14 +83,12 @@
                     "var": "issue_date"
                 }
             },
-            "32": {
-                "B": {
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "amount"
-                    }
+            "32B": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "amount"
                 }
             },
             "75": {

@@ -97,13 +97,6 @@
                     "var": "fee_amount"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "ordering_bic"
-                    }
-                }
-            },
             "71B": {
                 "details": [
                     "CANCELLATION - DUPLICATE REQUEST",
@@ -145,6 +138,11 @@
                     "/ERR/SYSTEM PROCESSING ERROR",
                     "/IGN/PLEASE IGNORE THIS REQUEST"
                 ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "ordering_bic"
+                }
             }
         }
     }

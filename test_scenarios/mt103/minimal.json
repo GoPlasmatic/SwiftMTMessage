@@ -81,31 +81,27 @@
                     "var": "amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "1234567890",
-                    "name_and_address": [
-                        {
-                            "fake": [
-                                "name"
-                            ]
-                        },
-                        "NEW YORK"
-                    ]
-                }
+            "50K": {
+                "account": "1234567890",
+                "name_and_address": [
+                    {
+                        "fake": [
+                            "name"
+                        ]
+                    },
+                    "NEW YORK"
+                ]
             },
             "59": {
-                "NoOption": {
-                    "account": "9876543210",
-                    "name_and_address": [
-                        {
-                            "fake": [
-                                "name"
-                            ]
-                        },
-                        "NEW YORK"
-                    ]
-                }
+                "account": "9876543210",
+                "name_and_address": [
+                    {
+                        "fake": [
+                            "name"
+                        ]
+                    },
+                    "NEW YORK"
+                ]
             },
             "71A": {
                 "code": "SHA"

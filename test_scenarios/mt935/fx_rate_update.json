@@ -74,7 +74,6 @@
                 {
                     "23": {
                         "function_code": "DEP",
-                        "days": 1,
                         "reference": "FX2024RATE"
                     },
                     "30": {
@@ -100,7 +99,6 @@
                 {
                     "23": {
                         "function_code": "DEP",
-                        "days": 2,
                         "reference": "FX2024RATE"
                     },
                     "30": {

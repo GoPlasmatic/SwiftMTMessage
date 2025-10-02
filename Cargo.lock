@@ -751,25 +751,10 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_path_to_error",
- "swift-mt-message-macros",
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
-]
-
-[[package]]
-name = "swift-mt-message-macros"
-version = "3.1.0"
-dependencies = [
- "datalogic-rs",
- "once_cell",
- "proc-macro2",
- "quote",
- "regex",
- "serde_json",
- "syn",
- "thiserror 1.0.69",
 ]
 
 [[package]]

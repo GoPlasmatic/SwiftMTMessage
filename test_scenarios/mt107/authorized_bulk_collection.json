@@ -73,11 +73,9 @@
                     "var": "execution_date"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
             "26T": {
@@ -113,28 +111,6 @@
                         },
                         "amount": 10000
                     },
-                    "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                {
-                                    "cat": [
-                                        "TAX ID ",
-                                        10000000
-                                    ]
-                                },
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
                     "70": {
                         "narrative": [
                             "/RFB/CORPORATE TAX",
@@ -148,23 +124,28 @@
                             "/PERIOD/Q4 2024"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "TAX-AUTHORITY-001",
-                            "name_and_address": [
-                                "NATIONAL TAX AUTHORITY",
-                                {
-                                    "cat": [
-                                        "GOV ENTITY/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "GOVERNMENT DISTRICT",
-                                "CAPITAL CITY, GB"
-                            ]
-                        }
+                    "59": {
+                        "name_and_address": [
+                            "DEBTOR NAME",
+                            "DEBTOR ADDRESS LINE 1",
+                            "CITY, COUNTRY"
+                        ]
+                    },
+                    "50K": {
+                        "account": "TAX-AUTHORITY-001",
+                        "name_and_address": [
+                            "NATIONAL TAX AUTHORITY",
+                            {
+                                "cat": [
+                                    "GOV ENTITY/",
+                                    {
+                                        "var": "sender_lei"
+                                    }
+                                ]
+                            },
+                            "GOVERNMENT DISTRICT",
+                            "CAPITAL CITY, GB"
+                        ]
                     }
                 },
                 {
@@ -185,28 +166,6 @@
                         },
                         "amount": 10000
                     },
-                    "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                {
-                                    "cat": [
-                                        "VAT REG ",
-                                        10000000
-                                    ]
-                                },
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
                     "70": {
                         "narrative": [
                             "/RFB/VAT PAYMENT",
@@ -220,26 +179,37 @@
                             "/PERIOD/DEC 2024"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "TAX-AUTHORITY-001",
-                            "name_and_address": [
-                                "NATIONAL TAX AUTHORITY",
-                                {
-                                    "cat": [
-                                        "GOV ENTITY/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "GOVERNMENT DISTRICT",
-                                "CAPITAL CITY, GB"
-                            ]
-                        }
+                    "59": {
+                        "name_and_address": [
+                            "DEBTOR NAME",
+                            "DEBTOR ADDRESS LINE 1",
+                            "CITY, COUNTRY"
+                        ]
+                    },
+                    "50K": {
+                        "account": "TAX-AUTHORITY-001",
+                        "name_and_address": [
+                            "NATIONAL TAX AUTHORITY",
+                            {
+                                "cat": [
+                                    "GOV ENTITY/",
+                                    {
+                                        "var": "sender_lei"
+                                    }
+                                ]
+                            },
+                            "GOVERNMENT DISTRICT",
+                            "CAPITAL CITY, GB"
+                        ]
                     }
                 }
-            ]
+            ],
+            "32B": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": 20000
+            }
         }
     }
 }

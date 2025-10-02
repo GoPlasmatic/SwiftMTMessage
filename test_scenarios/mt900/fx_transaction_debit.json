@@ -84,17 +84,15 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
             "13D": {
-                "date": "2024-12-20",
-                "time": "14:25:00",
+                "date": "241220",
+                "time": "1425",
                 "offset_sign": "+",
-                "offset_seconds": "0100"
+                "offset": "0100"
             },
             "32A": {
                 "value_date": {
@@ -107,11 +105,9 @@
                     "var": "debit_amount"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "dealing_desk_bic"
-                    }
+            "52A": {
+                "bic": {
+                    "var": "dealing_desk_bic"
                 }
             },
             "72": {

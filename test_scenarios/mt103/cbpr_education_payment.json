@@ -94,67 +94,59 @@
                     "var": "tuition_amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "1000000000000000",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        {
-                            "cat": [
-                                "STUDENT/",
-                                {
-                                    "var": "student_id"
-                                }
-                            ]
-                        },
-                        "123 MAIN STREET",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
+            "50K": {
+                "account": "1000000000000000",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    {
+                        "cat": [
+                            "STUDENT/",
+                            {
+                                "var": "student_id"
+                            }
+                        ]
+                    },
+                    "123 MAIN STREET",
+                    {
+                        "cat": [
+                            "NEW YORK",
+                            ", ",
+                            "US"
+                        ]
+                    }
+                ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
-                }
-            },
-            "57": {
-                "A": {
-                    "bic": {
-                        "var": "receiver_bic"
-                    }
+            "57A": {
+                "bic": {
+                    "var": "receiver_bic"
                 }
             },
             "59": {
-                "NoOption": {
-                    "account": "UNIVERSITY-BURSAR",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        {
-                            "cat": [
-                                "INSTITUTION/",
-                                {
-                                    "var": "institution_lei"
-                                }
-                            ]
-                        },
-                        "STUDENT ACCOUNTS OFFICE",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
-                }
+                "account": "UNIVERSITY-BURSAR",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    {
+                        "cat": [
+                            "INSTITUTION/",
+                            {
+                                "var": "institution_lei"
+                            }
+                        ]
+                    },
+                    "STUDENT ACCOUNTS OFFICE",
+                    {
+                        "cat": [
+                            "NEW YORK",
+                            ", ",
+                            "US"
+                        ]
+                    }
+                ]
             },
             "70": {
                 "narrative": [

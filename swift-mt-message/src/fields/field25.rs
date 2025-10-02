@@ -1,6 +1,7 @@
+use super::swift_utils::{parse_bic, parse_max_length, parse_swift_chars};
+use crate::errors::ParseError;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::SwiftField;
-use swift_mt_message_macros::serde_swift_fields;
 
 ///   **Field 25: Account Identification / Authorisation**
 ///
@@ -125,62 +126,294 @@ use swift_mt_message_macros::serde_swift_fields;
 ///
 /// Security authorization code or digital signature between ordering customer
 /// and account servicing financial institution.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field25NoOption {
     /// Authorization code or digital signature
     ///
     /// Format: 35x - Security token, electronic signature, or agreed authorization code
     /// Used for additional security verification between customer and institution
-    #[component("35x")]
     pub authorisation: String,
+}
+
+impl SwiftField for Field25NoOption {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Parse as 35x - up to 35 SWIFT characters
+        let authorisation = parse_max_length(input, 35, "Field 25 authorisation")?;
+        parse_swift_chars(&authorisation, "Field 25 authorisation")?;
+
+        Ok(Field25NoOption { authorisation })
+    }
+
+    fn to_swift_string(&self) -> String {
+        self.authorisation.clone()
+    }
 }
 
 ///   **Field 25A: Account Identifier**
 ///
 /// Simple account identification with slash prefix for basic account specification.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field25A {
     /// Account identifier with slash prefix
     ///
     /// Format: /34x - Account number preceded by slash
     /// Supports IBAN, BBAN, or institution-specific account formats
-    #[component("/34x")]
     pub account: String,
+}
+
+impl SwiftField for Field25A {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Must start with slash
+        if !input.starts_with('/') {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 25A must start with '/'".to_string(),
+            });
+        }
+
+        // Parse account after slash (up to 34 characters)
+        let account_part = &input[1..];
+        if account_part.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 25A account cannot be empty after '/'".to_string(),
+            });
+        }
+
+        if account_part.len() > 34 {
+            return Err(ParseError::InvalidFormat {
+                message: format!(
+                    "Field 25A account must not exceed 34 characters, found {}",
+                    account_part.len()
+                ),
+            });
+        }
+
+        parse_swift_chars(account_part, "Field 25A account")?;
+
+        Ok(Field25A {
+            account: account_part.to_string(), // Store without the slash prefix
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        // Ensure account starts with '/' for SWIFT format
+        if self.account.starts_with('/') {
+            format!(":25:{}", self.account)
+        } else {
+            format!(":25:/{}", self.account)
+        }
+    }
 }
 
 ///   **Field 25P: Account with Institution**
 ///
 /// Account identification with associated financial institution BIC code
 /// for complete account specification.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field25P {
     /// Account identifier
     ///
     /// Format: 35x - Account number or identifier
     /// Combined with BIC for complete account specification
-    #[component("35x")]
     pub account: String,
 
     /// Bank Identifier Code of account servicing institution
     ///
     /// Format: 4!a2!a2!c\[3!c\] - 8 or 11 character BIC code
     /// Must be valid registered financial institution identifier
-    #[component("4!a2!a2!c[3!c]")]
     pub bic: String,
+}
+
+impl SwiftField for Field25P {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Field25P has account on first line and BIC on second
+        let lines: Vec<&str> = input.split('\n').collect();
+
+        if lines.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 25P cannot be empty".to_string(),
+            });
+        }
+
+        // Parse account (first line, up to 35 characters)
+        let account = parse_max_length(lines[0], 35, "Field 25P account")?;
+        parse_swift_chars(&account, "Field 25P account")?;
+
+        // Parse BIC (second line if present, otherwise might be concatenated)
+        let bic = if lines.len() > 1 {
+            parse_bic(lines[1])?
+        } else {
+            // Try to extract BIC from the end (last 8 or 11 characters)
+            if input.len() > 8 {
+                let potential_bic_11 = &input[input.len().saturating_sub(11)..];
+                let potential_bic_8 = &input[input.len().saturating_sub(8)..];
+
+                // Try 11-character BIC first
+                if potential_bic_11.len() == 11
+                    && let Ok(bic) = parse_bic(potential_bic_11)
+                {
+                    // Reparse account without BIC
+                    let account_part = &input[..input.len() - 11];
+                    return Ok(Field25P {
+                        account: parse_max_length(account_part, 35, "Field 25P account")?,
+                        bic,
+                    });
+                }
+
+                // Try 8-character BIC
+                if potential_bic_8.len() == 8
+                    && let Ok(bic) = parse_bic(potential_bic_8)
+                {
+                    // Reparse account without BIC
+                    let account_part = &input[..input.len() - 8];
+                    return Ok(Field25P {
+                        account: parse_max_length(account_part, 35, "Field 25P account")?,
+                        bic,
+                    });
+                }
+            }
+
+            return Err(ParseError::InvalidFormat {
+                message: "Field 25P requires a BIC code".to_string(),
+            });
+        };
+
+        Ok(Field25P { account, bic })
+    }
+
+    fn to_swift_string(&self) -> String {
+        format!(":25P:{}\n{}", self.account, self.bic)
+    }
 }
 
 ///   **Field 25 Account Identification Enum**
 ///
 /// Enumeration of account identification options providing flexibility
 /// for different account specification needs.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum Field25AccountIdentification {
     /// Authorization code without account specification
     NoOption(Field25NoOption),
     /// Account with institution BIC code
     P(Field25P),
+}
+
+impl SwiftField for Field25AccountIdentification {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Try to determine variant based on content
+        // If it contains a newline or looks like it has a BIC at the end, it's Option P
+        if input.contains('\n')
+            || (input.len() > 8 && parse_bic(&input[input.len().saturating_sub(11)..]).is_ok())
+            || (input.len() > 8 && parse_bic(&input[input.len().saturating_sub(8)..]).is_ok())
+        {
+            Ok(Field25AccountIdentification::P(Field25P::parse(input)?))
+        } else {
+            // Otherwise treat as NoOption (authorization)
+            Ok(Field25AccountIdentification::NoOption(
+                Field25NoOption::parse(input)?,
+            ))
+        }
+    }
+
+    fn to_swift_string(&self) -> String {
+        match self {
+            Field25AccountIdentification::NoOption(field) => field.to_swift_string(),
+            Field25AccountIdentification::P(field) => field.to_swift_string(),
+        }
+    }
+}
+
+// Type alias for backward compatibility
+pub type Field25 = Field25NoOption;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field25_no_option() {
+        let field = Field25NoOption::parse("AUTH123456789").unwrap();
+        assert_eq!(field.authorisation, "AUTH123456789");
+        assert_eq!(field.to_swift_string(), "AUTH123456789"); // NoOption doesn't include field tag
+
+        // Test max length
+        let long_auth = "A".repeat(35);
+        let field = Field25NoOption::parse(&long_auth).unwrap();
+        assert_eq!(field.authorisation, long_auth);
+
+        // Test too long
+        let too_long = "A".repeat(36);
+        assert!(Field25NoOption::parse(&too_long).is_err());
+    }
+
+    #[test]
+    fn test_field25a() {
+        let field = Field25A::parse("/GB82WEST12345698765432").unwrap();
+        assert_eq!(field.account, "GB82WEST12345698765432"); // Account stored without slash
+        assert_eq!(field.to_swift_string(), ":25:/GB82WEST12345698765432"); // MT format includes field tag and slash
+
+        let field = Field25A::parse("/1234567890").unwrap();
+        assert_eq!(field.account, "1234567890"); // Account stored without slash
+
+        // Test missing slash
+        assert!(Field25A::parse("1234567890").is_err());
+
+        // Test empty account
+        assert!(Field25A::parse("/").is_err());
+
+        // Test too long
+        let too_long = format!("/{}", "A".repeat(35));
+        assert!(Field25A::parse(&too_long).is_err());
+    }
+
+    #[test]
+    fn test_field25p() {
+        // Test with newline separator
+        let field = Field25P::parse("CHF1234567890\nUBSWCHZH80A").unwrap();
+        assert_eq!(field.account, "CHF1234567890");
+        assert_eq!(field.bic, "UBSWCHZH80A");
+        assert_eq!(field.to_swift_string(), ":25P:CHF1234567890\nUBSWCHZH80A");
+
+        // Test with concatenated format (8-char BIC)
+        let field = Field25P::parse("ACCOUNT123DEUTDEFF").unwrap();
+        assert_eq!(field.account, "ACCOUNT123");
+        assert_eq!(field.bic, "DEUTDEFF");
+
+        // Test with concatenated format (11-char BIC)
+        let field = Field25P::parse("ACC456DEUTDEFFXXX").unwrap();
+        assert_eq!(field.account, "ACC456");
+        assert_eq!(field.bic, "DEUTDEFFXXX");
+    }
+
+    #[test]
+    fn test_field25_account_identification() {
+        // Test NoOption variant
+        let field = Field25AccountIdentification::parse("AUTH999").unwrap();
+        match field {
+            Field25AccountIdentification::NoOption(f) => assert_eq!(f.authorisation, "AUTH999"),
+            _ => panic!("Expected NoOption variant"),
+        }
+
+        // Test P variant with newline
+        let field = Field25AccountIdentification::parse("MYACCOUNT\nDEUTDEFF").unwrap();
+        match field {
+            Field25AccountIdentification::P(f) => {
+                assert_eq!(f.account, "MYACCOUNT");
+                assert_eq!(f.bic, "DEUTDEFF");
+            }
+            _ => panic!("Expected P variant"),
+        }
+    }
 }

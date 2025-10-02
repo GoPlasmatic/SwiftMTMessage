@@ -93,19 +93,11 @@
                 ]
             },
             "11": {
-                "S": {
-                    "message_type": {
-                        "var": "original_mt"
-                    },
-                    "date": {
-                        "var": "date"
-                    },
-                    "session_number": {
-                        "var": "session"
-                    },
-                    "input_sequence_number": {
-                        "var": "sequence"
-                    }
+                "message_type": {
+                    "var": "original_mt"
+                },
+                "date": {
+                    "var": "date"
                 }
             },
             "79": {
@@ -121,7 +113,7 @@
                     "PRIORITY: HIGH",
                     "ASSIGNED TO: FRAUD PREVENTION UNIT",
                     "NEXT UPDATE: WITHIN 24 HOURS",
-                    "EMERGENCY CONTACT: +1-800-FRAUD-01"
+                    "EMERGENCY CONTACT: 1-800-FRAUD-01"
                 ]
             }
         }

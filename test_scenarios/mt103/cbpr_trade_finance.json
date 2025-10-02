@@ -3,12 +3,7 @@
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
         "intermediary_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "TRD",
-                100000000000
-            ]
-        },
+        "transaction_ref": "TRA20241231001",
         "currency": "USD",
         "amount": 10000,
         "value_date": "2024-12-20",
@@ -26,24 +21,9 @@
         "beneficiary_city": "NEW YORK",
         "beneficiary_country": "US",
         "beneficiary_lei": "LEIJKLMNOPQRST789012",
-        "lc_number": {
-            "cat": [
-                "LC-",
-                100000
-            ]
-        },
-        "invoice_ref": {
-            "cat": [
-                "INV-",
-                10000000
-            ]
-        },
-        "bl_number": {
-            "cat": [
-                "BL-",
-                1000000
-            ]
-        },
+        "lc_number": "LC_NUMBER20241231001",
+        "invoice_ref": "INV20241231001",
+        "bl_number": "BL_NUMBER20241231001",
         "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
@@ -123,80 +103,64 @@
                     "var": "amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "TRADE-ACCOUNT-456789",
-                    "name_and_address": [
-                        {
-                            "var": "sender_name"
-                        },
-                        {
-                            "cat": [
-                                "/LEI/",
-                                {
-                                    "var": "sender_lei"
-                                }
-                            ]
-                        },
-                        {
-                            "var": "sender_address"
-                        },
-                        {
-                            "var": "sender_city"
-                        },
-                        {
-                            "var": "sender_country"
-                        }
-                    ]
+            "50K": {
+                "account": "TRADE-ACCOUNT-456789",
+                "name_and_address": [
+                    {
+                        "var": "sender_name"
+                    },
+                    {
+                        "cat": [
+                            "/LEI/",
+                            {
+                                "var": "sender_lei"
+                            }
+                        ]
+                    },
+                    {
+                        "var": "sender_address"
+                    },
+                    {
+                        "var": "sender_city"
+                    }
+                ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
+            "56A": {
+                "bic": {
+                    "var": "intermediary_bic"
                 }
             },
-            "56": {
-                "A": {
-                    "bic": {
-                        "var": "intermediary_bic"
-                    }
-                }
-            },
-            "57": {
-                "A": {
-                    "bic": {
-                        "var": "receiver_bic"
-                    }
+            "57A": {
+                "bic": {
+                    "var": "receiver_bic"
                 }
             },
             "59": {
-                "NoOption": {
-                    "account": "EXPORT-ACCOUNT-123456",
-                    "name_and_address": [
-                        {
-                            "var": "beneficiary_name"
-                        },
-                        {
-                            "cat": [
-                                "/LEI/",
-                                {
-                                    "var": "beneficiary_lei"
-                                }
-                            ]
-                        },
-                        {
-                            "var": "beneficiary_address"
-                        },
-                        {
-                            "var": "beneficiary_city"
-                        },
-                        {
-                            "var": "beneficiary_country"
-                        }
-                    ]
-                }
+                "account": "EXPORT-ACCOUNT-123456",
+                "name_and_address": [
+                    {
+                        "var": "beneficiary_name"
+                    },
+                    {
+                        "cat": [
+                            "/LEI/",
+                            {
+                                "var": "beneficiary_lei"
+                            }
+                        ]
+                    },
+                    {
+                        "var": "beneficiary_address"
+                    },
+                    {
+                        "var": "beneficiary_city"
+                    }
+                ]
             },
             "70": {
                 "narrative": [

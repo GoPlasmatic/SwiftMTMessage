@@ -88,23 +88,19 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
-            "32": {
-                "D": {
-                    "value_date": {
-                        "var": "value_date"
-                    },
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "management_fee"
-                    }
+            "32D": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "management_fee"
                 }
             },
             "71B": {

@@ -94,19 +94,11 @@
                 ]
             },
             "11": {
-                "S": {
-                    "message_type": {
-                        "var": "original_mt"
-                    },
-                    "date": {
-                        "var": "date"
-                    },
-                    "session_number": {
-                        "var": "session"
-                    },
-                    "input_sequence_number": {
-                        "var": "sequence"
-                    }
+                "message_type": {
+                    "var": "original_mt"
+                },
+                "date": {
+                    "var": "date"
                 }
             },
             "79": {
@@ -117,8 +109,8 @@
                     "PAYMENT STATUS: ACCEPTED FOR CANCELLATION.",
                     "FUNDS WILL BE RETURNED TO YOUR NOSTRO ACCOUNT.",
                     "FOR FURTHER ASSISTANCE:",
-                    "OPERATIONS DESK: +44 20 1234 5678",
-                    "EMAIL: PAYMENTS@EXAMPLE.COM"
+                    "OPERATIONS DESK: 44 20 1234 5678",
+                    "EMAIL: PAYMENTSATEXAMPLE.COM"
                 ]
             }
         }

@@ -78,10 +78,8 @@
                 "reference": "CBPRRCV001"
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_id"
-                    }
+                "authorisation": {
+                    "var": "account_id"
                 }
             },
             "32A": {
@@ -95,16 +93,14 @@
                     "var": "amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "DE89370400440532013000",
-                    "name_and_address": [
-                        "EUROPEAN TECH BUYER GMBH",
-                        "KOENIGSALLEE 61",
-                        "40215 DUESSELDORF",
-                        "GERMANY"
-                    ]
-                }
+            "50K": {
+                "account": "DE89370400440532013000",
+                "name_and_address": [
+                    "EUROPEAN TECH BUYER GMBH",
+                    "KOENIGSALLEE 61",
+                    "40215 DUESSELDORF",
+                    "GERMANY"
+                ]
             },
             "72": {
                 "information": [

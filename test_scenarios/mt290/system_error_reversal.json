@@ -92,23 +92,8 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
-                }
-            },
-            "32": {
-                "C": {
-                    "value_date": {
-                        "var": "value_date"
-                    },
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "error_amount"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
             "71B": {
@@ -159,6 +144,17 @@
                     "/REV/FULL REVERSAL",
                     "/RES/ERROR RESOLVED"
                 ]
+            },
+            "32C": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "error_amount"
+                }
             }
         }
     }

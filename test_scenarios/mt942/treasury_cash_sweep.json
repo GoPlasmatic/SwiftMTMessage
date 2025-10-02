@@ -104,10 +104,8 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
             "28C": {
@@ -116,29 +114,20 @@
                 },
                 "sequence_number": 1
             },
-            "floor_limit_debit": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "debit_limit"
-                }
-            },
-            "floor_limit_credit": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "credit_limit"
-                }
-            },
             "13D": {
-                "date": "2024-12-20",
-                "time": "17:00:00",
+                "date": "241220",
+                "time": "1700",
                 "offset_sign": "+",
-                "offset_seconds": "0000"
+                "offset": "0000"
             },
-            "#": [
+            "90D": {
+                "number": 2,
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": 250050
+            },
+            "statement_lines": [
                 {
                     "61": {
                         "value_date": "2024-12-20",
@@ -191,14 +180,7 @@
                         ]
                     }
                 }
-            ],
-            "90D": {
-                "number": 2,
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": 250050
-            }
+            ]
         }
     }
 }

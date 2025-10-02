@@ -86,21 +86,19 @@
                     "var": "execution_date"
                 }
             },
-            "creditor": {
-                "K": {
-                    "account": "RETURN-PROCESSOR",
-                    "name_and_address": [
-                        "RETURNS DEPARTMENT",
-                        "FINANCIAL INSTITUTION",
-                        "OPERATIONS CENTER",
-                        "LONDON, GB"
-                    ]
-                }
-            },
             "51A": {
                 "bic": {
                     "var": "sender_bic"
                 }
+            },
+            "50K": {
+                "account": "RETURN-PROCESSOR",
+                "name_and_address": [
+                    "RETURNS DEPARTMENT",
+                    "FINANCIAL INSTITUTION",
+                    "OPERATIONS CENTER",
+                    "LONDON, GB"
+                ]
             },
             "71A": {
                 "code": {
@@ -144,23 +142,6 @@
                         },
                         "amount": 10000
                     },
-                    "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "ACCOUNT HOLDER",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
                     "70": {
                         "narrative": [
                             "/RFB/DD RETURN",
@@ -172,6 +153,13 @@
                                 ]
                             },
                             "/CD/ACCOUNT CLOSED"
+                        ]
+                    },
+                    "59": {
+                        "name_and_address": [
+                            "DEBTOR NAME",
+                            "DEBTOR ADDRESS LINE 1",
+                            "CITY, COUNTRY"
                         ]
                     }
                 },
@@ -189,23 +177,6 @@
                             "var": "currency"
                         },
                         "amount": 10000
-                    },
-                    "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "CUSTOMER",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
                     },
                     "70": {
                         "narrative": [
@@ -219,6 +190,13 @@
                             },
                             "/CD/INSUFFICIENT FUNDS"
                         ]
+                    },
+                    "59": {
+                        "name_and_address": [
+                            "DEBTOR NAME",
+                            "DEBTOR ADDRESS LINE 1",
+                            "CITY, COUNTRY"
+                        ]
                     }
                 },
                 {
@@ -236,23 +214,6 @@
                         },
                         "amount": 10000
                     },
-                    "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "DEBTOR",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
                     "70": {
                         "narrative": [
                             "/RFB/DD RETURN",
@@ -265,9 +226,22 @@
                                 ]
                             }
                         ]
+                    },
+                    "59": {
+                        "name_and_address": [
+                            "DEBTOR NAME",
+                            "DEBTOR ADDRESS LINE 1",
+                            "CITY, COUNTRY"
+                        ]
                     }
                 }
-            ]
+            ],
+            "32B": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": 30000
+            }
         }
     }
 }

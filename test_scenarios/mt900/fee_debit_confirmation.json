@@ -15,7 +15,7 @@
             ]
         },
         "currency": "USD",
-        "fee_amount": 10000,
+        "fee_amount": 10000.0,
         "value_date": "2024-12-20",
         "account_number": "1000000000000000",
         "fee_type": "WIRE TRANSFER FEE",
@@ -81,10 +81,8 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
             "32A": {

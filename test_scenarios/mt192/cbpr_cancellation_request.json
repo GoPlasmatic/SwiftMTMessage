@@ -89,7 +89,7 @@
                     {
                         "var": "uetr_original"
                     },
-                    "/ORIGTXN/MT103 CBPR+ PAYMENT",
+                    "/ORIGTXN/MT103 CBPR PAYMENT",
                     "/ORIGAMT/USD10000000",
                     "/ORIGDATE/2024-12-23",
                     "/CBPR/CANCELLATION REQUEST",

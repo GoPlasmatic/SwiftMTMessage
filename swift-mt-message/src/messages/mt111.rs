@@ -1,97 +1,230 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// MT111: Stop Payment of a Cheque
-///
-/// ## Purpose
-/// Used to request the stop payment of a previously issued cheque from the account holder to their bank.
-/// This message provides precise identification of the cheque to be stopped and includes supporting information
-/// for immediate processing to prevent unauthorized or problematic cheque payments.
-///
-/// ## Scope
-/// This message is:
-/// - Used for stop payment requests from account holders to their financial institutions
-/// - Applicable for preventing payment of specific cheques before clearing
-/// - Designed for urgent processing to halt cheque payment authorization
-/// - Compatible with both domestic and international cheque clearing systems
-/// - Subject to validation rules for proper cheque identification
-/// - Integrated with fraud prevention and account security systems
-///
-/// ## Key Features
-/// - **Precise Cheque Identification**: Complete cheque details for accurate identification
-/// - **Immediate Stop Payment Control**: Urgent processing to prevent cheque payment
-/// - **Reference Tracking System**: Links to original cheque issue and account references
-/// - **Reason Code Support**: Optional information about why stop payment is requested
-/// - **Payee Information**: Optional payee details for additional verification
-/// - **Bank Integration**: Seamless integration with bank's cheque processing systems
-///
-/// ## Common Use Cases
-/// - Stolen or lost cheque stop payment requests
-/// - Fraudulent cheque prevention and security measures
-/// - Duplicate cheque issuance corrections
-/// - Post-dated cheque cancellation requests
-/// - Dispute resolution for unauthorized cheque issuance
-/// - Account closure preparation with outstanding cheques
-/// - Emergency stop payments for financial protection
-///
-/// ## Message Structure
-/// - **Field 20**: Transaction Reference (mandatory) - Unique stop payment request identifier
-/// - **Field 21**: Cheque Number (mandatory) - Specific cheque number to be stopped
-/// - **Field 30**: Date of Issue (mandatory) - Date when cheque was originally issued (YYMMDD)
-/// - **Field 32**: Currency/Amount (mandatory) - Original cheque amount and currency
-/// - **Field 52**: Drawer Bank (optional) - Bank on which the cheque was drawn
-/// - **Field 59**: Payee (optional) - Name and address of cheque payee (no account number)
-/// - **Field 75**: Queries (optional) - Additional information or reason for stop payment
-///
-/// ## Network Validation Rules
-/// - **Reference Format**: Transaction reference must not start/end with '/' or contain '//'
-/// - **Cheque Number Format**: Cheque number must not contain '/' or '//' characters
-/// - **Date Validation**: Date of issue must be in valid YYMMDD format
-/// - **Payee Information**: Payee field must not contain account number information
-/// - **Amount Validation**: Currency and amount must match original cheque details
-/// - **Bank Identification**: Proper validation of drawer bank information when present
-/// - **Query Information**: Proper formatting of reason codes and additional information
-///
-/// ## SRG2025 Status
-/// - **Structural Changes**: None - MT111 format remains stable for stop payment processing
-/// - **Validation Updates**: Enhanced validation for fraud prevention and security
-/// - **Processing Improvements**: Improved handling of urgent stop payment requests
-/// - **Compliance Notes**: Maintained compatibility with regulatory requirements for stop payments
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Compatible with cheque processing and fraud prevention systems
-/// - **API Integration**: RESTful API support for modern digital banking platforms
-/// - **Processing Requirements**: Supports urgent processing with immediate effect
-/// - **Compliance Integration**: Built-in validation for regulatory stop payment requirements
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Often triggered by customer requests through digital banking or branch systems
-/// - **Responses**: Generates MT112 status response messages for stop payment confirmation
-/// - **Related**: Works with cheque processing systems and account management platforms
-/// - **Alternatives**: Electronic payment cancellation messages for digital transactions
-/// - **Status Updates**: May receive status updates about stop payment effectiveness
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+// MT111: Request for Stop Payment of a Cheque
+// Sent by the drawer bank (or its agent) to the drawee bank to request
+// stop payment of a cheque.
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT111 {
-    #[field("20")]
+    // Sender's Reference
+    #[serde(rename = "20")]
     pub field_20: Field20,
 
-    #[field("21")]
+    // Cheque Number
+    #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    #[field("30")]
+    // Date of Issue
+    #[serde(rename = "30")]
     pub field_30: Field30,
 
-    #[field("32")]
-    pub field_32: Field32,
+    // Amount (can be 32A or 32B)
+    #[serde(flatten)]
+    pub field_32: Field32Amount,
 
-    #[field("52")]
+    // Drawer Bank (optional) - can be A, B, or D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52DrawerBank>,
 
-    #[field("59")]
+    // Payee (optional) - name and address only
+    #[serde(rename = "59", skip_serializing_if = "Option::is_none")]
     pub field_59: Option<Field59NoOption>,
 
-    #[field("75")]
+    // Queries (optional)
+    #[serde(rename = "75", skip_serializing_if = "Option::is_none")]
     pub field_75: Option<Field75>,
 }
+
+// Enum for Field 32 variants (A or B)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum Field32Amount {
+    #[serde(rename = "32A")]
+    A(Field32A),
+    #[serde(rename = "32B")]
+    B(Field32B),
+}
+
+impl MT111 {
+    /// Parse message from Block 4 content
+    pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        let mut parser = crate::message_parser::MessageParser::new(block4, "111");
+
+        // Parse mandatory fields
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_21 = parser.parse_field::<Field21NoOption>("21")?;
+        let field_30 = parser.parse_field::<Field30>("30")?;
+
+        // Parse amount - can be 32A or 32B
+        let field_32 = if parser.detect_field("32A") {
+            Field32Amount::A(parser.parse_field::<Field32A>("32A")?)
+        } else if parser.detect_field("32B") {
+            Field32Amount::B(parser.parse_field::<Field32B>("32B")?)
+        } else {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT111: Either field 32A or 32B is required for amount".to_string(),
+            });
+        };
+
+        // Parse optional fields
+        let field_52 = parser.parse_optional_variant_field::<Field52DrawerBank>("52")?;
+        let field_59 = parser.parse_optional_field::<Field59NoOption>("59")?;
+        let field_75 = parser.parse_optional_field::<Field75>("75")?;
+
+        Ok(MT111 {
+            field_20,
+            field_21,
+            field_30,
+            field_32,
+            field_52,
+            field_59,
+            field_75,
+        })
+    }
+
+    /// Static validation rules for MT111
+    pub fn validate() -> &'static str {
+        r#"{"rules": [
+            {"id": "F20", "description": "Field 20 must not start or end with '/', and must not contain '//'"},
+            {"id": "F21", "description": "Field 21 must not start or end with '/', and must not contain '//'"},
+            {"id": "F30", "description": "Field 30 must be a valid date in YYMMDD format"},
+            {"id": "F32", "description": "Field 32 must contain valid currency and positive amount"},
+            {"id": "F59", "description": "Field 59 must not include account number"}
+        ]}"#
+    }
+
+    /// Validate the message instance according to MT111 rules
+    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
+        // Validate Field 20 - must not start/end with '/' or contain '//'
+        let reference = &self.field_20.reference;
+        if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT111: Field 20 must not start or end with '/', and must not contain '//'".to_string(),
+            });
+        }
+
+        // Validate Field 21 - same rules as Field 20
+        let cheque_number = &self.field_21.reference;
+        if cheque_number.starts_with('/') || cheque_number.ends_with('/') || cheque_number.contains("//") {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT111: Field 21 must not start or end with '/', and must not contain '//'".to_string(),
+            });
+        }
+
+        // Amount validation is handled by Field32A/B parse methods
+
+        Ok(())
+    }
+}
+
+// Implement the SwiftMessageBody trait for MT111
+impl crate::traits::SwiftMessageBody for MT111 {
+    fn message_type() -> &'static str {
+        "111"
+    }
+
+    fn from_fields(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+    ) -> crate::SwiftResult<Self> {
+        // Collect all fields with their positions
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position to preserve field order
+        all_fields.sort_by_key(|(_, _, pos)| *pos);
+
+        // Reconstruct block4 in the correct order
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+        _config: &crate::errors::ParserConfig,
+    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+        use crate::traits::SwiftField;
+        use chrono::Datelike;
+        let mut fields = std::collections::HashMap::new();
+
+        // Add mandatory fields
+        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
+        fields.insert("21".to_string(), vec![self.field_21.reference.clone()]);
+        fields.insert("30".to_string(), vec![format!("{:02}{:02}{:02}",
+            self.field_30.execution_date.year() % 100,
+            self.field_30.execution_date.month(),
+            self.field_30.execution_date.day()
+        )]);
+
+        // Add amount field (32A or 32B)
+        match &self.field_32 {
+            Field32Amount::A(field_32a) => {
+                fields.insert("32A".to_string(), vec![format!("{:02}{:02}{:02}{}{}",
+                    field_32a.value_date.year() % 100,
+                    field_32a.value_date.month(),
+                    field_32a.value_date.day(),
+                    field_32a.currency,
+                    field_32a.amount.to_string().replace('.', ",")
+                )]);
+            }
+            Field32Amount::B(field_32b) => {
+                fields.insert("32B".to_string(), vec![format!("{}{}",
+                    field_32b.currency,
+                    field_32b.amount.to_string().replace('.', ",")
+                )]);
+            }
+        }
+
+        // Add optional fields
+        if let Some(ref field_52) = self.field_52 {
+            match field_52 {
+                Field52DrawerBank::A(f) => {
+                    fields.insert("52A".to_string(), vec![f.to_swift_value()]);
+                }
+                Field52DrawerBank::D(f) => {
+                    fields.insert("52D".to_string(), vec![f.to_swift_value()]);
+                }
+            }
+        }
+
+        if let Some(ref field_59) = self.field_59 {
+            let mut value = String::new();
+            if let Some(ref account) = field_59.account {
+                value.push_str(account);
+                value.push('\n');
+            }
+            value.push_str(&field_59.name_and_address.join("\n"));
+            fields.insert("59".to_string(), vec![value]);
+        }
+
+        if let Some(ref field_75) = self.field_75 {
+            fields.insert("75".to_string(), vec![field_75.information.join("\n")]);
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "21", "30", "32"] // Note: 32 can be 32A or 32B
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["52", "59", "75"]
+    }
+}
+
+// Type alias for clarity
+pub type Field52DrawerBank = Field52OrderingInstitution; // Can be A or D

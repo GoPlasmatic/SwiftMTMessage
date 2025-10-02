@@ -2,12 +2,7 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "FEES",
-                100000000000
-            ]
-        },
+        "transaction_ref": "FEE20241231001",
         "currency": "USD",
         "fee_amount": 10000,
         "value_date": "2024-12-28",
@@ -93,60 +88,39 @@
                     "var": "fee_amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "CORP-FINANCE",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        "CORPORATE SERVICES",
-                        "123 MAIN STREET",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
+            "50K": {
+                "account": "CORP-FINANCE",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    "CORPORATE SERVICES",
+                    "123 MAIN STREET",
+                    {
+                        "cat": [
+                            "NEW YORK",
+                            ", ",
+                            "US"
+                        ]
+                    }
+                ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
-                }
-            },
-            "57": {
-                "A": {
-                    "bic": {
-                        "var": "receiver_bic"
-                    }
+            "57A": {
+                "bic": {
+                    "var": "receiver_bic"
                 }
             },
             "59": {
-                "NoOption": {
-                    "account": "1234567890123456",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        {
-                            "cat": [
-                                "SERVICE PROVIDER/",
-                                {
-                                    "var": "service_provider_lei"
-                                }
-                            ]
-                        },
-                        "123 MAIN STREET",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
-                }
+                "account": "1234567890123456",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    "SERVICE PROVIDER",
+                    "123 MAIN STREET",
+                    "NEW YORK NY US"
+                ]
             },
             "70": {
                 "narrative": [

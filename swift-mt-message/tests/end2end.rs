@@ -219,28 +219,28 @@ async fn test_swift_mt_workflow_pipeline() {
                                     );
 
                                     // Show fields structure
-                                    if let Some(fields) = json_obj.get("fields") {
-                                        if let Some(fields_obj) = fields.as_object() {
-                                            println!(
-                                                "  fields keys: {:?}",
-                                                fields_obj.keys().collect::<Vec<_>>()
-                                            );
+                                    if let Some(fields) = json_obj.get("fields")
+                                        && let Some(fields_obj) = fields.as_object()
+                                    {
+                                        println!(
+                                            "  fields keys: {:?}",
+                                            fields_obj.keys().collect::<Vec<_>>()
+                                        );
 
-                                            // Show a sample field
-                                            if let Some(field_20) = fields_obj.get("20") {
-                                                println!(
-                                                    "  field 20 structure: {}",
-                                                    serde_json::to_string_pretty(field_20)
-                                                        .unwrap_or_default()
-                                                );
-                                            }
-                                            if let Some(field_50) = fields_obj.get("50") {
-                                                println!(
-                                                    "  field 50 structure: {}",
-                                                    serde_json::to_string_pretty(field_50)
-                                                        .unwrap_or_default()
-                                                );
-                                            }
+                                        // Show a sample field
+                                        if let Some(field_20) = fields_obj.get("20") {
+                                            println!(
+                                                "  field 20 structure: {}",
+                                                serde_json::to_string_pretty(field_20)
+                                                    .unwrap_or_default()
+                                            );
+                                        }
+                                        if let Some(field_50) = fields_obj.get("50") {
+                                            println!(
+                                                "  field 50 structure: {}",
+                                                serde_json::to_string_pretty(field_50)
+                                                    .unwrap_or_default()
+                                            );
                                         }
                                     }
                                 } else {
@@ -257,11 +257,11 @@ async fn test_swift_mt_workflow_pipeline() {
                         } else if key == "sample_mt" {
                             println!("\nDebug - Sample MT structure:");
                             if let Some(mt_str) = value.get("mt_message").and_then(|v| v.as_str()) {
-                                println!("  MT message exists, first 200 chars:");
-                                println!("  {}", &mt_str[..mt_str.len().min(200)]);
+                                println!("  MT message exists, full message:");
+                                println!("  {}", mt_str);
                             } else if let Some(mt_str) = value.as_str() {
-                                println!("  MT message as string, first 200 chars:");
-                                println!("  {}", &mt_str[..mt_str.len().min(200)]);
+                                println!("  MT message as string, full message:");
+                                println!("  {}", mt_str);
                             } else {
                                 println!("  MT message structure: {:?}", value);
                             }
@@ -456,36 +456,33 @@ fn get_all_test_cases() -> Vec<(String, String, String)> {
     if let Ok(entries) = fs::read_dir(scenarios_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_dir() {
-                if let Some(dir_name) = path.file_name().and_then(|s| s.to_str()) {
-                    if dir_name.starts_with("mt") {
-                        let message_type = dir_name.to_uppercase();
+            if path.is_dir()
+                && let Some(dir_name) = path.file_name().and_then(|s| s.to_str())
+                && dir_name.starts_with("mt")
+            {
+                let message_type = dir_name.to_uppercase();
 
-                        // Try to load index.json first
-                        let index_path = path.join("index.json");
-                        if index_path.exists() {
-                            if let Ok(content) = fs::read_to_string(&index_path) {
-                                if let Ok(index) = serde_json::from_str::<ScenarioIndex>(&content) {
-                                    for scenario_info in index.scenarios {
-                                        let scenario_name =
-                                            scenario_info.file.trim_end_matches(".json");
-                                        test_cases.push((
-                                            message_type.clone(),
-                                            scenario_name.to_string(),
-                                            scenario_info.description,
-                                        ));
-                                    }
-                                    continue;
-                                }
-                            }
-                        }
-
-                        // Fallback to getting scenarios without index
-                        let scenarios = get_scenarios_fallback(&message_type);
-                        for scenario in scenarios {
-                            test_cases.push((message_type.clone(), scenario.clone(), scenario));
-                        }
+                // Try to load index.json first
+                let index_path = path.join("index.json");
+                if index_path.exists()
+                    && let Ok(content) = fs::read_to_string(&index_path)
+                    && let Ok(index) = serde_json::from_str::<ScenarioIndex>(&content)
+                {
+                    for scenario_info in index.scenarios {
+                        let scenario_name = scenario_info.file.trim_end_matches(".json");
+                        test_cases.push((
+                            message_type.clone(),
+                            scenario_name.to_string(),
+                            scenario_info.description,
+                        ));
                     }
+                    continue;
+                }
+
+                // Fallback to getting scenarios without index
+                let scenarios = get_scenarios_fallback(&message_type);
+                for scenario in scenarios {
+                    test_cases.push((message_type.clone(), scenario.clone(), scenario));
                 }
             }
         }
@@ -533,12 +530,11 @@ fn get_scenarios_fallback(message_type: &str) -> Vec<String> {
     if let Ok(entries) = fs::read_dir(&scenario_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
-                    if stem != "index" {
-                        scenarios.push(stem.to_string());
-                    }
-                }
+            if path.extension().and_then(|s| s.to_str()) == Some("json")
+                && let Some(stem) = path.file_stem().and_then(|s| s.to_str())
+                && stem != "index"
+            {
+                scenarios.push(stem.to_string());
             }
         }
     }
@@ -651,58 +647,55 @@ fn check_round_trip_success(message: &Message) -> bool {
             let parsed_str = serde_json::to_string(&parsed).unwrap_or_default();
 
             // Debug: Print first few keys to see the difference
-            if std::env::var("TEST_DEBUG").unwrap_or_default() == "1" {
-                if orig_str != parsed_str {
-                    println!("\n  Debug round-trip comparison:");
-                    if let (Some(orig_obj), Some(parsed_obj)) =
-                        (original_data.as_object(), parsed.as_object())
-                    {
-                        println!(
-                            "    Original keys: {:?}",
-                            orig_obj.keys().collect::<Vec<_>>()
-                        );
-                        println!(
-                            "    Parsed keys: {:?}",
-                            parsed_obj.keys().collect::<Vec<_>>()
-                        );
+            if std::env::var("TEST_DEBUG").unwrap_or_default() == "1" && orig_str != parsed_str {
+                println!("\n  Debug round-trip comparison:");
+                println!("    JSON strings are different");
+                if let (Some(orig_obj), Some(parsed_obj)) =
+                    (original_data.as_object(), parsed.as_object())
+                {
+                    println!(
+                        "    Original keys: {:?}",
+                        orig_obj.keys().collect::<Vec<_>>()
+                    );
+                    println!(
+                        "    Parsed keys: {:?}",
+                        parsed_obj.keys().collect::<Vec<_>>()
+                    );
 
-                        // Compare each top-level field
-                        for key in orig_obj.keys() {
-                            let orig_val = serde_json::to_string(orig_obj.get(key).unwrap())
+                    // Compare each top-level field
+                    for key in orig_obj.keys() {
+                        let orig_val =
+                            serde_json::to_string(orig_obj.get(key).unwrap()).unwrap_or_default();
+                        let parsed_val =
+                            serde_json::to_string(parsed_obj.get(key).unwrap_or(&Value::Null))
                                 .unwrap_or_default();
-                            let parsed_val =
-                                serde_json::to_string(parsed_obj.get(key).unwrap_or(&Value::Null))
-                                    .unwrap_or_default();
-                            if orig_val != parsed_val {
-                                println!("    Mismatch in '{}' field!", key);
-                                if key == "fields" {
-                                    // Show field-level differences
-                                    if let (Some(orig_fields), Some(parsed_fields)) = (
-                                        orig_obj.get("fields").and_then(|f| f.as_object()),
-                                        parsed_obj.get("fields").and_then(|f| f.as_object()),
-                                    ) {
-                                        for field_key in orig_fields.keys() {
-                                            let orig_field = serde_json::to_string(
-                                                orig_fields.get(field_key).unwrap(),
-                                            )
-                                            .unwrap_or_default();
-                                            let parsed_field = serde_json::to_string(
-                                                parsed_fields
-                                                    .get(field_key)
-                                                    .unwrap_or(&Value::Null),
-                                            )
-                                            .unwrap_or_default();
-                                            if orig_field != parsed_field {
-                                                println!("      Field {} differs:", field_key);
-                                                println!("        Original: {}", orig_field);
-                                                println!("        Parsed: {}", parsed_field);
-                                            }
+                        if orig_val != parsed_val {
+                            println!("    Mismatch in '{}' field!", key);
+                            if key == "fields" {
+                                // Show field-level differences
+                                if let (Some(orig_fields), Some(parsed_fields)) = (
+                                    orig_obj.get("fields").and_then(|f| f.as_object()),
+                                    parsed_obj.get("fields").and_then(|f| f.as_object()),
+                                ) {
+                                    for field_key in orig_fields.keys() {
+                                        let orig_field = serde_json::to_string(
+                                            orig_fields.get(field_key).unwrap(),
+                                        )
+                                        .unwrap_or_default();
+                                        let parsed_field = serde_json::to_string(
+                                            parsed_fields.get(field_key).unwrap_or(&Value::Null),
+                                        )
+                                        .unwrap_or_default();
+                                        if orig_field != parsed_field {
+                                            println!("      Field {} differs:", field_key);
+                                            println!("        Original: {}", orig_field);
+                                            println!("        Parsed: {}", parsed_field);
                                         }
                                     }
-                                } else {
-                                    println!("      Original: {}", orig_val);
-                                    println!("      Parsed: {}", parsed_val);
                                 }
+                            } else {
+                                println!("      Original: {}", orig_val);
+                                println!("      Parsed: {}", parsed_val);
                             }
                         }
                     }
@@ -718,13 +711,11 @@ fn check_round_trip_success(message: &Message) -> bool {
 
 /// Check workflow step results
 fn analyze_workflow_results(message: &Message, debug_mode: bool) -> WorkflowResult {
-    let mut result = WorkflowResult::default();
-
-    // Step 1: Generate - Check if sample_json was generated
-    result.generate_success = message.data().get("sample_json").is_some();
-
-    // Step 2: Publish - Check if sample_mt was created
-    result.publish_success = message.data().get("sample_mt").is_some();
+    let mut result = WorkflowResult {
+        generate_success: message.data().get("sample_json").is_some(),
+        publish_success: message.data().get("sample_mt").is_some(),
+        ..Default::default()
+    };
 
     // Step 3: Validate - Check validation results
     if let Some(validation) = message.data().get("validation_result") {
@@ -864,7 +855,7 @@ fn print_test_summary(results: &[TestResult]) {
 
     for (scenario_key, scenario_tests) in sorted_scenarios {
         let parts: Vec<&str> = scenario_key.split('/').collect();
-        let message_type = parts.get(0).unwrap_or(&"");
+        let message_type = parts.first().unwrap_or(&"");
         let scenario_name = parts.get(1).unwrap_or(&"").trim_end_matches(".json"); // Remove .json extension if present
 
         let total = scenario_tests.len();

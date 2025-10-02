@@ -1,117 +1,168 @@
+use crate::errors::{ParseError, ParseResult, ParserConfig};
 use crate::fields::*;
+use crate::message_parser::MessageParser;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use std::collections::HashMap;
 
-/// MT291: Request for Payment of Charges, Interest and Other Expenses Cancellation
+/// MT291 - Request for Payment of Charges, Interest and Other Expenses
 ///
-/// ## Purpose
-/// Used to cancel or withdraw a previously sent MT191 request for payment of charges.
-/// This message notifies the receiving institution that a previous expense claim should be
-/// disregarded, ensuring proper handling of erroneous or superseded charge requests.
-///
-/// ## Scope
-/// This message is:
-/// - Sent between financial institutions to cancel expense reimbursement requests
-/// - Used to withdraw previously claimed charges, interest, or expenses
-/// - Applied when errors are discovered or claims need withdrawal
-/// - Essential for maintaining accurate inter-bank expense records
-/// - Part of the error correction and expense management process
-///
-/// ## Key Features
-/// - **Cancellation Notification**: Official cancellation of previous MT191 request
-/// - **Reference Linking**: Clear reference to the original MT191 being cancelled
-/// - **Amount Details**: Complete information about the claim being withdrawn
-/// - **Institution Identification**: Clear identification of parties involved
-/// - **Charge Details**: Explanation of the cancellation reason
-/// - **Audit Trail**: Maintains complete documentation of requests and cancellations
-///
-/// ## Common Use Cases
-/// - Cancelling erroneously submitted expense claims
-/// - Withdrawing duplicate charge requests
-/// - Correcting miscalculated interest claims
-/// - Cancelling provisional expense requests
-/// - Withdrawing charges due to billing errors
-/// - Correcting service fee claims
-/// - Cancelling requests due to system errors
-/// - Withdrawing claims per bilateral agreement changes
-///
-/// ## Message Structure
-/// - **Field 20**: Transaction Reference Number (mandatory) - Unique reference for this cancellation
-/// - **Field 21**: Related Reference (mandatory) - Reference to original MT191 being cancelled
-/// - **Field 32B**: Currency Code, Amount (mandatory) - Original requested amount
-/// - **Field 52a**: Ordering Institution (optional) - Institution initiating cancellation (A or D)
-/// - **Field 57a**: Account With Institution (optional) - Settlement account details (A, B, or D)
-/// - **Field 71B**: Details of Charges (mandatory) - Explanation of cancellation/withdrawal
-/// - **Field 72**: Sender to Receiver Information (optional) - Additional cancellation details
-///
-/// ## Network Validation Rules
-/// - **Reference Matching**: Field 21 must reference a valid MT191 transaction
-/// - **Amount Consistency**: Amount should match the original MT191 request
-/// - **Institution Validation**: Institutions must match the original MT191
-/// - **Cancellation Details**: Field 71B must explain the cancellation reason
-/// - **Timing Rules**: Cancellation typically before payment processing
-///
-/// ## Processing Context
-/// ### Cancellation Processing Workflow
-/// 1. Error or withdrawal requirement identified
-/// 2. Original MT191 request marked for cancellation
-/// 3. MT291 sent to advise cancellation
-/// 4. Receiving institution cancels pending claim
-/// 5. Reconciliation updated accordingly
-///
-/// ### Claim Management
-/// - Automatic claim withdrawal
-/// - Audit trail maintenance
-/// - Expense tracking updates
-/// - Billing system adjustments
-///
-/// ## SRG2025 Status
-/// - **No Structural Changes**: MT291 format remains stable
-/// - **Enhanced Processing**: Improved cancellation workflow support
-/// - **Validation Updates**: Stricter reference matching validation
-/// - **Real-time Capability**: Support for immediate cancellation notifications
-///
-/// ## Integration Considerations
-/// - **Expense Systems**: Integrated with expense management platforms
-/// - **Audit Systems**: Complete audit trail for compliance
-/// - **Reconciliation**: Automatic expense reconciliation adjustment
-/// - **Reporting**: Reflected in inter-bank expense reports
-///
-/// ## Relationship to Other Messages
-/// - **Cancels**: MT191 request messages
-/// - **May trigger**: New MT191 with corrected information
-/// - **Related to**: MT292 for payment request cancellation
-/// - **Supports**: Error correction and expense management processes
-///
-/// ## Best Practices
-/// - Send MT291 promptly upon discovering errors
-/// - Provide clear cancellation reasons in Field 71B
-/// - Ensure amount and institution details match original MT191
-/// - Consider sending corrected MT191 if claim still valid
-/// - Maintain complete audit trail of requests and cancellations
-/// - Notify affected departments of claim withdrawal
-
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+/// Used by financial institutions to request payment of charges, interest and other expenses.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT291 {
-    #[field("20")]
-    pub field_20: Field20,
+    /// Field 20 - Transaction Reference Number (Mandatory)
+    #[serde(rename = "20")]
+    pub transaction_reference: Field20,
 
-    #[field("21")]
-    pub field_21: Field21NoOption,
+    /// Field 21 - Related Reference (Mandatory)
+    #[serde(rename = "21")]
+    pub related_reference: Field21NoOption,
 
-    #[field("32B")]
-    pub field_32b: Field32B,
+    /// Field 32B - Currency Code, Amount (Mandatory)
+    #[serde(rename = "32B")]
+    pub currency_amount: Field32B,
 
-    #[field("52")]
-    pub field_52: Option<Field52OrderingInstitution>,
+    /// Field 52 - Ordering Institution (Optional)
+    /// Can be 52A or 52D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub ordering_institution: Option<Field52OrderingInstitution>,
 
-    #[field("57")]
-    pub field_57: Option<Field57AccountWithInstitution>,
+    /// Field 57 - Account With Institution (Optional)
+    /// Can be 57A, 57B, or 57D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub account_with_institution: Option<Field57>,
 
-    #[field("71B")]
-    pub field_71b: Field71B,
+    /// Field 71B - Details of Charges (Mandatory)
+    #[serde(rename = "71B")]
+    pub details_of_charges: Field71B,
 
-    #[field("72")]
-    pub field_72: Option<Field72>,
+    /// Field 72 - Sender to Receiver Information (Optional)
+    #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
+    pub sender_to_receiver: Option<Field72>,
+}
+
+impl MT291 {
+    /// Parse MT291 from a raw SWIFT message string
+    pub fn parse_from_block4(block4: &str) -> Result<Self, ParseError> {
+        let mut parser = MessageParser::new(block4, "291");
+
+        // Parse mandatory fields
+        let transaction_reference = parser.parse_field::<Field20>("20")?;
+        let related_reference = parser.parse_field::<Field21NoOption>("21")?;
+        let currency_amount = parser.parse_field::<Field32B>("32B")?;
+
+        // Parse optional Field 52 - Ordering Institution
+        let ordering_institution = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+
+        // Parse optional Field 57 - Account With Institution
+        let account_with_institution = parser.parse_optional_variant_field::<Field57>("57")?;
+
+        // Parse mandatory Field 71B
+        let details_of_charges = parser.parse_field::<Field71B>("71B")?;
+
+        // Parse optional Field 72
+        let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
+
+        Ok(MT291 {
+            transaction_reference,
+            related_reference,
+            currency_amount,
+            ordering_institution,
+            account_with_institution,
+            details_of_charges,
+            sender_to_receiver,
+        })
+    }
+
+    /// Static validation rules for MT291
+    pub fn validate() -> &'static str {
+        r#"{"rules": []}"#
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT291 {
+    fn message_type() -> &'static str {
+        "291"
+    }
+
+    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
+        // Reconstruct block4 from fields
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position
+        all_fields.sort_by_key(|f| f.2);
+
+        // Build block4
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: HashMap<String, Vec<(String, usize)>>,
+        _config: &ParserConfig,
+    ) -> Result<ParseResult<Self>, ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(ParseResult::Success(msg)),
+            Err(e) => Err(e)
+        }
+    }
+
+    fn to_fields(&self) -> HashMap<String, Vec<String>> {
+        let mut fields = HashMap::new();
+
+        fields.insert("20".to_string(), vec![self.transaction_reference.to_swift_string()]);
+        fields.insert("21".to_string(), vec![self.related_reference.to_swift_string()]);
+        fields.insert("32B".to_string(), vec![self.currency_amount.to_swift_string()]);
+
+        if let Some(ref ord_inst) = self.ordering_institution {
+            match ord_inst {
+                Field52OrderingInstitution::A(f) => {
+                    fields.insert("52A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field52OrderingInstitution::D(f) => {
+                    fields.insert("52D".to_string(), vec![f.to_swift_string()]);
+                }
+            }
+        }
+
+        if let Some(ref acc_with) = self.account_with_institution {
+            match acc_with {
+                Field57::A(f) => {
+                    fields.insert("57A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field57::B(f) => {
+                    fields.insert("57B".to_string(), vec![f.to_swift_string()]);
+                }
+                Field57::D(f) => {
+                    fields.insert("57D".to_string(), vec![f.to_swift_string()]);
+                }
+                _ => {}
+            }
+        }
+
+        fields.insert("71B".to_string(), vec![self.details_of_charges.to_swift_string()]);
+
+        if let Some(ref sender_info) = self.sender_to_receiver {
+            fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "21", "32B", "71B"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["52", "57", "72"]
+    }
 }

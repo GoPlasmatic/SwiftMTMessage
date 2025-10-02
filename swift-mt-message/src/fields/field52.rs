@@ -1,6 +1,8 @@
+use super::field_utils::parse_name_and_address;
+use super::swift_utils::{parse_bic, parse_swift_chars};
+use crate::errors::ParseError;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::SwiftField;
-use swift_mt_message_macros::serde_swift_fields;
 
 ///   **Field 52: Ordering Institution / Account Servicing Institution**
 ///
@@ -32,7 +34,7 @@ use swift_mt_message_macros::serde_swift_fields;
 /// ## National Clearing System Support
 /// ### European Systems
 /// - **AT (Austria)**: Bankleitzahl - 5!n format
-/// - **BL (Germany)**: Bankleitzahl - 8!n format  
+/// - **BL (Germany)**: Bankleitzahl - 8!n format
 /// - **ES (Spain)**: Spanish Domestic - 8..9n format
 /// - **GR (Greece)**: HEBIC - 7!n format
 /// - **IE (Ireland)**: NSC - 6!n format
@@ -91,109 +93,550 @@ use swift_mt_message_macros::serde_swift_fields;
 ///
 /// Structured institutional identification using BIC code with optional party identifier.
 /// Preferred option for automated processing and correspondent banking.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field52A {
     /// Optional party identifier for clearing system or account reference
     ///
     /// Format: \[/1!a/34x\] - Single character code + up to 34 character identifier
     /// Used for national clearing codes and institutional account references
-    #[component("[/1!a/34x]")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub party_identifier: Option<String>,
 
     /// Bank Identifier Code of the ordering institution
     ///
     /// Format: 4!a2!a2!c\[3!c\] - 8 or 11 character BIC code
     /// Must be registered financial institution BIC
-    #[component("4!a2!a2!c[3!c]")]
     pub bic: String,
+}
+
+impl SwiftField for Field52A {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        let lines: Vec<&str> = input.lines().collect();
+
+        if lines.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 52A cannot be empty".to_string(),
+            });
+        }
+
+        let mut party_identifier = None;
+        let bic_line_idx;
+
+        // Check if first line is party identifier (/X/...)
+        if lines[0].starts_with('/') && lines[0].len() > 2 {
+            // Parse party identifier format: /1!a/34x
+            let parts: Vec<&str> = lines[0][1..].splitn(2, '/').collect();
+
+            if parts.len() == 2 && parts[0].len() == 1 {
+                // Validate single character code
+                if !parts[0].chars().all(|c| c.is_ascii_alphabetic()) {
+                    return Err(ParseError::InvalidFormat {
+                        message: "Field 52A party identifier code must be alphabetic".to_string(),
+                    });
+                }
+
+                // Validate identifier (up to 34 chars)
+                if parts[1].len() > 34 {
+                    return Err(ParseError::InvalidFormat {
+                        message: "Field 52A party identifier exceeds 34 characters".to_string(),
+                    });
+                }
+
+                parse_swift_chars(parts[1], "Field 52A party identifier")?;
+                party_identifier = Some(format!("{}/{}", parts[0], parts[1]));
+                bic_line_idx = 1;
+            } else {
+                bic_line_idx = 0;
+            }
+        } else {
+            bic_line_idx = 0;
+        }
+
+        // Parse BIC
+        if bic_line_idx >= lines.len() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 52A missing BIC code".to_string(),
+            });
+        }
+
+        let bic = parse_bic(lines[bic_line_idx])?;
+
+        Ok(Field52A {
+            party_identifier,
+            bic,
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        let mut lines = Vec::new();
+
+        if let Some(ref id) = self.party_identifier {
+            lines.push(format!("/{}", id));
+        }
+
+        lines.push(self.bic.clone());
+        format!(":52A:{}", lines.join("\n"))
+    }
 }
 
 ///   **Field 52B: Ordering Institution (Party Identifier with Location)**
 ///
 /// Domestic routing information using party identifier and location details.
 /// Used for national clearing systems requiring location-based routing.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field52B {
     /// Optional party identifier for clearing system or account reference
     ///
     /// Format: \[/1!a\]\[/34x\] - Single character code + up to 34 character identifier
     /// Used for domestic clearing systems and institutional references
-    #[component("[/1!a][/34x]")]
     pub party_identifier: Option<String>,
 
     /// Location information for domestic routing
     ///
     /// Format: \[35x\] - Up to 35 character location identifier
     /// Used for location-based routing within domestic systems
-    #[component("[35x]")]
     pub location: Option<String>,
+}
+
+impl SwiftField for Field52B {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        if input.is_empty() {
+            return Ok(Field52B {
+                party_identifier: None,
+                location: None,
+            });
+        }
+
+        let lines: Vec<&str> = input.lines().collect();
+        let mut party_identifier = None;
+        let mut location = None;
+        let mut current_idx = 0;
+
+        // Check for party identifier
+        if !lines.is_empty() && lines[0].starts_with('/') {
+            let line = &lines[0][1..]; // Remove leading /
+
+            // Check if it's /1!a/34x format
+            if let Some(slash_pos) = line.find('/') {
+                let code = &line[..slash_pos];
+                let id = &line[slash_pos + 1..];
+
+                if code.len() == 1
+                    && code.chars().all(|c| c.is_ascii_alphabetic())
+                    && id.len() <= 34
+                {
+                    parse_swift_chars(id, "Field 52B party identifier")?;
+                    party_identifier = Some(format!("{}/{}", code, id));
+                    current_idx = 1;
+                }
+            } else if line.len() <= 34 {
+                // Just /34x format
+                parse_swift_chars(line, "Field 52B party identifier")?;
+                party_identifier = Some(line.to_string());
+                current_idx = 1;
+            }
+        }
+
+        // Check for location
+        if current_idx < lines.len() {
+            let loc = lines[current_idx];
+            if !loc.is_empty() && loc.len() <= 35 {
+                parse_swift_chars(loc, "Field 52B location")?;
+                location = Some(loc.to_string());
+            }
+        }
+
+        Ok(Field52B {
+            party_identifier,
+            location,
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        let mut result = Vec::new();
+
+        if let Some(ref id) = self.party_identifier {
+            result.push(format!("/{}", id));
+        }
+
+        if let Some(ref loc) = self.location {
+            result.push(loc.clone());
+        }
+
+        result.join("\n")
+    }
 }
 
 ///   **Field 52C: Ordering Institution (Party Identifier Only)**
 ///
 /// Simplified institutional reference using party identifier only.
 /// Used when BIC is not required or available for institutional identification.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field52C {
     /// Party identifier for institutional reference
     ///
     /// Format: /34x - Mandatory slash prefix + up to 34 character identifier
     /// Used for domestic institutional references and clearing codes
-    #[component("/34x")]
     pub party_identifier: String,
+}
+
+impl SwiftField for Field52C {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        if !input.starts_with('/') {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 52C must start with '/'".to_string(),
+            });
+        }
+
+        let identifier = &input[1..];
+
+        if identifier.is_empty() || identifier.len() > 34 {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 52C party identifier must be 1-34 characters".to_string(),
+            });
+        }
+
+        parse_swift_chars(identifier, "Field 52C party identifier")?;
+
+        Ok(Field52C {
+            party_identifier: identifier.to_string(),
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        format!("/{}", self.party_identifier)
+    }
 }
 
 ///   **Field 52D: Ordering Institution (Party Identifier with Name and Address)**
 ///
 /// Detailed institutional identification with full name and address information.
 /// Used when structured BIC identification is not available or sufficient.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field52D {
     /// Optional party identifier for clearing system or account reference
     ///
     /// Format: \[/1!a\]\[/34x\] - Single character code + up to 34 character identifier
     /// Used for domestic clearing systems and institutional references
-    #[component("[/1!a][/34x]")]
     pub party_identifier: Option<String>,
 
     /// Name and address of the ordering institution
     ///
     /// Format: 4*35x - Up to 4 lines of 35 characters each
     /// Contains institution name, address, city, country details
-    #[component("4*35x")]
     pub name_and_address: Vec<String>,
 }
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+impl SwiftField for Field52D {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        let lines: Vec<&str> = input.lines().collect();
+
+        if lines.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 52D must have at least one line".to_string(),
+            });
+        }
+
+        let mut party_identifier = None;
+        let mut start_idx = 0;
+
+        // Check for party identifier
+        if lines[0].starts_with('/') {
+            let line = &lines[0][1..]; // Remove leading /
+
+            // Check if it's /1!a/34x format
+            if let Some(slash_pos) = line.find('/') {
+                let code = &line[..slash_pos];
+                let id = &line[slash_pos + 1..];
+
+                if code.len() == 1
+                    && code.chars().all(|c| c.is_ascii_alphabetic())
+                    && id.len() <= 34
+                {
+                    parse_swift_chars(id, "Field 52D party identifier")?;
+                    party_identifier = Some(format!("{}/{}", code, id));
+                    start_idx = 1;
+                }
+            } else if line.len() <= 34 {
+                // Just /34x format
+                parse_swift_chars(line, "Field 52D party identifier")?;
+                party_identifier = Some(line.to_string());
+                start_idx = 1;
+            }
+        }
+
+        // Parse name and address lines
+        let name_and_address = parse_name_and_address(&lines, start_idx, "Field 52D")?;
+
+        Ok(Field52D {
+            party_identifier,
+            name_and_address,
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        let mut lines = Vec::new();
+
+        if let Some(ref id) = self.party_identifier {
+            lines.push(format!("/{}", id));
+        }
+
+        for line in &self.name_and_address {
+            lines.push(line.clone());
+        }
+
+        format!(":52D:{}", lines.join("\n"))
+    }
+}
+
+/// Enum for Field52 Account Servicing Institution variants (A, C)
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field52AccountServicingInstitution {
+    #[serde(rename = "52A")]
     A(Field52A),
+    #[serde(rename = "52C")]
     C(Field52C),
 }
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+impl SwiftField for Field52AccountServicingInstitution {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Try Option A (BIC-based)
+        if let Ok(field) = Field52A::parse(input) {
+            return Ok(Field52AccountServicingInstitution::A(field));
+        }
+
+        // Try Option C (party identifier only)
+        if let Ok(field) = Field52C::parse(input) {
+            return Ok(Field52AccountServicingInstitution::C(field));
+        }
+
+        Err(ParseError::InvalidFormat {
+            message: "Field 52 Account Servicing Institution could not be parsed as option A or C"
+                .to_string(),
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        match self {
+            Field52AccountServicingInstitution::A(field) => field.to_swift_string(),
+            Field52AccountServicingInstitution::C(field) => field.to_swift_string(),
+        }
+    }
+}
+
+/// Enum for Field52 Ordering Institution variants (A, D)
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field52OrderingInstitution {
+    #[serde(rename = "52A")]
     A(Field52A),
+    #[serde(rename = "52D")]
     D(Field52D),
 }
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+impl SwiftField for Field52OrderingInstitution {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Try Option A (BIC-based) first
+        if let Ok(field) = Field52A::parse(input) {
+            return Ok(Field52OrderingInstitution::A(field));
+        }
+
+        // Try Option D (party identifier with name/address)
+        if let Ok(field) = Field52D::parse(input) {
+            return Ok(Field52OrderingInstitution::D(field));
+        }
+
+        Err(ParseError::InvalidFormat {
+            message: "Field 52 Ordering Institution could not be parsed as option A or D"
+                .to_string(),
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        match self {
+            Field52OrderingInstitution::A(field) => field.to_swift_string(),
+            Field52OrderingInstitution::D(field) => field.to_swift_string(),
+        }
+    }
+
+    fn get_variant_tag(&self) -> Option<&'static str> {
+        match self {
+            Field52OrderingInstitution::A(_) => Some("A"),
+            Field52OrderingInstitution::D(_) => Some("D"),
+        }
+    }
+}
+
+/// Enum for Field52 Creditor Bank variants (A, C, D)
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field52CreditorBank {
+    #[serde(rename = "52A")]
     A(Field52A),
+    #[serde(rename = "52C")]
     C(Field52C),
+    #[serde(rename = "52D")]
     D(Field52D),
 }
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+impl SwiftField for Field52CreditorBank {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Try Option A (BIC-based) first
+        if let Ok(field) = Field52A::parse(input) {
+            return Ok(Field52CreditorBank::A(field));
+        }
+
+        // Try Option C (party identifier only)
+        if input.starts_with('/')
+            && !input.contains('\n')
+            && let Ok(field) = Field52C::parse(input)
+        {
+            return Ok(Field52CreditorBank::C(field));
+        }
+
+        // Try Option D (party identifier with name/address)
+        if let Ok(field) = Field52D::parse(input) {
+            return Ok(Field52CreditorBank::D(field));
+        }
+
+        Err(ParseError::InvalidFormat {
+            message: "Field 52 Creditor Bank could not be parsed as option A, C or D".to_string(),
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        match self {
+            Field52CreditorBank::A(field) => field.to_swift_string(),
+            Field52CreditorBank::C(field) => field.to_swift_string(),
+            Field52CreditorBank::D(field) => field.to_swift_string(),
+        }
+    }
+}
+
+/// Enum for Field52 Drawer Bank variants (A, B, D)
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field52DrawerBank {
+    #[serde(rename = "52A")]
     A(Field52A),
+    #[serde(rename = "52B")]
     B(Field52B),
+    #[serde(rename = "52D")]
     D(Field52D),
+}
+
+impl SwiftField for Field52DrawerBank {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Try Option A (BIC-based) first
+        if let Ok(field) = Field52A::parse(input) {
+            return Ok(Field52DrawerBank::A(field));
+        }
+
+        // Try Option B (party identifier with location)
+        if let Ok(field) = Field52B::parse(input) {
+            return Ok(Field52DrawerBank::B(field));
+        }
+
+        // Try Option D (party identifier with name/address)
+        if let Ok(field) = Field52D::parse(input) {
+            return Ok(Field52DrawerBank::D(field));
+        }
+
+        Err(ParseError::InvalidFormat {
+            message: "Field 52 Drawer Bank could not be parsed as option A, B or D".to_string(),
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        match self {
+            Field52DrawerBank::A(field) => field.to_swift_string(),
+            Field52DrawerBank::B(field) => field.to_swift_string(),
+            Field52DrawerBank::D(field) => field.to_swift_string(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field52a() {
+        // With party identifier
+        let field = Field52A::parse("/C/US123456\nDEUTDEFF").unwrap();
+        assert_eq!(field.party_identifier, Some("C/US123456".to_string()));
+        assert_eq!(field.bic, "DEUTDEFF");
+
+        // Without party identifier
+        let field = Field52A::parse("CHASUS33XXX").unwrap();
+        assert_eq!(field.party_identifier, None);
+        assert_eq!(field.bic, "CHASUS33XXX");
+    }
+
+    #[test]
+    fn test_field52b() {
+        // With party identifier and location
+        let field = Field52B::parse("/A/12345\nNEW YORK").unwrap();
+        assert_eq!(field.party_identifier, Some("A/12345".to_string()));
+        assert_eq!(field.location, Some("NEW YORK".to_string()));
+
+        // Empty
+        let field = Field52B::parse("").unwrap();
+        assert_eq!(field.party_identifier, None);
+        assert_eq!(field.location, None);
+    }
+
+    #[test]
+    fn test_field52c() {
+        let field = Field52C::parse("/UKCLEARING123").unwrap();
+        assert_eq!(field.party_identifier, "UKCLEARING123");
+        assert_eq!(field.to_swift_string(), "/UKCLEARING123");
+    }
+
+    #[test]
+    fn test_field52d() {
+        // With party identifier
+        let field = Field52D::parse("/D/DE123456\nDEUTSCHE BANK\nFRANKFURT").unwrap();
+        assert_eq!(field.party_identifier, Some("D/DE123456".to_string()));
+        assert_eq!(field.name_and_address.len(), 2);
+        assert_eq!(field.name_and_address[0], "DEUTSCHE BANK");
+
+        // Without party identifier
+        let field = Field52D::parse("ACME BANK\nLONDON").unwrap();
+        assert_eq!(field.party_identifier, None);
+        assert_eq!(field.name_and_address.len(), 2);
+    }
+
+    #[test]
+    fn test_field52_invalid() {
+        // Invalid BIC
+        assert!(Field52A::parse("INVALID").is_err());
+
+        // Missing slash in 52C
+        assert!(Field52C::parse("NOSLASH").is_err());
+
+        // Too many lines in 52D
+        assert!(Field52D::parse("LINE1\nLINE2\nLINE3\nLINE4\nLINE5").is_err());
+    }
 }

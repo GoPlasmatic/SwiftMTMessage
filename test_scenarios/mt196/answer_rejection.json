@@ -94,19 +94,11 @@
                 ]
             },
             "11": {
-                "S": {
-                    "message_type": {
-                        "var": "original_mt"
-                    },
-                    "date": {
-                        "var": "date"
-                    },
-                    "session_number": {
-                        "var": "session"
-                    },
-                    "input_sequence_number": {
-                        "var": "sequence"
-                    }
+                "message_type": {
+                    "var": "original_mt"
+                },
+                "date": {
+                    "var": "date"
                 }
             },
             "79": {
@@ -121,7 +113,7 @@
                     "UNABLE TO REVERSE TRANSACTION",
                     "PLEASE INITIATE MT103 RETURN IF REQUIRED",
                     "TRANSACTION DETAILS AVAILABLE VIA MT950",
-                    "CONTACT: settlements@bank.com"
+                    "CONTACT: settlementsATbank.com"
                 ]
             }
         }

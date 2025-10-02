@@ -97,30 +97,16 @@
                             "var": "amount1"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "UBSWCHZHXXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "SWISS HEALTH INSURANCE AG",
-                                "PREMIUM COLLECTION DEPT",
-                                "3000 BERN",
-                                "SWITZERLAND"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "SWISS HEALTH INSURANCE AG",
+                            "PREMIUM COLLECTION DEPT",
+                            "3000 BERN",
+                            "SWITZERLAND"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -140,16 +126,22 @@
                             "/PURPOSE/HEALTH INS JAN-2025"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "CH1234567890123456789",
-                            "name_and_address": [
-                                "MUELLER, HANS",
-                                "BAHNHOFSTRASSE 123",
-                                "8001 ZURICH",
-                                "SWITZERLAND"
-                            ]
+                    "50K": {
+                        "account": "CH1234567890123456789",
+                        "name_and_address": [
+                            "MUELLER, HANS",
+                            "BAHNHOFSTRASSE 123",
+                            "8001 ZURICH",
+                            "SWITZERLAND"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "UBSWCHZHXXX"
                     }
                 },
                 {
@@ -164,30 +156,16 @@
                             "var": "amount2"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "CRESCHZHXXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "HELVETIA INSURANCE GROUP",
-                                "AUTO INSURANCE DIVISION",
-                                "9001 ST GALLEN",
-                                "SWITZERLAND"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "HELVETIA INSURANCE GROUP",
+                            "AUTO INSURANCE DIVISION",
+                            "9001 ST GALLEN",
+                            "SWITZERLAND"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -207,16 +185,22 @@
                             "/PURPOSE/AUTO INS Q1-2025"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "CH9876543210987654321",
-                            "name_and_address": [
-                                "SCHMID, ANNA",
-                                "HAUPTSTRASSE 45",
-                                "4051 BASEL",
-                                "SWITZERLAND"
-                            ]
+                    "50K": {
+                        "account": "CH9876543210987654321",
+                        "name_and_address": [
+                            "SCHMID, ANNA",
+                            "HAUPTSTRASSE 45",
+                            "4051 BASEL",
+                            "SWITZERLAND"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "CRESCHZHXXX"
                     }
                 },
                 {
@@ -231,30 +215,16 @@
                             "var": "amount3"
                         }
                     },
-                    "52": {
-                        "A": {
-                            "bic": {
-                                "var": "sender_bic"
-                            }
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": "ZKBKCHZZXXX"
-                        }
-                    },
                     "59": {
-                        "NoOption": {
-                            "account": {
-                                "var": "account_id"
-                            },
-                            "name_and_address": [
-                                "ZURICH INSURANCE COMPANY LTD",
-                                "HOME INSURANCE DEPT",
-                                "8002 ZURICH",
-                                "SWITZERLAND"
-                            ]
-                        }
+                        "account": {
+                            "var": "account_id"
+                        },
+                        "name_and_address": [
+                            "ZURICH INSURANCE COMPANY LTD",
+                            "HOME INSURANCE DEPT",
+                            "8002 ZURICH",
+                            "SWITZERLAND"
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -274,16 +244,22 @@
                             "/PURPOSE/HOME INS JAN-2025"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "CH1122334455667788990",
-                            "name_and_address": [
-                                "WEBER, PETER",
-                                "SEESTRASSE 78",
-                                "6005 LUCERNE",
-                                "SWITZERLAND"
-                            ]
+                    "50K": {
+                        "account": "CH1122334455667788990",
+                        "name_and_address": [
+                            "WEBER, PETER",
+                            "SEESTRASSE 78",
+                            "6005 LUCERNE",
+                            "SWITZERLAND"
+                        ]
+                    },
+                    "52A": {
+                        "bic": {
+                            "var": "sender_bic"
                         }
+                    },
+                    "57A": {
+                        "bic": "ZKBKCHZZXXX"
                     }
                 }
             ],

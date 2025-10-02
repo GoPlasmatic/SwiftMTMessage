@@ -1,81 +1,170 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// MT199: Free Format Message
-///
-/// ## Purpose
-/// Used for free format communication between financial institutions regarding customer payments and related
-/// matters. This message provides the maximum flexibility for various types of communication that don't fit into
-/// other structured message formats, enabling efficient bilateral communication in the payment ecosystem.
-///
-/// ## Scope
-/// This message is:
-/// - Used for customer payment-related communications between financial institutions
-/// - Applicable for inquiries, clarifications, and general information exchange
-/// - Designed for flexible narrative text supporting various communication needs
-/// - Compatible with both automated and manual message generation systems
-/// - Subject to minimal validation rules for maximum communication flexibility
-/// - Integrated with customer service and payment processing communication workflows
-///
-/// ## Key Features
-/// - **Maximum Communication Flexibility**: Field 79 for completely free format narrative text
-/// - **Payment Context Integration**: Specifically related to customer payments and transactions
-/// - **Bilateral Communication Support**: Facilitates direct bank-to-bank communication
-/// - **Reference Tracking System**: Links to related payment messages or transactions
-/// - **Minimal Structure Requirements**: Minimal mandatory fields for maximum messaging flexibility
-/// - **Multi-Purpose Usage**: Adaptable to various communication scenarios and business needs
-///
-/// ## Common Use Cases
-/// - Payment inquiry messages for transaction status and details
-/// - Status update communications for processing milestones
-/// - Clarification requests for payment instructions and requirements
-/// - Special instruction messages for unique processing needs
-/// - Problem resolution communications for payment issues
-/// - Customer service related messages for account and payment support
-/// - Reject and return notifications with detailed explanatory information
-///
-/// ## Message Structure
-/// - **Field 20**: Sender's Reference (mandatory) - Unique message reference identifier
-/// - **Field 21**: Related Reference (optional) - Reference to related message or transaction
-/// - **Field 79**: Narrative (mandatory) - Free format text content for communication
-///
-/// ## Network Validation Rules
-/// - **Reference Format Validation**: Sender's reference must follow standard SWIFT reference format rules
-/// - **Narrative Content Requirements**: Field 79 must contain meaningful communication content
-/// - **Related Reference Format**: Field 21 must follow proper reference format when present
-/// - **Reject/Return Guidelines**: If narrative starts with /REJT/ or /RETN/, must follow Payments Guidelines
-/// - **Content Length Validation**: Narrative content must be within specified field length limits
-/// - **Character Set Compliance**: All text content must use valid SWIFT character sets
-/// - **Mandatory Field Validation**: All mandatory fields must be present with valid content
-///
-/// ## SRG2025 Status
-/// - **Structural Changes**: None - MT199 format remains stable for free format communication
-/// - **Validation Updates**: Enhanced validation for reject/return guidelines compliance
-/// - **Processing Improvements**: Improved handling of structured reject and return notifications
-/// - **Compliance Notes**: Maintained flexibility while ensuring compliance with payment guidelines
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Compatible with customer service systems and payment communication platforms
-/// - **API Integration**: RESTful API support for modern digital banking communication systems
-/// - **Processing Requirements**: Supports both automated and manual message generation and processing
-/// - **Compliance Integration**: Built-in validation for regulatory communication requirements
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Triggered by various payment scenarios requiring flexible communication
-/// - **Responses**: May generate response messages or trigger follow-up communications
-/// - **Related**: Works with all payment message types for supporting communication
-/// - **Alternatives**: Structured messages for specific communication scenarios with defined formats
-/// - **Status Updates**: Provides flexible status updates and notifications for payment processes
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+// MT199: Free Format Message
+// Used for free format communication between financial institutions regarding
+// customer payments and related matters.
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT199 {
-    #[field("20")]
+    // Sender's Reference
+    #[serde(rename = "20")]
     pub field_20: Field20,
 
-    #[field("21")]
+    // Related Reference (optional)
+    #[serde(rename = "21", skip_serializing_if = "Option::is_none")]
     pub field_21: Option<Field21NoOption>,
 
-    #[field("79")]
+    // Narrative (mandatory)
+    #[serde(rename = "79")]
     pub field_79: Field79,
+}
+
+impl MT199 {
+    /// Parse message from Block 4 content
+    pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        let mut parser = crate::message_parser::MessageParser::new(block4, "199");
+
+        // Parse mandatory field 20
+        let field_20 = parser.parse_field::<Field20>("20")?;
+
+        // Parse optional field 21
+        let field_21 = parser.parse_optional_field::<Field21NoOption>("21")?;
+
+        // Parse mandatory field 79
+        let field_79 = parser.parse_field::<Field79>("79")?;
+
+        Ok(MT199 {
+            field_20,
+            field_21,
+            field_79,
+        })
+    }
+
+    /// Static validation rules for MT199
+    pub fn validate() -> &'static str {
+        r#"{"rules": [
+            {"id": "F20", "description": "Field 20 must not start or end with '/', and must not contain '//'"},
+            {"id": "F21", "description": "Field 21 must not start or end with '/', and must not contain '//'"},
+            {"id": "F79", "description": "Field 79 must contain meaningful communication content"},
+            {"id": "REJT", "description": "If narrative starts with /REJT/, must follow Payments Guidelines"},
+            {"id": "RETN", "description": "If narrative starts with /RETN/, must follow Payments Guidelines"}
+        ]}"#
+    }
+
+    /// Validate the message instance according to MT199 rules
+    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
+        // Validate Field 20 - must not start/end with '/' or contain '//'
+        let reference = &self.field_20.reference;
+        if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT199: Field 20 must not start or end with '/', and must not contain '//'".to_string(),
+            });
+        }
+
+        // Validate Field 21 if present - same rules as Field 20
+        if let Some(ref field_21) = self.field_21 {
+            let related_ref = &field_21.reference;
+            if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//") {
+                return Err(crate::errors::ParseError::InvalidFormat {
+                    message: "MT199: Field 21 must not start or end with '/', and must not contain '//'".to_string(),
+                });
+            }
+        }
+
+        // Validate Field 79 has content
+        if self.field_79.information.is_empty() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT199: Field 79 must contain at least one line of narrative".to_string(),
+            });
+        }
+
+        // Check for reject/return codes in narrative (informational only)
+        if let Some(first_line) = self.field_79.information.first() {
+            if first_line.starts_with("/REJT/") || first_line.starts_with("/RETN/") {
+                // Note: In production, additional validation for Payments Guidelines would be needed
+                // For now, we just acknowledge these special cases exist
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check if this is a reject message
+    pub fn is_reject_message(&self) -> bool {
+        self.field_79.information.first()
+            .map(|line| line.starts_with("/REJT/"))
+            .unwrap_or(false)
+    }
+
+    /// Check if this is a return message
+    pub fn is_return_message(&self) -> bool {
+        self.field_79.information.first()
+            .map(|line| line.starts_with("/RETN/"))
+            .unwrap_or(false)
+    }
+}
+
+// Implement the SwiftMessageBody trait for MT199
+impl crate::traits::SwiftMessageBody for MT199 {
+    fn message_type() -> &'static str {
+        "199"
+    }
+
+    fn from_fields(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+    ) -> crate::SwiftResult<Self> {
+        // Collect all fields with their positions
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position to preserve field order
+        all_fields.sort_by_key(|(_, _, pos)| *pos);
+
+        // Reconstruct block4 in the correct order
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+        _config: &crate::errors::ParserConfig,
+    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+        let mut fields = std::collections::HashMap::new();
+
+        // Add mandatory field 20
+        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
+
+        // Add optional field 21
+        if let Some(ref field_21) = self.field_21 {
+            fields.insert("21".to_string(), vec![field_21.reference.clone()]);
+        }
+
+        // Add mandatory field 79
+        fields.insert("79".to_string(), vec![self.field_79.information.join("\n")]);
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "79"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["21"]
+    }
 }

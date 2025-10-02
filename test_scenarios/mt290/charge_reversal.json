@@ -86,23 +86,8 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
-                }
-            },
-            "32": {
-                "C": {
-                    "value_date": {
-                        "var": "value_date"
-                    },
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "charge_amount"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
             "71B": {
@@ -146,6 +131,17 @@
                     "/ERR/BANK ERROR",
                     "/COR/CORRECTED"
                 ]
+            },
+            "32C": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "charge_amount"
+                }
             }
         }
     }

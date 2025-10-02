@@ -1,190 +1,227 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
-/// MT940: Customer Statement Message
-///
-/// ## Purpose
-/// Used to transmit detailed account statement information from an account servicing institution
-/// to the account holder. This message provides a complete transaction-by-transaction record
-/// of account activity with opening and closing balances for a specific period.
-///
-/// ## Scope
-/// This message is:
-/// - Sent by account servicing institutions to account holders
-/// - Used for regular account statement transmission (daily, weekly, monthly)
-/// - Applied to various account types including current, savings, and foreign currency accounts
-/// - Essential for account reconciliation and cash management
-/// - Part of automated statement delivery and cash management systems
-///
-/// ## Key Features
-/// - **Complete Transaction Detail**: Full transaction-by-transaction statement
-/// - **Balance Information**: Opening and closing balances with currency consistency
-/// - **Statement Line Details**: Individual transaction entries with references and descriptions
-/// - **Value Dating**: Precise value dates for each transaction
-/// - **Available Balance**: Optional available balance information for credit management
-/// - **Information Lines**: Additional transaction details and narrative information
-///
-/// ## Common Use Cases
-/// - Daily account statement delivery
-/// - End-of-month statement transmission
-/// - Real-time account activity reporting
-/// - Cash management system integration
-/// - Account reconciliation support
-/// - Regulatory reporting and compliance
-/// - Customer self-service portal integration
-/// - Treasury management system feeds
-///
-/// ## Message Structure
-/// ### Header Information
-/// - **20**: Transaction Reference (mandatory) - Unique statement reference
-/// - **21**: Related Reference (optional) - Reference to related statement or period
-/// - **25**: Account Identification (mandatory) - Account being reported
-/// - **28C**: Statement Number/Sequence (mandatory) - Statement numbering
-/// - **60**: Opening Balance (mandatory) - Starting balance for statement period
-///
-/// ### Transaction Details
-/// - **Statement Lines**: Repetitive sequence of individual transactions
-/// - **62**: Closing Balance (mandatory) - Ending balance for statement period
-/// - **64**: Available Balance (optional) - Available credit or debit balance
-/// - **65**: Forward Available Balance (optional, repetitive) - Future available balances
-/// - **86**: Information to Account Owner (optional) - Additional statement information
-///
-/// ### Statement Line Structure (MT940StatementLine)
-/// Each statement line contains:
-/// - **61**: Statement Line (optional) - Individual transaction details
-/// - **86**: Information to Account Owner (optional) - Additional transaction information
-///
-/// ## Field Details
-/// ### Field 60/62 - Balance Information
-/// - **Currency**: ISO 4217 3-character currency code
-/// - **Amount**: Balance amount with appropriate precision
-/// - **Date**: Balance date (YYMMDD format)
-/// - **Credit/Debit Indicator**: C (Credit) or D (Debit) balance
-///
-/// ### Field 61 - Statement Line
-/// - **Value Date**: Date when transaction becomes effective
-/// - **Entry Date**: Date when transaction was posted (optional)
-/// - **Credit/Debit Mark**: C (Credit) or D (Debit) entry
-/// - **Amount**: Transaction amount
-/// - **Transaction Type**: SWIFT transaction type identification
-/// - **Reference**: Transaction reference number
-/// - **Account Servicing Institution Reference**: Bank's internal reference
-///
-/// ## Network Validation Rules
-/// - **Currency Consistency**: Opening and closing balances must use the same currency
-/// - **Reference Format**: Transaction references must follow SWIFT formatting standards
-/// - **Required Fields**: All mandatory fields must be present and properly formatted
-/// - **Balance Logic**: Closing balance should reflect opening balance plus/minus transactions
-/// - **Date Validation**: All dates must be valid and in proper sequence
-/// - **Amount Validation**: All amounts must be properly formatted with currency precision
-///
-/// ## Processing Context
-/// ### Statement Generation
-/// 1. Account activity accumulated over statement period
-/// 2. Transactions sorted by value date and sequence
-/// 3. Opening balance carried forward from previous statement
-/// 4. MT940 generated with complete transaction detail
-/// 5. Closing balance calculated and validated
-///
-/// ### Cash Management Integration
-/// - Real-time balance updating
-/// - Transaction categorization and analysis
-/// - Cash flow forecasting input
-/// - Reconciliation automation
-/// - Exception reporting and investigation
-///
-/// ## SRG2025 Status
-/// - **No Structural Changes**: MT940 format remains unchanged in SRG2025
-/// - **Enhanced Validation**: Additional validation for statement accuracy and completeness
-/// - **Digital Integration**: Improved support for digital banking and API integration
-/// - **Real-time Capabilities**: Enhanced support for real-time statement delivery
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Core component of account management and customer communication
-/// - **Cash Management**: Primary input for automated cash management and forecasting
-/// - **ERP Integration**: Critical for enterprise financial management and reconciliation
-/// - **Regulatory Reporting**: Essential for compliance and audit trail requirements
-///
-/// ## Relationship to Other Messages
-/// - **Triggered by**: MT920 (Request Message) for on-demand statement delivery
-/// - **Complements**: MT900/MT910 confirmation messages for real-time transaction notification
-/// - **Supports**: Complete account management and cash management workflows
-/// - **Integrates with**: Customer communication and digital banking platforms
+// MT940: Customer Statement Message
+// Used to transmit detailed account statement information to the account owner,
+// showing all debits and credits for a specific period.
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT940_VALIDATION_RULES)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT940 {
-    #[field("20")]
+    // Transaction Reference Number
+    #[serde(rename = "20")]
     pub field_20: Field20,
 
-    #[field("21")]
+    // Related Reference (optional)
+    #[serde(rename = "21", skip_serializing_if = "Option::is_none")]
     pub field_21: Option<Field21NoOption>,
 
-    #[field("25")]
-    pub field_25: Field25AccountIdentification,
+    // Account Identification
+    #[serde(rename = "25")]
+    pub field_25: Field25NoOption,
 
-    #[field("28C")]
+    // Statement Number/Sequence Number
+    #[serde(rename = "28C")]
     pub field_28c: Field28C,
 
-    #[field("60")]
-    pub field_60: Field60,
+    // Opening Balance
+    #[serde(rename = "60F")]
+    pub field_60f: Field60F,
 
-    #[field("#")]
+    // Statement Lines (1-500 occurrences)
+    #[serde(rename = "statement_lines")]
     pub statement_lines: Vec<MT940StatementLine>,
 
-    #[field("62")]
-    pub field_62: Field62,
+    // Closing Balance
+    #[serde(rename = "62F")]
+    pub field_62f: Field62F,
 
-    #[field("64")]
+    // Available Balance (optional)
+    #[serde(rename = "64", skip_serializing_if = "Option::is_none")]
     pub field_64: Option<Field64>,
 
-    #[field("65")]
-    pub field_65: Option<Vec<Field65>>,
-
-    #[field("86")]
-    pub field_86: Option<Field86>,
+    // Forward Available Balance (optional)
+    #[serde(rename = "65", skip_serializing_if = "Option::is_none")]
+    pub field_65: Option<Field65>,
 }
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT940StatementLine {
-    #[field("61")]
-    pub field_61: Option<Field61>,
+    // Statement Line
+    #[serde(rename = "61")]
+    pub field_61: Field61,
 
-    #[field("86")]
+    // Information to Account Owner (optional)
+    #[serde(rename = "86", skip_serializing_if = "Option::is_none")]
     pub field_86: Option<Field86>,
 }
 
-/// Validation rules for MT940 - Customer Statement Message
-const MT940_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "The repetitive sequence starting with field 61 must appear at least once and no more than 500 times",
-      "condition": {
-        "and": [
-          {">=": [{"length": {"var": "fields.#"}}, 1]},
-          {"<=": [{"length": {"var": "fields.#"}}, 500]}
-        ]
-      }
-    },
-    {
-      "id": "C2",
-      "description": "If field 64 is present, field 60F must also be present, and field 62F must also be present",
-      "condition": {
-        "if": [
-          {"exists": ["fields", "64"]},
-          {
-            "and": [
-              {"exists": ["fields", "60"]},
-              {"exists": ["fields", "62"]}
-            ]
-          },
-          true
-        ]
-      }
+impl MT940 {
+    /// Parse message from Block 4 content
+    pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        let mut parser = crate::message_parser::MessageParser::new(block4, "940");
+
+        // Parse mandatory fields
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_21 = parser.parse_optional_field::<Field21NoOption>("21")?;
+        let field_25 = parser.parse_field::<Field25NoOption>("25")?;
+        let field_28c = parser.parse_field::<Field28C>("28C")?;
+        let field_60f = parser.parse_field::<Field60F>("60F")?;
+
+        // Enable duplicate field handling for statement lines
+        parser = parser.with_duplicates(true);
+
+        // Parse statement lines (1-500)
+        let mut statement_lines = Vec::new();
+
+        while parser.detect_field("61") && statement_lines.len() < 500 {
+            let field_61 = parser.parse_field::<Field61>("61")?;
+            let field_86 = parser.parse_optional_field::<Field86>("86")?;
+
+            statement_lines.push(MT940StatementLine {
+                field_61,
+                field_86,
+            });
+        }
+
+        // Must have at least one statement line
+        if statement_lines.is_empty() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT940: At least one statement line (field 61) is required".to_string(),
+            });
+        }
+
+        // Parse mandatory closing balance
+        let field_62f = parser.parse_field::<Field62F>("62F")?;
+
+        // Parse optional fields
+        let field_64 = parser.parse_optional_field::<Field64>("64")?;
+        let field_65 = parser.parse_optional_field::<Field65>("65")?;
+
+        Ok(MT940 {
+            field_20,
+            field_21,
+            field_25,
+            field_28c,
+            field_60f,
+            statement_lines,
+            field_62f,
+            field_64,
+            field_65,
+        })
     }
-  ]
-}"#;
+
+    /// Static validation rules for MT940
+    pub fn validate() -> &'static str {
+        r#"{"rules": [
+            {"id": "C1", "description": "The repetitive sequence starting with field 61 must appear at least once and no more than 500 times"},
+            {"id": "C2", "description": "If field 64 is present, fields 60F and 62F must also be present"}
+        ]}"#
+    }
+
+    /// Validate the message instance according to MT940 rules
+    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
+        // C1: Statement lines must occur 1-500 times
+        if self.statement_lines.is_empty() || self.statement_lines.len() > 500 {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!("MT940: Statement lines must occur 1-500 times, found {}", self.statement_lines.len()),
+            });
+        }
+
+        // C2 is automatically satisfied as fields 60F and 62F are mandatory
+
+        Ok(())
+    }
+}
+
+// Implement the SwiftMessageBody trait for MT940
+impl crate::traits::SwiftMessageBody for MT940 {
+    fn message_type() -> &'static str {
+        "940"
+    }
+
+    fn from_fields(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+    ) -> crate::SwiftResult<Self> {
+        // Collect all fields with their positions
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position to preserve field order
+        all_fields.sort_by_key(|(_, _, pos)| *pos);
+
+        // Reconstruct block4 in the correct order
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+        _config: &crate::errors::ParserConfig,
+    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+        use crate::traits::SwiftField;
+        let mut fields = std::collections::HashMap::new();
+
+        // Add mandatory fields
+        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
+
+        if let Some(ref field_21) = self.field_21 {
+            fields.insert("21".to_string(), vec![field_21.reference.clone()]);
+        }
+
+        fields.insert("25".to_string(), vec![self.field_25.authorisation.clone()]);
+        fields.insert("28C".to_string(), vec![self.field_28c.to_swift_string()]);
+        fields.insert("60F".to_string(), vec![self.field_60f.to_swift_string()]);
+
+        // Add statement lines
+        let mut field_61_values = Vec::new();
+        let mut field_86_values = Vec::new();
+
+        for line in &self.statement_lines {
+            field_61_values.push(line.field_61.to_swift_string());
+            if let Some(ref field_86) = line.field_86 {
+                field_86_values.push(field_86.to_swift_string());
+            }
+        }
+
+        fields.insert("61".to_string(), field_61_values);
+        if !field_86_values.is_empty() {
+            fields.insert("86".to_string(), field_86_values);
+        }
+
+        // Add closing balance
+        fields.insert("62F".to_string(), vec![self.field_62f.to_swift_string()]);
+
+        // Add optional fields
+        if let Some(ref field_64) = self.field_64 {
+            fields.insert("64".to_string(), vec![field_64.to_swift_string()]);
+        }
+
+        if let Some(ref field_65) = self.field_65 {
+            fields.insert("65".to_string(), vec![field_65.to_swift_string()]);
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "25", "28C", "60F", "61", "62F"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["21", "86", "64", "65"]
+    }
+}

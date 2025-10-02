@@ -82,28 +82,24 @@
                     "var": "execution_date"
                 }
             },
-            "creditor": {
-                "K": {
-                    "account": "COLLECTION-AGENCY",
-                    "name_and_address": [
-                        "DEBT COLLECTION AGENCY",
-                        "RECOVERY DEPARTMENT",
-                        "123 MAIN STREET",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
-                }
-            },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
+            "50K": {
+                "account": "COLLECTION-AGENCY",
+                "name_and_address": [
+                    "DEBT COLLECTION AGENCY",
+                    "RECOVERY DEPARTMENT",
+                    "123 MAIN STREET",
+                    {
+                        "cat": [
+                            "NEW YORK",
+                            ", ",
+                            "US"
+                        ]
                     }
+                ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
             "71A": {
@@ -127,30 +123,6 @@
                         },
                         "amount": 10000
                     },
-                    "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "DEFAULTED BORROWER",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
-                            }
-                        }
-                    },
                     "70": {
                         "narrative": [
                             "/RFB/DEBT RECOVERY",
@@ -162,6 +134,18 @@
                             },
                             "/PURP/LOAN",
                             "/NAUT/COURT AUTHORIZED"
+                        ]
+                    },
+                    "57A": {
+                        "bic": {
+                            "var": "receiver_bic"
+                        }
+                    },
+                    "59": {
+                        "name_and_address": [
+                            "DEBTOR NAME",
+                            "DEBTOR ADDRESS LINE 1",
+                            "CITY, COUNTRY"
                         ]
                     }
                 },
@@ -183,39 +167,6 @@
                         },
                         "amount": 10000
                     },
-                    "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "COLLECTION AGENCY TRUST",
-                                "RECOVERY ACCOUNT",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    "57": {
-                        "D": {
-                            "name_and_address": [
-                                "RECOVERY BANK INTERNATIONAL",
-                                "COLLECTIONS DIVISION",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
                     "70": {
                         "narrative": [
                             "/RFB/COMMERCIAL DEBT",
@@ -230,9 +181,36 @@
                             "ARBITRATION CASE 2024-ARB-1234",
                             "COLLECTION UNDER PROTEST"
                         ]
+                    },
+                    "57D": {
+                        "name_and_address": [
+                            "RECOVERY BANK INTERNATIONAL",
+                            "COLLECTIONS DIVISION",
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
+                            }
+                        ]
+                    },
+                    "59": {
+                        "name_and_address": [
+                            "DEBTOR NAME",
+                            "DEBTOR ADDRESS LINE 1",
+                            "CITY, COUNTRY"
+                        ]
                     }
                 }
-            ]
+            ],
+            "32B": {
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": 20000
+            }
         }
     }
 }

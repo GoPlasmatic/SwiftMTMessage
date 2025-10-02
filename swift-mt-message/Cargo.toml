@@ -13,9 +13,6 @@ keywords = ["swift", "mt", "message", "parsing", "macro"]
 categories = ["data-structures", "development-tools", "parsing"]
 
 [dependencies]
-# Macro crate
-swift-mt-message-macros = { version = "3.0.4", path = "../swift-mt-message-macros" }
-
 # Core serialization and parsing
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -108,28 +108,19 @@
                         }
                     },
                     "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "ORIGINAL DEBTOR",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
+                        "account": "1000000000000000",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "ORIGINAL DEBTOR",
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
                             }
-                        }
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -158,21 +149,24 @@
                             "var": "charges"
                         }
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "RETURN-PROCESSING",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "RETURNS DEPARTMENT",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
+                    "50K": {
+                        "account": "RETURN-PROCESSING",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "RETURNS DEPARTMENT",
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
+                            }
+                        ]
+                    },
+                    "57A": {
+                        "bic": {
+                            "var": "receiver_bic"
                         }
                     }
                 }

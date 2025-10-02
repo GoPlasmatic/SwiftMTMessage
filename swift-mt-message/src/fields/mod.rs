@@ -46,6 +46,10 @@
 //! # }
 //! ```
 
+// Utility modules
+pub mod field_utils;
+pub mod swift_utils;
+
 pub mod field11;
 pub use field11::*;
 

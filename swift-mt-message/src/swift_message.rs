@@ -423,30 +423,44 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         // Use to_ordered_fields for proper sequence ordering
         let ordered_fields = self.fields.to_ordered_fields();
 
-        #[cfg(debug_assertions)]
-        {
-            eprintln!("DEBUG to_mt_message: all field tags:");
-            for (tag, val) in &ordered_fields {
-                eprintln!(
-                    "  tag='{}', value_prefix='{}'",
-                    tag,
-                    &val[..val.len().min(30)]
-                );
-            }
-        }
+        // Debug output disabled for cleaner test results
+        // #[cfg(debug_assertions)]
+        // {
+        //     eprintln!("DEBUG to_mt_message: ordered_fields returned {} entries", ordered_fields.len());
+        //     eprintln!("DEBUG to_mt_message: all field tags:");
+        //     for (i, (tag, val)) in ordered_fields.iter().enumerate() {
+        //         eprintln!(
+        //             "  [{}] tag='{}', value_prefix='{}'",
+        //             i,
+        //             tag,
+        //             &val[..val.len().min(30)]
+        //         );
+        //     }
+        // }
 
         // Output fields in the correct order
-        for (field_tag, field_value) in ordered_fields {
+        for (_i, (field_tag, field_value)) in ordered_fields.iter().enumerate() {
             // Skip empty optional fields
-            if optional_fields.contains(&field_tag) && field_value.trim().is_empty() {
+            if optional_fields.contains(field_tag) && field_value.trim().is_empty() {
                 continue;
             }
+
+            // Debug output disabled for cleaner test results
+            // #[cfg(debug_assertions)]
+            // {
+            //     eprintln!("  Writing field [{}]: tag='{}', value_starts_with_colon={}, value_prefix='{}'",
+            //         i, field_tag, field_value.starts_with(':'), &field_value[..field_value.len().min(40)]);
+            //     eprintln!("    block4 length before: {}", block4.len());
+            // }
 
             // field_value already includes the field tag prefix from to_swift_string()
             // but we need to check if it starts with ':' to avoid double prefixing
             if field_value.starts_with(':') {
                 // Value already has field tag prefix, use as-is
-                block4.push_str(&format!("\n{field_value}"));
+                let to_add = format!("\n{field_value}");
+                // #[cfg(debug_assertions)]
+                // eprintln!("    Adding (with prefix): '{}' (len={})", &to_add[..to_add.len().min(60)], to_add.len());
+                block4.push_str(&to_add);
             } else {
                 // Value doesn't have field tag prefix, add it
                 // Extract the MT tag, handling numbered fields and variant letters
@@ -466,9 +480,22 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
                     // For regular fields, use the tag as-is
                     field_tag.clone()
                 };
-                block4.push_str(&format!("\n:{}:{field_value}", mt_tag));
+                let to_add = format!("\n:{}:{field_value}", mt_tag);
+                // #[cfg(debug_assertions)]
+                // eprintln!("    Adding (without prefix): '{}' (len={})", &to_add[..to_add.len().min(60)], to_add.len());
+                block4.push_str(&to_add);
             }
+
+            // #[cfg(debug_assertions)]
+            // eprintln!("    block4 length after: {}", block4.len());
         }
+
+        // Debug output disabled for cleaner test results
+        // #[cfg(debug_assertions)]
+        // {
+        //     eprintln!("DEBUG: Final block4 length = {}", block4.len());
+        //     eprintln!("DEBUG: Generated Block 4 content (first 500 chars):\n{}", &block4[..block4.len().min(500)]);
+        // }
 
         swift_message.push_str(&format!("{{4:{block4}\n-}}\n"));
 

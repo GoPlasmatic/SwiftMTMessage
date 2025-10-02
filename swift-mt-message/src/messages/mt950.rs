@@ -1,6 +1,5 @@
 use crate::fields::*;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 
 /// MT950: Statement Message
 ///
@@ -40,7 +39,7 @@ use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 /// - **25**: Account Identification (mandatory) - Account being reported
 /// - **28C**: Statement Number/Sequence (mandatory) - Statement numbering
 /// - **60**: Opening Balance (mandatory) - Starting balance for statement period
-/// - **61**: Statement Line (mandatory, repetitive) - Individual transaction entries
+/// - **61**: Statement Line (optional, repetitive) - Individual transaction entries
 /// - **62**: Closing Balance (mandatory) - Ending balance for statement period
 /// - **64**: Available Balance (optional) - Available balance information
 ///
@@ -61,106 +60,243 @@ use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
 /// - **Required Fields**: All mandatory fields must be present and properly formatted
 /// - **Balance Logic**: Closing balance should reflect opening balance plus/minus transactions
 /// - **Date Validation**: All dates must be valid and properly sequenced
-///
-/// ## Processing Context
-/// ### Simplified Statement Generation
-/// 1. Account activity summarized for statement period
-/// 2. Essential transactions selected for reporting
-/// 3. Opening balance carried forward from previous period
-/// 4. MT950 generated with streamlined transaction detail
-/// 5. Closing balance calculated and validated
-///
-/// ### Automated Processing
-/// - High-volume statement batch processing
-/// - Automated account reconciliation
-/// - System integration and data exchange
-/// - Efficient customer communication
-/// - Streamlined compliance reporting
-///
-/// ## SRG2025 Status
-/// - **Structural Changes**: None - MT950 format remains unchanged in SRG2025
-/// - **Validation Updates**: Additional validation for statement accuracy and completeness
-/// - **Processing Improvements**: Improved support for digital banking integration
-/// - **Compliance Notes**: Enhanced support for high-volume automated processing
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Efficient integration with core banking platforms and statement processing
-/// - **Customer Systems**: Streamlined input for customer financial management systems
-/// - **API Integration**: Optimized for modern API-based banking services and digital platforms
-/// - **Compliance Integration**: Simplified compliance and audit trail maintenance requirements
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Often triggered by MT920 (Request Message) for streamlined statement delivery
-/// - **Responses**: Provides simplified alternative to MT940 when detailed information is not required
-/// - **Related**: Works with other cash management and account reporting messages
-/// - **Alternatives**: MT940 for detailed transaction information when comprehensive reporting is needed
-/// - **Status Updates**: Supports efficient account management and customer communication workflows
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT950_VALIDATION_RULES)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT950 {
-    #[field("20")]
+    // Transaction Reference Number
+    #[serde(rename = "20")]
     pub field_20: Field20,
 
-    #[field("25")]
+    // Account Identification
+    #[serde(rename = "25")]
     pub field_25: Field25NoOption,
 
-    #[field("28C")]
+    // Statement Number/Sequence Number
+    #[serde(rename = "28C")]
     pub field_28c: Field28C,
 
-    #[field("60")]
+    // Opening Balance
+    #[serde(rename = "60")]
     pub field_60: Field60,
 
-    #[field("61")]
+    // Statement Lines (optional, repetitive)
+    #[serde(rename = "61", skip_serializing_if = "Option::is_none")]
     pub field_61: Option<Vec<Field61>>,
 
-    #[field("62")]
+    // Closing Balance
+    #[serde(rename = "62")]
     pub field_62: Field62,
 
-    #[field("64")]
+    // Closing Available Balance (optional)
+    #[serde(rename = "64", skip_serializing_if = "Option::is_none")]
     pub field_64: Option<Field64>,
 }
 
-/// Validation rules for MT950 - Statement Message
-const MT950_VALIDATION_RULES: &str = r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "The first two characters of the three-character currency code in fields 60a, 62a, and 64 must be the same",
-      "condition": {
-        "and": [
-          {"==": [
-            {"substr": [
-              {"if": [
-                {"exists": ["fields", "60", "F"]},
-                {"var": "fields.60.F.currency"},
-                {"var": "fields.60.M.currency"}
-              ]}, 0, 2]},
-            {"substr": [
-              {"if": [
-                {"exists": ["fields", "62", "F"]},
-                {"var": "fields.62.F.currency"},
-                {"var": "fields.62.M.currency"}
-              ]}, 0, 2]}
-          ]},
-          {
-            "if": [
-              {"exists": ["fields", "64"]},
-              {"==": [
-                {"substr": [
-                  {"if": [
-                    {"exists": ["fields", "60", "F"]},
-                    {"var": "fields.60.F.currency"},
-                    {"var": "fields.60.M.currency"}
-                  ]}, 0, 2]},
-                {"substr": [{"var": "fields.64.currency"}, 0, 2]}
-              ]},
-              true
-            ]
-          }
-        ]
-      }
+impl MT950 {
+    /// Parse message from Block 4 content
+    pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        let mut parser = crate::message_parser::MessageParser::new(block4, "950");
+
+        // Parse mandatory fields
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_25 = parser.parse_field::<Field25NoOption>("25")?;
+        let field_28c = parser.parse_field::<Field28C>("28C")?;
+
+        // Parse Field60 - check for both 60F and 60M variants
+        let field_60 = if parser.detect_field("60F") {
+            Field60::F(parser.parse_field::<Field60F>("60F")?)
+        } else if parser.detect_field("60M") {
+            Field60::M(parser.parse_field::<Field60M>("60M")?)
+        } else if parser.detect_field("60") {
+            // Try to parse as generic Field60
+            parser.parse_field::<Field60>("60")?
+        } else {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT950: Missing required field 60 (opening balance)".to_string(),
+            });
+        };
+
+        // Enable duplicate field handling for statement lines
+        parser = parser.with_duplicates(true);
+
+        // Parse optional statement lines (repetitive)
+        let mut field_61_vec = Vec::new();
+        while parser.detect_field("61") {
+            if let Ok(field) = parser.parse_field::<Field61>("61") {
+                field_61_vec.push(field);
+            } else {
+                break;
+            }
+        }
+        let field_61 = if field_61_vec.is_empty() {
+            None
+        } else {
+            Some(field_61_vec)
+        };
+
+        // Parse mandatory closing balance - check for both 62F and 62M variants
+        let field_62 = if parser.detect_field("62F") {
+            Field62::F(parser.parse_field::<Field62F>("62F")?)
+        } else if parser.detect_field("62M") {
+            Field62::M(parser.parse_field::<Field62M>("62M")?)
+        } else if parser.detect_field("62") {
+            // Try to parse as generic Field62
+            parser.parse_field::<Field62>("62")?
+        } else {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT950: Missing required field 62 (closing balance)".to_string(),
+            });
+        };
+
+        // Parse optional available balance
+        let field_64 = parser.parse_optional_field::<Field64>("64")?;
+
+        Ok(MT950 {
+            field_20,
+            field_25,
+            field_28c,
+            field_60,
+            field_61,
+            field_62,
+            field_64,
+        })
     }
-  ]
-}"#;
+
+    /// Static validation rules for MT950
+    pub fn validate() -> &'static str {
+        r#"{"rules": [
+            {"id": "C1", "description": "The first two characters of the three-character currency code in fields 60a, 62a, and 64 must be the same"}
+        ]}"#
+    }
+
+    /// Validate the message instance according to MT950 rules
+    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
+        // C1: Currency consistency validation
+        // Extract currency from field 60 (mandatory)
+        let base_currency = match &self.field_60 {
+            Field60::F(field) => &field.currency[0..2],
+            Field60::M(field) => &field.currency[0..2],
+        };
+
+        // Check field 62 (mandatory)
+        let field_62_currency = match &self.field_62 {
+            Field62::F(field) => &field.currency[0..2],
+            Field62::M(field) => &field.currency[0..2],
+        };
+
+        if field_62_currency != base_currency {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "MT950: Currency code mismatch - field 62 currency '{}' does not match field 60 currency '{}'",
+                    field_62_currency,
+                    base_currency
+                ),
+            });
+        }
+
+        // Check field 64 if present
+        if let Some(ref field_64) = self.field_64 {
+            if &field_64.currency[0..2] != base_currency {
+                return Err(crate::errors::ParseError::InvalidFormat {
+                    message: format!(
+                        "MT950: Currency code mismatch - field 64 currency '{}' does not match field 60 currency '{}'",
+                        &field_64.currency[0..2],
+                        base_currency
+                    ),
+                });
+            }
+        }
+
+        Ok(())
+    }
+}
+
+// Implement the SwiftMessageBody trait for MT950
+impl crate::traits::SwiftMessageBody for MT950 {
+    fn message_type() -> &'static str {
+        "950"
+    }
+
+    fn from_fields(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+    ) -> crate::SwiftResult<Self> {
+        // Collect all fields with their positions
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position to preserve field order
+        all_fields.sort_by_key(|(_, _, pos)| *pos);
+
+        // Reconstruct block4 in the correct order
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
+        _config: &crate::errors::ParserConfig,
+    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+        use crate::traits::SwiftField;
+        let mut fields = std::collections::HashMap::new();
+
+        // Add mandatory fields
+        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
+        fields.insert("25".to_string(), vec![self.field_25.authorisation.clone()]);
+        fields.insert("28C".to_string(), vec![self.field_28c.to_swift_string()]);
+
+        // Handle Field60 enum
+        match &self.field_60 {
+            Field60::F(field) => {
+                fields.insert("60F".to_string(), vec![field.to_swift_string()]);
+            }
+            Field60::M(field) => {
+                fields.insert("60M".to_string(), vec![field.to_swift_string()]);
+            }
+        }
+
+        // Add optional statement lines
+        if let Some(ref field_61_vec) = self.field_61 {
+            let values: Vec<String> = field_61_vec.iter().map(|f| f.to_swift_string()).collect();
+            fields.insert("61".to_string(), values);
+        }
+
+        // Handle Field62 enum
+        match &self.field_62 {
+            Field62::F(field) => {
+                fields.insert("62F".to_string(), vec![field.to_swift_string()]);
+            }
+            Field62::M(field) => {
+                fields.insert("62M".to_string(), vec![field.to_swift_string()]);
+            }
+        }
+
+        // Add optional field 64
+        if let Some(ref field_64) = self.field_64 {
+            fields.insert("64".to_string(), vec![field_64.to_swift_string()]);
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "25", "28C", "60", "62"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["61", "64"]
+    }
+}

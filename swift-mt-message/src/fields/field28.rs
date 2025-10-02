@@ -1,6 +1,7 @@
+use super::swift_utils::{parse_swift_digits, split_at_first};
+use crate::errors::ParseError;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::SwiftField;
-use swift_mt_message_macros::serde_swift_fields;
 
 ///   **Field 28: Statement Number / Sequence Number / Message Index**
 ///
@@ -125,64 +126,312 @@ use swift_mt_message_macros::serde_swift_fields;
 ///
 /// Basic statement numbering with optional sequence for account statements
 /// and transaction reports.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field28 {
     /// Statement number
     ///
     /// Format: 5n - Up to 5 digits (1-99999)
     /// Primary identifier for statement period or report
-    #[component("5n")]
     pub statement_number: u32,
 
     /// Optional sequence number
     ///
     /// Format: [/2n] - Optional 1-2 digits after slash (1-99)
     /// Used for multi-part statements within same period
-    #[component("[/2n]")]
     pub sequence_number: Option<u8>,
+}
+
+impl SwiftField for Field28 {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        let (statement_str, sequence_str) = split_at_first(input, '/');
+
+        // Parse statement number (5n)
+        if statement_str.len() > 5 {
+            return Err(ParseError::InvalidFormat {
+                message: "Statement number must be at most 5 digits".to_string(),
+            });
+        }
+
+        parse_swift_digits(&statement_str, "Statement number")?;
+        let statement_number: u32 =
+            statement_str
+                .parse()
+                .map_err(|_| ParseError::InvalidFormat {
+                    message: "Invalid statement number".to_string(),
+                })?;
+
+        // Parse optional sequence number ([/2n])
+        let sequence_number = if let Some(seq_str) = sequence_str {
+            if seq_str.len() > 2 {
+                return Err(ParseError::InvalidFormat {
+                    message: "Sequence number must be at most 2 digits".to_string(),
+                });
+            }
+            parse_swift_digits(&seq_str, "Sequence number")?;
+            let seq: u8 = seq_str.parse().map_err(|_| ParseError::InvalidFormat {
+                message: "Invalid sequence number".to_string(),
+            })?;
+            Some(seq)
+        } else {
+            None
+        };
+
+        Ok(Field28 {
+            statement_number,
+            sequence_number,
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        if let Some(seq) = self.sequence_number {
+            format!(":28:{}/{:02}", self.statement_number, seq)
+        } else {
+            format!(":28:{}", self.statement_number)
+        }
+    }
 }
 
 ///   **Field 28C: Extended Statement Number/Sequence Number**
 ///
 /// Extended statement numbering with larger sequence capacity for
 /// complex statement structures and detailed transaction reports.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field28C {
     /// Statement number
     ///
     /// Format: 5n - Up to 5 digits (1-99999)
     /// Primary identifier for statement period
-    #[component("5n")]
     pub statement_number: u32,
 
     /// Optional extended sequence number
     ///
     /// Format: [/5n] - Optional 1-5 digits after slash (1-99999)
     /// Enhanced sequence capacity for complex multi-part statements
-    #[component("[/5n]")]
     pub sequence_number: Option<u32>,
+}
+
+impl SwiftField for Field28C {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        let (statement_str, sequence_str) = split_at_first(input, '/');
+
+        // Parse statement number (5n)
+        if statement_str.len() > 5 {
+            return Err(ParseError::InvalidFormat {
+                message: "Statement number must be at most 5 digits".to_string(),
+            });
+        }
+
+        parse_swift_digits(&statement_str, "Statement number")?;
+        let statement_number: u32 =
+            statement_str
+                .parse()
+                .map_err(|_| ParseError::InvalidFormat {
+                    message: "Invalid statement number".to_string(),
+                })?;
+
+        // Parse optional sequence number ([/5n])
+        let sequence_number = if let Some(seq_str) = sequence_str {
+            if seq_str.len() > 5 {
+                return Err(ParseError::InvalidFormat {
+                    message: "Sequence number must be at most 5 digits".to_string(),
+                });
+            }
+            parse_swift_digits(&seq_str, "Sequence number")?;
+            let seq: u32 = seq_str.parse().map_err(|_| ParseError::InvalidFormat {
+                message: "Invalid sequence number".to_string(),
+            })?;
+            Some(seq)
+        } else {
+            None
+        };
+
+        Ok(Field28C {
+            statement_number,
+            sequence_number,
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        if let Some(seq) = self.sequence_number {
+            format!(":28C:{}/{}", self.statement_number, seq)
+        } else {
+            format!(":28C:{}", self.statement_number)
+        }
+    }
 }
 
 ///   **Field 28D: Message Index/Total**
 ///
 /// Message indexing for batch operations enabling completeness verification
 /// and proper sequencing of related messages.
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field28D {
     /// Message index (current position)
     ///
     /// Format: 5n - Current message number in sequence (1-99999)
     /// Must not exceed total count, enables ordering verification
-    #[component("5n")]
     pub index: u32,
 
     /// Total message count
     ///
     /// Format: /5n - Complete count of messages in batch (1-99999)
     /// Enables receiver to verify all messages received
-    #[component("/5n")]
     pub total: u32,
+}
+
+impl SwiftField for Field28D {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        let (index_str, total_str) = split_at_first(input, '/');
+
+        // Parse index number (5n)
+        if index_str.len() > 5 {
+            return Err(ParseError::InvalidFormat {
+                message: "Index number must be at most 5 digits".to_string(),
+            });
+        }
+
+        parse_swift_digits(&index_str, "Index number")?;
+        let index: u32 = index_str.parse().map_err(|_| ParseError::InvalidFormat {
+            message: "Invalid index number".to_string(),
+        })?;
+
+        // Parse total count (required for Field28D)
+        let total_str = total_str.ok_or_else(|| ParseError::InvalidFormat {
+            message: "Field28D requires both index and total separated by '/'".to_string(),
+        })?;
+
+        if total_str.len() > 5 {
+            return Err(ParseError::InvalidFormat {
+                message: "Total count must be at most 5 digits".to_string(),
+            });
+        }
+
+        parse_swift_digits(&total_str, "Total count")?;
+        let total: u32 = total_str.parse().map_err(|_| ParseError::InvalidFormat {
+            message: "Invalid total count".to_string(),
+        })?;
+
+        // Validate that index doesn't exceed total
+        if index > total {
+            return Err(ParseError::InvalidFormat {
+                message: format!("Index {} cannot exceed total {}", index, total),
+            });
+        }
+
+        if index == 0 || total == 0 {
+            return Err(ParseError::InvalidFormat {
+                message: "Index and total must be greater than zero".to_string(),
+            });
+        }
+
+        Ok(Field28D { index, total })
+    }
+
+    fn to_swift_string(&self) -> String {
+        format!(":28D:{:03}/{:03}", self.index, self.total)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field28_parse() {
+        // Test with sequence number
+        let field = Field28::parse("12345/67").unwrap();
+        assert_eq!(field.statement_number, 12345);
+        assert_eq!(field.sequence_number, Some(67));
+
+        // Test without sequence number
+        let field = Field28::parse("12345").unwrap();
+        assert_eq!(field.statement_number, 12345);
+        assert_eq!(field.sequence_number, None);
+
+        // Test with single digit sequence
+        let field = Field28::parse("123/5").unwrap();
+        assert_eq!(field.statement_number, 123);
+        assert_eq!(field.sequence_number, Some(5));
+    }
+
+    #[test]
+    fn test_field28c_parse() {
+        // Test with extended sequence number
+        let field = Field28C::parse("12345/99999").unwrap();
+        assert_eq!(field.statement_number, 12345);
+        assert_eq!(field.sequence_number, Some(99999));
+
+        // Test without sequence number
+        let field = Field28C::parse("12345").unwrap();
+        assert_eq!(field.statement_number, 12345);
+        assert_eq!(field.sequence_number, None);
+    }
+
+    #[test]
+    fn test_field28d_parse() {
+        // Test valid index/total
+        let field = Field28D::parse("001/010").unwrap();
+        assert_eq!(field.index, 1);
+        assert_eq!(field.total, 10);
+
+        // Test another valid case
+        let field = Field28D::parse("5/5").unwrap();
+        assert_eq!(field.index, 5);
+        assert_eq!(field.total, 5);
+    }
+
+    #[test]
+    fn test_field28_to_swift_string() {
+        let field = Field28 {
+            statement_number: 12345,
+            sequence_number: Some(67),
+        };
+        assert_eq!(field.to_swift_string(), ":28:12345/67");
+
+        let field = Field28 {
+            statement_number: 12345,
+            sequence_number: None,
+        };
+        assert_eq!(field.to_swift_string(), ":28:12345");
+    }
+
+    #[test]
+    fn test_field28c_to_swift_string() {
+        let field = Field28C {
+            statement_number: 12345,
+            sequence_number: Some(99999),
+        };
+        assert_eq!(field.to_swift_string(), ":28C:12345/99999");
+    }
+
+    #[test]
+    fn test_field28d_to_swift_string() {
+        let field = Field28D {
+            index: 1,
+            total: 10,
+        };
+        assert_eq!(field.to_swift_string(), ":28D:001/010");
+    }
+
+    #[test]
+    fn test_field28d_validation_errors() {
+        // Index exceeds total
+        assert!(Field28D::parse("11/10").is_err());
+
+        // Zero values
+        assert!(Field28D::parse("0/10").is_err());
+        assert!(Field28D::parse("1/0").is_err());
+
+        // Missing total
+        assert!(Field28D::parse("5").is_err());
+    }
 }

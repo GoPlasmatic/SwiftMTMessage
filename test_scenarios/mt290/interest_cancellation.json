@@ -87,30 +87,8 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
-                }
-            },
-            "32": {
-                "D": {
-                    "value_date": {
-                        "var": "value_date"
-                    },
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "interest_amount"
-                    }
-                }
-            },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "ordering_bic"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
             "71B": {
@@ -154,6 +132,22 @@
                     "/REF/ORIGINAL MT190",
                     "/ACT/CORRECTIVE ACTION TAKEN"
                 ]
+            },
+            "32D": {
+                "value_date": {
+                    "var": "value_date"
+                },
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "interest_amount"
+                }
+            },
+            "52A": {
+                "bic": {
+                    "var": "ordering_bic"
+                }
             }
         }
     }

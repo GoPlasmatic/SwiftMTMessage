@@ -92,17 +92,6 @@
                     "var": "interest_amount"
                 }
             },
-            "52": {
-                "D": {
-                    "party_identifier": "NOSTRO ACCOUNT",
-                    "name_and_address": [
-                        "CORRESPONDENT BANK",
-                        "TREASURY DEPARTMENT",
-                        "LONDON",
-                        "UNITED KINGDOM"
-                    ]
-                }
-            },
             "71B": {
                 "details": [
                     "WITHDRAWAL OF INTEREST CLAIM",
@@ -147,6 +136,15 @@
                     "/ERR/CALCULATION ERROR",
                     "/COR/CORRECTED CLAIM TO FOLLOW",
                     "/APO/APOLOGIES FOR ERROR"
+                ]
+            },
+            "52D": {
+                "party_identifier": "NOSTRO ACCOUNT",
+                "name_and_address": [
+                    "CORRESPONDENT BANK",
+                    "TREASURY DEPARTMENT",
+                    "LONDON",
+                    "UNITED KINGDOM"
                 ]
             }
         }

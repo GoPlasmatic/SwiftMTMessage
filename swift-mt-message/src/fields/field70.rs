@@ -1,6 +1,7 @@
+use super::field_utils::parse_multiline_text;
+use crate::errors::ParseError;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::SwiftField;
-use swift_mt_message_macros::serde_swift_fields;
 
 ///   **Field 70: Remittance Information**
 ///
@@ -48,67 +49,138 @@ use swift_mt_message_macros::serde_swift_fields;
 ///
 /// ## STP Processing Requirements
 /// ### ISO 11649 Creditor Reference
-/// - **Format**: RF followed by 2 check digits and up to 21 alphanumeric characters
-/// - **Position**: Must appear alone on first line for STP processing
-/// - **Validation**: Check digit validation required
-/// - **Usage**: Automated reconciliation and payment processing
+/// - Must appear alone on first line
+/// - Format: Creditor Reference (up to 25 characters)
+/// - When present, enables full STP processing
+/// - Must not be combined with other information on same line
 ///
-/// ### Multiple References
-/// - **Separation**: Multiple references separated by double slash '//'
-/// - **Line Management**: Each line maximum 35 characters
-/// - **Continuation**: Long references can span multiple lines
-/// - **Priority**: Most important reference should appear first
+/// ### Structured References
+/// - Invoice references enable automated reconciliation
+/// - Payment references support automated matching
+/// - Customer references facilitate transaction identification
 ///
 /// ## Regional Considerations
-/// - **European Payments**: SEPA remittance information requirements
-/// - **US Payments**: ACH and wire transfer reference standards
-/// - **Asian Markets**: Local payment reference requirements
-/// - **Cross-Border**: International payment reference coordination
-///
-/// ## Clearing System Requirements
-/// - **Length Checking**: Sender must verify length restrictions with receiver
-/// - **Format Validation**: Structured codes must be properly formatted
-/// - **Character Validation**: All characters must be SWIFT-valid
-/// - **Reference Uniqueness**: References should be unique for reconciliation
+/// - **European Payments**: ISO 11649 reference standards for SEPA
+/// - **US Payments**: ACH addenda record mappings and requirements
+/// - **Asian Markets**: Local language considerations for beneficiary details
+/// - **Cross-Border**: Multi-language and character set requirements
 ///
 /// ## Error Prevention Guidelines
-/// - **Length Validation**: Confirm total length does not exceed limits
-/// - **Character Checking**: Verify all characters are SWIFT-valid
-/// - **Reference Format**: Ensure structured references follow correct format
-/// - **Beneficiary Clarity**: Ensure information is clear for beneficiary
+/// - **Character Validation**: Verify all characters are SWIFT-compliant
+/// - **Line Length**: Ensure no line exceeds 35 characters
+/// - **Reference Formats**: Validate structured reference formats
+/// - **STP Compliance**: Verify ISO 11649 reference format when used
 ///
 /// ## Related Fields Integration
-/// - **Field 59**: Beneficiary Customer (recipient of remittance information)
-/// - **Field 72**: Sender to Receiver Information (additional instructions)
-/// - **Field 77A**: Narrative (extended narrative information)
-/// - **Field 50**: Ordering Customer (originator context)
+/// - **Field 20**: Sender's Reference (transaction identification)
+/// - **Field 21**: Related Reference (linked transaction reference)
+/// - **Field 59**: Beneficiary Customer (recipient details)
+/// - **Field 72**: Sender to Receiver Information (bank-to-bank info)
 ///
 /// ## Compliance Framework
-/// - **Regulatory Requirements**: Payment reference reporting requirements
-/// - **AML Compliance**: Transaction purpose identification for AML screening
-/// - **Customer Protection**: Clear payment purpose communication
-/// - **Audit Trail**: Complete payment reference documentation
+/// - **Regulatory Reporting**: Transaction purpose for compliance monitoring
+/// - **Anti-Money Laundering**: Payment purpose verification requirements
+/// - **Tax Reporting**: Invoice and payment reference documentation
+/// - **Audit Requirements**: Complete transaction documentation standards
 ///
-/// ## Trade Finance Applications
-/// - **Documentary Credits**: Letter of credit references
-/// - **Trade Settlements**: Commercial invoice and shipping references
-/// - **Supply Chain**: Purchase order and delivery references
-/// - **International Trade**: Import/export documentation references
+/// ## Best Practices
+/// - **Clear References**: Use unambiguous invoice/payment references
+/// - **Structured Codes**: Prefer structured codes for STP processing
+/// - **Concise Information**: Keep descriptions clear and brief
+/// - **Character Compliance**: Use only SWIFT-approved characters
+///
+/// ## Common Patterns
+/// - Invoice payments: /INV/ followed by invoice details
+/// - Salary payments: Clear employee/period references
+/// - Trade transactions: Documentary credit references
+/// - Service payments: Contract or service agreement references
 ///
 /// ## See Also
-/// - Swift FIN User Handbook: Remittance Information Specifications
-/// - ISO 11649: Creditor Reference Standard
-/// - Payment Reference Standards: International Payment References
-/// - STP Guidelines: Straight Through Processing Requirements
-
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+/// - Swift FIN User Handbook: Remittance Information Field Specifications
+/// - ISO 11649: Structured Creditor Reference to Remittance Information
+/// - SEPA Implementation Guidelines: Remittance Information Standards
+/// - Payment Processing Standards: Beneficiary Information Requirements
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field70 {
     /// Remittance information narrative
     ///
     /// Format: 4*35x - Up to 4 lines of 35 characters each
-    /// Contains payment details, references, and instructions for beneficiary
-    /// May include structured codes (INV, IPI, RFB, ROC, TSU) and ISO 11649 references
-    #[component("4*35x")]
+    /// Contains payment details, invoice references, or other remittance information
     pub narrative: Vec<String>,
+}
+
+impl SwiftField for Field70 {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Parse as multiline text (up to 4 lines, 35 chars each)
+        let narrative = parse_multiline_text(input, 4, 35)?;
+
+        if narrative.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 70 must have at least one line of narrative".to_string(),
+            });
+        }
+
+        Ok(Field70 { narrative })
+    }
+
+    fn to_swift_string(&self) -> String {
+        format!(":70:{}", self.narrative.join("\n"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field70_single_line() {
+        let field = Field70::parse("PAYMENT FOR INVOICE 12345").unwrap();
+        assert_eq!(field.narrative.len(), 1);
+        assert_eq!(field.narrative[0], "PAYMENT FOR INVOICE 12345");
+    }
+
+    #[test]
+    fn test_field70_multiline() {
+        let input = "/INV/123456\nPAYMENT FOR GOODS\nDELIVERED ON 2024-07-19\nREF: CONTRACT-001";
+        let field = Field70::parse(input).unwrap();
+        assert_eq!(field.narrative.len(), 4);
+        assert_eq!(field.narrative[0], "/INV/123456");
+        assert_eq!(field.narrative[1], "PAYMENT FOR GOODS");
+        assert_eq!(field.narrative[2], "DELIVERED ON 2024-07-19");
+        assert_eq!(field.narrative[3], "REF: CONTRACT-001");
+    }
+
+    #[test]
+    fn test_field70_to_swift_string() {
+        let field = Field70 {
+            narrative: vec!["LINE ONE".to_string(), "LINE TWO".to_string()],
+        };
+        assert_eq!(field.to_swift_string(), ":70:LINE ONE\nLINE TWO");
+    }
+
+    #[test]
+    fn test_field70_max_lines() {
+        let input = "LINE1\nLINE2\nLINE3\nLINE4";
+        let field = Field70::parse(input).unwrap();
+        assert_eq!(field.narrative.len(), 4);
+
+        // Test that 5 lines would fail
+        let too_many = "LINE1\nLINE2\nLINE3\nLINE4\nLINE5";
+        assert!(Field70::parse(too_many).is_err());
+    }
+
+    #[test]
+    fn test_field70_line_length() {
+        // Test max length line (35 chars)
+        let max_line = "A".repeat(35);
+        let field = Field70::parse(&max_line).unwrap();
+        assert_eq!(field.narrative[0].len(), 35);
+
+        // Test too long line (36 chars)
+        let too_long = "A".repeat(36);
+        assert!(Field70::parse(&too_long).is_err());
+    }
 }

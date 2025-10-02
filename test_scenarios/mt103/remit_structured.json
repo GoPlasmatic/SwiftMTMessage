@@ -124,55 +124,47 @@
                     "var": "amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "5432109876543210987654",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        {
-                            "cat": [
-                                "/LEI/",
-                                {
-                                    "var": "ordering_customer_lei"
-                                }
-                            ]
-                        },
-                        "NEW YORK",
-                        "US"
-                    ]
+            "50K": {
+                "account": "5432109876543210987654",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    {
+                        "cat": [
+                            "/LEI/",
+                            {
+                                "var": "ordering_customer_lei"
+                            }
+                        ]
+                    },
+                    "NEW YORK",
+                    "US"
+                ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
-                }
-            },
-            "57": {
-                "A": {
-                    "bic": {
-                        "var": "beneficiary_bank_bic"
-                    }
+            "57A": {
+                "bic": {
+                    "var": "beneficiary_bank_bic"
                 }
             },
             "59": {
-                "NoOption": {
-                    "account": "8765432109876543210987",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        {
-                            "cat": [
-                                "/LEI/",
-                                {
-                                    "var": "beneficiary_lei"
-                                }
-                            ]
-                        },
-                        "NEW YORK",
-                        "US"
-                    ]
-                }
+                "account": "8765432109876543210987",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    {
+                        "cat": [
+                            "/LEI/",
+                            {
+                                "var": "beneficiary_lei"
+                            }
+                        ]
+                    },
+                    "NEW YORK",
+                    "US"
+                ]
             },
             "70": {
                 "narrative": [

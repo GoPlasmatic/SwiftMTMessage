@@ -92,60 +92,52 @@
                     "var": "settlement_amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "TRADING-ACCOUNT",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        "CRYPTO TRADER",
-                        "123 MAIN STREET",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
+            "50K": {
+                "account": "TRADING-ACCOUNT",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    "CRYPTO TRADER",
+                    "123 MAIN STREET",
+                    {
+                        "cat": [
+                            "NEW YORK",
+                            ", ",
+                            "US"
+                        ]
+                    }
+                ]
+            },
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
-                }
-            },
-            "57": {
-                "A": {
-                    "bic": {
-                        "var": "receiver_bic"
-                    }
+            "57A": {
+                "bic": {
+                    "var": "receiver_bic"
                 }
             },
             "59": {
-                "NoOption": {
-                    "account": "1000000000000000",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        {
-                            "cat": [
-                                "EXCHANGE/",
-                                {
-                                    "var": "exchange_lei"
-                                }
-                            ]
-                        },
-                        "123 MAIN STREET",
-                        {
-                            "cat": [
-                                "NEW YORK",
-                                ", ",
-                                "US"
-                            ]
-                        }
-                    ]
-                }
+                "account": "1000000000000000",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    {
+                        "cat": [
+                            "EXCHANGE/",
+                            {
+                                "var": "exchange_lei"
+                            }
+                        ]
+                    },
+                    "123 MAIN STREET",
+                    {
+                        "cat": [
+                            "NEW YORK",
+                            ", ",
+                            "US"
+                        ]
+                    }
+                ]
             },
             "70": {
                 "narrative": [

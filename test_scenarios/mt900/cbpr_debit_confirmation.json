@@ -78,10 +78,8 @@
                 "reference": "CBPRPAY001"
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_id"
-                    }
+                "authorisation": {
+                    "var": "account_id"
                 }
             },
             "32A": {
@@ -95,11 +93,9 @@
                     "var": "amount"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             },
             "72": {

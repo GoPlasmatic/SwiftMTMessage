@@ -1,179 +1,180 @@
+use crate::errors::{ParseError, ParseResult, ParserConfig};
 use crate::fields::*;
+use crate::message_parser::MessageParser;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use std::collections::HashMap;
 
-/// MT200: Financial Institution Transfer for its Own Account
+/// MT200 - Financial Institution Transfer for Own Account
 ///
-/// ## Purpose
-/// Used for transfers between financial institutions where the institution is acting for its own account,
-/// not on behalf of a customer. This message type facilitates proprietary fund movements between institutions
-/// for purposes such as liquidity management, nostro account funding, or internal account adjustments.
-///
-/// ## Scope
-/// This message is:
-/// - Sent between financial institutions for their own account transfers
-/// - Used for nostro/vostro account management and liquidity adjustments
-/// - Applicable for same-currency transfers between correspondent accounts
-/// - Not used for customer-initiated transfers or third-party payments
-/// - Compatible with real-time gross settlement (RTGS) systems
-/// - Suitable for both domestic and cross-border institutional transfers
-///
-/// ## Key Features
-/// - **Simplified Structure**: Streamlined format for institution-to-institution transfers
-/// - **Own Account Focus**: Specifically designed for proprietary institutional movements
-/// - **Direct Routing**: Minimal intermediary support for direct institutional transfers
-/// - **Settlement Efficiency**: Optimized for same-day value and immediate settlement
-/// - **Correspondent Banking**: Built for nostro/vostro account management
-/// - **Minimal Validation**: No complex customer validation rules required
-///
-/// ## Common Use Cases
-/// - Nostro account funding and adjustments
-/// - Vostro account management
-/// - Liquidity transfers between branches
-/// - Foreign exchange position management
-/// - End-of-day settlement positions
-/// - Cash concentration and disbursement
-/// - Internal book transfers between institutions
-///
-/// ## Message Structure
-/// - **Field 20**: Transaction Reference Number (mandatory) - Unique sender reference
-/// - **Field 32A**: Value Date, Currency Code, Amount (mandatory) - Settlement details
-/// - **Field 53B**: Sender's Correspondent (optional) - Account at correspondent bank
-/// - **Field 56**: Intermediary (optional) - Intermediary institution if required
-/// - **Field 57**: Account With Institution (mandatory) - Institution maintaining the account
-/// - **Field 72**: Sender to Receiver Information (optional) - Additional instructions
-///
-/// ## Network Validation Rules
-/// - No specific network validation rules apply to MT200
-/// - Standard SWIFT field format validations apply
-/// - BIC and account number format validations as per SWIFT standards
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Direct integration with treasury and liquidity management systems
-/// - **Settlement**: Compatible with major settlement systems and RTGS platforms
-/// - **Processing**: Typically processed with high priority for same-day value
-/// - **Reconciliation**: Simplified reconciliation due to institution-to-institution nature
-///
-/// ## Relationship to Other Messages
-/// - **Related to MT202**: MT202 is used when acting on behalf of customers
-/// - **Related to MT205**: MT205 includes mandatory ordering institution field
-/// - **Confirmations**: May generate MT900 (debit) or MT910 (credit) confirmations
-/// - **Account Reporting**: Reflected in MT940/MT950 account statements
-/// - **Status Updates**: May receive MT192/MT196 for queries and responses
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT200_VALIDATION_RULES)]
+/// Used by financial institutions to transfer funds for their own account,
+/// typically for nostro account funding, liquidity management, or internal transfers.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT200 {
-    #[field("20")]
-    pub field_20: Field20,
+    /// Field 20 - Transaction Reference Number (Mandatory)
+    #[serde(rename = "20")]
+    pub transaction_reference: Field20,
 
-    #[field("32A")]
-    pub field_32a: Field32A,
+    /// Field 32A - Value Date, Currency Code, Amount (Mandatory)
+    #[serde(rename = "32A")]
+    pub value_date_amount: Field32A,
 
-    #[field("53B")]
-    pub field_53b: Option<Field53B>,
+    /// Field 53 - Sender's Correspondent (Optional)
+    /// Can be 53A or 53B
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub senders_correspondent: Option<Field53>,
 
-    #[field("56")]
-    pub field_56: Option<Field56IntermediaryAD>,
+    /// Field 56 - Intermediary Institution (Optional)
+    /// Can be 56A or 56D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub intermediary: Option<Field56>,
 
-    #[field("57")]
-    pub field_57: Field57DebtInstitution,
+    /// Field 57 - Account With Institution (Optional)
+    /// Can be 57A, 57B, or 57D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub account_with_institution: Option<Field57>,
 
-    #[field("72")]
-    pub field_72: Option<Field72>,
+    /// Field 72 - Sender to Receiver Information (Optional)
+    #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
+    pub sender_to_receiver: Option<Field72>,
 }
 
 impl MT200 {
-    /// Creates a new MT200 message with mandatory fields
-    pub fn new(
-        transaction_reference: Field20,
-        value_date_amount: Field32A,
-        account_with_institution: Field57DebtInstitution,
-    ) -> Self {
-        Self {
-            field_20: transaction_reference,
-            field_32a: value_date_amount,
-            field_53b: None,
-            field_56: None,
-            field_57: account_with_institution,
-            field_72: None,
-        }
+    /// Parse MT200 from a raw SWIFT message string
+    pub fn parse_from_block4(block4: &str) -> Result<Self, ParseError> {
+        let mut parser = MessageParser::new(block4, "200");
+
+        // Parse mandatory fields
+        let transaction_reference = parser.parse_field::<Field20>("20")?;
+        let value_date_amount = parser.parse_field::<Field32A>("32A")?;
+
+        // Parse optional Field 53 - Sender's Correspondent
+        let senders_correspondent = parser.parse_optional_variant_field::<Field53>("53")?;
+
+        // Parse optional Field 56 - Intermediary Institution
+        let intermediary = parser.parse_optional_variant_field::<Field56>("56")?;
+
+        // Parse optional Field 57 - Account With Institution
+        let account_with_institution = parser.parse_optional_variant_field::<Field57>("57")?;
+
+        // Parse optional Field 72
+        let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
+
+        Ok(MT200 {
+            transaction_reference,
+            value_date_amount,
+            senders_correspondent,
+            intermediary,
+            account_with_institution,
+            sender_to_receiver,
+        })
     }
 
-    /// Sets the sender's correspondent (Field 53B)
-    pub fn with_senders_correspondent(mut self, correspondent: Field53B) -> Self {
-        self.field_53b = Some(correspondent);
-        self
-    }
-
-    /// Sets the intermediary institution (Field 56)
-    pub fn with_intermediary(mut self, intermediary: Field56IntermediaryAD) -> Self {
-        self.field_56 = Some(intermediary);
-        self
-    }
-
-    /// Sets sender to receiver information (Field 72)
-    pub fn with_sender_to_receiver_info(mut self, info: Field72) -> Self {
-        self.field_72 = Some(info);
-        self
+    /// Static validation rules for MT200
+    pub fn validate() -> &'static str {
+        r#"{"rules": []}"#
     }
 }
 
-// Validation rules for MT200 using JSONLogic
-// MT200 has no specific network validated rules according to SWIFT standards
-pub const MT200_VALIDATION_RULES: &str = r#"{
-    "rules": []
-}"#;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_mt200_creation() {
-        let reference = Field20 {
-            reference: "REF123456".to_string(),
-        };
-        let amount = Field32A {
-            value_date: Some(chrono::NaiveDate::from_ymd_opt(2024, 12, 25).unwrap()),
-            currency: "USD".to_string(),
-            amount: 1000000.00,
-        };
-        let account_with = Field57DebtInstitution::A(Field57A {
-            party_identifier: None,
-            bic: "BANKUSAA".to_string(),
-        });
-
-        let mt200 = MT200::new(reference, amount, account_with);
-
-        assert_eq!(mt200.field_20.reference, "REF123456");
-        assert_eq!(mt200.field_32a.currency, "USD");
-        assert!(mt200.field_53b.is_none());
-        assert!(mt200.field_56.is_none());
-        assert!(mt200.field_72.is_none());
+impl crate::traits::SwiftMessageBody for MT200 {
+    fn message_type() -> &'static str {
+        "200"
     }
 
-    #[test]
-    fn test_mt200_with_optional_fields() {
-        let reference = Field20 {
-            reference: "REF123456".to_string(),
-        };
-        let amount = Field32A {
-            value_date: Some(chrono::NaiveDate::from_ymd_opt(2024, 12, 25).unwrap()),
-            currency: "USD".to_string(),
-            amount: 1000000.00,
-        };
-        let account_with = Field57DebtInstitution::A(Field57A {
-            party_identifier: None,
-            bic: "BANKUSAA".to_string(),
-        });
-        let intermediary = Field56IntermediaryAD::A(Field56A {
-            party_identifier: None,
-            bic: "INTMUSAA".to_string(),
-        });
+    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
+        // Reconstruct block4 from fields
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
 
-        let mt200 = MT200::new(reference, amount, account_with).with_intermediary(intermediary);
+        // Sort by position
+        all_fields.sort_by_key(|f| f.2);
 
-        assert!(mt200.field_56.is_some());
+        // Build block4
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: HashMap<String, Vec<(String, usize)>>,
+        _config: &ParserConfig,
+    ) -> Result<ParseResult<Self>, ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> HashMap<String, Vec<String>> {
+        let mut fields = HashMap::new();
+
+        fields.insert(
+            "20".to_string(),
+            vec![self.transaction_reference.to_swift_string()],
+        );
+        fields.insert(
+            "32A".to_string(),
+            vec![self.value_date_amount.to_swift_string()],
+        );
+
+        if let Some(ref corr) = self.senders_correspondent {
+            match corr {
+                Field53::A(f) => {
+                    fields.insert("53A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field53::B(f) => {
+                    fields.insert("53B".to_string(), vec![f.to_swift_string()]);
+                }
+                _ => {}
+            }
+        }
+
+        if let Some(ref inter) = self.intermediary {
+            match inter {
+                Field56::A(f) => {
+                    fields.insert("56A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field56::D(f) => {
+                    fields.insert("56D".to_string(), vec![f.to_swift_string()]);
+                }
+                _ => {}
+            }
+        }
+
+        if let Some(ref acc_with) = self.account_with_institution {
+            match acc_with {
+                Field57::A(f) => {
+                    fields.insert("57A".to_string(), vec![f.to_swift_string()]);
+                }
+                Field57::B(f) => {
+                    fields.insert("57B".to_string(), vec![f.to_swift_string()]);
+                }
+                Field57::D(f) => {
+                    fields.insert("57D".to_string(), vec![f.to_swift_string()]);
+                }
+                _ => {}
+            }
+        }
+
+        if let Some(ref sender_info) = self.sender_to_receiver {
+            fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "32A"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["53", "56", "57", "72"]
     }
 }

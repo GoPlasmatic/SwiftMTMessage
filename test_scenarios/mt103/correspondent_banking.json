@@ -91,70 +91,54 @@
                     "var": "amount"
                 }
             },
-            "50": {
-                "K": {
-                    "account": "CH9300762011623852957",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        "123 MAIN STREET",
-                        "NEW YORK",
-                        "SWITZERLAND"
-                    ]
-                }
+            "50K": {
+                "account": "CH9300762011623852957",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    "123 MAIN STREET",
+                    "NEW YORK",
+                    "SWITZERLAND"
+                ]
             },
             "51A": {
                 "bic": "DEUTDEFF"
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "ordering_inst_bic"
-                    }
+            "52A": {
+                "bic": {
+                    "var": "ordering_inst_bic"
                 }
             },
-            "53": {
-                "B": {
-                    "location": "ZURICH"
+            "53B": {
+                "location": "ZURICH"
+            },
+            "54A": {
+                "bic": {
+                    "var": "receiver_corr_bic"
                 }
             },
-            "54": {
-                "A": {
-                    "bic": {
-                        "var": "receiver_corr_bic"
-                    }
+            "55A": {
+                "bic": {
+                    "var": "third_reimb_bic"
                 }
             },
-            "55": {
-                "A": {
-                    "bic": {
-                        "var": "third_reimb_bic"
-                    }
+            "56A": {
+                "bic": {
+                    "var": "intermediary_bic"
                 }
             },
-            "56": {
-                "A": {
-                    "bic": {
-                        "var": "intermediary_bic"
-                    }
-                }
-            },
-            "57": {
-                "A": {
-                    "bic": {
-                        "var": "account_with_bic"
-                    }
+            "57A": {
+                "bic": {
+                    "var": "account_with_bic"
                 }
             },
             "59": {
-                "NoOption": {
-                    "account": "JP1234567890123456",
-                    "name_and_address": [
-                        "ACME CORPORATION",
-                        "123 MAIN STREET",
-                        "NEW YORK",
-                        "JAPAN"
-                    ]
-                }
+                "account": "JP1234567890123456",
+                "name_and_address": [
+                    "ACME CORPORATION",
+                    "123 MAIN STREET",
+                    "NEW YORK",
+                    "JAPAN"
+                ]
             },
             "70": {
                 "narrative": [

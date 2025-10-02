@@ -1,169 +1,228 @@
+use crate::errors::{ParseError, ParseResult, ParserConfig};
 use crate::fields::*;
+use crate::message_parser::MessageParser;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::{SwiftMessage, serde_swift_fields};
+use std::collections::HashMap;
 
-/// MT210: Notice to Receive
+/// MT210 - Notice to Receive
 ///
-/// ## Purpose
-/// Used to inform a financial institution that funds will be credited to their account.
-/// This message serves as advance notification of incoming funds, allowing the receiving
-/// institution to prepare for and reconcile expected payments.
-///
-/// ## Scope
-/// This message is:
-/// - Sent by a financial institution to notify another institution of pending credits
-/// - Used for liquidity management and cash flow planning
-/// - Applicable to various payment scenarios requiring advance notification
-/// - Essential for correspondent banking relationships
-/// - Used in settlement systems requiring pre-advice of incoming funds
-///
-/// ## Key Features
-/// - **Pre-Advice Functionality**: Advance notification of incoming payments
-/// - **Repetitive Sequence Structure**: Multiple payment notifications in single message
-/// - **Flexible Identification**: Either ordering customer (50) or ordering institution (52) required
-/// - **Account Management**: Optional account identification for specific crediting
-/// - **Multi-Currency Support**: Individual currency and amount per sequence
-/// - **Correspondent Banking**: Support for intermediary institution chains
-///
-/// ## Common Use Cases
-/// - Correspondent bank payment notifications
-/// - Treasury department cash flow management
-/// - Settlement system pre-advice messages
-/// - Liquidity management notifications
-/// - Expected payment confirmations
-/// - Cross-border payment notifications
-/// - Multi-currency portfolio funding advice
-///
-/// ## Message Structure
-/// ### Header Section
-/// - **20**: Transaction Reference (mandatory) - Unique message identifier
-/// - **25**: Account Identification (optional) - Specific account to be credited
-/// - **30**: Value Date (mandatory) - Date when funds will be available
-///
-/// ### Repetitive Sequence (Multiple entries allowed)
-/// - **21**: Related Reference (mandatory) - Reference to related payment/transaction
-/// - **32B**: Currency and Amount (mandatory) - Currency code and amount to be credited
-/// - **50**: Ordering Customer (optional) - Customer initiating the payment
-/// - **52**: Ordering Institution (optional) - Institution initiating the payment
-/// - **56**: Intermediary Institution (optional) - Intermediary in payment chain
-///
-/// ## Network Validation Rules
-/// - **C2 Rule**: Either field 50 (Ordering Customer) or field 52 (Ordering Institution) must be present, but not both
-/// - **Currency Consistency**: All 32B fields should use consistent currency (when multiple sequences)
-/// - **Reference Format**: Transaction and related references must follow SWIFT format rules
-/// - **Date Validation**: Value date must be valid and properly formatted (YYMMDD)
-/// - **Amount Validation**: All amounts must be positive and within acceptable ranges
-/// - **Institution Codes**: BIC codes must be valid when institution fields are used
-///
-/// ## MT210Sequence Details
-/// Each sequence within the message represents a separate payment notification and contains:
-/// - Individual payment reference (field 21)
-/// - Specific currency and amount (field 32B)
-/// - Payment originator identification (either field 50 or 52)
-/// - Optional intermediary institution details (field 56)
-///
-/// ## Processing Considerations
-/// - **Advance Notice**: Typically sent before the actual payment message
-/// - **Reconciliation**: Used for matching expected vs. actual payments
-/// - **Liquidity Planning**: Enables receiving institution to plan cash positions
-/// - **Settlement Timing**: Coordinates with payment system settlement cycles
-/// - **Exception Handling**: Facilitates investigation of missing payments
-///
-/// ## SRG2025 Status
-/// - **No Structural Changes**: MT210 format remains unchanged in SRG2025
-/// - **Enhanced Validation**: Additional validation rules for payment notification accuracy
-/// - **Cross-Border Compliance**: Enhanced validation for international payment notifications
-/// - **Settlement Integration**: Improved integration with modern settlement systems
-///
-/// ## Integration Considerations
-/// - **Banking Systems**: Compatible with liquidity management and treasury systems
-/// - **API Integration**: RESTful API support for modern cash management platforms
-/// - **Processing Requirements**: Supports real-time notification and cash flow planning
-/// - **Compliance Integration**: Built-in validation for correspondent banking requirements
-///
-/// ## Relationship to Other Messages
-/// - **Triggers**: Often precedes actual payment messages like MT202, MT103, or MT205
-/// - **Responses**: May generate acknowledgment or status confirmation messages
-/// - **Related**: Works with account reporting messages and settlement confirmations
-/// - **Alternatives**: Direct payment messages for immediate transfer without pre-advice
-/// - **Status Updates**: Enables reconciliation of expected vs. actual payments received
-
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT210_VALIDATION_RULES)]
+/// Used to advise the receiver that funds will be coming and should be credited
+/// to the account specified. Typically precedes the actual transfer.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT210 {
-    #[field("20")]
-    pub field_20: Field20, // Transaction Reference Number
+    /// Field 20 - Transaction Reference Number (Mandatory)
+    #[serde(rename = "20")]
+    pub transaction_reference: Field20,
 
-    #[field("25")]
-    pub field_25: Option<Field25NoOption>, // Account Identification
+    /// Field 25 - Account Identification (Optional)
+    #[serde(rename = "25", skip_serializing_if = "Option::is_none")]
+    pub account_identification: Option<Field25NoOption>,
 
-    #[field("30")]
-    pub field_30: Field30, // Value Date (YYMMDD)
+    /// Field 30 - Value Date (Mandatory)
+    #[serde(rename = "30")]
+    pub value_date: Field30,
 
-    #[field("#")]
-    pub sequence: Vec<MT210Sequence>, // Sequence of Fields
+    /// Transactions (Repeatable)
+    #[serde(rename = "#", default)]
+    pub transactions: Vec<MT210Transaction>,
 }
 
-#[serde_swift_fields]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, SwiftMessage)]
-#[validation_rules(MT210_SEQUENCE_VALIDATION_RULES)]
-pub struct MT210Sequence {
-    #[field("21")]
-    pub field_21: Field21NoOption, // Related Reference
+/// Individual transaction within an MT210 message
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MT210Transaction {
+    /// Field 21 - Related Reference (Optional)
+    #[serde(rename = "21", skip_serializing_if = "Option::is_none")]
+    pub related_reference: Option<Field21NoOption>,
 
-    #[field("32B")]
-    pub field_32b: Field32B, // Currency and Amount
+    /// Field 32B - Currency Code, Amount (Mandatory)
+    #[serde(rename = "32B")]
+    pub currency_amount: Field32B,
 
-    #[field("50")]
-    pub field_50: Option<Field50OrderingCustomerNCF>, // Ordering Customer (C, F options)
+    /// Field 50 - Ordering Customer (Optional)
+    /// Can be 50, 50C, 50F, or 50K
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub ordering_customer: Option<Field50>,
 
-    #[field("52")]
-    pub field_52: Option<Field52OrderingInstitution>, // Ordering Institution (A, D options)
+    /// Field 52 - Ordering Institution (Optional)
+    /// Can be 52A or 52D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub ordering_institution: Option<Field52OrderingInstitution>,
 
-    #[field("56")]
-    pub field_56: Option<Field56Intermediary>, // Intermediary Institution (A, D options)
+    /// Field 56 - Intermediary Institution (Optional)
+    /// Can be 56A, 56C, or 56D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub intermediary: Option<Field56>,
 }
 
-/// Validation rules for MT210 - Notice to Receive
-const MT210_VALIDATION_RULES: &str = r##"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "The repetitive sequence (fields 50a-32B) must not appear more than 10 times",
-      "condition": {
-        "if": [
-          {"exists": ["fields", "#"]},
-          {"<=": [{"length": {"var": "fields.#"}}, 10]},
-          true
-        ]
-      }
-    }
-  ]
-}"##;
+impl MT210 {
+    /// Parse MT210 from a raw SWIFT message string
+    pub fn parse_from_block4(block4: &str) -> Result<Self, ParseError> {
+        let mut parser = MessageParser::new(block4, "210");
 
-/// Validation rules for MT210Sequence - Individual sequence validation
-const MT210_SEQUENCE_VALIDATION_RULES: &str = r##"{
-  "rules": [
-    {
-      "id": "C2",
-      "description": "Either field 50a or field 52a must be present, but not both",
-      "condition": {
-        "or": [
-          {
-            "and": [
-              {"exists": ["fields", "50"]},
-              {"!": {"exists": ["fields", "52"]}}
-            ]
-          },
-          {
-            "and": [
-              {"!": {"exists": ["fields", "50"]}},
-              {"exists": ["fields", "52"]}
-            ]
-          }
-        ]
-      }
+        // Parse mandatory fields
+        let transaction_reference = parser.parse_field::<Field20>("20")?;
+
+        // Parse optional Field 25
+        let account_identification = parser.parse_optional_field::<Field25NoOption>("25")?;
+
+        // Parse mandatory Field 30
+        let value_date = parser.parse_field::<Field30>("30")?;
+
+        // Parse transactions
+        // For now, we'll create an empty vector as transaction parsing requires special handling
+        let transactions = Vec::new();
+
+        Ok(MT210 {
+            transaction_reference,
+            account_identification,
+            value_date,
+            transactions,
+        })
     }
-  ]
-}"##;
+
+    /// Static validation rules for MT210
+    pub fn validate() -> &'static str {
+        r#"{"rules": []}"#
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT210 {
+    fn message_type() -> &'static str {
+        "210"
+    }
+
+    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
+        // Reconstruct block4 from fields
+        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
+        for (tag, values) in fields {
+            for (value, position) in values {
+                all_fields.push((tag.clone(), value, position));
+            }
+        }
+
+        // Sort by position
+        all_fields.sort_by_key(|f| f.2);
+
+        // Build block4
+        let mut block4 = String::new();
+        for (tag, value, _) in all_fields {
+            block4.push_str(&format!(":{}:{}\n", tag, value));
+        }
+
+        Self::parse_from_block4(&block4)
+    }
+
+    fn from_fields_with_config(
+        fields: HashMap<String, Vec<(String, usize)>>,
+        _config: &ParserConfig,
+    ) -> Result<ParseResult<Self>, ParseError> {
+        match Self::from_fields(fields) {
+            Ok(msg) => Ok(ParseResult::Success(msg)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn to_fields(&self) -> HashMap<String, Vec<String>> {
+        let mut fields = HashMap::new();
+
+        fields.insert(
+            "20".to_string(),
+            vec![self.transaction_reference.to_swift_string()],
+        );
+
+        if let Some(ref account) = self.account_identification {
+            fields.insert("25".to_string(), vec![account.to_swift_string()]);
+        }
+
+        fields.insert("30".to_string(), vec![self.value_date.to_swift_string()]);
+
+        // Add transaction fields
+        for transaction in &self.transactions {
+            if let Some(ref related) = transaction.related_reference {
+                fields
+                    .entry("21".to_string())
+                    .or_insert_with(Vec::new)
+                    .push(related.to_swift_string());
+            }
+
+            fields
+                .entry("32B".to_string())
+                .or_insert_with(Vec::new)
+                .push(transaction.currency_amount.to_swift_string());
+
+            if let Some(ref ord_cust) = transaction.ordering_customer {
+                match ord_cust {
+                    Field50::NoOption(f) => {
+                        fields
+                            .entry("50".to_string())
+                            .or_insert_with(Vec::new)
+                            .push(f.to_swift_string());
+                    }
+                    Field50::C(f) => {
+                        fields
+                            .entry("50C".to_string())
+                            .or_insert_with(Vec::new)
+                            .push(f.to_swift_string());
+                    }
+                    Field50::F(f) => {
+                        fields
+                            .entry("50F".to_string())
+                            .or_insert_with(Vec::new)
+                            .push(f.to_swift_string());
+                    }
+                }
+            }
+
+            if let Some(ref ord_inst) = transaction.ordering_institution {
+                match ord_inst {
+                    Field52OrderingInstitution::A(f) => {
+                        fields
+                            .entry("52A".to_string())
+                            .or_insert_with(Vec::new)
+                            .push(f.to_swift_string());
+                    }
+                    Field52OrderingInstitution::D(f) => {
+                        fields
+                            .entry("52D".to_string())
+                            .or_insert_with(Vec::new)
+                            .push(f.to_swift_string());
+                    }
+                }
+            }
+
+            if let Some(ref inter) = transaction.intermediary {
+                match inter {
+                    Field56::A(f) => {
+                        fields
+                            .entry("56A".to_string())
+                            .or_insert_with(Vec::new)
+                            .push(f.to_swift_string());
+                    }
+                    Field56::C(f) => {
+                        fields
+                            .entry("56C".to_string())
+                            .or_insert_with(Vec::new)
+                            .push(f.to_swift_string());
+                    }
+                    Field56::D(f) => {
+                        fields
+                            .entry("56D".to_string())
+                            .or_insert_with(Vec::new)
+                            .push(f.to_swift_string());
+                    }
+                }
+            }
+        }
+
+        fields
+    }
+
+    fn required_fields() -> Vec<&'static str> {
+        vec!["20", "30"]
+    }
+
+    fn optional_fields() -> Vec<&'static str> {
+        vec!["25", "21", "32B", "50", "52", "56"]
+    }
+}

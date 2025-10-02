@@ -1,6 +1,7 @@
+use super::swift_utils::{parse_exact_length, parse_swift_chars, parse_uppercase};
+use crate::errors::ParseError;
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::SwiftField;
-use swift_mt_message_macros::serde_swift_fields;
 
 ///   **Field 23: Further Identification**
 ///
@@ -94,216 +95,364 @@ use swift_mt_message_macros::serde_swift_fields;
 /// - Swift FIN User Handbook: Further Identification Field Specifications
 /// - Money Market Standards: Function Code Classifications
 /// - Treasury Operations Guide: Transaction Identification Best Practices
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field23 {
     /// Function code (3!a format: BASE, CALL, COMMERCIAL, CURRENT, DEPOSIT, NOTICE, PRIME)
-    #[component("3!a")]
+    ///
+    /// Determines transaction processing type and whether days field is required
     pub function_code: String,
-    /// Number of days (2!n format, optional, only for NOTICE function)
-    #[component("2!n")]
-    pub days: Option<u8>,
+
+    /// Optional days specification (2!n format, 1-99)
+    ///
+    /// Only present for NOTICE function code, specifies notice period in days
+    pub days: Option<u32>,
+
     /// Reference information (11x format)
-    #[component("11x")]
+    ///
+    /// Additional transaction identification or reference details
     pub reference: String,
+}
+
+impl SwiftField for Field23 {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        if input.len() < 4 {
+            // Minimum: 3 char function code + 1 char reference
+            return Err(ParseError::InvalidFormat {
+                message: format!(
+                    "Field 23 must be at least 4 characters, found {}",
+                    input.len()
+                ),
+            });
+        }
+
+        // Parse function code (first 3 characters)
+        let function_code = parse_exact_length(&input[0..3], 3, "Field 23 function code")?;
+        parse_uppercase(&function_code, "Field 23 function code")?;
+
+        // Check if days field is present (next 2 characters could be numeric)
+        let (days, reference_start) = if input.len() >= 5 {
+            let potential_days = &input[3..5];
+            if potential_days.chars().all(|c| c.is_numeric()) {
+                let days_value =
+                    potential_days
+                        .parse::<u32>()
+                        .map_err(|_| ParseError::InvalidFormat {
+                            message: "Invalid days value in Field 23".to_string(),
+                        })?;
+
+                // Validate days range (1-99)
+                if days_value == 0 || days_value > 99 {
+                    return Err(ParseError::InvalidFormat {
+                        message: format!(
+                            "Field 23 days must be between 1 and 99, found {}",
+                            days_value
+                        ),
+                    });
+                }
+
+                // NOTICE function code requires days field
+                if function_code != "NOT" && function_code != "NOTICE" {
+                    return Err(ParseError::InvalidFormat {
+                        message: format!(
+                            "Days field only allowed for NOTICE function code, found {}",
+                            function_code
+                        ),
+                    });
+                }
+
+                (Some(days_value), 5)
+            } else {
+                (None, 3)
+            }
+        } else {
+            (None, 3)
+        };
+
+        // Parse reference (remaining characters, max 11)
+        let reference = if input.len() > reference_start {
+            let ref_str = &input[reference_start..];
+            if ref_str.len() > 11 {
+                return Err(ParseError::InvalidFormat {
+                    message: format!(
+                        "Field 23 reference must be at most 11 characters, found {}",
+                        ref_str.len()
+                    ),
+                });
+            }
+            parse_swift_chars(ref_str, "Field 23 reference")?;
+            ref_str.to_string()
+        } else {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 23 reference is required".to_string(),
+            });
+        };
+
+        Ok(Field23 {
+            function_code,
+            days,
+            reference,
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        let mut result = String::from(":23:");
+        result.push_str(&self.function_code);
+        if let Some(days) = self.days {
+            result.push_str(&format!("{:02}", days));
+        }
+        result.push_str(&self.reference);
+        result
+    }
 }
 
 ///   **Field 23B: Bank Operation Code**
 ///
 /// ## Purpose
-/// Identifies the type of operation and associated service level for the payment instruction.
-/// This field determines processing rules, STP compliance requirements, and available service features.
+/// Specifies the bank operation code for payment instructions, determining the service
+/// level and processing type for customer credit transfers. This field is crucial for
+/// STP (Straight Through Processing) and affects how the payment is processed through
+/// the payment chain.
 ///
 /// ## Format
 /// - **Swift Format**: `4!c`
-/// - **Description**: Exactly 4 alphabetic characters (uppercase)
-/// - **Character Set**: A-Z only, no numbers or special characters
+/// - **Description**: Exactly 4 uppercase alphabetic characters
+/// - **Valid Codes**: CRED, CRTS, SPAY, SPRI, SSTD
 ///
-/// ## Presence
-/// - **Status**: Mandatory in MT103, MT102, and related payment messages
-/// - **Swift Error Codes**: T12 (invalid code), T15 (field not allowed)
-/// - **Referenced in Rules**: C3, C4, C5, C6, C8, C10, C11, C12 (MT103)
-///
-/// ## Valid Codes
-/// - **CRED**: Normal credit transfer (no specific SWIFT Service Level)
-/// - **CRTS**: Test message (should not be processed on FIN network)
-/// - **SPAY**: SWIFTPay Service Level (premium service)
-/// - **SPRI**: Priority Service Level (highest priority)
-/// - **SSTD**: Standard Service Level (standard processing)
+/// ## Code Definitions
+/// - **CRED**: Creditor transfer - Standard credit transfer
+/// - **CRTS**: Credit transfer with time criticality
+/// - **SPAY**: Priority payment - High priority processing
+/// - **SPRI**: Priority payment with immediate processing
+/// - **SSTD**: Standard transfer - Normal processing priority
 ///
 /// ## Network Validation Rules
-/// - **C3**: If SPRI → field 23E restricted to SDVA, TELB, PHOB, INTC only
-/// - **C3**: If SSTD or SPAY → field 23E must not be present
-/// - **C4**: Service levels affect correspondent institution field requirements
-/// - **C6**: SPRI requires specific BIC validation for certain regions
-/// - **C10**: If SPRI → field 56a (Intermediary) must not be present
-/// - **C12**: Service levels mandate beneficiary account requirements
+/// - **Format**: Must be exactly 4 alphabetic characters
+/// - **Case**: Must be uppercase
+/// - **Validity**: Must be one of the defined codes
 ///
-/// ## Usage Rules
-/// - **Service Level Selection**: Choose based on urgency and STP requirements
-/// - **Cost Implications**: SPRI and SPAY typically incur higher fees
-/// - **Processing Time**: SPRI processes faster than SSTD, CRED has standard timing
-/// - **STP Compliance**: SPRI, SPAY, SSTD enable straight-through processing
-///
-/// ## STP Compliance
-/// - **STP-Enabled Codes**: SPRI, SPAY, SSTD
-/// - **Non-STP Code**: CRED (legacy processing)
-/// - **Additional Restrictions**: STP codes have stricter field format requirements
-/// - **Correspondent Constraints**: Service levels limit correspondent field options
-///
-/// ## Regional Considerations
-/// - **EU/EEA**: Service level affects SEPA compliance and processing routes
-/// - **Correspondents**: Some institutions only support specific service levels
-/// - **Settlement**: Service level determines settlement timing and priority
-///
-/// ## Examples
-/// ```logic
-/// :23B:CRED    // Normal credit transfer
-/// :23B:SPRI    // Priority service level
-/// :23B:SSTD    // Standard service level  
-/// :23B:SPAY    // SWIFTPay service
-/// ```
-///
-/// ## Related Fields
-/// - **Field 23E**: Instruction Code (availability depends on 23B value)
-/// - **Field 13C**: Time Indication (may be required for certain service levels)
-/// - **Field 72**: Sender to Receiver Information (service level details)
-///
-/// ## Error Handling
-/// - **Invalid Code**: Results in T12 error and message rejection
-/// - **Rule Violations**: Service level constraints trigger specific C-rule errors
-/// - **STP Failures**: Non-compliant combinations cause processing delays
-///
-/// ## See Also
-/// - Swift FIN User Handbook: Service Level Definitions
-/// - MT103 Usage Rules: Bank Operation Code Guidelines
-/// - STP Implementation Guide: Service Level Requirements
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+/// ## STP Impact
+/// - Determines processing priority and routing
+/// - Affects cut-off times and settlement windows
+/// - Influences fee structures and service levels
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field23B {
     /// Bank operation code indicating service level and processing type
     ///
     /// Format: 4!c - Exactly 4 alphabetic characters
     /// Valid codes: CRED, CRTS, SPAY, SPRI, SSTD
-    #[component("4!c")]
     pub instruction_code: String,
+}
+
+impl SwiftField for Field23B {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Must be exactly 4 characters
+        let instruction_code = parse_exact_length(input, 4, "Field 23B instruction code")?;
+
+        // Must be uppercase alphabetic
+        parse_uppercase(&instruction_code, "Field 23B instruction code")?;
+
+        // Validate against known codes
+        // Common codes: CRED (Customer Transfer), CRTS (Credit Transfer System),
+        // SPAY (STP), SPRI (Priority), SSTD (Standard), URGP (Urgent Payment),
+        // SDVA (Same Day Value), TELB (Telecommunication Bulk)
+        const VALID_CODES: &[&str] = &[
+            "CRED", "CRTS", "SPAY", "SPRI", "SSTD", "URGP", "SDVA", "TELB", "PHON", "PHOB", "PHOI",
+            "TELE", "REPA", "CORT", "INTC", "HOLD",
+        ];
+        if !VALID_CODES.contains(&instruction_code.as_str()) {
+            return Err(ParseError::InvalidFormat {
+                message: format!(
+                    "Field 23B instruction code must be one of {:?}, found {}",
+                    VALID_CODES, instruction_code
+                ),
+            });
+        }
+
+        Ok(Field23B { instruction_code })
+    }
+
+    fn to_swift_string(&self) -> String {
+        format!(":23B:{}", self.instruction_code)
+    }
 }
 
 ///   **Field 23E: Instruction Code**
 ///
 /// ## Purpose
-/// Specifies detailed payment instructions and processing directives that complement
-/// the bank operation code in Field 23B. This field provides granular control over
-/// payment processing, delivery methods, and special handling requirements essential
-/// for precise transaction execution and compliance with specific service levels.
+/// Provides additional instruction codes for payment processing, enabling specific
+/// handling instructions and regulatory compliance indicators. Each instruction consists
+/// of a 4-character code optionally followed by additional information.
 ///
-/// ## Format Specification
-/// - **Swift Format**: `4!c[/30x]`
-/// - **Structure**: Mandatory instruction code + optional additional information
-/// - **Instruction Code**: Exactly 4 alphabetic characters (uppercase)
-/// - **Additional Info**: Up to 30 characters for supplementary details
+/// ## Format
+/// - **Swift Format**: `4!c[/35x]`
+/// - **Structure**: Instruction code + optional additional information
+/// - **Multiple Instructions**: Can contain multiple instruction codes
 ///
-/// ## Business Context Applications
-/// - **Payment Instructions**: Specific delivery and processing directives
-/// - **Service Level Compliance**: Instructions aligned with Field 23B service levels
-/// - **Special Handling**: Non-standard processing requirements
-/// - **Delivery Methods**: Communication and notification preferences
-///
-/// ## Instruction Code Categories
-/// ### Standard Delivery Instructions
-/// - **SDVA**: Same day value (immediate processing)
-/// - **TELB**: Telephone beneficiary before crediting
-/// - **PHOB**: Phone beneficiary organization before payment
-/// - **INTC**: Intermediary contact required
-///
-/// ### Communication Instructions
-/// - **TELE**: Telephone advice required
-/// - **TELEAUTH**: Telephone authorization needed
-/// - **HOLD**: Hold payment for specific conditions
-/// - **RETN**: Return if undeliverable
-///
-/// ## Network Validation Requirements
-/// - **Service Level Constraints**: Availability depends on Field 23B value
-/// - **SPRI Service**: Only SDVA, TELB, PHOB, INTC allowed with Priority Service
-/// - **SSTD/SPAY Services**: Field 23E must not be present
-/// - **Character Set**: Standard SWIFT character set for additional information
-/// - **Length Validation**: Additional info maximum 30 characters
-///
-/// ## Field 23B Integration Rules
-/// ### Priority Service Level (SPRI)
-/// - **Allowed Codes**: SDVA, TELB, PHOB, INTC only
-/// - **Processing Impact**: Immediate execution requirements
-/// - **Validation Rule**: C3 constraint enforcement
-/// - **STP Compliance**: Enhanced straight-through processing
-///
-/// ### Standard/SWIFTPay Service (SSTD/SPAY)
-/// - **Field Restriction**: Field 23E must not be present
-/// - **Automated Processing**: No manual intervention instructions
-/// - **STP Requirements**: Full automation compliance
-/// - **Error Prevention**: C3 rule violation avoidance
-///
-/// ## Regional Considerations
-/// - **Local Practices**: Regional instruction code interpretation
-/// - **Central Bank Rules**: Regulatory instruction requirements
-/// - **Correspondent Capabilities**: Institution-specific instruction support
-/// - **Settlement Systems**: Local system instruction integration
-///
-/// ## Processing Impact
-/// ### Same Day Value (SDVA)
-/// - **Timing**: Immediate value date processing
-/// - **Priority**: High priority execution
-/// - **Settlement**: Same day settlement requirements
-/// - **Cost**: Potential premium charges
-///
-/// ### Communication Requirements (TELB/PHOB)
-/// - **Manual Intervention**: Human contact required
-/// - **Processing Delay**: Additional processing time
-/// - **Verification**: Beneficiary confirmation needed
-/// - **Documentation**: Contact record maintenance
-///
-/// ## Error Prevention Guidelines
-/// - **Service Level Validation**: Verify compatibility with Field 23B
-/// - **Instruction Appropriateness**: Confirm instruction necessity
-/// - **Additional Info Format**: Ensure character set compliance
-/// - **Processing Capability**: Verify recipient institution capability
-///
-/// ## Related Fields Integration
-/// - **Field 23B**: Bank Operation Code (service level dependency)
-/// - **Field 13C**: Time Indication (timing coordination)
-/// - **Field 72**: Sender to Receiver Information (instruction context)
-/// - **Field 57A**: Account with Institution (delivery coordination)
-///
-/// ## Compliance Framework
-/// - **Service Level Agreements**: Instruction compliance with SLAs
-/// - **Regulatory Requirements**: Instruction regulatory compliance
-/// - **Operational Procedures**: Standard operating procedure alignment
-/// - **Audit Documentation**: Instruction rationale documentation
-///
-/// ## Usage Examples
-/// ```logic
-/// :23E:SDVA             // Same day value instruction
-/// :23E:TELB/URGENT      // Telephone beneficiary with urgency note
-/// :23E:PHOB/CONFIRM     // Phone organization with confirmation required
-/// :23E:INTC/AUTH REQ    // Intermediary contact with authorization request
-/// ```
-///
-/// ## Best Practices
-/// - **Selective Usage**: Only include when necessary for processing
-/// - **Service Level Alignment**: Ensure compatibility with Field 23B
-/// - **Clear Instructions**: Provide clear additional information
-/// - **Cost Consideration**: Understand fee implications of special instructions
-///
-/// ## See Also
-/// - Swift FIN User Handbook: Instruction Code Specifications
-/// - MT103 Usage Rules: Field 23E Implementation Guidelines
-/// - Service Level Guide: Instruction Code Compatibility Matrix
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+/// ## Common Instruction Codes
+/// ### Regulatory Instructions
+/// - **CHQB**: Cheque settlement instruction
+/// - **CORT**: Corporate trade settlement
+/// - **HOLD**: Hold for compliance review
+/// - **PHON**: Phone verification completed
+/// - **REPA**: Regulatory reporting required
+/// - **SDVA**: Same day value adjustment
+/// - **TELB**: Telephone initiated transfer
+/// - **URGP**: Urgent payment instruction
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field23E {
-    /// Instruction code
-    #[component("4!c")]
+    /// Instruction code (4!c format)
+    ///
+    /// Specifies the type of instruction for processing
     pub instruction_code: String,
-    /// Additional information (optional)
-    #[component("[/30x]")]
+
+    /// Optional additional information (up to 35 characters)
+    ///
+    /// Provides supplementary details for the instruction code
     pub additional_info: Option<String>,
+}
+
+impl SwiftField for Field23E {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        if input.len() < 4 {
+            return Err(ParseError::InvalidFormat {
+                message: format!(
+                    "Field 23E must be at least 4 characters, found {}",
+                    input.len()
+                ),
+            });
+        }
+
+        // Parse instruction code (first 4 characters)
+        let instruction_code = parse_exact_length(&input[0..4], 4, "Field 23E instruction code")?;
+        parse_uppercase(&instruction_code, "Field 23E instruction code")?;
+
+        // Check for optional additional information after slash
+        let additional_info = if input.len() > 4 {
+            if !input[4..].starts_with('/') {
+                return Err(ParseError::InvalidFormat {
+                    message: "Field 23E additional information must start with '/'".to_string(),
+                });
+            }
+
+            let info = &input[5..];
+            if info.len() > 35 {
+                return Err(ParseError::InvalidFormat {
+                    message: format!(
+                        "Field 23E additional information must be at most 35 characters, found {}",
+                        info.len()
+                    ),
+                });
+            }
+
+            parse_swift_chars(info, "Field 23E additional information")?;
+            Some(info.to_string())
+        } else {
+            None
+        };
+
+        Ok(Field23E {
+            instruction_code,
+            additional_info,
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        let mut result = String::from(":23E:");
+        result.push_str(&self.instruction_code);
+        if let Some(ref info) = self.additional_info {
+            result.push('/');
+            result.push_str(info);
+        }
+        result
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field23() {
+        // Test with days field (NOTICE)
+        let field = Field23::parse("NOT02REFERENCE1").unwrap();
+        assert_eq!(field.function_code, "NOT");
+        assert_eq!(field.days, Some(2));
+        assert_eq!(field.reference, "REFERENCE1");
+
+        // Test without days field
+        let field = Field23::parse("BASREFERENCE").unwrap();
+        assert_eq!(field.function_code, "BAS");
+        assert_eq!(field.days, None);
+        assert_eq!(field.reference, "REFERENCE");
+
+        // Test to_swift_string
+        let field = Field23 {
+            function_code: "NOT".to_string(),
+            days: Some(15),
+            reference: "REF123".to_string(),
+        };
+        assert_eq!(field.to_swift_string(), ":23:NOT15REF123");
+    }
+
+    #[test]
+    fn test_field23b() {
+        // Test valid codes
+        let field = Field23B::parse("SSTD").unwrap();
+        assert_eq!(field.instruction_code, "SSTD");
+
+        let field = Field23B::parse("SPRI").unwrap();
+        assert_eq!(field.instruction_code, "SPRI");
+
+        // Test invalid length
+        assert!(Field23B::parse("SST").is_err());
+        assert!(Field23B::parse("SSTDD").is_err());
+
+        // Test invalid code
+        assert!(Field23B::parse("XXXX").is_err());
+
+        // Test lowercase (should fail)
+        assert!(Field23B::parse("sstd").is_err());
+    }
+
+    #[test]
+    fn test_field23e() {
+        // Test with additional info
+        let field = Field23E::parse("CHQB/CHECK NUMBER 12345").unwrap();
+        assert_eq!(field.instruction_code, "CHQB");
+        assert_eq!(
+            field.additional_info,
+            Some("CHECK NUMBER 12345".to_string())
+        );
+
+        // Test without additional info
+        let field = Field23E::parse("URGP").unwrap();
+        assert_eq!(field.instruction_code, "URGP");
+        assert_eq!(field.additional_info, None);
+
+        // Test to_swift_string
+        let field = Field23E {
+            instruction_code: "HOLD".to_string(),
+            additional_info: Some("COMPLIANCE REVIEW".to_string()),
+        };
+        assert_eq!(field.to_swift_string(), ":23E:HOLD/COMPLIANCE REVIEW");
+
+        // Test max length additional info
+        let long_info = "A".repeat(35);
+        let input = format!("CODE/{}", long_info);
+        assert!(Field23E::parse(&input).is_ok());
+
+        // Test too long additional info
+        let too_long = "A".repeat(36);
+        let input = format!("CODE/{}", too_long);
+        assert!(Field23E::parse(&input).is_err());
+    }
 }

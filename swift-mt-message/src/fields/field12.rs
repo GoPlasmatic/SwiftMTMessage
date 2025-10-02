@@ -70,9 +70,9 @@
 //! - Processing Guidelines: Sub-Type Routing Rules
 //! - System Integration Guide: Sub-Type Code Usage
 
+use super::swift_utils::{parse_exact_length, parse_numeric};
+use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use swift_mt_message_macros::SwiftField;
-use swift_mt_message_macros::serde_swift_fields;
 
 /// **Field 12: Sub Message Type**
 ///
@@ -83,13 +83,61 @@ use swift_mt_message_macros::serde_swift_fields;
 /// - Type code (3!n, exactly 3 numeric digits)
 ///
 /// For complete documentation, see the [Field 12 module](index.html).
-#[serde_swift_fields]
-#[derive(Debug, Clone, PartialEq, SwiftField, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field12 {
     /// Sub-message type or categorization code
     ///
     /// Format: 3!n - Exactly 3 numeric digits (0-9)
     /// Used for additional message classification within main MT type
-    #[component("3!n")]
     pub type_code: String,
+}
+
+impl SwiftField for Field12 {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Must be exactly 3 numeric digits
+        let type_code = parse_exact_length(input, 3, "Field 12 type code")?;
+        parse_numeric(&type_code, "Field 12 type code")?;
+
+        Ok(Field12 { type_code })
+    }
+
+    fn to_swift_string(&self) -> String {
+        format!(":12:{}", self.type_code)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_field12_valid() {
+        let field = Field12::parse("103").unwrap();
+        assert_eq!(field.type_code, "103");
+        assert_eq!(field.to_swift_string(), ":12:103");
+
+        let field = Field12::parse("001").unwrap();
+        assert_eq!(field.type_code, "001");
+        assert_eq!(field.to_swift_string(), ":12:001");
+
+        let field = Field12::parse("950").unwrap();
+        assert_eq!(field.type_code, "950");
+        assert_eq!(field.to_swift_string(), ":12:950");
+    }
+
+    #[test]
+    fn test_field12_invalid() {
+        // Too short
+        assert!(Field12::parse("12").is_err());
+
+        // Too long
+        assert!(Field12::parse("1234").is_err());
+
+        // Non-numeric
+        assert!(Field12::parse("ABC").is_err());
+        assert!(Field12::parse("12A").is_err());
+    }
 }

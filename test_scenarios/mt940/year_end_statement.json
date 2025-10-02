@@ -72,10 +72,8 @@
                 "reference": "ANNUAL"
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_id"
-                    }
+                "authorisation": {
+                    "var": "account_id"
                 }
             },
             "28C": {
@@ -83,19 +81,47 @@
                     "var": "statement_num"
                 }
             },
-            "60": {
-                "F": {
-                    "debit_credit_mark": "C",
-                    "value_date": "2024-01-01",
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "opening_balance"
-                    }
+            "60F": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-01-01",
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "opening_balance"
                 }
             },
-            "#": [
+            "62F": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-31",
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "closing_balance"
+                }
+            },
+            "64": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-31",
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": {
+                    "var": "closing_balance"
+                }
+            },
+            "86": {
+                "narrative": [
+                    "/ANNUAL SUMMARY 2024/",
+                    "/TOTAL CREDITS/359 TRANSACTIONS",
+                    "/TOTAL DEBITS/304 TRANSACTIONS",
+                    "/HIGH/2,500,0000 LOW/1,200,0000",
+                    "/AVERAGE BALANCE/1,850,0000",
+                    "/THANK YOU FOR YOUR BUSINESS/"
+                ]
+            },
+            "statement_lines": [
                 {
                     "61": {
                         "value_date": "2024-03-31",
@@ -216,39 +242,7 @@
                         ]
                     }
                 }
-            ],
-            "62": {
-                "F": {
-                    "debit_credit_mark": "C",
-                    "value_date": "2024-12-31",
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": {
-                        "var": "closing_balance"
-                    }
-                }
-            },
-            "64": {
-                "debit_credit_mark": "C",
-                "value_date": "2024-12-31",
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "closing_balance"
-                }
-            },
-            "86": {
-                "narrative": [
-                    "/ANNUAL SUMMARY 2024/",
-                    "/TOTAL CREDITS/359 TRANSACTIONS",
-                    "/TOTAL DEBITS/304 TRANSACTIONS",
-                    "/HIGH/2,500,0000 LOW/1,200,0000",
-                    "/AVERAGE BALANCE/1,850,0000",
-                    "/THANK YOU FOR YOUR BUSINESS/"
-                ]
-            }
+            ]
         }
     }
 }

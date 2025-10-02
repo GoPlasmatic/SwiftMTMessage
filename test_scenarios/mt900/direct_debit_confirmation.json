@@ -89,10 +89,8 @@
                 }
             },
             "25": {
-                "NoOption": {
-                    "authorisation": {
-                        "var": "account_number"
-                    }
+                "authorisation": {
+                    "var": "account_number"
                 }
             },
             "32A": {
@@ -106,11 +104,9 @@
                     "var": "dd_amount"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "creditor_bic"
-                    }
+            "52A": {
+                "bic": {
+                    "var": "creditor_bic"
                 }
             },
             "72": {

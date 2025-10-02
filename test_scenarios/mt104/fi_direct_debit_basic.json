@@ -91,13 +91,6 @@
                     "var": "execution_date"
                 }
             },
-            "52": {
-                "A": {
-                    "bic": {
-                        "var": "sender_bic"
-                    }
-                }
-            },
             "71A": {
                 "code": {
                     "var": "charges"
@@ -123,28 +116,19 @@
                         }
                     },
                     "59": {
-                        "NoOption": {
-                            "account": "1000000000000000",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                "DEBTOR ACCOUNT HOLDER",
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    "57": {
-                        "A": {
-                            "bic": {
-                                "var": "receiver_bic"
+                        "account": "1000000000000000",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "DEBTOR ACCOUNT HOLDER",
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
                             }
-                        }
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -161,28 +145,23 @@
                             "/CD/RECURRING PAYMENT"
                         ]
                     },
-                    "creditor_tx": {
-                        "K": {
-                            "account": "CREDITOR-001",
-                            "name_and_address": [
-                                "ACME CORPORATION",
-                                {
-                                    "cat": [
-                                        "CREDITOR INSTITUTION/",
-                                        {
-                                            "var": "sender_lei"
-                                        }
-                                    ]
-                                },
-                                "123 MAIN STREET",
-                                {
-                                    "cat": [
-                                        "NEW YORK",
-                                        ", ",
-                                        "US"
-                                    ]
-                                }
-                            ]
+                    "50K": {
+                        "account": "CREDITOR-001",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "123 MAIN STREET",
+                            {
+                                "cat": [
+                                    "NEW YORK",
+                                    ", ",
+                                    "US"
+                                ]
+                            }
+                        ]
+                    },
+                    "57A": {
+                        "bic": {
+                            "var": "receiver_bic"
                         }
                     }
                 }
@@ -193,6 +172,11 @@
                 },
                 "amount": {
                     "var": "debit_amount"
+                }
+            },
+            "52A": {
+                "bic": {
+                    "var": "sender_bic"
                 }
             }
         }

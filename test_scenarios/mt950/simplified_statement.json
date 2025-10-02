@@ -93,16 +93,6 @@
                 "statement_number": 1234,
                 "sequence_number": 1
             },
-            "60": {
-                "F": {
-                    "debit_credit_mark": "C",
-                    "value_date": "2024-12-20",
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": 250000
-                }
-            },
             "61": [
                 {
                     "value_date": "2024-12-20",
@@ -129,6 +119,24 @@
                     "bank_reference": "BA3-1234567890"
                 }
             ],
+            "64": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-20",
+                "currency": {
+                    "var": "currency"
+                },
+                "amount": 495000
+            },
+            "60": {
+                "F": {
+                    "debit_credit_mark": "C",
+                    "value_date": "2024-12-20",
+                    "currency": {
+                        "var": "currency"
+                    },
+                    "amount": 250000
+                }
+            },
             "62": {
                 "F": {
                     "debit_credit_mark": "C",
@@ -138,14 +146,6 @@
                     },
                     "amount": 258000
                 }
-            },
-            "64": {
-                "debit_credit_mark": "C",
-                "value_date": "2024-12-20",
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": 495000
             }
         }
     }

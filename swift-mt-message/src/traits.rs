@@ -25,19 +25,23 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
         Self::parse(value)
     }
 
-    /// Convert field back to SWIFT string format
+    /// Convert field back to SWIFT string format (includes tag)
     fn to_swift_string(&self) -> String;
 
-    /// Get field format specification
-    fn format_spec() -> &'static str;
-
-    /// Get valid variant letters for enum fields
-    /// Returns None for non-enum fields, Some(vec) for enum fields
-    fn valid_variants() -> Option<Vec<&'static str>> {
-        None // Default implementation for non-enum fields
+    /// Get the field value without tag (for JSON serialization)
+    fn to_swift_value(&self) -> String {
+        // Default implementation: if to_swift_string includes tag, strip it
+        let swift_str = self.to_swift_string();
+        if let Some(pos) = swift_str.find(':')
+            && let Some(second_colon) = swift_str[pos + 1..].find(':')
+        {
+            // Format is :TAG:VALUE, return VALUE
+            return swift_str[pos + second_colon + 2..].to_string();
+        }
+        swift_str
     }
 
-    /// Get the variant tag for enum fields (e.g., "A", "F", "M")
+    /// Get the variant tag for this field value (for enum fields)
     /// Returns None for non-enum fields
     fn get_variant_tag(&self) -> Option<&'static str> {
         None

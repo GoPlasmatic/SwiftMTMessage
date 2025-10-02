@@ -93,16 +93,14 @@
                     "var": "cost_amount"
                 }
             },
-            "52": {
-                "D": {
-                    "party_identifier": "COMPLIANCE DEPT",
-                    "name_and_address": [
-                        "REGULATORY COMPLIANCE",
-                        "FINANCIAL CRIMES UNIT",
-                        "NEW YORK",
-                        "UNITED STATES"
-                    ]
-                }
+            "52D": {
+                "party_identifier": "COMPLIANCE DEPT",
+                "name_and_address": [
+                    "REGULATORY COMPLIANCE",
+                    "FINANCIAL CRIMES UNIT",
+                    "NEW YORK",
+                    "UNITED STATES"
+                ]
             },
             "71B": {
                 "details": [

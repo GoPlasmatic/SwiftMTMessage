@@ -1,6 +1,7 @@
 use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT291 - Request for Payment of Charges, Interest and Other Expenses
@@ -88,48 +89,16 @@ impl crate::traits::SwiftMessageBody for MT291 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.field_20);
+        append_field(&mut result, &self.field_21);
+        append_field(&mut result, &self.field_32b);
+        append_optional_field(&mut result, &self.field_52);
+        append_optional_field(&mut result, &self.field_57);
+        append_field(&mut result, &self.field_71b);
+        append_optional_field(&mut result, &self.field_72);
 
-        result.push_str(&self.field_21.to_swift_string());
-        result.push_str("\r\n");
-
-        result.push_str(&self.field_32b.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_52 {
-            match field {
-                Field52OrderingInstitution::A(f) => result.push_str(&f.to_swift_string()),
-                Field52OrderingInstitution::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_57 {
-            match field {
-                Field57AccountWithABD::A(f) => result.push_str(&f.to_swift_string()),
-                Field57AccountWithABD::B(f) => result.push_str(&f.to_swift_string()),
-                Field57AccountWithABD::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        result.push_str(&self.field_71b.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_72 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

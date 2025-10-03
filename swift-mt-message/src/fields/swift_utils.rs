@@ -207,6 +207,45 @@ pub fn parse_amount(input: &str) -> Result<f64, ParseError> {
         })
 }
 
+/// Format amount for SWIFT output with comma decimal separator
+///
+/// This function ensures SWIFT-compliant amount formatting:
+/// - Uses comma (,) as decimal separator instead of period (.)
+/// - Maintains proper decimal precision (typically 2 decimal places)
+/// - Ensures at least one digit in the integer part
+/// - Removes trailing zeros after decimal for cleaner output
+///
+/// # Arguments
+/// * `amount` - The amount to format
+/// * `decimals` - Number of decimal places (typically 2 for most currencies)
+///
+/// # Returns
+/// SWIFT-formatted amount string with comma separator
+///
+/// # Examples
+/// ```
+/// assert_eq!(format_swift_amount(1234.56, 2), "1234,56");
+/// assert_eq!(format_swift_amount(1000.00, 2), "1000");
+/// assert_eq!(format_swift_amount(1000.50, 2), "1000,5");
+/// ```
+pub fn format_swift_amount(amount: f64, decimals: usize) -> String {
+    let formatted = format!("{:.width$}", amount, width = decimals);
+    let with_comma = formatted.replace('.', ",");
+
+    // Remove trailing zeros after comma for cleaner output
+    // e.g., "1000,00" -> "1000", "1000,50" -> "1000,5"
+    if with_comma.contains(',') {
+        let trimmed = with_comma.trim_end_matches('0');
+        if trimmed.ends_with(',') {
+            trimmed.trim_end_matches(',').to_string()
+        } else {
+            trimmed.to_string()
+        }
+    } else {
+        with_comma
+    }
+}
+
 /// Parse date in YYMMDD format
 pub fn parse_date_yymmdd(input: &str) -> Result<NaiveDate, ParseError> {
     if input.len() != 6 {
@@ -446,6 +485,32 @@ mod tests {
         assert!(parse_amount("1234,56").is_ok()); // European format
         assert!(parse_amount("1234").is_ok());
         assert!(parse_amount("abc").is_err());
+    }
+
+    #[test]
+    fn test_format_swift_amount() {
+        // Test standard 2 decimal formatting
+        assert_eq!(format_swift_amount(1234.56, 2), "1234,56");
+        assert_eq!(format_swift_amount(1000.00, 2), "1000");
+        assert_eq!(format_swift_amount(1000.50, 2), "1000,5");
+
+        // Test trailing zero removal
+        assert_eq!(format_swift_amount(5000.00, 2), "5000");
+        assert_eq!(format_swift_amount(2500.00, 2), "2500");
+
+        // Test with single decimal
+        assert_eq!(format_swift_amount(250.75, 2), "250,75");
+        assert_eq!(format_swift_amount(99.99, 2), "99,99");
+
+        // Test large amounts
+        assert_eq!(format_swift_amount(1000000.0, 2), "1000000");
+        assert_eq!(format_swift_amount(1234567.89, 2), "1234567,89");
+
+        // Test zero decimals (for currencies like JPY)
+        assert_eq!(format_swift_amount(1500000.0, 0), "1500000");
+
+        // Test three decimals (for currencies like BHD)
+        assert_eq!(format_swift_amount(123.456, 3), "123,456");
     }
 
     #[test]

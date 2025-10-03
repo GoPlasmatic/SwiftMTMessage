@@ -1,4 +1,5 @@
 use crate::fields::*;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT107: General Direct Debit Message
@@ -334,220 +335,52 @@ impl crate::traits::SwiftMessageBody for MT107 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
         // Sequence A - General Information
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_23e {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_21e {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        result.push_str(&self.field_30.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_51a {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.instructing_party {
-            match field {
-                Field50InstructingParty::C(f) => result.push_str(&f.to_swift_string()),
-                Field50InstructingParty::L(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.creditor {
-            match field {
-                Field50Creditor::A(f) => result.push_str(&f.to_swift_string()),
-                Field50Creditor::K(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_52 {
-            match field {
-                Field52CreditorBank::A(f) => result.push_str(&f.to_swift_string()),
-                Field52CreditorBank::C(f) => result.push_str(&f.to_swift_string()),
-                Field52CreditorBank::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_26t {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_77b {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_71a {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_72 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
+        append_field(&mut result, &self.field_20);
+        append_optional_field(&mut result, &self.field_23e);
+        append_optional_field(&mut result, &self.field_21e);
+        append_field(&mut result, &self.field_30);
+        append_optional_field(&mut result, &self.field_51a);
+        append_optional_field(&mut result, &self.instructing_party);
+        append_optional_field(&mut result, &self.creditor);
+        append_optional_field(&mut result, &self.field_52);
+        append_optional_field(&mut result, &self.field_26t);
+        append_optional_field(&mut result, &self.field_77b);
+        append_optional_field(&mut result, &self.field_71a);
+        append_optional_field(&mut result, &self.field_72);
 
         // Sequence B - Transaction Details
         for txn in &self.transactions {
-            result.push_str(&txn.field_21.to_swift_string());
-            result.push_str("\r\n");
-
-            if let Some(ref field) = txn.field_23e {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_21c {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_21d {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_21e {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            result.push_str(&txn.field_32b.to_swift_string());
-            result.push_str("\r\n");
-
-            if let Some(ref field) = txn.instructing_party_tx {
-                match field {
-                    Field50InstructingParty::C(f) => result.push_str(&f.to_swift_string()),
-                    Field50InstructingParty::L(f) => result.push_str(&f.to_swift_string()),
-                }
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.creditor_tx {
-                match field {
-                    Field50Creditor::A(f) => result.push_str(&f.to_swift_string()),
-                    Field50Creditor::K(f) => result.push_str(&f.to_swift_string()),
-                }
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_52 {
-                match field {
-                    Field52CreditorBank::A(f) => result.push_str(&f.to_swift_string()),
-                    Field52CreditorBank::C(f) => result.push_str(&f.to_swift_string()),
-                    Field52CreditorBank::D(f) => result.push_str(&f.to_swift_string()),
-                }
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_57 {
-                match field {
-                    Field57DebtorBank::A(f) => result.push_str(&f.to_swift_string()),
-                    Field57DebtorBank::B(f) => result.push_str(&f.to_swift_string()),
-                    Field57DebtorBank::C(f) => result.push_str(&f.to_swift_string()),
-                    Field57DebtorBank::D(f) => result.push_str(&f.to_swift_string()),
-                }
-                result.push_str("\r\n");
-            }
-
-            match &txn.field_59 {
-                Field59::NoOption(f) => result.push_str(&f.to_swift_string()),
-                Field59::A(f) => result.push_str(&f.to_swift_string()),
-                Field59::F(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-
-            if let Some(ref field) = txn.field_70 {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_26t {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_77b {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_33b {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_71a {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_71f {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_71g {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.field_36 {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
+            append_field(&mut result, &txn.field_21);
+            append_optional_field(&mut result, &txn.field_23e);
+            append_optional_field(&mut result, &txn.field_21c);
+            append_optional_field(&mut result, &txn.field_21d);
+            append_optional_field(&mut result, &txn.field_21e);
+            append_field(&mut result, &txn.field_32b);
+            append_optional_field(&mut result, &txn.instructing_party_tx);
+            append_optional_field(&mut result, &txn.creditor_tx);
+            append_optional_field(&mut result, &txn.field_52);
+            append_optional_field(&mut result, &txn.field_57);
+            append_field(&mut result, &txn.field_59);
+            append_optional_field(&mut result, &txn.field_70);
+            append_optional_field(&mut result, &txn.field_26t);
+            append_optional_field(&mut result, &txn.field_77b);
+            append_optional_field(&mut result, &txn.field_33b);
+            append_optional_field(&mut result, &txn.field_71a);
+            append_optional_field(&mut result, &txn.field_71f);
+            append_optional_field(&mut result, &txn.field_71g);
+            append_optional_field(&mut result, &txn.field_36);
         }
 
         // Sequence C - Settlement Details
-        result.push_str(&self.field_32b.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.field_32b);
+        append_optional_field(&mut result, &self.field_19);
+        append_optional_field(&mut result, &self.field_71f);
+        append_optional_field(&mut result, &self.field_71g);
+        append_optional_field(&mut result, &self.field_53);
 
-        if let Some(ref field) = self.field_19 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_71f {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_71g {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_53 {
-            match field {
-                Field53SenderCorrespondent::A(f) => result.push_str(&f.to_swift_string()),
-                Field53SenderCorrespondent::B(f) => result.push_str(&f.to_swift_string()),
-                Field53SenderCorrespondent::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

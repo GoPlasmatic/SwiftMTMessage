@@ -1,6 +1,7 @@
 use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT205 - Financial Institution Transfer Execution
@@ -169,91 +170,21 @@ impl crate::traits::SwiftMessageBody for MT205 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        result.push_str(&self.transaction_reference.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.transaction_reference);
+        append_field(&mut result, &self.related_reference);
+        append_vec_field(&mut result, &self.time_indication);
+        append_field(&mut result, &self.value_date_amount);
+        append_optional_field(&mut result, &self.instructed_amount);
+        append_optional_field(&mut result, &self.ordering_institution);
+        append_optional_field(&mut result, &self.senders_correspondent);
+        append_optional_field(&mut result, &self.receivers_correspondent);
+        append_optional_field(&mut result, &self.intermediary);
+        append_optional_field(&mut result, &self.account_with_institution);
+        append_field(&mut result, &self.beneficiary_institution);
+        append_optional_field(&mut result, &self.sender_to_receiver);
 
-        result.push_str(&self.related_reference.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field_13c_vec) = self.time_indication {
-            for field in field_13c_vec {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-        }
-
-        result.push_str(&self.value_date_amount.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.instructed_amount {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.ordering_institution {
-            match field {
-                Field52OrderingInstitution::A(f) => result.push_str(&f.to_swift_string()),
-                Field52OrderingInstitution::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.senders_correspondent {
-            match field {
-                Field53::A(f) => result.push_str(&f.to_swift_string()),
-                Field53::B(f) => result.push_str(&f.to_swift_string()),
-                Field53::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.receivers_correspondent {
-            match field {
-                Field54::A(f) => result.push_str(&f.to_swift_string()),
-                Field54::B(f) => result.push_str(&f.to_swift_string()),
-                Field54::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.intermediary {
-            match field {
-                Field56::A(f) => result.push_str(&f.to_swift_string()),
-                Field56::C(f) => result.push_str(&f.to_swift_string()),
-                Field56::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.account_with_institution {
-            match field {
-                Field57::A(f) => result.push_str(&f.to_swift_string()),
-                Field57::B(f) => result.push_str(&f.to_swift_string()),
-                Field57::C(f) => result.push_str(&f.to_swift_string()),
-                Field57::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        match &self.beneficiary_institution {
-            Field58::A(f) => result.push_str(&f.to_swift_string()),
-            Field58::D(f) => result.push_str(&f.to_swift_string()),
-        }
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.sender_to_receiver {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

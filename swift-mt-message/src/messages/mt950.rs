@@ -1,4 +1,5 @@
 use crate::fields::*;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT950: Statement Message
@@ -221,47 +222,16 @@ impl crate::traits::SwiftMessageBody for MT950 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.field_20);
+        append_field(&mut result, &self.field_25);
+        append_field(&mut result, &self.field_28c);
+        append_field(&mut result, &self.field_60);
+        append_vec_field(&mut result, &self.field_61);
+        append_field(&mut result, &self.field_62);
+        append_optional_field(&mut result, &self.field_64);
 
-        result.push_str(&self.field_25.to_swift_string());
-        result.push_str("\r\n");
-
-        result.push_str(&self.field_28c.to_swift_string());
-        result.push_str("\r\n");
-
-        match &self.field_60 {
-            Field60::F(f) => result.push_str(&f.to_swift_string()),
-            Field60::M(f) => result.push_str(&f.to_swift_string()),
-        }
-        result.push_str("\r\n");
-
-        if let Some(ref field_61_vec) = self.field_61 {
-            for field in field_61_vec {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-        }
-
-        match &self.field_62 {
-            Field62::F(f) => result.push_str(&f.to_swift_string()),
-            Field62::M(f) => result.push_str(&f.to_swift_string()),
-        }
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_64 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

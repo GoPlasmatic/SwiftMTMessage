@@ -1,6 +1,7 @@
 use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -84,31 +85,16 @@ impl crate::traits::SwiftMessageBody for MT292 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
-        // MT292 has specific field order requirements:
-        // Fields 20 and 21 must come before Field 11S
-        let mut ordered_fields = Vec::new();
-
-        // Add fields in the correct SWIFT order
-        ordered_fields.push(("20".to_string(), self.field_20.to_swift_value()));
-        ordered_fields.push(("21".to_string(), self.field_21.to_swift_value()));
-        ordered_fields.push(("11S".to_string(), self.field_11s.to_swift_value()));
-
-        if let Some(ref field_79) = self.field_79 {
-            ordered_fields.push(("79".to_string(), field_79.to_swift_value()));
-        }
-
-        // Convert ordered_fields to MT string format
         let mut result = String::new();
-        for (tag, value) in ordered_fields {
-            result.push_str(&format!(":{tag}:{value}\r\n"));
-        }
 
-        // Remove trailing \r\n if present
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
+        // Add mandatory fields in the correct SWIFT order
+        append_field(&mut result, &self.field_20);
+        append_field(&mut result, &self.field_21);
+        append_field(&mut result, &self.field_11s);
 
-        result
+        // Add optional field 79
+        append_optional_field(&mut result, &self.field_79);
+
+        finalize_mt_string(result, false)
     }
 }

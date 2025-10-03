@@ -1,4 +1,5 @@
 use crate::fields::*;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT910: Confirmation of Credit
@@ -53,14 +54,7 @@ impl MT910 {
         let field_72 = parser.parse_optional_field::<Field72>("72")?;
 
         // Verify all content is consumed
-        if !parser.is_complete() {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "Unparsed content remaining in message: {}",
-                    parser.remaining()
-                ),
-            });
-        }
+        verify_parser_complete(&parser)?;
 
         Ok(Self {
             field_20,
@@ -82,17 +76,7 @@ impl MT910 {
 
     /// Parse from SWIFT MT text format
     pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
-        // If input starts with block headers, extract Block 4
-        let block4 = if input.starts_with("{") {
-            crate::parser::SwiftParser::extract_block(input, 4)?.ok_or_else(|| {
-                crate::errors::ParseError::InvalidFormat {
-                    message: "Block 4 not found".to_string(),
-                }
-            })?
-        } else {
-            // Assume input is already block 4 content
-            input.to_string()
-        };
+        let block4 = extract_block4(input)?;
         #[cfg(test)]
         println!("MT910 block4: {}", block4);
         let message = Self::parse_from_block4(&block4)?;
@@ -123,44 +107,17 @@ impl MT910 {
 
     /// Convert to SWIFT MT text format
     pub fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        // Add fields in order
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
-        result.push_str(&self.field_21.to_swift_string());
-        result.push_str("\r\n");
-        result.push_str(&self.field_25.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field_13d) = self.field_13d {
-            result.push_str(&field_13d.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        result.push_str(&self.field_32a.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field_50) = self.field_50 {
-            result.push_str(&field_50.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field_52) = self.field_52 {
-            result.push_str(&field_52.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field_56) = self.field_56 {
-            result.push_str(&field_56.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field_72) = self.field_72 {
-            result.push_str(&field_72.to_swift_string());
-            result.push_str("\r\n");
-        }
+        append_field(&mut result, &self.field_20);
+        append_field(&mut result, &self.field_21);
+        append_field(&mut result, &self.field_25);
+        append_optional_field(&mut result, &self.field_13d);
+        append_field(&mut result, &self.field_32a);
+        append_optional_field(&mut result, &self.field_50);
+        append_optional_field(&mut result, &self.field_52);
+        append_optional_field(&mut result, &self.field_56);
+        append_optional_field(&mut result, &self.field_72);
 
         result.push('-');
         result

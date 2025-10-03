@@ -1,6 +1,7 @@
 use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT204 - Financial Markets Direct Debit Message
@@ -106,66 +107,23 @@ impl crate::traits::SwiftMessageBody for MT204 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        result.push_str(&self.sum_of_amounts.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.sum_of_amounts);
+        append_field(&mut result, &self.transaction_reference);
+        append_field(&mut result, &self.execution_date);
+        append_optional_field(&mut result, &self.account_with_institution);
+        append_optional_field(&mut result, &self.sender_to_receiver);
 
-        result.push_str(&self.transaction_reference.to_swift_string());
-        result.push_str("\r\n");
-
-        result.push_str(&self.execution_date.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.account_with_institution {
-            match field {
-                Field57::A(f) => result.push_str(&f.to_swift_string()),
-                Field57::B(f) => result.push_str(&f.to_swift_string()),
-                Field57::C(f) => result.push_str(&f.to_swift_string()),
-                Field57::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.sender_to_receiver {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Transactions (currently not parsed, but structure is in place)
+        // Transactions
         for txn in &self.transactions {
-            result.push_str(&txn.transaction_reference.to_swift_string());
-            result.push_str("\r\n");
-
-            if let Some(ref field) = txn.related_reference {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            result.push_str(&txn.currency_amount.to_swift_string());
-            result.push_str("\r\n");
-
-            if let Some(ref field) = txn.senders_correspondent {
-                match field {
-                    Field53::A(f) => result.push_str(&f.to_swift_string()),
-                    Field53::B(f) => result.push_str(&f.to_swift_string()),
-                    Field53::D(f) => result.push_str(&f.to_swift_string()),
-                }
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.sender_to_receiver {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
+            append_field(&mut result, &txn.transaction_reference);
+            append_optional_field(&mut result, &txn.related_reference);
+            append_field(&mut result, &txn.currency_amount);
+            append_optional_field(&mut result, &txn.senders_correspondent);
+            append_optional_field(&mut result, &txn.sender_to_receiver);
         }
 
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

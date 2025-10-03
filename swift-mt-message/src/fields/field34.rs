@@ -212,7 +212,7 @@ impl SwiftField for Field34F {
             ":34F:{}{}{}",
             self.currency,
             indicator_str,
-            self.amount.to_string().replace('.', ",")
+            super::swift_utils::format_swift_amount(self.amount, 2)
         )
     }
 }
@@ -228,7 +228,7 @@ mod tests {
         assert_eq!(field.currency, "USD");
         assert_eq!(field.indicator, None);
         assert_eq!(field.amount, 5000.00);
-        assert_eq!(field.to_swift_string(), "USD5000".replace('.', ","));
+        assert_eq!(field.to_swift_string(), ":34F:USD5000");
 
         // With D indicator
         let field = Field34F::parse("USDD2500,00").unwrap();

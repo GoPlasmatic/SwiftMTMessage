@@ -1,4 +1,5 @@
 use crate::fields::{field34::Field34F, *};
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT920: Request Message
@@ -65,14 +66,7 @@ impl MT920 {
         }
 
         // Verify all content is consumed
-        if !parser.is_complete() {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "Unparsed content remaining in message: {}",
-                    parser.remaining()
-                ),
-            });
-        }
+        verify_parser_complete(&parser)?;
 
         Ok(Self { field_20, sequence })
     }
@@ -84,17 +78,7 @@ impl MT920 {
 
     /// Parse from SWIFT MT text format
     pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
-        // If input starts with block headers, extract Block 4
-        let block4 = if input.starts_with("{") {
-            crate::parser::SwiftParser::extract_block(input, 4)?.ok_or_else(|| {
-                crate::errors::ParseError::InvalidFormat {
-                    message: "Block 4 not found".to_string(),
-                }
-            })?
-        } else {
-            // Assume input is already block 4 content
-            input.to_string()
-        };
+        let block4 = extract_block4(input)?;
         let message = Self::parse_from_block4(&block4)?;
 
         // Apply validation rules
@@ -127,29 +111,17 @@ impl MT920 {
 
     /// Convert to SWIFT MT text format
     pub fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
         // Add header field
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.field_20);
 
         // Add sequences
         for seq in &self.sequence {
-            result.push_str(&seq.field_12.to_swift_string());
-            result.push_str("\r\n");
-            result.push_str(&seq.field_25.to_swift_string());
-            result.push_str("\r\n");
-
-            if let Some(ref floor_limit) = seq.floor_limit_debit {
-                result.push_str(&floor_limit.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref floor_limit) = seq.floor_limit_credit {
-                result.push_str(&floor_limit.to_swift_string());
-                result.push_str("\r\n");
-            }
+            append_field(&mut result, &seq.field_12);
+            append_field(&mut result, &seq.field_25);
+            append_optional_field(&mut result, &seq.floor_limit_debit);
+            append_optional_field(&mut result, &seq.floor_limit_credit);
         }
 
         result.push('-');

@@ -1,4 +1,5 @@
 use crate::fields::*;
+use crate::parsing_utils::*;
 
 // MT103: Single Customer Credit Transfer
 // Used to convey funds transfer instructions between financial institutions where the ordering
@@ -96,159 +97,39 @@ impl MT103 {
 
     /// Parse from SWIFT MT text format
     pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
-        // If input starts with block headers, extract Block 4
-        let block4 = if input.starts_with("{") {
-            crate::parser::SwiftParser::extract_block(input, 4)?.ok_or_else(|| {
-                crate::errors::ParseError::InvalidFormat {
-                    message: "Block 4 not found".to_string(),
-                }
-            })?
-        } else {
-            // Assume input is already block 4 content
-            input.to_string()
-        };
+        let block4 = extract_block4(input)?;
         <Self as crate::traits::SwiftMessageBody>::parse_from_block4(&block4)
     }
 
     /// Convert to SWIFT MT text format
     pub fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
         // Add mandatory fields in order
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
-
-        // Add optional field 13C (repeated)
-        if let Some(ref field_13c_vec) = self.field_13c {
-            for field_13c in field_13c_vec {
-                result.push_str(&field_13c.to_swift_string());
-                result.push_str("\r\n");
-            }
-        }
-
-        result.push_str(&self.field_23b.to_swift_string());
-        result.push_str("\r\n");
-
-        // Add optional field 23E (repeated)
-        if let Some(ref field_23e_vec) = self.field_23e {
-            for field_23e in field_23e_vec {
-                result.push_str(&field_23e.to_swift_string());
-                result.push_str("\r\n");
-            }
-        }
-
-        // Add optional field 26T
-        if let Some(ref field_26t) = self.field_26t {
-            result.push_str(&field_26t.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        result.push_str(&self.field_32a.to_swift_string());
-        result.push_str("\r\n");
-
-        // Add optional field 33B
-        if let Some(ref field_33b) = self.field_33b {
-            result.push_str(&field_33b.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 36
-        if let Some(ref field_36) = self.field_36 {
-            result.push_str(&field_36.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add field 50 (variant)
-        result.push_str(&self.field_50.to_swift_string());
-        result.push_str("\r\n");
-
-        // Add optional field 51A
-        if let Some(ref field_51a) = self.field_51a {
-            result.push_str(&field_51a.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 52 (variant)
-        if let Some(ref field_52) = self.field_52 {
-            result.push_str(&field_52.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 53 (variant)
-        if let Some(ref field_53) = self.field_53 {
-            result.push_str(&field_53.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 54 (variant)
-        if let Some(ref field_54) = self.field_54 {
-            result.push_str(&field_54.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 55 (variant)
-        if let Some(ref field_55) = self.field_55 {
-            result.push_str(&field_55.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 56 (variant)
-        if let Some(ref field_56) = self.field_56 {
-            result.push_str(&field_56.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 57 (variant)
-        if let Some(ref field_57) = self.field_57 {
-            result.push_str(&field_57.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add field 59 (variant)
-        result.push_str(&self.field_59.to_swift_string());
-        result.push_str("\r\n");
-
-        // Add optional field 70
-        if let Some(ref field_70) = self.field_70 {
-            result.push_str(&field_70.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        result.push_str(&self.field_71a.to_swift_string());
-        result.push_str("\r\n");
-
-        // Add optional field 71F (repeated)
-        if let Some(ref field_71f_vec) = self.field_71f {
-            for field_71f in field_71f_vec {
-                result.push_str(&field_71f.to_swift_string());
-                result.push_str("\r\n");
-            }
-        }
-
-        // Add optional field 71G
-        if let Some(ref field_71g) = self.field_71g {
-            result.push_str(&field_71g.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 72
-        if let Some(ref field_72) = self.field_72 {
-            result.push_str(&field_72.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 77B
-        if let Some(ref field_77b) = self.field_77b {
-            result.push_str(&field_77b.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Add optional field 77T
-        if let Some(ref field_77t) = self.field_77t {
-            result.push_str(&field_77t.to_swift_string());
-            result.push_str("\r\n");
-        }
+        append_field(&mut result, &self.field_20);
+        append_vec_field(&mut result, &self.field_13c);
+        append_field(&mut result, &self.field_23b);
+        append_vec_field(&mut result, &self.field_23e);
+        append_optional_field(&mut result, &self.field_26t);
+        append_field(&mut result, &self.field_32a);
+        append_optional_field(&mut result, &self.field_33b);
+        append_optional_field(&mut result, &self.field_36);
+        append_field(&mut result, &self.field_50);
+        append_optional_field(&mut result, &self.field_51a);
+        append_optional_field(&mut result, &self.field_52);
+        append_optional_field(&mut result, &self.field_53);
+        append_optional_field(&mut result, &self.field_54);
+        append_optional_field(&mut result, &self.field_55);
+        append_optional_field(&mut result, &self.field_56);
+        append_optional_field(&mut result, &self.field_57);
+        append_field(&mut result, &self.field_59);
+        append_optional_field(&mut result, &self.field_70);
+        append_field(&mut result, &self.field_71a);
+        append_vec_field(&mut result, &self.field_71f);
+        append_optional_field(&mut result, &self.field_71g);
+        append_optional_field(&mut result, &self.field_72);
+        append_optional_field(&mut result, &self.field_77b);
+        append_optional_field(&mut result, &self.field_77t);
 
         result.push('-');
         result
@@ -380,14 +261,7 @@ impl crate::traits::SwiftMessageBody for MT103 {
         parser = parser.with_duplicates(false);
 
         // Verify all content is consumed
-        if !parser.is_complete() {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "Unparsed content remaining in message: {}",
-                    parser.remaining()
-                ),
-            });
-        }
+        verify_parser_complete(&parser)?;
 
         Ok(Self {
             field_20,

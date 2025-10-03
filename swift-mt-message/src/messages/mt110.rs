@@ -1,6 +1,6 @@
 use crate::fields::Field52DrawerBank;
 use crate::fields::*;
-use chrono::Datelike;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT110: Advice of Cheque(s)
@@ -215,120 +215,24 @@ impl crate::traits::SwiftMessageBody for MT110 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
-        let mut ordered_fields = Vec::new();
+        let mut result = String::new();
 
         // Add header fields
-        ordered_fields.push(("20".to_string(), self.field_20.to_swift_value()));
+        append_field(&mut result, &self.field_20);
+        append_optional_field(&mut result, &self.field_53a);
+        append_optional_field(&mut result, &self.field_54a);
+        append_optional_field(&mut result, &self.field_72);
 
-        if let Some(ref field_53) = self.field_53a {
-            match field_53 {
-                Field53SenderCorrespondent::A(f) => {
-                    ordered_fields.push(("53A".to_string(), f.to_swift_value()));
-                }
-                Field53SenderCorrespondent::B(f) => {
-                    ordered_fields.push(("53B".to_string(), f.to_swift_value()));
-                }
-                Field53SenderCorrespondent::D(f) => {
-                    ordered_fields.push(("53D".to_string(), f.to_swift_value()));
-                }
-            }
-        }
-
-        if let Some(ref field_54) = self.field_54a {
-            match field_54 {
-                Field54ReceiverCorrespondent::A(f) => {
-                    ordered_fields.push(("54A".to_string(), f.to_swift_value()));
-                }
-                Field54ReceiverCorrespondent::B(f) => {
-                    ordered_fields.push(("54B".to_string(), f.to_swift_value()));
-                }
-                Field54ReceiverCorrespondent::D(f) => {
-                    ordered_fields.push(("54D".to_string(), f.to_swift_value()));
-                }
-            }
-        }
-
-        if let Some(ref field_72) = self.field_72 {
-            ordered_fields.push(("72".to_string(), field_72.information.join("\n")));
-        }
-
-        // Add cheque details in sequence (important for proper parsing)
+        // Add cheque details in sequence
         for cheque in &self.cheques {
-            // Each cheque's fields must be in sequence
-            ordered_fields.push(("21".to_string(), cheque.field_21.to_swift_value()));
-
-            ordered_fields.push((
-                "30".to_string(),
-                format!(
-                    "{:02}{:02}{:02}",
-                    cheque.field_30.execution_date.year() % 100,
-                    cheque.field_30.execution_date.month(),
-                    cheque.field_30.execution_date.day()
-                ),
-            ));
-
-            // Amount field
-            match &cheque.field_32 {
-                Field32AB::A(f) => ordered_fields.push(("32A".to_string(), f.to_swift_value())),
-                Field32AB::B(f) => ordered_fields.push(("32B".to_string(), f.to_swift_value())),
-            }
-
-            // Optional payer
-            if let Some(ref field_50) = cheque.field_50 {
-                match field_50 {
-                    Field50OrderingCustomerAFK::A(f) => {
-                        ordered_fields.push(("50A".to_string(), f.to_swift_value()));
-                    }
-                    Field50OrderingCustomerAFK::F(f) => {
-                        ordered_fields.push(("50F".to_string(), f.to_swift_value()));
-                    }
-                    Field50OrderingCustomerAFK::K(f) => {
-                        ordered_fields.push(("50K".to_string(), f.to_swift_value()));
-                    }
-                }
-            }
-
-            // Optional drawer bank (supports A, B, D variants)
-            if let Some(ref field_52) = cheque.field_52 {
-                match field_52 {
-                    Field52DrawerBank::A(f) => {
-                        ordered_fields.push(("52A".to_string(), f.to_swift_value()));
-                    }
-                    Field52DrawerBank::B(f) => {
-                        ordered_fields.push(("52B".to_string(), f.to_swift_value()));
-                    }
-                    Field52DrawerBank::D(f) => {
-                        ordered_fields.push(("52D".to_string(), f.to_swift_value()));
-                    }
-                }
-            }
-
-            // Payee
-            match &cheque.field_59 {
-                Field59::NoOption(f) => {
-                    ordered_fields.push(("59".to_string(), f.to_swift_value()));
-                }
-                Field59::A(f) => {
-                    ordered_fields.push(("59A".to_string(), f.to_swift_value()));
-                }
-                Field59::F(f) => {
-                    ordered_fields.push(("59F".to_string(), f.to_swift_value()));
-                }
-            }
+            append_field(&mut result, &cheque.field_21);
+            append_field(&mut result, &cheque.field_30);
+            append_field(&mut result, &cheque.field_32);
+            append_optional_field(&mut result, &cheque.field_50);
+            append_optional_field(&mut result, &cheque.field_52);
+            append_field(&mut result, &cheque.field_59);
         }
 
-        // Convert ordered_fields to MT string format
-        let mut result = String::new();
-        for (tag, value) in ordered_fields {
-            result.push_str(&format!(":{tag}:{value}\r\n"));
-        }
-
-        // Remove trailing \r\n if present
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

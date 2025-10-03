@@ -177,7 +177,7 @@ impl SwiftField for Field33B {
         format!(
             ":33B:{}{}",
             self.currency,
-            self.amount.to_string().replace('.', ",")
+            super::swift_utils::format_swift_amount(self.amount, 2)
         )
     }
 }

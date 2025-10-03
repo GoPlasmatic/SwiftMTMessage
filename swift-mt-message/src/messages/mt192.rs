@@ -1,4 +1,5 @@
 use crate::fields::*;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT192: Request for Cancellation
@@ -96,28 +97,13 @@ impl crate::traits::SwiftMessageBody for MT192 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.field_20);
+        append_field(&mut result, &self.field_21);
+        append_field(&mut result, &self.field_11s);
+        append_optional_field(&mut result, &self.field_79);
 
-        result.push_str(&self.field_21.to_swift_string());
-        result.push_str("\r\n");
-
-        result.push_str(&self.field_11s.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_79 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

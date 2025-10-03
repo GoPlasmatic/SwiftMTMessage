@@ -1,4 +1,5 @@
 use crate::fields::*;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT942: Interim Transaction Report
@@ -265,65 +266,26 @@ impl crate::traits::SwiftMessageBody for MT942 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_21 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        result.push_str(&self.field_25.to_swift_string());
-        result.push_str("\r\n");
-
-        result.push_str(&self.field_28c.to_swift_string());
-        result.push_str("\r\n");
-
-        result.push_str(&self.floor_limit_debit.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.floor_limit_credit {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        result.push_str(&self.field_13d.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.field_20);
+        append_optional_field(&mut result, &self.field_21);
+        append_field(&mut result, &self.field_25);
+        append_field(&mut result, &self.field_28c);
+        append_field(&mut result, &self.floor_limit_debit);
+        append_optional_field(&mut result, &self.floor_limit_credit);
+        append_field(&mut result, &self.field_13d);
 
         // Statement lines
         for statement_line in &self.statement_lines {
-            result.push_str(&statement_line.field_61.to_swift_string());
-            result.push_str("\r\n");
-
-            if let Some(ref field) = statement_line.field_86 {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
+            append_field(&mut result, &statement_line.field_61);
+            append_optional_field(&mut result, &statement_line.field_86);
         }
 
-        if let Some(ref field) = self.field_90d {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
+        append_optional_field(&mut result, &self.field_90d);
+        append_optional_field(&mut result, &self.field_90c);
+        append_optional_field(&mut result, &self.field_86);
 
-        if let Some(ref field) = self.field_90c {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_86 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

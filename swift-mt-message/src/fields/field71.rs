@@ -158,7 +158,11 @@ impl SwiftField for Field71F {
     }
 
     fn to_swift_string(&self) -> String {
-        format!(":71F:{}{}", self.currency, self.amount)
+        format!(
+            ":71F:{}{}",
+            self.currency,
+            super::swift_utils::format_swift_amount(self.amount, 2)
+        )
     }
 }
 
@@ -212,7 +216,11 @@ impl SwiftField for Field71G {
     }
 
     fn to_swift_string(&self) -> String {
-        format!(":71G:{}{}", self.currency, self.amount)
+        format!(
+            ":71G:{}{}",
+            self.currency,
+            super::swift_utils::format_swift_amount(self.amount, 2)
+        )
     }
 }
 
@@ -308,7 +316,7 @@ mod tests {
             currency: "USD".to_string(),
             amount: 250.75,
         };
-        assert_eq!(field.to_swift_string(), ":71F:USD250.75");
+        assert_eq!(field.to_swift_string(), ":71F:USD250,75");
 
         // Test invalid currency
         assert!(Field71F::parse("US100").is_err());
@@ -356,7 +364,7 @@ mod tests {
             currency: "CAD".to_string(),
             amount: 99.99,
         };
-        assert_eq!(field.to_swift_string(), ":71G:CAD99.99");
+        assert_eq!(field.to_swift_string(), ":71G:CAD99,99");
 
         // Test format spec
     }

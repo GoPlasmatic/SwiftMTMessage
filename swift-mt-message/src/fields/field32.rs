@@ -190,7 +190,7 @@ impl SwiftField for Field32A {
             ":32A:{}{}{}",
             self.value_date.format("%y%m%d"),
             self.currency,
-            self.amount.to_string().replace('.', ",")
+            super::swift_utils::format_swift_amount(self.amount, 2)
         )
     }
 }
@@ -256,7 +256,7 @@ impl SwiftField for Field32B {
         format!(
             ":32B:{}{}",
             self.currency,
-            self.amount.to_string().replace('.', ",")
+            super::swift_utils::format_swift_amount(self.amount, 2)
         )
     }
 }
@@ -358,7 +358,7 @@ impl SwiftField for Field32C {
             ":32C:{}{}{}",
             self.value_date.format("%y%m%d"),
             self.currency,
-            self.amount.to_string().replace('.', ",")
+            super::swift_utils::format_swift_amount(self.amount, 2)
         )
     }
 }
@@ -439,7 +439,7 @@ impl SwiftField for Field32D {
             ":32D:{}{}{}",
             self.value_date.format("%y%m%d"),
             self.currency,
-            self.amount.to_string().replace('.', ",")
+            super::swift_utils::format_swift_amount(self.amount, 2)
         )
     }
 }

@@ -1,4 +1,5 @@
 use crate::fields::*;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT935: Rate Change Advice
@@ -231,40 +232,23 @@ impl crate::traits::SwiftMessageBody for MT935 {
         use crate::traits::SwiftField;
         let mut result = String::new();
 
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.field_20);
 
         // Rate change sequences
         for rate_change in &self.rate_changes {
-            if let Some(ref field) = rate_change.field_23 {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
+            append_optional_field(&mut result, &rate_change.field_23);
+            append_optional_field(&mut result, &rate_change.field_25);
+            append_field(&mut result, &rate_change.field_30);
 
-            if let Some(ref field) = rate_change.field_25 {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            result.push_str(&rate_change.field_30.to_swift_string());
-            result.push_str("\r\n");
-
+            // Manually append vec field
             for field_37h in &rate_change.field_37h {
                 result.push_str(&field_37h.to_swift_string());
                 result.push_str("\r\n");
             }
         }
 
-        if let Some(ref field) = self.field_72 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
+        append_optional_field(&mut result, &self.field_72);
 
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

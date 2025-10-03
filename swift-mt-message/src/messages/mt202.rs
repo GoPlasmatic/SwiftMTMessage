@@ -1,6 +1,7 @@
 use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT202 - General Financial Institution Transfer
@@ -211,148 +212,31 @@ impl crate::traits::SwiftMessageBody for MT202 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
         // Sequence A - Basic Transfer Details
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
-
-        result.push_str(&self.field_21.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field_13c_vec) = self.field_13c {
-            for field in field_13c_vec {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-        }
-
-        result.push_str(&self.field_32a.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_52 {
-            match field {
-                Field52OrderingInstitution::A(f) => result.push_str(&f.to_swift_string()),
-                Field52OrderingInstitution::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_53 {
-            match field {
-                Field53SenderCorrespondent::A(f) => result.push_str(&f.to_swift_string()),
-                Field53SenderCorrespondent::B(f) => result.push_str(&f.to_swift_string()),
-                Field53SenderCorrespondent::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_54 {
-            match field {
-                Field54ReceiverCorrespondent::A(f) => result.push_str(&f.to_swift_string()),
-                Field54ReceiverCorrespondent::B(f) => result.push_str(&f.to_swift_string()),
-                Field54ReceiverCorrespondent::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_56 {
-            match field {
-                Field56Intermediary::A(f) => result.push_str(&f.to_swift_string()),
-                Field56Intermediary::C(f) => result.push_str(&f.to_swift_string()),
-                Field56Intermediary::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_57 {
-            match field {
-                Field57AccountWithInstitution::A(f) => result.push_str(&f.to_swift_string()),
-                Field57AccountWithInstitution::B(f) => result.push_str(&f.to_swift_string()),
-                Field57AccountWithInstitution::C(f) => result.push_str(&f.to_swift_string()),
-                Field57AccountWithInstitution::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        match &self.field_58 {
-            Field58::A(f) => result.push_str(&f.to_swift_string()),
-            Field58::D(f) => result.push_str(&f.to_swift_string()),
-        }
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_72 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
+        append_field(&mut result, &self.field_20);
+        append_field(&mut result, &self.field_21);
+        append_vec_field(&mut result, &self.field_13c);
+        append_field(&mut result, &self.field_32a);
+        append_optional_field(&mut result, &self.field_52);
+        append_optional_field(&mut result, &self.field_53);
+        append_optional_field(&mut result, &self.field_54);
+        append_optional_field(&mut result, &self.field_56);
+        append_optional_field(&mut result, &self.field_57);
+        append_field(&mut result, &self.field_58);
+        append_optional_field(&mut result, &self.field_72);
 
         // Sequence B - Cover Payment Details (MT202 COV)
-        if let Some(ref field) = self.ordering_customer_b {
-            match field {
-                Field50OrderingCustomerAFK::A(f) => result.push_str(&f.to_swift_string()),
-                Field50OrderingCustomerAFK::F(f) => result.push_str(&f.to_swift_string()),
-                Field50OrderingCustomerAFK::K(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
+        append_optional_field(&mut result, &self.ordering_customer_b);
+        append_optional_field(&mut result, &self.ordering_institution_b);
+        append_optional_field(&mut result, &self.intermediary_b);
+        append_optional_field(&mut result, &self.account_with_institution_b);
+        append_optional_field(&mut result, &self.beneficiary_customer_b);
+        append_optional_field(&mut result, &self.remittance_information_b);
+        append_optional_field(&mut result, &self.sender_to_receiver_information_b);
+        append_optional_field(&mut result, &self.currency_amount_b);
 
-        if let Some(ref field) = self.ordering_institution_b {
-            match field {
-                Field52OrderingInstitution::A(f) => result.push_str(&f.to_swift_string()),
-                Field52OrderingInstitution::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.intermediary_b {
-            match field {
-                Field56Intermediary::A(f) => result.push_str(&f.to_swift_string()),
-                Field56Intermediary::C(f) => result.push_str(&f.to_swift_string()),
-                Field56Intermediary::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.account_with_institution_b {
-            match field {
-                Field57AccountWithInstitution::A(f) => result.push_str(&f.to_swift_string()),
-                Field57AccountWithInstitution::B(f) => result.push_str(&f.to_swift_string()),
-                Field57AccountWithInstitution::C(f) => result.push_str(&f.to_swift_string()),
-                Field57AccountWithInstitution::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.beneficiary_customer_b {
-            match field {
-                Field59::NoOption(f) => result.push_str(&f.to_swift_string()),
-                Field59::A(f) => result.push_str(&f.to_swift_string()),
-                Field59::F(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.remittance_information_b {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.sender_to_receiver_information_b {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.currency_amount_b {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

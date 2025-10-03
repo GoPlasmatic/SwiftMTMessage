@@ -1,6 +1,7 @@
 use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT210 - Notice to Receive
@@ -95,62 +96,21 @@ impl crate::traits::SwiftMessageBody for MT210 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        result.push_str(&self.transaction_reference.to_swift_string());
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.account_identification {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        result.push_str(&self.value_date.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.transaction_reference);
+        append_optional_field(&mut result, &self.account_identification);
+        append_field(&mut result, &self.value_date);
 
         // Transactions
         for txn in &self.transactions {
-            if let Some(ref field) = txn.related_reference {
-                result.push_str(&field.to_swift_string());
-                result.push_str("\r\n");
-            }
-
-            result.push_str(&txn.currency_amount.to_swift_string());
-            result.push_str("\r\n");
-
-            if let Some(ref field) = txn.ordering_customer {
-                match field {
-                    Field50::NoOption(f) => result.push_str(&f.to_swift_string()),
-                    Field50::C(f) => result.push_str(&f.to_swift_string()),
-                    Field50::F(f) => result.push_str(&f.to_swift_string()),
-                }
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.ordering_institution {
-                match field {
-                    Field52OrderingInstitution::A(f) => result.push_str(&f.to_swift_string()),
-                    Field52OrderingInstitution::D(f) => result.push_str(&f.to_swift_string()),
-                }
-                result.push_str("\r\n");
-            }
-
-            if let Some(ref field) = txn.intermediary {
-                match field {
-                    Field56::A(f) => result.push_str(&f.to_swift_string()),
-                    Field56::C(f) => result.push_str(&f.to_swift_string()),
-                    Field56::D(f) => result.push_str(&f.to_swift_string()),
-                }
-                result.push_str("\r\n");
-            }
+            append_optional_field(&mut result, &txn.related_reference);
+            append_field(&mut result, &txn.currency_amount);
+            append_optional_field(&mut result, &txn.ordering_customer);
+            append_optional_field(&mut result, &txn.ordering_institution);
+            append_optional_field(&mut result, &txn.intermediary);
         }
 
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

@@ -1,4 +1,5 @@
 use crate::fields::*;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT111: Request for Stop Payment of a Cheque
@@ -25,7 +26,7 @@ pub struct MT111 {
 
     // Drawer Bank (optional) - can be A, B, or D
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_52: Option<Field52DrawerBank>,
+    pub field_52: Option<Field52OrderingInstitution>,
 
     // Payee (optional) - name and address only
     #[serde(rename = "59", skip_serializing_if = "Option::is_none")]
@@ -50,7 +51,7 @@ impl MT111 {
         let field_32 = parser.parse_variant_field::<Field32AB>("32")?;
 
         // Parse optional fields
-        let field_52 = parser.parse_optional_variant_field::<Field52DrawerBank>("52")?;
+        let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
         let field_59 = parser.parse_optional_field::<Field59NoOption>("59")?;
         let field_75 = parser.parse_optional_field::<Field75>("75")?;
 
@@ -118,50 +119,16 @@ impl crate::traits::SwiftMessageBody for MT111 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.field_20);
+        append_field(&mut result, &self.field_21);
+        append_field(&mut result, &self.field_30);
+        append_field(&mut result, &self.field_32);
+        append_optional_field(&mut result, &self.field_52);
+        append_optional_field(&mut result, &self.field_59);
+        append_optional_field(&mut result, &self.field_75);
 
-        result.push_str(&self.field_21.to_swift_string());
-        result.push_str("\r\n");
-
-        result.push_str(&self.field_30.to_swift_string());
-        result.push_str("\r\n");
-
-        match &self.field_32 {
-            Field32AB::A(f) => result.push_str(&f.to_swift_string()),
-            Field32AB::B(f) => result.push_str(&f.to_swift_string()),
-        }
-        result.push_str("\r\n");
-
-        if let Some(ref field) = self.field_52 {
-            match field {
-                Field52DrawerBank::A(f) => result.push_str(&f.to_swift_string()),
-                Field52DrawerBank::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_59 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        if let Some(ref field) = self.field_75 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }
-
-// Type alias for clarity
-pub type Field52DrawerBank = Field52OrderingInstitution; // Can be A or D

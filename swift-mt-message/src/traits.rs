@@ -52,28 +52,6 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
     /// Returns the complete SWIFT field representation, e.g., `:20:PAYMENT123` or `:50K:/ACC\nNAME`
     fn to_swift_string(&self) -> String;
 
-    /// Get the field value without `:TAG:` prefix
-    ///
-    /// Returns only the field content, without the SWIFT tag prefix.
-    /// Used by `to_ordered_fields()` implementations.
-    ///
-    /// ## Example
-    /// - Input: `:20:PAYMENT123` → Output: `PAYMENT123`
-    /// - Input: `:50K:/ACCOUNT\nNAME` → Output: `/ACCOUNT\nNAME`
-    ///
-    /// Default implementation automatically strips the prefix from `to_swift_string()`.
-    fn to_swift_value(&self) -> String {
-        let swift_str = self.to_swift_string();
-        // Format is :TAG:VALUE or :TAGX:VALUE (where X is variant like A, K, etc.)
-        // Find first : then find second : and return everything after it
-        if let Some(first_colon) = swift_str.find(':')
-            && let Some(second_colon) = swift_str[first_colon + 1..].find(':')
-        {
-            return swift_str[first_colon + second_colon + 2..].to_string();
-        }
-        swift_str
-    }
-
     /// Get the variant tag for enum field values
     ///
     /// Returns the variant letter (e.g., "A", "K", "F") for enum fields like Field50OrderingCustomerAFK.

@@ -1,6 +1,7 @@
 use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
+use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT200 - Financial Institution Transfer for Own Account
@@ -82,49 +83,15 @@ impl crate::traits::SwiftMessageBody for MT200 {
     }
 
     fn to_mt_string(&self) -> String {
-        use crate::traits::SwiftField;
         let mut result = String::new();
 
-        // Mandatory fields
-        result.push_str(&self.field_20.to_swift_string());
-        result.push_str("\r\n");
-        result.push_str(&self.field_32a.to_swift_string());
-        result.push_str("\r\n");
+        append_field(&mut result, &self.field_20);
+        append_field(&mut result, &self.field_32a);
+        append_optional_field(&mut result, &self.field_53b);
+        append_optional_field(&mut result, &self.field_56);
+        append_field(&mut result, &self.field_57);
+        append_optional_field(&mut result, &self.field_72);
 
-        // Optional Field 53B
-        if let Some(ref field) = self.field_53b {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Optional Field 56
-        if let Some(ref field_56) = self.field_56 {
-            match field_56 {
-                Field56IntermediaryAD::A(f) => result.push_str(&f.to_swift_string()),
-                Field56IntermediaryAD::D(f) => result.push_str(&f.to_swift_string()),
-            }
-            result.push_str("\r\n");
-        }
-
-        // Mandatory Field 57
-        match &self.field_57 {
-            Field57DebtInstitution::A(f) => result.push_str(&f.to_swift_string()),
-            Field57DebtInstitution::B(f) => result.push_str(&f.to_swift_string()),
-            Field57DebtInstitution::D(f) => result.push_str(&f.to_swift_string()),
-        }
-        result.push_str("\r\n");
-
-        // Optional Field 72
-        if let Some(ref field) = self.field_72 {
-            result.push_str(&field.to_swift_string());
-            result.push_str("\r\n");
-        }
-
-        // Remove trailing \r\n
-        if result.ends_with("\r\n") {
-            result.truncate(result.len() - 2);
-        }
-
-        result
+        finalize_mt_string(result, false)
     }
 }

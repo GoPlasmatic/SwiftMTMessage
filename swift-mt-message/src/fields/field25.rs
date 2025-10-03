@@ -148,7 +148,7 @@ impl SwiftField for Field25NoOption {
     }
 
     fn to_swift_string(&self) -> String {
-        self.authorisation.clone()
+        format!(":25:{}", self.authorisation)
     }
 }
 

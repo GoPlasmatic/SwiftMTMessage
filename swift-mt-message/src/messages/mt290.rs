@@ -13,33 +13,33 @@ use std::collections::HashMap;
 pub struct MT290 {
     /// Field 20 - Transaction Reference Number (Mandatory)
     #[serde(rename = "20")]
-    pub transaction_reference: Field20,
+    pub field_20: Field20,
 
     /// Field 21 - Related Reference (Mandatory)
     #[serde(rename = "21")]
-    pub related_reference: Field21NoOption,
+    pub field_21: Field21NoOption,
 
     /// Field 25 - Account Identification (Mandatory)
     #[serde(rename = "25")]
-    pub account_identification: Field25AccountIdentification,
+    pub field_25: Field25NoOption,
 
     /// Field 32 - Value Date, Currency Code, Amount (Mandatory)
     /// Can be 32C (credit) or 32D (debit)
     #[serde(flatten)]
-    pub value_date_amount: Field32AmountCD,
+    pub field_32: Field32AmountCD,
 
     /// Field 52 - Ordering Institution (Optional)
     /// Can be 52A or 52D
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub ordering_institution: Option<Field52OrderingInstitution>,
+    pub field_52: Option<Field52OrderingInstitution>,
 
     /// Field 71B - Details of Charges (Mandatory)
     #[serde(rename = "71B")]
-    pub details_of_charges: Field71B,
+    pub field_71b: Field71B,
 
     /// Field 72 - Sender to Receiver Information (Optional)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
-    pub sender_to_receiver: Option<Field72>,
+    pub field_72: Option<Field72>,
 }
 
 impl MT290 {
@@ -48,42 +48,32 @@ impl MT290 {
         let mut parser = MessageParser::new(block4, "290");
 
         // Parse mandatory fields
-        let transaction_reference = parser.parse_field::<Field20>("20")?;
-        let related_reference = parser.parse_field::<Field21NoOption>("21")?;
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_21 = parser.parse_field::<Field21NoOption>("21")?;
 
         // Parse Field 25 - Account Identification
-        let account_identification =
-            parser.parse_variant_field::<Field25AccountIdentification>("25")?;
+        let field_25 = parser.parse_field::<Field25NoOption>("25")?;
 
-        // Parse Field 32 - check for variant (32C or 32D)
-        let value_date_amount = if parser.detect_field("32C") {
-            Field32AmountCD::C(parser.parse_field::<Field32C>("32C")?)
-        } else if parser.detect_field("32D") {
-            Field32AmountCD::D(parser.parse_field::<Field32D>("32D")?)
-        } else {
-            return Err(ParseError::InvalidFormat {
-                message: "MT290: Either field 32C or 32D is required".to_string(),
-            });
-        };
+        // Parse Field 32 - variant field (32C or 32D only per spec)
+        let field_32 = parser.parse_variant_field::<Field32AmountCD>("32")?;
 
         // Parse optional Field 52 - Ordering Institution
-        let ordering_institution =
-            parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+        let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
 
         // Parse mandatory Field 71B
-        let details_of_charges = parser.parse_field::<Field71B>("71B")?;
+        let field_71b = parser.parse_field::<Field71B>("71B")?;
 
         // Parse optional Field 72
-        let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
+        let field_72 = parser.parse_optional_field::<Field72>("72")?;
 
         Ok(MT290 {
-            transaction_reference,
-            related_reference,
-            account_identification,
-            value_date_amount,
-            ordering_institution,
-            details_of_charges,
-            sender_to_receiver,
+            field_20,
+            field_21,
+            field_25,
+            field_32,
+            field_52,
+            field_71b,
+            field_72,
         })
     }
 
@@ -132,50 +122,50 @@ impl crate::traits::SwiftMessageBody for MT290 {
     fn to_fields(&self) -> HashMap<String, Vec<String>> {
         let mut fields = HashMap::new();
 
-        fields.insert(
-            "20".to_string(),
-            vec![self.transaction_reference.to_swift_string()],
-        );
-        fields.insert(
-            "21".to_string(),
-            vec![self.related_reference.to_swift_string()],
-        );
-        match &self.account_identification {
-            Field25AccountIdentification::NoOption(f) => {
-                fields.insert("25".to_string(), vec![f.to_swift_string()]);
-            }
-            Field25AccountIdentification::P(f) => {
-                fields.insert("25P".to_string(), vec![f.to_swift_string()]);
-            }
-        }
+        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
+        fields.insert("21".to_string(), vec![self.field_21.reference.clone()]);
+        fields.insert("25".to_string(), vec![self.field_25.authorisation.clone()]);
 
-        match &self.value_date_amount {
+        match &self.field_32 {
             Field32AmountCD::C(f) => {
-                fields.insert("32C".to_string(), vec![f.to_swift_string()]);
+                fields.insert(
+                    "32C".to_string(),
+                    vec![format!(
+                        "{}{}{}",
+                        f.value_date.format("%y%m%d"),
+                        f.currency,
+                        f.amount.to_string().replace('.', ",")
+                    )],
+                );
             }
             Field32AmountCD::D(f) => {
-                fields.insert("32D".to_string(), vec![f.to_swift_string()]);
+                fields.insert(
+                    "32D".to_string(),
+                    vec![format!(
+                        "{}{}{}",
+                        f.value_date.format("%y%m%d"),
+                        f.currency,
+                        f.amount.to_string().replace('.', ",")
+                    )],
+                );
             }
         }
 
-        if let Some(ref ord_inst) = self.ordering_institution {
+        if let Some(ref ord_inst) = self.field_52 {
             match ord_inst {
                 Field52OrderingInstitution::A(f) => {
-                    fields.insert("52A".to_string(), vec![f.to_swift_string()]);
+                    fields.insert("52A".to_string(), vec![f.to_swift_value()]);
                 }
                 Field52OrderingInstitution::D(f) => {
-                    fields.insert("52D".to_string(), vec![f.to_swift_string()]);
+                    fields.insert("52D".to_string(), vec![f.to_swift_value()]);
                 }
             }
         }
 
-        fields.insert(
-            "71B".to_string(),
-            vec![self.details_of_charges.to_swift_string()],
-        );
+        fields.insert("71B".to_string(), vec![self.field_71b.details.join("\n")]);
 
-        if let Some(ref sender_info) = self.sender_to_receiver {
-            fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);
+        if let Some(ref sender_info) = self.field_72 {
+            fields.insert("72".to_string(), vec![sender_info.information.join("\n")]);
         }
 
         fields

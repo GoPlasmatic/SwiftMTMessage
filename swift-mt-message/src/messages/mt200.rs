@@ -13,30 +13,28 @@ use std::collections::HashMap;
 pub struct MT200 {
     /// Field 20 - Transaction Reference Number (Mandatory)
     #[serde(rename = "20")]
-    pub transaction_reference: Field20,
+    pub field_20: Field20,
 
     /// Field 32A - Value Date, Currency Code, Amount (Mandatory)
     #[serde(rename = "32A")]
-    pub value_date_amount: Field32A,
+    pub field_32a: Field32A,
 
-    /// Field 53 - Sender's Correspondent (Optional)
-    /// Can be 53A or 53B
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub senders_correspondent: Option<Field53>,
+    /// Field 53B - Sender's Correspondent (Optional)
+    #[serde(rename = "53B", skip_serializing_if = "Option::is_none")]
+    pub field_53b: Option<Field53B>,
 
     /// Field 56 - Intermediary Institution (Optional)
     /// Can be 56A or 56D
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub intermediary: Option<Field56>,
+    pub field_56: Option<Field56IntermediaryAD>,
 
-    /// Field 57 - Account With Institution (Optional)
-    /// Can be 57A, 57B, or 57D
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub account_with_institution: Option<Field57>,
+    /// Field 57 - Account With Institution (Mandatory)
+    #[serde(flatten)]
+    pub field_57: Field57DebtInstitution,
 
     /// Field 72 - Sender to Receiver Information (Optional)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
-    pub sender_to_receiver: Option<Field72>,
+    pub field_72: Option<Field72>,
 }
 
 impl MT200 {
@@ -45,28 +43,28 @@ impl MT200 {
         let mut parser = MessageParser::new(block4, "200");
 
         // Parse mandatory fields
-        let transaction_reference = parser.parse_field::<Field20>("20")?;
-        let value_date_amount = parser.parse_field::<Field32A>("32A")?;
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_32a = parser.parse_field::<Field32A>("32A")?;
 
-        // Parse optional Field 53 - Sender's Correspondent
-        let senders_correspondent = parser.parse_optional_variant_field::<Field53>("53")?;
+        // Parse optional Field 53B - Sender's Correspondent
+        let field_53b = parser.parse_optional_field::<Field53B>("53B")?;
 
         // Parse optional Field 56 - Intermediary Institution
-        let intermediary = parser.parse_optional_variant_field::<Field56>("56")?;
+        let field_56 = parser.parse_optional_variant_field::<Field56IntermediaryAD>("56")?;
 
-        // Parse optional Field 57 - Account With Institution
-        let account_with_institution = parser.parse_optional_variant_field::<Field57>("57")?;
+        // Parse mandatory Field 57 - Account With Institution
+        let field_57 = parser.parse_variant_field::<Field57DebtInstitution>("57")?;
 
         // Parse optional Field 72
-        let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
+        let field_72 = parser.parse_optional_field::<Field72>("72")?;
 
         Ok(MT200 {
-            transaction_reference,
-            value_date_amount,
-            senders_correspondent,
-            intermediary,
-            account_with_institution,
-            sender_to_receiver,
+            field_20,
+            field_32a,
+            field_53b,
+            field_56,
+            field_57,
+            field_72,
         })
     }
 
@@ -115,66 +113,73 @@ impl crate::traits::SwiftMessageBody for MT200 {
     fn to_fields(&self) -> HashMap<String, Vec<String>> {
         let mut fields = HashMap::new();
 
-        fields.insert(
-            "20".to_string(),
-            vec![self.transaction_reference.to_swift_string()],
-        );
+        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
         fields.insert(
             "32A".to_string(),
-            vec![self.value_date_amount.to_swift_string()],
+            vec![format!(
+                "{}{}{}",
+                self.field_32a.value_date.format("%y%m%d"),
+                self.field_32a.currency,
+                self.field_32a.amount.to_string().replace('.', ",")
+            )],
         );
 
-        if let Some(ref corr) = self.senders_correspondent {
-            match corr {
-                Field53::A(f) => {
-                    fields.insert("53A".to_string(), vec![f.to_swift_string()]);
+        if let Some(ref field_53b) = self.field_53b {
+            fields.insert("53B".to_string(), vec![field_53b.to_swift_value()]);
+        }
+
+        if let Some(ref field_56) = self.field_56 {
+            match field_56 {
+                Field56IntermediaryAD::A(f) => {
+                    fields.insert("56A".to_string(), vec![f.to_swift_value()]);
                 }
-                Field53::B(f) => {
-                    fields.insert("53B".to_string(), vec![f.to_swift_string()]);
+                Field56IntermediaryAD::D(f) => {
+                    fields.insert("56D".to_string(), vec![f.to_swift_value()]);
                 }
-                _ => {}
             }
         }
 
-        if let Some(ref inter) = self.intermediary {
-            match inter {
-                Field56::A(f) => {
-                    fields.insert("56A".to_string(), vec![f.to_swift_string()]);
+        match &self.field_57 {
+            Field57DebtInstitution::A(f) => {
+                let mut value = String::new();
+                if let Some(ref party) = f.party_identifier {
+                    value.push_str(&format!("/{}\n", party));
                 }
-                Field56::D(f) => {
-                    fields.insert("56D".to_string(), vec![f.to_swift_string()]);
+                value.push_str(&f.bic);
+                fields.insert("57A".to_string(), vec![value]);
+            }
+            Field57DebtInstitution::B(f) => {
+                let mut value = String::new();
+                if let Some(ref party) = f.party_identifier {
+                    value.push_str(&format!("/{}\n", party));
                 }
-                _ => {}
+                if let Some(ref loc) = f.location {
+                    value.push_str(loc);
+                }
+                fields.insert("57B".to_string(), vec![value]);
+            }
+            Field57DebtInstitution::D(f) => {
+                let mut lines = Vec::new();
+                if let Some(ref party) = f.party_identifier {
+                    lines.push(format!("/{}", party));
+                }
+                lines.extend(f.name_and_address.clone());
+                fields.insert("57D".to_string(), vec![lines.join("\n")]);
             }
         }
 
-        if let Some(ref acc_with) = self.account_with_institution {
-            match acc_with {
-                Field57::A(f) => {
-                    fields.insert("57A".to_string(), vec![f.to_swift_string()]);
-                }
-                Field57::B(f) => {
-                    fields.insert("57B".to_string(), vec![f.to_swift_string()]);
-                }
-                Field57::D(f) => {
-                    fields.insert("57D".to_string(), vec![f.to_swift_string()]);
-                }
-                _ => {}
-            }
-        }
-
-        if let Some(ref sender_info) = self.sender_to_receiver {
-            fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);
+        if let Some(ref field_72) = self.field_72 {
+            fields.insert("72".to_string(), vec![field_72.information.join("\n")]);
         }
 
         fields
     }
 
     fn required_fields() -> Vec<&'static str> {
-        vec!["20", "32A"]
+        vec!["20", "32A", "57"]
     }
 
     fn optional_fields() -> Vec<&'static str> {
-        vec!["53", "56", "57", "72"]
+        vec!["53B", "56", "72"]
     }
 }

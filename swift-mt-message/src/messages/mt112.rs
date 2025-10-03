@@ -19,9 +19,9 @@ pub struct MT112 {
     #[serde(rename = "30")]
     pub field_30: Field30,
 
-    // Amount (can be 32A or 32B)
+    // Amount (can be 32A or 32B per SWIFT spec)
     #[serde(flatten)]
-    pub field_32: Field32Amount,
+    pub field_32: Field32AB,
 
     // Drawer Bank (optional) - can be A, B, or D
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
@@ -36,15 +36,6 @@ pub struct MT112 {
     pub field_76: Field76,
 }
 
-// Enum for Field 32 variants (A or B) - reuse from MT111
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum Field32Amount {
-    #[serde(rename = "32A")]
-    A(Field32A),
-    #[serde(rename = "32B")]
-    B(Field32B),
-}
-
 impl MT112 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
@@ -55,16 +46,8 @@ impl MT112 {
         let field_21 = parser.parse_field::<Field21NoOption>("21")?;
         let field_30 = parser.parse_field::<Field30>("30")?;
 
-        // Parse amount - can be 32A or 32B
-        let field_32 = if parser.detect_field("32A") {
-            Field32Amount::A(parser.parse_field::<Field32A>("32A")?)
-        } else if parser.detect_field("32B") {
-            Field32Amount::B(parser.parse_field::<Field32B>("32B")?)
-        } else {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT112: Either field 32A or 32B is required for amount".to_string(),
-            });
-        };
+        // Parse amount - can be 32A or 32B per spec
+        let field_32 = parser.parse_variant_field::<Field32AB>("32")?;
 
         // Parse optional fields
         let field_52 = parser.parse_optional_variant_field::<Field52DrawerBank>("52")?;
@@ -191,7 +174,7 @@ impl crate::traits::SwiftMessageBody for MT112 {
 
         // Add amount field (32A or 32B)
         match &self.field_32 {
-            Field32Amount::A(field_32a) => {
+            Field32AB::A(field_32a) => {
                 fields.insert(
                     "32A".to_string(),
                     vec![format!(
@@ -204,7 +187,7 @@ impl crate::traits::SwiftMessageBody for MT112 {
                     )],
                 );
             }
-            Field32Amount::B(field_32b) => {
+            Field32AB::B(field_32b) => {
                 fields.insert(
                     "32B".to_string(),
                     vec![format!(

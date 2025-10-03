@@ -39,18 +39,18 @@ use serde::{Deserialize, Serialize};
 /// - **21**: Related Reference (optional) - Reference to related period or statement
 /// - **25**: Account Identification (mandatory) - Account being reported
 /// - **28C**: Statement Number/Sequence (mandatory) - Report numbering
+/// - **34F**: Debit Floor Limit Indicator (mandatory) - Minimum debit transaction amount for reporting
+/// - **34F**: Credit Floor Limit Indicator (optional) - Minimum credit transaction amount for reporting
 /// - **13D**: Date/Time Indication (mandatory) - Precise timing of report
-/// - **60F**: Opening Balance (optional) - Starting balance for reporting period
 /// - **Statement Lines**: Repetitive sequence of transaction details (Field 61 + optional Field 86)
 /// - **90D**: Number/Sum of Debit Entries (optional) - Debit transaction summary
 /// - **90C**: Number/Sum of Credit Entries (optional) - Credit transaction summary
-/// - **62F**: Closing Balance (optional) - Ending balance for reporting period
-/// - **64**: Available Balance (optional) - Available balance information
-/// - **65**: Forward Available Balance (optional, repetitive) - Future balance projections
+/// - **86**: Information to Account Owner (optional) - Additional information
 ///
 /// ## Network Validation Rules
-/// - **Currency Consistency**: All balance and limit fields must use consistent currency
-/// - **Entry Currency Consistency**: Entry summaries must use same currency as balances
+/// - **Currency Consistency**: All floor limit and entry summary fields must use consistent currency
+/// - **Entry Currency Consistency**: Entry summaries must use same currency as floor limits
+/// - **Floor Limit DC Mark**: Second occurrence of field 34F must have debit/credit mark 'C'
 /// - **Reference Format**: Transaction references must follow SWIFT standards
 /// - **Required Fields**: All mandatory fields must be present and properly formatted
 /// - **Real-time Constraints**: Timing information must reflect current processing
@@ -73,13 +73,17 @@ pub struct MT942 {
     #[serde(rename = "28C")]
     pub field_28c: Field28C,
 
+    // Debit Floor Limit Indicator (mandatory)
+    #[serde(rename = "34F_debit")]
+    pub floor_limit_debit: Field34F,
+
+    // Credit Floor Limit Indicator (optional)
+    #[serde(rename = "34F_credit", skip_serializing_if = "Option::is_none")]
+    pub floor_limit_credit: Option<Field34F>,
+
     // Date/Time Indication (mandatory)
     #[serde(rename = "13D")]
     pub field_13d: Field13D,
-
-    // Opening Balance (optional)
-    #[serde(rename = "60F", skip_serializing_if = "Option::is_none")]
-    pub field_60f: Option<Field60F>,
 
     // Statement Lines (repetitive)
     #[serde(rename = "statement_lines")]
@@ -93,17 +97,9 @@ pub struct MT942 {
     #[serde(rename = "90C", skip_serializing_if = "Option::is_none")]
     pub field_90c: Option<Field90C>,
 
-    // Closing Balance (optional)
-    #[serde(rename = "62F", skip_serializing_if = "Option::is_none")]
-    pub field_62f: Option<Field62F>,
-
-    // Closing Available Balance (optional)
-    #[serde(rename = "64", skip_serializing_if = "Option::is_none")]
-    pub field_64: Option<Field64>,
-
-    // Forward Available Balance (optional, repetitive)
-    #[serde(rename = "65", skip_serializing_if = "Option::is_none")]
-    pub field_65: Option<Vec<Field65>>,
+    // Information to Account Owner (optional)
+    #[serde(rename = "86", skip_serializing_if = "Option::is_none")]
+    pub field_86: Option<Field86>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -138,15 +134,16 @@ impl MT942 {
         let field_25 = parser.parse_field::<Field25AccountIdentification>("25")?;
         let field_28c = parser.parse_field::<Field28C>("28C")?;
 
+        // Parse floor limit indicators (Field 34F appears twice)
+        let floor_limit_debit = parser.parse_field::<Field34F>("34F")?;
+        let floor_limit_credit = parser.parse_optional_field::<Field34F>("34F")?;
+
         // Parse Field 13D if not already parsed
         let field_13d = if let Some(early_13d) = field_13d_early {
             early_13d
         } else {
             parser.parse_field::<Field13D>("13D")?
         };
-
-        // Parse optional opening balance
-        let field_60f = parser.parse_optional_field::<Field60F>("60F")?;
 
         // Enable duplicate field handling for statement lines
         parser = parser.with_duplicates(true);
@@ -165,88 +162,46 @@ impl MT942 {
         let field_90d = parser.parse_optional_field::<Field90D>("90D")?;
         let field_90c = parser.parse_optional_field::<Field90C>("90C")?;
 
-        // Parse optional closing balance
-        let field_62f = parser.parse_optional_field::<Field62F>("62F")?;
-
-        // Parse optional available balance
-        let field_64 = parser.parse_optional_field::<Field64>("64")?;
-
-        // Parse optional forward available balance (can be repetitive)
-        let mut field_65_vec = Vec::new();
-        while parser.detect_field("65") {
-            if let Ok(field) = parser.parse_field::<Field65>("65") {
-                field_65_vec.push(field);
-            } else {
-                break;
-            }
-        }
-        let field_65 = if field_65_vec.is_empty() {
-            None
-        } else {
-            Some(field_65_vec)
-        };
+        // Parse optional information to account owner
+        let field_86 = parser.parse_optional_field::<Field86>("86")?;
 
         Ok(MT942 {
             field_20,
             field_21,
             field_25,
             field_28c,
+            floor_limit_debit,
+            floor_limit_credit,
             field_13d,
-            field_60f,
             statement_lines,
             field_90d,
             field_90c,
-            field_62f,
-            field_64,
-            field_65,
+            field_86,
         })
     }
 
     /// Static validation rules for MT942
     pub fn validate() -> &'static str {
         r#"{"rules": [
-            {"id": "C1", "description": "The first two characters of the three-character currency code in fields 60F, 61, 90D, 90C, 62F, 64, and 65 must be the same for all occurrences"}
+            {"id": "C1", "description": "The first two characters of the three-character currency code in fields 34F, 61, 90D, and 90C must be the same for all occurrences"},
+            {"id": "C2", "description": "The debit/credit mark in the first occurrence of field 34F may be D or C, but the second occurrence must have C"}
         ]}"#
     }
 
     /// Validate the message instance according to MT942 rules
     pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
         // C1: Currency consistency validation
-        // We need at least one field with currency to validate against
-        let base_currency = if let Some(ref field_60f) = self.field_60f {
-            &field_60f.currency[0..2]
-        } else if let Some(ref field_62f) = self.field_62f {
-            &field_62f.currency[0..2]
-        } else if let Some(ref field_90d) = self.field_90d {
-            &field_90d.currency[0..2]
-        } else if let Some(ref field_90c) = self.field_90c {
-            &field_90c.currency[0..2]
-        } else {
-            // No currency fields to validate
-            return Ok(());
-        };
+        // Base currency from mandatory floor limit debit
+        let base_currency = &self.floor_limit_debit.currency[0..2];
 
-        // Check 60F if present
-        if let Some(ref field_60f) = self.field_60f
-            && &field_60f.currency[0..2] != base_currency
+        // Check floor limit credit if present
+        if let Some(ref floor_limit_credit) = self.floor_limit_credit
+            && &floor_limit_credit.currency[0..2] != base_currency
         {
             return Err(crate::errors::ParseError::InvalidFormat {
                 message: format!(
-                    "MT942: Currency code mismatch - field 60F currency '{}' does not match base currency '{}'",
-                    &field_60f.currency[0..2],
-                    base_currency
-                ),
-            });
-        }
-
-        // Check 62F if present
-        if let Some(ref field_62f) = self.field_62f
-            && &field_62f.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT942: Currency code mismatch - field 62F currency '{}' does not match base currency '{}'",
-                    &field_62f.currency[0..2],
+                    "MT942: Currency code mismatch - credit floor limit currency '{}' does not match base currency '{}'",
+                    &floor_limit_credit.currency[0..2],
                     base_currency
                 ),
             });
@@ -278,32 +233,16 @@ impl MT942 {
             });
         }
 
-        // Check 64 if present
-        if let Some(ref field_64) = self.field_64
-            && &field_64.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT942: Currency code mismatch - field 64 currency '{}' does not match base currency '{}'",
-                    &field_64.currency[0..2],
-                    base_currency
-                ),
-            });
-        }
-
-        // Check 65 if present
-        if let Some(ref field_65_vec) = self.field_65 {
-            for (idx, field_65) in field_65_vec.iter().enumerate() {
-                if &field_65.currency[0..2] != base_currency {
-                    return Err(crate::errors::ParseError::InvalidFormat {
-                        message: format!(
-                            "MT942: Currency code mismatch - field 65[{}] currency '{}' does not match base currency '{}'",
-                            idx,
-                            &field_65.currency[0..2],
-                            base_currency
-                        ),
-                    });
-                }
+        // C2: Debit/Credit mark validation for Field 34F
+        if let Some(ref floor_limit_credit) = self.floor_limit_credit {
+            // Second occurrence must have C indicator
+            if floor_limit_credit.indicator != Some('C') {
+                return Err(crate::errors::ParseError::InvalidFormat {
+                    message: format!(
+                        "MT942: Second occurrence of field 34F must have indicator 'C', found '{:?}'",
+                        floor_limit_credit.indicator
+                    ),
+                });
             }
         }
 
@@ -375,11 +314,15 @@ impl crate::traits::SwiftMessageBody for MT942 {
         }
 
         fields.insert("28C".to_string(), vec![self.field_28c.to_swift_string()]);
-        fields.insert("13D".to_string(), vec![self.field_13d.to_swift_string()]);
 
-        if let Some(ref field_60f) = self.field_60f {
-            fields.insert("60F".to_string(), vec![field_60f.to_swift_string()]);
+        // Add floor limit indicators (Field 34F appears twice)
+        let mut field_34f_values = vec![self.floor_limit_debit.to_swift_string()];
+        if let Some(ref floor_limit_credit) = self.floor_limit_credit {
+            field_34f_values.push(floor_limit_credit.to_swift_string());
         }
+        fields.insert("34F".to_string(), field_34f_values);
+
+        fields.insert("13D".to_string(), vec![self.field_13d.to_swift_string()]);
 
         // Add statement lines
         let mut field_61_values = Vec::new();
@@ -407,27 +350,18 @@ impl crate::traits::SwiftMessageBody for MT942 {
             fields.insert("90C".to_string(), vec![field_90c.to_swift_string()]);
         }
 
-        if let Some(ref field_62f) = self.field_62f {
-            fields.insert("62F".to_string(), vec![field_62f.to_swift_string()]);
-        }
-
-        if let Some(ref field_64) = self.field_64 {
-            fields.insert("64".to_string(), vec![field_64.to_swift_string()]);
-        }
-
-        if let Some(ref field_65_vec) = self.field_65 {
-            let values: Vec<String> = field_65_vec.iter().map(|f| f.to_swift_string()).collect();
-            fields.insert("65".to_string(), values);
+        if let Some(ref field_86) = self.field_86 {
+            fields.insert("86".to_string(), vec![field_86.to_swift_string()]);
         }
 
         fields
     }
 
     fn required_fields() -> Vec<&'static str> {
-        vec!["20", "25", "28C", "13D"]
+        vec!["20", "25", "28C", "34F", "13D"]
     }
 
     fn optional_fields() -> Vec<&'static str> {
-        vec!["21", "60F", "61", "86", "90D", "90C", "62F", "64", "65"]
+        vec!["21", "61", "86", "90D", "90C"]
     }
 }

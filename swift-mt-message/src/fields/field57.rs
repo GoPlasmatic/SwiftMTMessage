@@ -505,3 +505,62 @@ mod tests {
         assert!(Field57D::parse("LINE1\nLINE2\nLINE3\nLINE4\nLINE5").is_err());
     }
 }
+
+// Type aliases for backward compatibility
+pub type Field57AccountWithInstitution = Field57;
+pub type Field57DebtorBank = Field57;
+
+/// Field57DebtInstitution: Account With Institution for MT200 and similar messages
+///
+/// Restricted enum supporting only variants A, B, and D per SWIFT specification.
+/// Used in MT200 where Field 57 is mandatory and limited to these options.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Field57DebtInstitution {
+    #[serde(rename = "57A")]
+    A(Field57A),
+    #[serde(rename = "57B")]
+    B(Field57B),
+    #[serde(rename = "57D")]
+    D(Field57D),
+}
+
+impl SwiftField for Field57DebtInstitution {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Try parsing as 57A (party identifier + BIC)
+        if let Ok(field) = Field57A::parse(input) {
+            return Ok(Field57DebtInstitution::A(field));
+        }
+
+        // Try parsing as 57B (party identifier only)
+        if let Ok(field) = Field57B::parse(input) {
+            return Ok(Field57DebtInstitution::B(field));
+        }
+
+        // Try parsing as 57D (name and address)
+        if let Ok(field) = Field57D::parse(input) {
+            return Ok(Field57DebtInstitution::D(field));
+        }
+
+        Err(ParseError::InvalidFormat {
+            message: "Field 57 must be one of formats: 57A (party + BIC), 57B (party + location), or 57D (name + address)".to_string(),
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        match self {
+            Field57DebtInstitution::A(field) => field.to_swift_string(),
+            Field57DebtInstitution::B(field) => field.to_swift_string(),
+            Field57DebtInstitution::D(field) => field.to_swift_string(),
+        }
+    }
+}
+
+/// Field57AccountWithABD: Account With Institution for MT291 and similar messages
+///
+/// Restricted enum supporting only variants A, B, and D per SWIFT specification.
+/// Used in MT291 where Field 57a is optional and limited to these options.
+/// This is an alias for Field57DebtInstitution with a more descriptive name.
+pub type Field57AccountWithABD = Field57DebtInstitution;

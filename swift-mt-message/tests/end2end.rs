@@ -206,8 +206,8 @@ async fn test_swift_mt_workflow_pipeline() {
                             || key == "sample_mt"
                             || key == "validation_result"
                             || key == "mt_json")
-                            && scenario == "standard"
-                            && message_type == "MT103"
+                            && (message_type == "MT104"
+                                || (scenario == "standard" && message_type == "MT103"))
                         {
                             println!("\nDebug - {} structure:", key);
                             if let Some(json_data) = value.get("json_data") {
@@ -253,6 +253,19 @@ async fn test_swift_mt_workflow_pipeline() {
                                     key,
                                     value.as_object().map(|o| o.keys().collect::<Vec<_>>())
                                 );
+
+                                // For MT104, show fields
+                                if message_type == "MT104" && key == "sample_json" {
+                                    if let Some(obj) = value.as_object() {
+                                        if let Some(fields) = obj.get("fields") {
+                                            println!(
+                                                "  MT104 fields: {}",
+                                                serde_json::to_string_pretty(fields)
+                                                    .unwrap_or_default()
+                                            );
+                                        }
+                                    }
+                                }
                             }
                         } else if key == "sample_mt" {
                             println!("\nDebug - Sample MT structure:");

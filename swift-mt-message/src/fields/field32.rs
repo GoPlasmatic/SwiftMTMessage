@@ -187,7 +187,7 @@ impl SwiftField for Field32A {
 
     fn to_swift_string(&self) -> String {
         format!(
-            "{}{}{}",
+            ":32A:{}{}{}",
             self.value_date.format("%y%m%d"),
             self.currency,
             self.amount.to_string().replace('.', ",")
@@ -355,7 +355,7 @@ impl SwiftField for Field32C {
 
     fn to_swift_string(&self) -> String {
         format!(
-            "{}{}{}",
+            ":32C:{}{}{}",
             self.value_date.format("%y%m%d"),
             self.currency,
             self.amount.to_string().replace('.', ",")
@@ -436,7 +436,7 @@ impl SwiftField for Field32D {
 
     fn to_swift_string(&self) -> String {
         format!(
-            "{}{}{}",
+            ":32D:{}{}{}",
             self.value_date.format("%y%m%d"),
             self.currency,
             self.amount.to_string().replace('.', ",")
@@ -452,9 +452,13 @@ impl SwiftField for Field32D {
 /// For complete documentation, see the [Field 32 module](index.html).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field32 {
+    #[serde(rename = "32A")]
     A(Field32A),
+    #[serde(rename = "32B")]
     B(Field32B),
+    #[serde(rename = "32C")]
     C(Field32C),
+    #[serde(rename = "32D")]
     D(Field32D),
 }
 
@@ -501,9 +505,54 @@ impl SwiftField for Field32 {
     }
 }
 
+/// **Field32AB: Amount with Value Date or Currency Only**
+///
+/// Used in MT110, MT111, MT112 for cheque-related messages to specify amount with optional value date.
+/// This enum provides JSON flattening to directly serialize as "32A" or "32B" fields.
+/// Per SWIFT specifications, these messages only support options A and B.
+///
+/// **Variants:**
+/// - A: Value date + Currency + Amount (Field32A)
+/// - B: Currency + Amount only (Field32B)
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Field32AB {
+    #[serde(rename = "32A")]
+    A(Field32A),
+    #[serde(rename = "32B")]
+    B(Field32B),
+}
+
+impl SwiftField for Field32AB {
+    fn parse(input: &str) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Try parsing as Field32A first (has value date)
+        if let Ok(field) = Field32A::parse(input) {
+            return Ok(Field32AB::A(field));
+        }
+
+        // If that fails, try as Field32B (no value date)
+        if let Ok(field) = Field32B::parse(input) {
+            return Ok(Field32AB::B(field));
+        }
+
+        Err(ParseError::InvalidFormat {
+            message: "Field 32 must be either format 32A (YYMMDD + Currency + Amount) or 32B (Currency + Amount)".to_string(),
+        })
+    }
+
+    fn to_swift_string(&self) -> String {
+        match self {
+            Field32AB::A(field) => field.to_swift_string(),
+            Field32AB::B(field) => field.to_swift_string(),
+        }
+    }
+}
+
 /// **Field32AmountCD: Credit or Debit Amount**
 ///
-/// Used in MT290 and similar messages to specify either a credit (32C) or debit (32D) amount.
+/// Used in MT190 and similar messages to specify either a credit (32C) or debit (32D) amount.
 /// This enum provides JSON flattening to directly serialize as "32C" or "32D" fields.
 ///
 /// **Variants:**
@@ -540,8 +589,8 @@ impl SwiftField for Field32AmountCD {
 
     fn to_swift_string(&self) -> String {
         match self {
-            Field32AmountCD::C(field) => format!(":32C:{}", field.to_swift_string()),
-            Field32AmountCD::D(field) => format!(":32D:{}", field.to_swift_string()),
+            Field32AmountCD::C(field) => field.to_swift_string(),
+            Field32AmountCD::D(field) => field.to_swift_string(),
         }
     }
 }
@@ -560,7 +609,10 @@ mod tests {
         );
         assert_eq!(field.currency, "EUR");
         assert_eq!(field.amount, 1250.50);
-        assert_eq!(field.to_swift_string(), "240719EUR1250.5".replace('.', ","));
+        assert_eq!(
+            field.to_swift_string(),
+            ":32A:240719EUR1250.5".replace('.', ",")
+        );
 
         let field = Field32A::parse("240720USD10000,00").unwrap();
         assert_eq!(field.currency, "USD");
@@ -657,6 +709,45 @@ mod tests {
             }
             _ => panic!("Expected Field32::B"),
         }
+    }
+
+    #[test]
+    fn test_field32_ab() {
+        // Test parsing as Field32A (with value date)
+        let field = Field32AB::parse("240719EUR500,25").unwrap();
+        match field {
+            Field32AB::A(f) => {
+                assert_eq!(f.value_date, NaiveDate::from_ymd_opt(2024, 7, 19).unwrap());
+                assert_eq!(f.currency, "EUR");
+                assert_eq!(f.amount, 500.25);
+            }
+            _ => panic!("Expected Field32AB::A"),
+        }
+
+        // Test parsing as Field32B (no value date)
+        let field = Field32AB::parse("USD1000,00").unwrap();
+        match field {
+            Field32AB::B(f) => {
+                assert_eq!(f.currency, "USD");
+                assert_eq!(f.amount, 1000.00);
+            }
+            _ => panic!("Expected Field32AB::B"),
+        }
+
+        // Test to_swift_string for A (Field32A includes field tag)
+        let field_a = Field32AB::A(Field32A {
+            value_date: NaiveDate::from_ymd_opt(2024, 7, 19).unwrap(),
+            currency: "EUR".to_string(),
+            amount: 500.25,
+        });
+        assert_eq!(field_a.to_swift_string(), ":32A:240719EUR500,25");
+
+        // Test to_swift_string for B (Field32B includes field tag)
+        let field_b = Field32AB::B(Field32B {
+            currency: "USD".to_string(),
+            amount: 1000.00,
+        });
+        assert_eq!(field_b.to_swift_string(), ":32B:USD1000");
     }
 
     #[test]

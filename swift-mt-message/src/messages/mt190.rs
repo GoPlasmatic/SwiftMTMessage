@@ -21,7 +21,7 @@ pub struct MT190 {
 
     // Value Date, Currency Code, Amount (can be 32C or 32D for MT190)
     #[serde(flatten)]
-    pub field_32: Field32Amount,
+    pub field_32: Field32AmountCD,
 
     // Ordering Institution (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
@@ -36,15 +36,6 @@ pub struct MT190 {
     pub field_72: Option<Field72>,
 }
 
-// Enum for Field 32 variants (C or D for MT190 - credit or debit adjustments)
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum Field32Amount {
-    #[serde(rename = "32C")]
-    C(Field32C),
-    #[serde(rename = "32D")]
-    D(Field32D),
-}
-
 impl MT190 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
@@ -56,15 +47,7 @@ impl MT190 {
         let field_25 = parser.parse_field::<Field25NoOption>("25")?;
 
         // Parse amount - can be 32C or 32D for credit/debit adjustments
-        let field_32 = if parser.detect_field("32C") {
-            Field32Amount::C(parser.parse_field::<Field32C>("32C")?)
-        } else if parser.detect_field("32D") {
-            Field32Amount::D(parser.parse_field::<Field32D>("32D")?)
-        } else {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT190: Either field 32C or 32D is required for amount".to_string(),
-            });
-        };
+        let field_32 = parser.parse_variant_field::<Field32AmountCD>("32")?;
 
         // Parse optional fields
         let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
@@ -178,13 +161,11 @@ impl crate::traits::SwiftMessageBody for MT190 {
         // Add mandatory fields
         fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
         fields.insert("21".to_string(), vec![self.field_21.reference.clone()]);
-
-        // Add account identification field
         fields.insert("25".to_string(), vec![self.field_25.authorisation.clone()]);
 
         // Add amount field (32C or 32D)
         match &self.field_32 {
-            Field32Amount::C(field_32c) => {
+            Field32AmountCD::C(field_32c) => {
                 fields.insert(
                     "32C".to_string(),
                     vec![format!(
@@ -197,7 +178,7 @@ impl crate::traits::SwiftMessageBody for MT190 {
                     )],
                 );
             }
-            Field32Amount::D(field_32d) => {
+            Field32AmountCD::D(field_32d) => {
                 fields.insert(
                     "32D".to_string(),
                     vec![format!(

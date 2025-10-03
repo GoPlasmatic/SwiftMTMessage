@@ -13,20 +13,20 @@ use std::collections::HashMap;
 pub struct MT292 {
     /// Field 20 - Transaction Reference Number (Mandatory)
     #[serde(rename = "20")]
-    pub transaction_reference: Field20,
+    pub field_20: Field20,
 
     /// Field 21 - Related Reference (Mandatory)
     #[serde(rename = "21")]
-    pub related_reference: Field21NoOption,
+    pub field_21: Field21NoOption,
 
     /// Field 11S - MT and Date of the Original Message (Mandatory)
     #[serde(rename = "11S")]
-    pub original_message_type: Field11S,
+    pub field_11s: Field11S,
 
     /// Field 79 - Narrative Description of Original Message (Conditional)
     /// Must be present if copy of original message fields is not included
     #[serde(rename = "79", skip_serializing_if = "Option::is_none")]
-    pub narrative_description: Option<Field79>,
+    pub field_79: Option<Field79>,
 
     /// Copy of mandatory fields from the original message (Conditional)
     /// Stored as additional fields that were part of the original message
@@ -40,19 +40,19 @@ impl MT292 {
         let mut parser = MessageParser::new(block4, "292");
 
         // Parse mandatory fields
-        let transaction_reference = parser.parse_field::<Field20>("20")?;
-        let related_reference = parser.parse_field::<Field21NoOption>("21")?;
-        let original_message_type = parser.parse_field::<Field11S>("11S")?;
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_21 = parser.parse_field::<Field21NoOption>("21")?;
+        let field_11s = parser.parse_field::<Field11S>("11S")?;
 
         // Parse optional/conditional Field 79
-        let narrative_description = parser.parse_optional_field::<Field79>("79")?;
+        let field_79 = parser.parse_optional_field::<Field79>("79")?;
 
         // Collect any remaining fields as original message fields
         // This would need to be implemented in MessageParser but for now use empty HashMap
         let original_fields = HashMap::new();
 
         // Validation: Either Field 79 or original fields must be present
-        if narrative_description.is_none() && original_fields.is_empty() {
+        if field_79.is_none() && original_fields.is_empty() {
             return Err(ParseError::InvalidFormat {
                 message:
                     "MT292: Either Field 79 or copy of original message fields must be present"
@@ -61,10 +61,10 @@ impl MT292 {
         }
 
         Ok(MT292 {
-            transaction_reference,
-            related_reference,
-            original_message_type,
-            narrative_description,
+            field_20,
+            field_21,
+            field_11s,
+            field_79,
             original_fields,
         })
     }
@@ -119,20 +119,11 @@ impl crate::traits::SwiftMessageBody for MT292 {
         let mut fields = HashMap::new();
 
         // Note: Field order matters in SWIFT - 20 and 21 must come before 11S
-        fields.insert(
-            "20".to_string(),
-            vec![self.transaction_reference.to_swift_string()],
-        );
-        fields.insert(
-            "21".to_string(),
-            vec![self.related_reference.to_swift_string()],
-        );
-        fields.insert(
-            "11S".to_string(),
-            vec![self.original_message_type.to_swift_string()],
-        );
+        fields.insert("20".to_string(), vec![self.field_20.to_swift_string()]);
+        fields.insert("21".to_string(), vec![self.field_21.to_swift_string()]);
+        fields.insert("11S".to_string(), vec![self.field_11s.to_swift_string()]);
 
-        if let Some(ref narrative) = self.narrative_description {
+        if let Some(ref narrative) = self.field_79 {
             fields.insert("79".to_string(), vec![narrative.to_swift_string()]);
         }
 

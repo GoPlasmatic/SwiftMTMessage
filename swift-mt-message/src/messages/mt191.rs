@@ -25,7 +25,7 @@ pub struct MT191 {
 
     // Account With Institution (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_57: Option<Field57>,
+    pub field_57: Option<Field57AccountWithInstitution>,
 
     // Details of Charges
     #[serde(rename = "71B")]
@@ -48,7 +48,8 @@ impl MT191 {
 
         // Parse optional fields
         let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
-        let field_57 = parser.parse_optional_variant_field::<Field57>("57")?;
+        let field_57 =
+            parser.parse_optional_variant_field::<Field57AccountWithInstitution>("57")?;
 
         // Parse mandatory field 71B
         let field_71b = parser.parse_field::<Field71B>("71B")?;

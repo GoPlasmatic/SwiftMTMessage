@@ -96,6 +96,15 @@
                 },
                 "sequence_number": 1
             },
+            "34F_debit": {
+                "currency": {
+                    "var": "currency"
+                },
+                "indicator": "D",
+                "amount": {
+                    "var": "debit_limit"
+                }
+            },
             "13D": {
                 "date": "241220",
                 "time": "0945",

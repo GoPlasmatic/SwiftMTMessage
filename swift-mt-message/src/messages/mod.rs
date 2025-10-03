@@ -35,7 +35,7 @@ pub use mt101::{MT101, MT101Transaction};
 pub use mt103::MT103;
 pub use mt104::{MT104, MT104Transaction};
 pub use mt107::{MT107, MT107Transaction};
-pub use mt110::{MT110, MT110ChequeDetails};
+pub use mt110::{MT110, MT110Cheque};
 pub use mt111::MT111;
 pub use mt112::MT112;
 pub use mt190::MT190;

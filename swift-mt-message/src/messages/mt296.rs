@@ -13,32 +13,32 @@ use std::collections::HashMap;
 pub struct MT296 {
     /// Field 20 - Transaction Reference Number (Mandatory)
     #[serde(rename = "20")]
-    pub transaction_reference: Field20,
+    pub field_20: Field20,
 
     /// Field 21 - Related Reference (Mandatory)
     /// Reference of the original message being responded to
     #[serde(rename = "21")]
-    pub related_reference: Field21NoOption,
+    pub field_21: Field21NoOption,
 
     /// Field 76 - Answers (Mandatory)
     #[serde(rename = "76")]
-    pub answers: Field76,
+    pub field_76: Field76,
 
     /// Field 77A - Narrative (Optional)
     #[serde(rename = "77A", skip_serializing_if = "Option::is_none")]
-    pub narrative: Option<Field77A>,
+    pub field_77a: Option<Field77A>,
 
     /// Field 11R - MT and Date of the Original Message - Received (Optional)
     #[serde(rename = "11R", skip_serializing_if = "Option::is_none")]
-    pub original_message_type_r: Option<Field11R>,
+    pub field_11r: Option<Field11R>,
 
     /// Field 11S - MT and Date of the Original Message - Sent (Optional)
     #[serde(rename = "11S", skip_serializing_if = "Option::is_none")]
-    pub original_message_type_s: Option<Field11S>,
+    pub field_11s: Option<Field11S>,
 
     /// Field 79 - Narrative Description of Original Message (Conditional)
     #[serde(rename = "79", skip_serializing_if = "Option::is_none")]
-    pub narrative_description: Option<Field79>,
+    pub field_79: Option<Field79>,
 
     /// Copy of mandatory fields from the original message (Conditional)
     /// Stored as additional fields that were part of the original message
@@ -52,39 +52,39 @@ impl MT296 {
         let mut parser = MessageParser::new(block4, "296");
 
         // Parse mandatory fields
-        let transaction_reference = parser.parse_field::<Field20>("20")?;
-        let related_reference = parser.parse_field::<Field21NoOption>("21")?;
-        let answers = parser.parse_field::<Field76>("76")?;
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_21 = parser.parse_field::<Field21NoOption>("21")?;
+        let field_76 = parser.parse_field::<Field76>("76")?;
 
         // Parse optional Field 77A
-        let narrative = parser.parse_optional_field::<Field77A>("77A")?;
+        let field_77a = parser.parse_optional_field::<Field77A>("77A")?;
 
         // Parse optional Field 11R or 11S
-        let original_message_type_r = parser.parse_optional_field::<Field11R>("11R")?;
-        let original_message_type_s = parser.parse_optional_field::<Field11S>("11S")?;
+        let field_11r = parser.parse_optional_field::<Field11R>("11R")?;
+        let field_11s = parser.parse_optional_field::<Field11S>("11S")?;
 
         // Parse optional/conditional Field 79
-        let narrative_description = parser.parse_optional_field::<Field79>("79")?;
+        let field_79 = parser.parse_optional_field::<Field79>("79")?;
 
         // Collect any remaining fields as original message fields
         // This would need to be implemented in MessageParser but for now use empty HashMap
         let original_fields = HashMap::new();
 
         // Validation: Only one of Field 79 or original fields should be present (C1)
-        if narrative_description.is_some() && !original_fields.is_empty() {
+        if field_79.is_some() && !original_fields.is_empty() {
             return Err(ParseError::InvalidFormat {
                 message: "MT296: Only one of Field 79 or copy of original message fields should be present (C1)".to_string(),
             });
         }
 
         Ok(MT296 {
-            transaction_reference,
-            related_reference,
-            answers,
-            narrative,
-            original_message_type_r,
-            original_message_type_s,
-            narrative_description,
+            field_20,
+            field_21,
+            field_76,
+            field_77a,
+            field_11r,
+            field_11s,
+            field_79,
             original_fields,
         })
     }
@@ -138,29 +138,23 @@ impl crate::traits::SwiftMessageBody for MT296 {
     fn to_fields(&self) -> HashMap<String, Vec<String>> {
         let mut fields = HashMap::new();
 
-        fields.insert(
-            "20".to_string(),
-            vec![self.transaction_reference.to_swift_string()],
-        );
-        fields.insert(
-            "21".to_string(),
-            vec![self.related_reference.to_swift_string()],
-        );
-        fields.insert("76".to_string(), vec![self.answers.to_swift_string()]);
+        fields.insert("20".to_string(), vec![self.field_20.to_swift_string()]);
+        fields.insert("21".to_string(), vec![self.field_21.to_swift_string()]);
+        fields.insert("76".to_string(), vec![self.field_76.to_swift_string()]);
 
-        if let Some(ref narr) = self.narrative {
+        if let Some(ref narr) = self.field_77a {
             fields.insert("77A".to_string(), vec![narr.to_swift_string()]);
         }
 
-        if let Some(ref orig_msg_r) = self.original_message_type_r {
+        if let Some(ref orig_msg_r) = self.field_11r {
             fields.insert("11R".to_string(), vec![orig_msg_r.to_swift_string()]);
         }
 
-        if let Some(ref orig_msg_s) = self.original_message_type_s {
+        if let Some(ref orig_msg_s) = self.field_11s {
             fields.insert("11S".to_string(), vec![orig_msg_s.to_swift_string()]);
         }
 
-        if let Some(ref narrative) = self.narrative_description {
+        if let Some(ref narrative) = self.field_79 {
             fields.insert("79".to_string(), vec![narrative.to_swift_string()]);
         }
 

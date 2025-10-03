@@ -385,4 +385,30 @@ impl<'a> MessageParser<'a> {
         let trimmed = remaining.trim_start_matches(|c: char| c.is_whitespace());
         trimmed.starts_with(&format!(":{}:", tag))
     }
+
+    /// Peek at the variant of a field without consuming it
+    /// Returns the variant letter (e.g., "A", "K", "C", "L") if the field exists
+    pub fn peek_field_variant(&self, base_tag: &str) -> Option<String> {
+        let remaining = self.remaining();
+        let trimmed = remaining.trim_start_matches(|c: char| c.is_whitespace());
+
+        // Try to find field with any variant (e.g., :50A:, :50K:, etc.)
+        for variant in [
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q',
+            'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        ] {
+            let search_pattern = format!(":{}{}:", base_tag, variant);
+            if trimmed.starts_with(&search_pattern) {
+                return Some(variant.to_string());
+            }
+        }
+
+        // Check for field without variant (e.g., :50:)
+        let search_pattern = format!(":{}:", base_tag);
+        if trimmed.starts_with(&search_pattern) {
+            return Some("".to_string()); // No variant
+        }
+
+        None
+    }
 }

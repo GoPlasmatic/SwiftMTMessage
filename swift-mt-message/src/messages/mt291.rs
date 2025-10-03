@@ -12,33 +12,33 @@ use std::collections::HashMap;
 pub struct MT291 {
     /// Field 20 - Transaction Reference Number (Mandatory)
     #[serde(rename = "20")]
-    pub transaction_reference: Field20,
+    pub field_20: Field20,
 
     /// Field 21 - Related Reference (Mandatory)
     #[serde(rename = "21")]
-    pub related_reference: Field21NoOption,
+    pub field_21: Field21NoOption,
 
     /// Field 32B - Currency Code, Amount (Mandatory)
     #[serde(rename = "32B")]
-    pub currency_amount: Field32B,
+    pub field_32b: Field32B,
 
     /// Field 52 - Ordering Institution (Optional)
     /// Can be 52A or 52D
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub ordering_institution: Option<Field52OrderingInstitution>,
+    pub field_52: Option<Field52OrderingInstitution>,
 
     /// Field 57 - Account With Institution (Optional)
-    /// Can be 57A, 57B, or 57D
+    /// Can be 57A, 57B, or 57D per MT n91 specification
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub account_with_institution: Option<Field57>,
+    pub field_57: Option<Field57AccountWithABD>,
 
     /// Field 71B - Details of Charges (Mandatory)
     #[serde(rename = "71B")]
-    pub details_of_charges: Field71B,
+    pub field_71b: Field71B,
 
     /// Field 72 - Sender to Receiver Information (Optional)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
-    pub sender_to_receiver: Option<Field72>,
+    pub field_72: Option<Field72>,
 }
 
 impl MT291 {
@@ -47,31 +47,30 @@ impl MT291 {
         let mut parser = MessageParser::new(block4, "291");
 
         // Parse mandatory fields
-        let transaction_reference = parser.parse_field::<Field20>("20")?;
-        let related_reference = parser.parse_field::<Field21NoOption>("21")?;
-        let currency_amount = parser.parse_field::<Field32B>("32B")?;
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_21 = parser.parse_field::<Field21NoOption>("21")?;
+        let field_32b = parser.parse_field::<Field32B>("32B")?;
 
         // Parse optional Field 52 - Ordering Institution
-        let ordering_institution =
-            parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+        let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
 
-        // Parse optional Field 57 - Account With Institution
-        let account_with_institution = parser.parse_optional_variant_field::<Field57>("57")?;
+        // Parse optional Field 57 - Account With Institution (A, B, D only per spec)
+        let field_57 = parser.parse_optional_variant_field::<Field57AccountWithABD>("57")?;
 
         // Parse mandatory Field 71B
-        let details_of_charges = parser.parse_field::<Field71B>("71B")?;
+        let field_71b = parser.parse_field::<Field71B>("71B")?;
 
         // Parse optional Field 72
-        let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
+        let field_72 = parser.parse_optional_field::<Field72>("72")?;
 
         Ok(MT291 {
-            transaction_reference,
-            related_reference,
-            currency_amount,
-            ordering_institution,
-            account_with_institution,
-            details_of_charges,
-            sender_to_receiver,
+            field_20,
+            field_21,
+            field_32b,
+            field_52,
+            field_57,
+            field_71b,
+            field_72,
         })
     }
 
@@ -120,20 +119,11 @@ impl crate::traits::SwiftMessageBody for MT291 {
     fn to_fields(&self) -> HashMap<String, Vec<String>> {
         let mut fields = HashMap::new();
 
-        fields.insert(
-            "20".to_string(),
-            vec![self.transaction_reference.to_swift_string()],
-        );
-        fields.insert(
-            "21".to_string(),
-            vec![self.related_reference.to_swift_string()],
-        );
-        fields.insert(
-            "32B".to_string(),
-            vec![self.currency_amount.to_swift_string()],
-        );
+        fields.insert("20".to_string(), vec![self.field_20.to_swift_string()]);
+        fields.insert("21".to_string(), vec![self.field_21.to_swift_string()]);
+        fields.insert("32B".to_string(), vec![self.field_32b.to_swift_string()]);
 
-        if let Some(ref ord_inst) = self.ordering_institution {
+        if let Some(ref ord_inst) = self.field_52 {
             match ord_inst {
                 Field52OrderingInstitution::A(f) => {
                     fields.insert("52A".to_string(), vec![f.to_swift_string()]);
@@ -144,27 +134,23 @@ impl crate::traits::SwiftMessageBody for MT291 {
             }
         }
 
-        if let Some(ref acc_with) = self.account_with_institution {
+        if let Some(ref acc_with) = self.field_57 {
             match acc_with {
-                Field57::A(f) => {
+                Field57AccountWithABD::A(f) => {
                     fields.insert("57A".to_string(), vec![f.to_swift_string()]);
                 }
-                Field57::B(f) => {
+                Field57AccountWithABD::B(f) => {
                     fields.insert("57B".to_string(), vec![f.to_swift_string()]);
                 }
-                Field57::D(f) => {
+                Field57AccountWithABD::D(f) => {
                     fields.insert("57D".to_string(), vec![f.to_swift_string()]);
                 }
-                _ => {}
             }
         }
 
-        fields.insert(
-            "71B".to_string(),
-            vec![self.details_of_charges.to_swift_string()],
-        );
+        fields.insert("71B".to_string(), vec![self.field_71b.to_swift_string()]);
 
-        if let Some(ref sender_info) = self.sender_to_receiver {
+        if let Some(ref sender_info) = self.field_72 {
             fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);
         }
 

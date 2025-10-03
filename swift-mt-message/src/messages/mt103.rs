@@ -33,12 +33,10 @@ pub struct MT103 {
 
     // Optional Fields
     #[serde(rename = "13C")]
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub field_13c: Vec<Field13C>,
+    pub field_13c: Option<Vec<Field13C>>,
 
     #[serde(rename = "23E")]
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub field_23e: Vec<Field23E>,
+    pub field_23e: Option<Vec<Field23E>>,
 
     #[serde(rename = "26T")]
     pub field_26t: Option<Field26T>,
@@ -68,14 +66,13 @@ pub struct MT103 {
     pub field_56: Option<Field56Intermediary>,
 
     #[serde(flatten)]
-    pub field_57: Option<Field57>,
+    pub field_57: Option<Field57AccountWithInstitution>,
 
     #[serde(rename = "70")]
     pub field_70: Option<Field70>,
 
     #[serde(rename = "71F")]
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub field_71f: Vec<Field71F>,
+    pub field_71f: Option<Vec<Field71F>>,
 
     #[serde(rename = "71G")]
     pub field_71g: Option<Field71G>,
@@ -110,7 +107,8 @@ impl MT103 {
         let field_55 =
             parser.parse_optional_variant_field::<Field55ThirdReimbursementInstitution>("55")?;
         let field_56 = parser.parse_optional_variant_field::<Field56Intermediary>("56")?;
-        let field_57 = parser.parse_optional_variant_field::<Field57>("57")?;
+        let field_57 =
+            parser.parse_optional_variant_field::<Field57AccountWithInstitution>("57")?;
 
         // Parse mandatory field 59 (after optional routing fields)
         let field_59 = parser.parse_variant_field::<Field59>("59")?;
@@ -167,8 +165,16 @@ impl MT103 {
             field_50,
             field_59,
             field_71a,
-            field_13c,
-            field_23e,
+            field_13c: if field_13c.is_empty() {
+                None
+            } else {
+                Some(field_13c)
+            },
+            field_23e: if field_23e.is_empty() {
+                None
+            } else {
+                Some(field_23e)
+            },
             field_26t,
             field_33b,
             field_36,
@@ -180,7 +186,11 @@ impl MT103 {
             field_56,
             field_57,
             field_70,
-            field_71f,
+            field_71f: if field_71f.is_empty() {
+                None
+            } else {
+                Some(field_71f)
+            },
             field_71g,
             field_72,
             field_77b,
@@ -219,18 +229,22 @@ impl MT103 {
         result.push_str("\r\n");
 
         // Add optional field 13C (repeated)
-        for field_13c in &self.field_13c {
-            result.push_str(&field_13c.to_swift_string());
-            result.push_str("\r\n");
+        if let Some(ref field_13c_vec) = self.field_13c {
+            for field_13c in field_13c_vec {
+                result.push_str(&field_13c.to_swift_string());
+                result.push_str("\r\n");
+            }
         }
 
         result.push_str(&self.field_23b.to_swift_string());
         result.push_str("\r\n");
 
         // Add optional field 23E (repeated)
-        for field_23e in &self.field_23e {
-            result.push_str(&field_23e.to_swift_string());
-            result.push_str("\r\n");
+        if let Some(ref field_23e_vec) = self.field_23e {
+            for field_23e in field_23e_vec {
+                result.push_str(&field_23e.to_swift_string());
+                result.push_str("\r\n");
+            }
         }
 
         // Add optional field 26T
@@ -314,9 +328,11 @@ impl MT103 {
         result.push_str("\r\n");
 
         // Add optional field 71F (repeated)
-        for field_71f in &self.field_71f {
-            result.push_str(&field_71f.to_swift_string());
-            result.push_str("\r\n");
+        if let Some(ref field_71f_vec) = self.field_71f {
+            for field_71f in field_71f_vec {
+                result.push_str(&field_71f.to_swift_string());
+                result.push_str("\r\n");
+            }
         }
 
         // Add optional field 71G
@@ -385,13 +401,15 @@ impl MT103 {
         // C3: If 23B is SPRI, field 23E may contain only SDVA, TELB, PHOB, INTC
         // If 23B is SSTD or SPAY, field 23E must not be used
         if bank_op_code == "SPRI" {
-            let allowed_codes = ["SDVA", "TELB", "PHOB", "INTC"];
-            for field_23e in &self.field_23e {
-                if !allowed_codes.contains(&field_23e.instruction_code.as_str()) {
-                    return false;
+            if let Some(ref field_23e_vec) = self.field_23e {
+                let allowed_codes = ["SDVA", "TELB", "PHOB", "INTC"];
+                for field_23e in field_23e_vec {
+                    if !allowed_codes.contains(&field_23e.instruction_code.as_str()) {
+                        return false;
+                    }
                 }
             }
-        } else if ["SSTD", "SPAY"].contains(&bank_op_code.as_str()) && !self.field_23e.is_empty() {
+        } else if ["SSTD", "SPAY"].contains(&bank_op_code.as_str()) && self.field_23e.is_some() {
             return false;
         }
 
@@ -477,17 +495,17 @@ impl crate::traits::SwiftMessageBody for MT103 {
         fields.insert("71A".to_string(), vec![self.field_71a.to_swift_value()]);
 
         // Optional fields
-        if !self.field_13c.is_empty() {
+        if let Some(ref field_13c_vec) = self.field_13c {
             fields.insert(
                 "13C".to_string(),
-                self.field_13c.iter().map(|f| f.to_swift_value()).collect(),
+                field_13c_vec.iter().map(|f| f.to_swift_value()).collect(),
             );
         }
 
-        if !self.field_23e.is_empty() {
+        if let Some(ref field_23e_vec) = self.field_23e {
             fields.insert(
                 "23E".to_string(),
-                self.field_23e.iter().map(|f| f.to_swift_value()).collect(),
+                field_23e_vec.iter().map(|f| f.to_swift_value()).collect(),
             );
         }
 
@@ -560,10 +578,10 @@ impl crate::traits::SwiftMessageBody for MT103 {
             fields.insert("70".to_string(), vec![field.to_swift_value()]);
         }
 
-        if !self.field_71f.is_empty() {
+        if let Some(ref field_71f_vec) = self.field_71f {
             fields.insert(
                 "71F".to_string(),
-                self.field_71f.iter().map(|f| f.to_swift_value()).collect(),
+                field_71f_vec.iter().map(|f| f.to_swift_value()).collect(),
             );
         }
 

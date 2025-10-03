@@ -107,8 +107,13 @@ pub fn parse_swift_digits(input: &str, field_name: &str) -> Result<String, Parse
 }
 
 /// Parse SWIFT character set (a-z, A-Z, 0-9, and special chars)
+///
+/// SWIFT 'x' character set includes: a-z, A-Z, 0-9, and special characters:
+/// / - ? : ( ) . , ' + { } SPACE CR LF and other printable ASCII
 pub fn parse_swift_chars(input: &str, field_name: &str) -> Result<String, ParseError> {
-    const SWIFT_SPECIAL: &str = "/-?:().,'+{} \r\n";
+    // SWIFT x character set: alphanumeric + special characters
+    // Common special chars: / - ? : ( ) . , ' + { } SPACE CR LF % & * ; < = > @ [ ] _ $ ! " # |
+    const SWIFT_SPECIAL: &str = "/-?:().,'+{} \r\n%&*;<=>@[]_$!\"#|";
 
     if !input
         .chars()

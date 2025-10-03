@@ -1,3 +1,4 @@
+use crate::fields::Field52DrawerBank;
 use crate::fields::*;
 use chrono::Datelike;
 use serde::{Deserialize, Serialize};
@@ -7,7 +8,7 @@ use serde::{Deserialize, Serialize};
 // or confirm the issuance of one or multiple cheques.
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct MT110ChequeDetails {
+pub struct MT110Cheque {
     // Cheque Number
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
@@ -16,24 +17,21 @@ pub struct MT110ChequeDetails {
     #[serde(rename = "30")]
     pub field_30: Field30,
 
-    // Amount
-    #[serde(rename = "32A")]
-    pub field_32a: Option<Field32A>,
-
-    #[serde(rename = "32B")]
-    pub field_32b: Option<Field32B>,
+    // Amount field - can be variants A or B per SWIFT spec
+    #[serde(flatten)]
+    pub field_32: Field32AB,
 
     // Payer (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_50: Option<Field50PayerAFK>,
+    pub field_50: Option<Field50OrderingCustomerAFK>,
 
-    // Drawer Bank (optional)  - MT110 spec says A, B, D but our Field52 only supports A, D
+    // Drawer Bank (optional) - supports A, B, D variants per MT110 spec
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52DrawerBank>,
 
-    // Payee (mandatory - only F option allowed for MT110)
-    #[serde(rename = "59F")]
-    pub field_59f: Field59F,
+    // Payee
+    #[serde(flatten)]
+    pub field_59: Field59,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -44,19 +42,19 @@ pub struct MT110 {
 
     // Sender's Correspondent (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_53: Option<Field53SenderCorrespondent>,
+    pub field_53a: Option<Field53SenderCorrespondent>,
 
     // Receiver's Correspondent (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_54: Option<Field54ReceiverCorrespondent>,
+    pub field_54a: Option<Field54ReceiverCorrespondent>,
 
     // Sender to Receiver Information (optional)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub field_72: Option<Field72>,
 
     // Cheque Details (repeating sequence, max 10)
-    #[serde(rename = "#")]
-    pub cheque_details: Vec<MT110ChequeDetails>,
+    #[serde(rename = "#", default)]
+    pub cheques: Vec<MT110Cheque>,
 }
 
 impl MT110 {
@@ -68,12 +66,13 @@ impl MT110 {
         let field_20 = parser.parse_field::<Field20>("20")?;
 
         // Parse optional fields before cheque details
-        let field_53 = parser.parse_optional_variant_field::<Field53SenderCorrespondent>("53")?;
-        let field_54 = parser.parse_optional_variant_field::<Field54ReceiverCorrespondent>("54")?;
+        let field_53a = parser.parse_optional_variant_field::<Field53SenderCorrespondent>("53")?;
+        let field_54a =
+            parser.parse_optional_variant_field::<Field54ReceiverCorrespondent>("54")?;
         let field_72 = parser.parse_optional_field::<Field72>("72")?;
 
         // Parse cheque details - enable duplicates for repeating fields
-        let mut cheque_details = Vec::new();
+        let mut cheques = Vec::new();
         parser = parser.with_duplicates(true);
 
         // Parse each cheque detail - they start with field 21
@@ -81,40 +80,28 @@ impl MT110 {
             let field_21 = parser.parse_field::<Field21NoOption>("21")?;
             let field_30 = parser.parse_field::<Field30>("30")?;
 
-            // Amount can be 32A or 32B
-            let field_32a = parser.parse_optional_field::<Field32A>("32A")?;
-            let field_32b = if field_32a.is_none() {
-                Some(parser.parse_field::<Field32B>("32B")?)
-            } else {
-                None
-            };
-
-            // Validate that we have at least one amount field
-            if field_32a.is_none() && field_32b.is_none() {
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: "MT110: Either field 32A or 32B is required for amount".to_string(),
-                });
-            }
+            // Parse field 32 (amount) - only A or B per spec
+            let field_32 = parser.parse_variant_field::<Field32AB>("32")?;
 
             // Parse optional fields
-            let field_50 = parser.parse_optional_variant_field::<Field50PayerAFK>("50")?;
+            let field_50 =
+                parser.parse_optional_variant_field::<Field50OrderingCustomerAFK>("50")?;
             let field_52 = parser.parse_optional_variant_field::<Field52DrawerBank>("52")?;
 
-            // Field 59F is mandatory for payee
-            let field_59f = parser.parse_field::<Field59F>("59F")?;
+            // Parse field 59 (payee)
+            let field_59 = parser.parse_variant_field::<Field59>("59")?;
 
-            cheque_details.push(MT110ChequeDetails {
+            cheques.push(MT110Cheque {
                 field_21,
                 field_30,
-                field_32a,
-                field_32b,
+                field_32,
                 field_50,
                 field_52,
-                field_59f,
+                field_59,
             });
 
             // Check max 10 repetitions (NVR C1)
-            if cheque_details.len() > 10 {
+            if cheques.len() > 10 {
                 return Err(crate::errors::ParseError::InvalidFormat {
                     message: "MT110: Maximum 10 cheque details allowed (NVR C1)".to_string(),
                 });
@@ -122,7 +109,7 @@ impl MT110 {
         }
 
         // Validate we have at least one cheque detail
-        if cheque_details.is_empty() {
+        if cheques.is_empty() {
             return Err(crate::errors::ParseError::InvalidFormat {
                 message: "MT110: At least one cheque detail is required".to_string(),
             });
@@ -130,11 +117,10 @@ impl MT110 {
 
         // NVR C2: Validate currency consistency across all cheque amounts
         let mut currency: Option<String> = None;
-        for (idx, cheque) in cheque_details.iter().enumerate() {
-            let cheque_currency = if let Some(ref amt) = cheque.field_32a {
-                Some(amt.currency.clone())
-            } else {
-                cheque.field_32b.as_ref().map(|amt| amt.currency.clone())
+        for (idx, cheque) in cheques.iter().enumerate() {
+            let cheque_currency = match &cheque.field_32 {
+                Field32AB::A(amt) => Some(amt.currency.clone()),
+                Field32AB::B(amt) => Some(amt.currency.clone()),
             };
 
             if let Some(cheque_curr) = cheque_currency {
@@ -157,10 +143,10 @@ impl MT110 {
 
         Ok(MT110 {
             field_20,
-            field_53,
-            field_54,
+            field_53a,
+            field_54a,
             field_72,
-            cheque_details,
+            cheques,
         })
     }
 
@@ -175,14 +161,14 @@ impl MT110 {
     /// Validate the message instance according to MT110 rules
     pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
         // NVR C1: Max 10 repetitions
-        if self.cheque_details.len() > 10 {
+        if self.cheques.len() > 10 {
             return Err(crate::errors::ParseError::InvalidFormat {
                 message: "MT110: Maximum 10 cheque details allowed (NVR C1)".to_string(),
             });
         }
 
         // At least one cheque detail is required
-        if self.cheque_details.is_empty() {
+        if self.cheques.is_empty() {
             return Err(crate::errors::ParseError::InvalidFormat {
                 message: "MT110: At least one cheque detail is required".to_string(),
             });
@@ -190,13 +176,10 @@ impl MT110 {
 
         // NVR C2: Currency consistency
         let mut currency: Option<String> = None;
-        for (idx, cheque) in self.cheque_details.iter().enumerate() {
-            let cheque_currency = if let Some(ref amt) = cheque.field_32a {
-                Some(amt.currency.clone())
-            } else if let Some(ref amt) = cheque.field_32b {
-                Some(amt.currency.clone())
-            } else {
-                continue; // Should not happen as we validate presence during parsing
+        for (idx, cheque) in self.cheques.iter().enumerate() {
+            let cheque_currency = match &cheque.field_32 {
+                Field32AB::A(amt) => Some(amt.currency.clone()),
+                Field32AB::B(amt) => Some(amt.currency.clone()),
             };
 
             if let Some(cheque_curr) = cheque_currency {
@@ -266,7 +249,7 @@ impl crate::traits::SwiftMessageBody for MT110 {
         // Add header fields
         fields.insert("20".to_string(), vec![self.field_20.to_swift_value()]);
 
-        if let Some(ref field_53) = self.field_53 {
+        if let Some(ref field_53) = self.field_53a {
             match field_53 {
                 Field53SenderCorrespondent::A(f) => {
                     fields.insert("53A".to_string(), vec![f.to_swift_value()]);
@@ -280,7 +263,7 @@ impl crate::traits::SwiftMessageBody for MT110 {
             }
         }
 
-        if let Some(ref field_54) = self.field_54 {
+        if let Some(ref field_54) = self.field_54a {
             match field_54 {
                 Field54ReceiverCorrespondent::A(f) => {
                     fields.insert("54A".to_string(), vec![f.to_swift_value()]);
@@ -299,7 +282,7 @@ impl crate::traits::SwiftMessageBody for MT110 {
         }
 
         // Add cheque details
-        for cheque in &self.cheque_details {
+        for cheque in &self.cheques {
             // Field 21 (can repeat)
             fields
                 .entry("21".to_string())
@@ -317,37 +300,38 @@ impl crate::traits::SwiftMessageBody for MT110 {
                     cheque.field_30.execution_date.day()
                 ));
 
-            // Amount field (32A or 32B)
-            if let Some(ref field_32a) = cheque.field_32a {
-                fields
-                    .entry("32A".to_string())
-                    .or_insert_with(Vec::new)
-                    .push(field_32a.to_swift_value());
-            }
-
-            if let Some(ref field_32b) = cheque.field_32b {
-                fields
-                    .entry("32B".to_string())
-                    .or_insert_with(Vec::new)
-                    .push(field_32b.to_swift_value());
+            // Amount field (32A, 32B, 32C, or 32D)
+            match &cheque.field_32 {
+                Field32AB::A(f) => {
+                    fields
+                        .entry("32A".to_string())
+                        .or_insert_with(Vec::new)
+                        .push(f.to_swift_value());
+                }
+                Field32AB::B(f) => {
+                    fields
+                        .entry("32B".to_string())
+                        .or_insert_with(Vec::new)
+                        .push(f.to_swift_value());
+                }
             }
 
             // Optional payer field
             if let Some(ref field_50) = cheque.field_50 {
                 match field_50 {
-                    Field50PayerAFK::A(f) => {
+                    Field50OrderingCustomerAFK::A(f) => {
                         fields
                             .entry("50A".to_string())
                             .or_insert_with(Vec::new)
                             .push(f.to_swift_value());
                     }
-                    Field50PayerAFK::F(f) => {
+                    Field50OrderingCustomerAFK::F(f) => {
                         fields
                             .entry("50F".to_string())
                             .or_insert_with(Vec::new)
                             .push(f.to_swift_value());
                     }
-                    Field50PayerAFK::K(f) => {
+                    Field50OrderingCustomerAFK::K(f) => {
                         fields
                             .entry("50K".to_string())
                             .or_insert_with(Vec::new)
@@ -356,12 +340,18 @@ impl crate::traits::SwiftMessageBody for MT110 {
                 }
             }
 
-            // Optional drawer bank (only A and D variants are supported in our implementation)
+            // Optional drawer bank (supports A, B, D variants)
             if let Some(ref field_52) = cheque.field_52 {
                 match field_52 {
                     Field52DrawerBank::A(f) => {
                         fields
                             .entry("52A".to_string())
+                            .or_insert_with(Vec::new)
+                            .push(f.to_swift_value());
+                    }
+                    Field52DrawerBank::B(f) => {
+                        fields
+                            .entry("52B".to_string())
                             .or_insert_with(Vec::new)
                             .push(f.to_swift_value());
                     }
@@ -374,11 +364,27 @@ impl crate::traits::SwiftMessageBody for MT110 {
                 }
             }
 
-            // Payee (mandatory, always 59F)
-            fields
-                .entry("59F".to_string())
-                .or_insert_with(Vec::new)
-                .push(cheque.field_59f.to_swift_value());
+            // Payee (mandatory, can be various variants)
+            match &cheque.field_59 {
+                Field59::NoOption(f) => {
+                    fields
+                        .entry("59".to_string())
+                        .or_insert_with(Vec::new)
+                        .push(f.to_swift_value());
+                }
+                Field59::A(f) => {
+                    fields
+                        .entry("59A".to_string())
+                        .or_insert_with(Vec::new)
+                        .push(f.to_swift_value());
+                }
+                Field59::F(f) => {
+                    fields
+                        .entry("59F".to_string())
+                        .or_insert_with(Vec::new)
+                        .push(f.to_swift_value());
+                }
+            }
         }
 
         fields
@@ -391,8 +397,111 @@ impl crate::traits::SwiftMessageBody for MT110 {
     fn optional_fields() -> Vec<&'static str> {
         vec!["53", "54", "72", "50", "52"]
     }
-}
 
-// Type aliases for field variants used in MT110
-pub type Field50PayerAFK = Field50OrderingCustomerAFK; // Can be A, F, or K
-pub type Field52DrawerBank = Field52OrderingInstitution; // Can be A, B, or D
+    fn to_ordered_fields(&self) -> Vec<(String, String)> {
+        use crate::traits::SwiftField;
+        let mut ordered_fields = Vec::new();
+
+        // Add header fields
+        ordered_fields.push(("20".to_string(), self.field_20.to_swift_value()));
+
+        if let Some(ref field_53) = self.field_53a {
+            match field_53 {
+                Field53SenderCorrespondent::A(f) => {
+                    ordered_fields.push(("53A".to_string(), f.to_swift_value()));
+                }
+                Field53SenderCorrespondent::B(f) => {
+                    ordered_fields.push(("53B".to_string(), f.to_swift_value()));
+                }
+                Field53SenderCorrespondent::D(f) => {
+                    ordered_fields.push(("53D".to_string(), f.to_swift_value()));
+                }
+            }
+        }
+
+        if let Some(ref field_54) = self.field_54a {
+            match field_54 {
+                Field54ReceiverCorrespondent::A(f) => {
+                    ordered_fields.push(("54A".to_string(), f.to_swift_value()));
+                }
+                Field54ReceiverCorrespondent::B(f) => {
+                    ordered_fields.push(("54B".to_string(), f.to_swift_value()));
+                }
+                Field54ReceiverCorrespondent::D(f) => {
+                    ordered_fields.push(("54D".to_string(), f.to_swift_value()));
+                }
+            }
+        }
+
+        if let Some(ref field_72) = self.field_72 {
+            ordered_fields.push(("72".to_string(), field_72.information.join("\n")));
+        }
+
+        // Add cheque details in sequence (important for proper parsing)
+        for cheque in &self.cheques {
+            // Each cheque's fields must be in sequence
+            ordered_fields.push(("21".to_string(), cheque.field_21.to_swift_value()));
+
+            ordered_fields.push((
+                "30".to_string(),
+                format!(
+                    "{:02}{:02}{:02}",
+                    cheque.field_30.execution_date.year() % 100,
+                    cheque.field_30.execution_date.month(),
+                    cheque.field_30.execution_date.day()
+                ),
+            ));
+
+            // Amount field
+            match &cheque.field_32 {
+                Field32AB::A(f) => ordered_fields.push(("32A".to_string(), f.to_swift_value())),
+                Field32AB::B(f) => ordered_fields.push(("32B".to_string(), f.to_swift_value())),
+            }
+
+            // Optional payer
+            if let Some(ref field_50) = cheque.field_50 {
+                match field_50 {
+                    Field50OrderingCustomerAFK::A(f) => {
+                        ordered_fields.push(("50A".to_string(), f.to_swift_value()));
+                    }
+                    Field50OrderingCustomerAFK::F(f) => {
+                        ordered_fields.push(("50F".to_string(), f.to_swift_value()));
+                    }
+                    Field50OrderingCustomerAFK::K(f) => {
+                        ordered_fields.push(("50K".to_string(), f.to_swift_value()));
+                    }
+                }
+            }
+
+            // Optional drawer bank (supports A, B, D variants)
+            if let Some(ref field_52) = cheque.field_52 {
+                match field_52 {
+                    Field52DrawerBank::A(f) => {
+                        ordered_fields.push(("52A".to_string(), f.to_swift_value()));
+                    }
+                    Field52DrawerBank::B(f) => {
+                        ordered_fields.push(("52B".to_string(), f.to_swift_value()));
+                    }
+                    Field52DrawerBank::D(f) => {
+                        ordered_fields.push(("52D".to_string(), f.to_swift_value()));
+                    }
+                }
+            }
+
+            // Payee
+            match &cheque.field_59 {
+                Field59::NoOption(f) => {
+                    ordered_fields.push(("59".to_string(), f.to_swift_value()));
+                }
+                Field59::A(f) => {
+                    ordered_fields.push(("59A".to_string(), f.to_swift_value()));
+                }
+                Field59::F(f) => {
+                    ordered_fields.push(("59F".to_string(), f.to_swift_value()));
+                }
+            }
+        }
+
+        ordered_fields
+    }
+}

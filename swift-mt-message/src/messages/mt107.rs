@@ -32,19 +32,19 @@ pub struct MT107Transaction {
 
     // Instructing Party (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_50_instructing: Option<Field50InstructingParty>,
+    pub instructing_party_tx: Option<Field50InstructingParty>,
 
     // Creditor (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_50_creditor: Option<Field50Creditor>,
+    pub creditor_tx: Option<Field50Creditor>,
 
     // Creditor's Bank (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_52: Option<Field52OrderingInstitution>,
+    pub field_52: Option<Field52CreditorBank>,
 
     // Debtor's Bank (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_57: Option<Field57>,
+    pub field_57: Option<Field57DebtorBank>,
 
     // Debtor (mandatory)
     #[serde(flatten)]
@@ -107,15 +107,15 @@ pub struct MT107 {
 
     // Instructing Party (message level, optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_50_instructing: Option<Field50InstructingParty>,
+    pub instructing_party: Option<Field50InstructingParty>,
 
     // Creditor (message level, optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_50_creditor: Option<Field50Creditor>,
+    pub creditor: Option<Field50Creditor>,
 
     // Creditor's Bank (optional)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub field_52: Option<Field52OrderingInstitution>,
+    pub field_52: Option<Field52CreditorBank>,
 
     // Transaction Type Code (optional)
     #[serde(rename = "26T", skip_serializing_if = "Option::is_none")]
@@ -172,9 +172,9 @@ impl MT107 {
 
         // Try to parse field 50 - could be instructing party (C/L) or creditor (A/K)
         // We'll need to detect the variant and determine which type
-        let (field_50_instructing, field_50_creditor) = Self::parse_field_50(&mut parser)?;
+        let (instructing_party, creditor) = Self::parse_field_50(&mut parser)?;
 
-        let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+        let field_52 = parser.parse_optional_variant_field::<Field52CreditorBank>("52")?;
         let field_26t = parser.parse_optional_field::<Field26T>("26T")?;
         let field_77b = parser.parse_optional_field::<Field77B>("77B")?;
         let field_71a = parser.parse_optional_field::<Field71A>("71A")?;
@@ -192,12 +192,10 @@ impl MT107 {
             let txn_field_21e = parser.parse_optional_field::<Field21E>("21E")?;
             let txn_field_32b = parser.parse_field::<Field32B>("32B")?;
 
-            let (txn_field_50_instructing, txn_field_50_creditor) =
-                Self::parse_field_50(&mut parser)?;
+            let (instructing_party_tx, creditor_tx) = Self::parse_field_50(&mut parser)?;
 
-            let txn_field_52 =
-                parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
-            let txn_field_57 = parser.parse_optional_variant_field::<Field57>("57")?;
+            let txn_field_52 = parser.parse_optional_variant_field::<Field52CreditorBank>("52")?;
+            let txn_field_57 = parser.parse_optional_variant_field::<Field57DebtorBank>("57")?;
             let txn_field_59 = parser.parse_variant_field::<Field59>("59")?;
             let txn_field_70 = parser.parse_optional_field::<Field70>("70")?;
             let txn_field_26t = parser.parse_optional_field::<Field26T>("26T")?;
@@ -215,8 +213,8 @@ impl MT107 {
                 field_21d: txn_field_21d,
                 field_21e: txn_field_21e,
                 field_32b: txn_field_32b,
-                field_50_instructing: txn_field_50_instructing,
-                field_50_creditor: txn_field_50_creditor,
+                instructing_party_tx,
+                creditor_tx,
                 field_52: txn_field_52,
                 field_57: txn_field_57,
                 field_59: txn_field_59,
@@ -256,8 +254,8 @@ impl MT107 {
             field_21e,
             field_30,
             field_51a,
-            field_50_instructing,
-            field_50_creditor,
+            instructing_party,
+            creditor,
             field_52,
             field_26t,
             field_77b,
@@ -283,20 +281,20 @@ impl MT107 {
 
         // Check for instructing party variants (C, L)
         if trimmed.starts_with(":50C:") {
-            let field_50_instructing =
+            let instructing_party =
                 parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
-            return Ok((field_50_instructing, None));
+            return Ok((instructing_party, None));
         }
         if trimmed.starts_with(":50L:") {
-            let field_50_instructing =
+            let instructing_party =
                 parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
-            return Ok((field_50_instructing, None));
+            return Ok((instructing_party, None));
         }
 
         // Check for creditor variants (A, K)
         if trimmed.starts_with(":50A:") || trimmed.starts_with(":50K:") {
-            let field_50_creditor = parser.parse_optional_variant_field::<Field50Creditor>("50")?;
-            return Ok((None, field_50_creditor));
+            let creditor = parser.parse_optional_variant_field::<Field50Creditor>("50")?;
+            return Ok((None, creditor));
         }
 
         // No field 50 present
@@ -383,7 +381,7 @@ impl crate::traits::SwiftMessageBody for MT107 {
             fields.insert("51A".to_string(), vec![field_51a.to_swift_value()]);
         }
 
-        if let Some(ref field_50) = self.field_50_instructing
+        if let Some(ref field_50) = self.instructing_party
             && let Some(variant_tag) = field_50.get_variant_tag()
         {
             fields.insert(
@@ -392,7 +390,7 @@ impl crate::traits::SwiftMessageBody for MT107 {
             );
         }
 
-        if let Some(ref field_50) = self.field_50_creditor
+        if let Some(ref field_50) = self.creditor
             && let Some(variant_tag) = field_50.get_variant_tag()
         {
             fields.insert(
@@ -466,7 +464,7 @@ impl crate::traits::SwiftMessageBody for MT107 {
                 .or_default()
                 .push(transaction.field_32b.to_swift_value());
 
-            if let Some(ref field_50) = transaction.field_50_instructing
+            if let Some(ref field_50) = transaction.instructing_party_tx
                 && let Some(variant_tag) = field_50.get_variant_tag()
             {
                 fields
@@ -475,7 +473,7 @@ impl crate::traits::SwiftMessageBody for MT107 {
                     .push(field_50.to_swift_value());
             }
 
-            if let Some(ref field_50) = transaction.field_50_creditor
+            if let Some(ref field_50) = transaction.creditor_tx
                 && let Some(variant_tag) = field_50.get_variant_tag()
             {
                 fields
@@ -622,13 +620,13 @@ impl crate::traits::SwiftMessageBody for MT107 {
             ordered_fields.push(("51A".to_string(), field_51a.to_swift_value()));
         }
 
-        if let Some(ref field_50) = self.field_50_instructing
+        if let Some(ref field_50) = self.instructing_party
             && let Some(variant_tag) = field_50.get_variant_tag()
         {
             ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
         }
 
-        if let Some(ref field_50) = self.field_50_creditor
+        if let Some(ref field_50) = self.creditor
             && let Some(variant_tag) = field_50.get_variant_tag()
         {
             ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
@@ -678,13 +676,13 @@ impl crate::traits::SwiftMessageBody for MT107 {
 
             ordered_fields.push(("32B".to_string(), transaction.field_32b.to_swift_value()));
 
-            if let Some(ref field_50) = transaction.field_50_instructing
+            if let Some(ref field_50) = transaction.instructing_party_tx
                 && let Some(variant_tag) = field_50.get_variant_tag()
             {
                 ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));
             }
 
-            if let Some(ref field_50) = transaction.field_50_creditor
+            if let Some(ref field_50) = transaction.creditor_tx
                 && let Some(variant_tag) = field_50.get_variant_tag()
             {
                 ordered_fields.push((format!("50{}", variant_tag), field_50.to_swift_value()));

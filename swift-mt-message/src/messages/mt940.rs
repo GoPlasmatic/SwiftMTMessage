@@ -39,9 +39,9 @@ pub struct MT940 {
     #[serde(rename = "64", skip_serializing_if = "Option::is_none")]
     pub field_64: Option<Field64>,
 
-    // Forward Available Balance (optional)
+    // Forward Available Balance (optional, repetitive)
     #[serde(rename = "65", skip_serializing_if = "Option::is_none")]
-    pub field_65: Option<Field65>,
+    pub field_65: Option<Vec<Field65>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -92,7 +92,17 @@ impl MT940 {
 
         // Parse optional fields
         let field_64 = parser.parse_optional_field::<Field64>("64")?;
-        let field_65 = parser.parse_optional_field::<Field65>("65")?;
+
+        // Parse optional repetitive Field 65 (Forward Available Balance)
+        let mut forward_balances = Vec::new();
+        while let Ok(field_65) = parser.parse_field::<Field65>("65") {
+            forward_balances.push(field_65);
+        }
+        let field_65 = if forward_balances.is_empty() {
+            None
+        } else {
+            Some(forward_balances)
+        };
 
         Ok(MT940 {
             field_20,
@@ -210,8 +220,13 @@ impl crate::traits::SwiftMessageBody for MT940 {
             fields.insert("64".to_string(), vec![field_64.to_swift_string()]);
         }
 
-        if let Some(ref field_65) = self.field_65 {
-            fields.insert("65".to_string(), vec![field_65.to_swift_string()]);
+        // Add optional repetitive Field 65 (Forward Available Balance)
+        if let Some(ref field_65_vec) = self.field_65 {
+            let field_65_values: Vec<String> =
+                field_65_vec.iter().map(|f| f.to_swift_string()).collect();
+            if !field_65_values.is_empty() {
+                fields.insert("65".to_string(), field_65_values);
+            }
         }
 
         fields

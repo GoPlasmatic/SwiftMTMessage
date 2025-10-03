@@ -13,15 +13,15 @@ use std::collections::HashMap;
 pub struct MT299 {
     /// Field 20 - Transaction Reference (Mandatory)
     #[serde(rename = "20")]
-    pub transaction_reference: Field20,
+    pub field_20: Field20,
 
     /// Field 21 - Related Reference (Optional)
     #[serde(rename = "21", skip_serializing_if = "Option::is_none")]
-    pub related_reference: Option<Field21NoOption>,
+    pub field_21: Option<Field21NoOption>,
 
     /// Field 79 - Narrative (Mandatory)
     #[serde(rename = "79")]
-    pub narrative: Field79,
+    pub field_79: Field79,
 }
 
 impl MT299 {
@@ -30,18 +30,18 @@ impl MT299 {
         let mut parser = MessageParser::new(block4, "299");
 
         // Parse mandatory Field 20
-        let transaction_reference = parser.parse_field::<Field20>("20")?;
+        let field_20 = parser.parse_field::<Field20>("20")?;
 
         // Parse optional Field 21
-        let related_reference = parser.parse_optional_field::<Field21NoOption>("21")?;
+        let field_21 = parser.parse_optional_field::<Field21NoOption>("21")?;
 
         // Parse mandatory Field 79
-        let narrative = parser.parse_field::<Field79>("79")?;
+        let field_79 = parser.parse_field::<Field79>("79")?;
 
         Ok(MT299 {
-            transaction_reference,
-            related_reference,
-            narrative,
+            field_20,
+            field_21,
+            field_79,
         })
     }
 
@@ -94,16 +94,13 @@ impl crate::traits::SwiftMessageBody for MT299 {
     fn to_fields(&self) -> HashMap<String, Vec<String>> {
         let mut fields = HashMap::new();
 
-        fields.insert(
-            "20".to_string(),
-            vec![self.transaction_reference.to_swift_string()],
-        );
+        fields.insert("20".to_string(), vec![self.field_20.to_swift_string()]);
 
-        if let Some(ref related) = self.related_reference {
+        if let Some(ref related) = self.field_21 {
             fields.insert("21".to_string(), vec![related.to_swift_string()]);
         }
 
-        fields.insert("79".to_string(), vec![self.narrative.to_swift_string()]);
+        fields.insert("79".to_string(), vec![self.field_79.to_swift_string()]);
 
         fields
     }

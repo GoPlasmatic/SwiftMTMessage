@@ -1,4 +1,6 @@
-use super::swift_utils::{parse_amount, parse_currency};
+use super::swift_utils::{
+    format_swift_amount_for_currency, parse_amount_with_currency, parse_currency_non_commodity,
+};
 use crate::errors::ParseError;
 use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
@@ -150,10 +152,10 @@ impl SwiftField for Field33B {
             });
         }
 
-        // Parse currency code (first 3 characters)
-        let currency = parse_currency(&input[0..3])?;
+        // Parse currency code (first 3 characters) - T52 + C08 validation
+        let currency = parse_currency_non_commodity(&input[0..3])?;
 
-        // Parse amount (remaining characters)
+        // Parse amount (remaining characters) - T40/T43 + C03 validation
         let amount_str = &input[3..];
         if amount_str.is_empty() {
             return Err(ParseError::InvalidFormat {
@@ -161,7 +163,7 @@ impl SwiftField for Field33B {
             });
         }
 
-        let amount = parse_amount(amount_str)?;
+        let amount = parse_amount_with_currency(amount_str, &currency)?;
 
         // Amount must be positive
         if amount <= 0.0 {
@@ -177,7 +179,7 @@ impl SwiftField for Field33B {
         format!(
             ":33B:{}{}",
             self.currency,
-            super::swift_utils::format_swift_amount(self.amount, 2)
+            format_swift_amount_for_currency(self.amount, &self.currency)
         )
     }
 }

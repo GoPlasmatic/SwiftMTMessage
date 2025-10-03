@@ -1,4 +1,7 @@
-use super::swift_utils::{parse_amount, parse_currency, parse_exact_length, parse_uppercase};
+use super::swift_utils::{
+    format_swift_amount_for_currency, parse_amount_with_currency, parse_currency_non_commodity,
+    parse_exact_length, parse_uppercase,
+};
 use crate::errors::ParseError;
 use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
@@ -141,10 +144,10 @@ impl SwiftField for Field71F {
             });
         }
 
-        // Parse currency (first 3 characters)
-        let currency = parse_currency(&input[0..3])?;
+        // Parse currency (first 3 characters) - T52 + C08 validation
+        let currency = parse_currency_non_commodity(&input[0..3])?;
 
-        // Parse amount (remaining characters, max 15 digits)
+        // Parse amount (remaining characters, max 15 digits) - T40/T43 + C03 validation
         let amount_str = &input[3..];
         if amount_str.is_empty() {
             return Err(ParseError::InvalidFormat {
@@ -152,7 +155,7 @@ impl SwiftField for Field71F {
             });
         }
 
-        let amount = parse_amount(amount_str)?;
+        let amount = parse_amount_with_currency(amount_str, &currency)?;
 
         Ok(Field71F { currency, amount })
     }
@@ -161,7 +164,7 @@ impl SwiftField for Field71F {
         format!(
             ":71F:{}{}",
             self.currency,
-            super::swift_utils::format_swift_amount(self.amount, 2)
+            format_swift_amount_for_currency(self.amount, &self.currency)
         )
     }
 }
@@ -199,10 +202,10 @@ impl SwiftField for Field71G {
             });
         }
 
-        // Parse currency (first 3 characters)
-        let currency = parse_currency(&input[0..3])?;
+        // Parse currency (first 3 characters) - T52 + C08 validation
+        let currency = parse_currency_non_commodity(&input[0..3])?;
 
-        // Parse amount (remaining characters, max 15 digits)
+        // Parse amount (remaining characters, max 15 digits) - T40/T43 + C03 validation
         let amount_str = &input[3..];
         if amount_str.is_empty() {
             return Err(ParseError::InvalidFormat {
@@ -210,7 +213,7 @@ impl SwiftField for Field71G {
             });
         }
 
-        let amount = parse_amount(amount_str)?;
+        let amount = parse_amount_with_currency(amount_str, &currency)?;
 
         Ok(Field71G { currency, amount })
     }
@@ -219,7 +222,7 @@ impl SwiftField for Field71G {
         format!(
             ":71G:{}{}",
             self.currency,
-            super::swift_utils::format_swift_amount(self.amount, 2)
+            format_swift_amount_for_currency(self.amount, &self.currency)
         )
     }
 }

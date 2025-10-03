@@ -100,7 +100,10 @@
 //! - MT103 Usage Rules: Value Date and Settlement Guidelines
 //! - STP Implementation Guide: Amount Format Requirements
 
-use super::swift_utils::{parse_amount, parse_currency, parse_date_yymmdd};
+use super::swift_utils::{
+    format_swift_amount_for_currency, parse_amount_with_currency, parse_currency_non_commodity,
+    parse_date_yymmdd,
+};
 use crate::errors::ParseError;
 use crate::traits::SwiftField;
 use chrono::NaiveDate;
@@ -155,13 +158,13 @@ impl SwiftField for Field32A {
             });
         }
 
-        // Parse value date (first 6 characters)
+        // Parse value date (first 6 characters) - T50 validation
         let value_date = parse_date_yymmdd(&input[0..6])?;
 
-        // Parse currency code (next 3 characters)
-        let currency = parse_currency(&input[6..9])?;
+        // Parse currency code (next 3 characters) - T52 + C08 validation
+        let currency = parse_currency_non_commodity(&input[6..9])?;
 
-        // Parse amount (remaining characters)
+        // Parse amount (remaining characters) - T40/T43 + C03 validation
         let amount_str = &input[9..];
         if amount_str.is_empty() {
             return Err(ParseError::InvalidFormat {
@@ -169,7 +172,7 @@ impl SwiftField for Field32A {
             });
         }
 
-        let amount = parse_amount(amount_str)?;
+        let amount = parse_amount_with_currency(amount_str, &currency)?;
 
         // Amount must be positive
         if amount <= 0.0 {
@@ -190,7 +193,7 @@ impl SwiftField for Field32A {
             ":32A:{}{}{}",
             self.value_date.format("%y%m%d"),
             self.currency,
-            super::swift_utils::format_swift_amount(self.amount, 2)
+            format_swift_amount_for_currency(self.amount, &self.currency)
         )
     }
 }
@@ -229,10 +232,10 @@ impl SwiftField for Field32B {
             });
         }
 
-        // Parse currency code (first 3 characters)
-        let currency = parse_currency(&input[0..3])?;
+        // Parse currency code (first 3 characters) - T52 + C08 validation
+        let currency = parse_currency_non_commodity(&input[0..3])?;
 
-        // Parse amount (remaining characters)
+        // Parse amount (remaining characters) - T40/T43 + C03 validation
         let amount_str = &input[3..];
         if amount_str.is_empty() {
             return Err(ParseError::InvalidFormat {
@@ -240,7 +243,7 @@ impl SwiftField for Field32B {
             });
         }
 
-        let amount = parse_amount(amount_str)?;
+        let amount = parse_amount_with_currency(amount_str, &currency)?;
 
         // Amount must be positive
         if amount <= 0.0 {
@@ -256,7 +259,7 @@ impl SwiftField for Field32B {
         format!(
             ":32B:{}{}",
             self.currency,
-            super::swift_utils::format_swift_amount(self.amount, 2)
+            format_swift_amount_for_currency(self.amount, &self.currency)
         )
     }
 }
@@ -329,7 +332,7 @@ impl SwiftField for Field32C {
         }
 
         let value_date = parse_date_yymmdd(&input[0..6])?;
-        let currency = parse_currency(&input[6..9])?;
+        let currency = parse_currency_non_commodity(&input[6..9])?;
         let amount_str = &input[9..];
 
         if amount_str.is_empty() {
@@ -338,7 +341,7 @@ impl SwiftField for Field32C {
             });
         }
 
-        let amount = parse_amount(amount_str)?;
+        let amount = parse_amount_with_currency(amount_str, &currency)?;
 
         if amount <= 0.0 {
             return Err(ParseError::InvalidFormat {
@@ -358,7 +361,7 @@ impl SwiftField for Field32C {
             ":32C:{}{}{}",
             self.value_date.format("%y%m%d"),
             self.currency,
-            super::swift_utils::format_swift_amount(self.amount, 2)
+            format_swift_amount_for_currency(self.amount, &self.currency)
         )
     }
 }
@@ -410,7 +413,7 @@ impl SwiftField for Field32D {
         }
 
         let value_date = parse_date_yymmdd(&input[0..6])?;
-        let currency = parse_currency(&input[6..9])?;
+        let currency = parse_currency_non_commodity(&input[6..9])?;
         let amount_str = &input[9..];
 
         if amount_str.is_empty() {
@@ -419,7 +422,7 @@ impl SwiftField for Field32D {
             });
         }
 
-        let amount = parse_amount(amount_str)?;
+        let amount = parse_amount_with_currency(amount_str, &currency)?;
 
         if amount <= 0.0 {
             return Err(ParseError::InvalidFormat {
@@ -439,7 +442,7 @@ impl SwiftField for Field32D {
             ":32D:{}{}{}",
             self.value_date.format("%y%m%d"),
             self.currency,
-            super::swift_utils::format_swift_amount(self.amount, 2)
+            format_swift_amount_for_currency(self.amount, &self.currency)
         )
     }
 }
@@ -789,5 +792,66 @@ mod tests {
             amount: 750.50,
         });
         assert_eq!(debit_field.to_swift_string(), ":32D:240720USD750,5");
+    }
+
+    #[test]
+    fn test_field32a_c08_commodity_currency_rejection() {
+        // Test that commodity currencies are rejected (C08 validation)
+        assert!(Field32A::parse("240719XAU1000").is_err()); // Gold
+        assert!(Field32A::parse("240719XAG500").is_err()); // Silver
+        assert!(Field32A::parse("240719XPT250").is_err()); // Platinum
+        assert!(Field32A::parse("240719XPD100").is_err()); // Palladium
+
+        // Verify error message contains C08
+        let err = Field32A::parse("240719XAU1000").unwrap_err();
+        let err_msg = format!("{}", err);
+        assert!(err_msg.contains("C08"));
+    }
+
+    #[test]
+    fn test_field32a_c03_decimal_precision_validation() {
+        // USD allows 2 decimals
+        assert!(Field32A::parse("240719USD100.50").is_ok());
+        assert!(Field32A::parse("240719USD100,50").is_ok());
+        assert!(Field32A::parse("240719USD100.505").is_err()); // 3 decimals - should fail
+
+        // JPY allows 0 decimals
+        assert!(Field32A::parse("240719JPY1500000").is_ok());
+        assert!(Field32A::parse("240719JPY1500000.5").is_err()); // Has decimals - should fail
+
+        // BHD allows 3 decimals
+        assert!(Field32A::parse("240719BHD100.505").is_ok());
+        assert!(Field32A::parse("240719BHD100,505").is_ok());
+        assert!(Field32A::parse("240719BHD100.5055").is_err()); // 4 decimals - should fail
+
+        // Verify error message contains C03
+        let err = Field32A::parse("240719USD100.505").unwrap_err();
+        let err_msg = format!("{}", err);
+        assert!(err_msg.contains("C03"));
+    }
+
+    #[test]
+    fn test_field32a_currency_specific_formatting() {
+        // Test that to_swift_string uses currency-specific decimal places
+        let field_usd = Field32A {
+            value_date: NaiveDate::from_ymd_opt(2024, 7, 19).unwrap(),
+            currency: "USD".to_string(),
+            amount: 1000.50,
+        };
+        assert_eq!(field_usd.to_swift_string(), ":32A:240719USD1000,5");
+
+        let field_jpy = Field32A {
+            value_date: NaiveDate::from_ymd_opt(2024, 7, 19).unwrap(),
+            currency: "JPY".to_string(),
+            amount: 1500000.0,
+        };
+        assert_eq!(field_jpy.to_swift_string(), ":32A:240719JPY1500000");
+
+        let field_bhd = Field32A {
+            value_date: NaiveDate::from_ymd_opt(2024, 7, 19).unwrap(),
+            currency: "BHD".to_string(),
+            amount: 123.456,
+        };
+        assert_eq!(field_bhd.to_swift_string(), ":32A:240719BHD123,456");
     }
 }

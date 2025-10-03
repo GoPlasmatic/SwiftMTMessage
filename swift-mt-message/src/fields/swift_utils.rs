@@ -175,6 +175,96 @@ pub fn parse_account(input: &str) -> Result<String, ParseError> {
     Ok(input.to_string())
 }
 
+/// Get the number of decimal places for a currency according to ISO 4217
+///
+/// Returns the standard number of decimal places for the given currency code.
+/// Most currencies use 2 decimal places, but there are notable exceptions.
+///
+/// # Examples
+/// - JPY, KRW: 0 decimal places (yen, won are not subdivided)
+/// - BHD, KWD, OMR, TND: 3 decimal places (dinars subdivided into 1000 fils)
+/// - Most others: 2 decimal places (USD, EUR, GBP, etc.)
+///
+/// # Arguments
+/// * `currency` - ISO 4217 three-letter currency code
+///
+/// # Returns
+/// Number of decimal places (0, 2, or 3)
+pub fn get_currency_decimals(currency: &str) -> u8 {
+    match currency {
+        // Zero decimal currencies (not subdivided)
+        "BIF" | // Burundian Franc
+        "CLP" | // Chilean Peso
+        "DJF" | // Djiboutian Franc
+        "GNF" | // Guinean Franc
+        "ISK" | // Icelandic Króna
+        "JPY" | // Japanese Yen
+        "KMF" | // Comorian Franc
+        "KRW" | // South Korean Won
+        "PYG" | // Paraguayan Guaraní
+        "RWF" | // Rwandan Franc
+        "UGX" | // Ugandan Shilling
+        "UYI" | // Uruguay Peso en Unidades Indexadas
+        "VND" | // Vietnamese Đồng
+        "VUV" | // Vanuatu Vatu
+        "XAF" | // Central African CFA Franc
+        "XOF" | // West African CFA Franc
+        "XPF"   // CFP Franc
+        => 0,
+
+        // Three decimal currencies (subdivided into 1000)
+        "BHD" | // Bahraini Dinar
+        "IQD" | // Iraqi Dinar
+        "JOD" | // Jordanian Dinar
+        "KWD" | // Kuwaiti Dinar
+        "LYD" | // Libyan Dinar
+        "OMR" | // Omani Rial
+        "TND"   // Tunisian Dinar
+        => 3,
+
+        // Four decimal currencies (rare)
+        "CLF" | // Unidad de Fomento (Chile)
+        "UYW"   // Unidad Previsional (Uruguay)
+        => 4,
+
+        // Default: two decimal places (USD, EUR, GBP, CHF, CAD, AUD, etc.)
+        _ => 2,
+    }
+}
+
+/// Commodity currency codes that are not allowed in payment messages (C08 validation)
+const COMMODITY_CURRENCIES: &[&str] = &[
+    "XAU", // Gold
+    "XAG", // Silver
+    "XPD", // Palladium
+    "XPT", // Platinum
+];
+
+/// Validate that currency is not a commodity code (C08 validation)
+///
+/// SWIFT network validation rule C08 prohibits the use of commodity currency codes
+/// (XAU, XAG, XPD, XPT) in payment message amount fields.
+///
+/// # Arguments
+/// * `currency` - ISO 4217 currency code to validate
+///
+/// # Returns
+/// Ok(()) if valid, Err(ParseError) if commodity currency
+///
+/// # Errors
+/// Returns ParseError::InvalidFormat with C08 error if commodity currency detected
+pub fn validate_non_commodity_currency(currency: &str) -> Result<(), ParseError> {
+    if COMMODITY_CURRENCIES.contains(&currency) {
+        return Err(ParseError::InvalidFormat {
+            message: format!(
+                "Commodity currency code {} not allowed in payment messages (Error code: C08)",
+                currency
+            ),
+        });
+    }
+    Ok(())
+}
+
 /// Parse currency code (3 uppercase letters)
 pub fn parse_currency(input: &str) -> Result<String, ParseError> {
     if input.len() != 3 {
@@ -195,6 +285,28 @@ pub fn parse_currency(input: &str) -> Result<String, ParseError> {
     Ok(input.to_string())
 }
 
+/// Parse currency code with commodity validation (enforces C08 rule)
+///
+/// This is a stricter version of parse_currency that also validates against
+/// commodity currencies. Use this for amount fields (32A, 32B, 33B, 71F, 71G, etc.)
+///
+/// # Arguments
+/// * `input` - Currency code string to parse
+///
+/// # Returns
+/// Validated currency code string
+///
+/// # Errors
+/// Returns error if:
+/// - Not exactly 3 characters (T52)
+/// - Contains non-uppercase letters (T52)
+/// - Is a commodity currency code (C08)
+pub fn parse_currency_non_commodity(input: &str) -> Result<String, ParseError> {
+    let currency = parse_currency(input)?;
+    validate_non_commodity_currency(&currency)?;
+    Ok(currency)
+}
+
 /// Parse amount with optional decimal places
 pub fn parse_amount(input: &str) -> Result<f64, ParseError> {
     // Remove any commas (European decimal separator handling)
@@ -205,6 +317,76 @@ pub fn parse_amount(input: &str) -> Result<f64, ParseError> {
         .map_err(|e| ParseError::InvalidFormat {
             message: format!("Invalid amount format: {}", e),
         })
+}
+
+/// Validate amount decimal precision for a specific currency (C03 validation)
+///
+/// SWIFT network validation rule C03 requires that the number of decimal places
+/// in an amount must not exceed the maximum allowed for the currency.
+///
+/// # Arguments
+/// * `amount` - The amount value to validate
+/// * `currency` - ISO 4217 currency code
+///
+/// # Returns
+/// Ok(()) if decimal precision is valid, Err(ParseError) if exceeds limit
+///
+/// # Errors
+/// Returns ParseError::InvalidFormat with C03 error if decimal precision exceeded
+///
+/// # Examples
+/// ```
+/// validate_amount_decimals(100.50, "USD") // Ok - 2 decimals allowed
+/// validate_amount_decimals(100.0, "JPY")  // Ok - 0 decimals allowed
+/// validate_amount_decimals(100.50, "JPY") // Err - JPY allows 0 decimals only
+/// validate_amount_decimals(100.505, "BHD") // Err - BHD allows 3 decimals max
+/// ```
+pub fn validate_amount_decimals(amount: f64, currency: &str) -> Result<(), ParseError> {
+    let max_decimals = get_currency_decimals(currency);
+
+    // Calculate actual decimal places in the amount
+    // Use string representation to avoid floating point precision issues
+    let amount_str = format!("{:.10}", amount); // Format with high precision
+    let decimal_places = if let Some(dot_pos) = amount_str.find('.') {
+        let after_dot = &amount_str[dot_pos + 1..];
+        // Count non-zero digits after decimal point
+        after_dot.trim_end_matches('0').len()
+    } else {
+        0
+    };
+
+    if decimal_places > max_decimals as usize {
+        return Err(ParseError::InvalidFormat {
+            message: format!(
+                "Amount has {} decimal places but currency {} allows maximum {} (Error code: C03)",
+                decimal_places, currency, max_decimals
+            ),
+        });
+    }
+
+    Ok(())
+}
+
+/// Parse amount with currency-specific decimal validation
+///
+/// This combines amount parsing with currency-specific decimal precision validation.
+/// Use this for amount fields where the currency is known (Field 32A, 32B, etc.)
+///
+/// # Arguments
+/// * `input` - Amount string to parse
+/// * `currency` - ISO 4217 currency code for decimal validation
+///
+/// # Returns
+/// Parsed amount as f64
+///
+/// # Errors
+/// Returns error if:
+/// - Amount format is invalid
+/// - Decimal precision exceeds currency limit (C03)
+pub fn parse_amount_with_currency(input: &str, currency: &str) -> Result<f64, ParseError> {
+    let amount = parse_amount(input)?;
+    validate_amount_decimals(amount, currency)?;
+    Ok(amount)
 }
 
 /// Format amount for SWIFT output with comma decimal separator
@@ -244,6 +426,29 @@ pub fn format_swift_amount(amount: f64, decimals: usize) -> String {
     } else {
         with_comma
     }
+}
+
+/// Format amount for SWIFT output with currency-specific decimal precision
+///
+/// This is a currency-aware version of format_swift_amount that automatically
+/// determines the correct number of decimal places based on the currency code.
+///
+/// # Arguments
+/// * `amount` - The amount to format
+/// * `currency` - ISO 4217 currency code
+///
+/// # Returns
+/// SWIFT-formatted amount string with currency-appropriate precision
+///
+/// # Examples
+/// ```
+/// assert_eq!(format_swift_amount_for_currency(1234.56, "USD"), "1234,56");
+/// assert_eq!(format_swift_amount_for_currency(1500000.0, "JPY"), "1500000");
+/// assert_eq!(format_swift_amount_for_currency(123.456, "BHD"), "123,456");
+/// ```
+pub fn format_swift_amount_for_currency(amount: f64, currency: &str) -> String {
+    let decimals = get_currency_decimals(currency);
+    format_swift_amount(amount, decimals as usize)
 }
 
 /// Parse date in YYMMDD format
@@ -530,5 +735,150 @@ mod tests {
         assert!(validate_iban("GB82WEST12345698765432").is_ok());
         assert!(validate_iban("DE89").is_err()); // Too short
         assert!(validate_iban("1234567890123456").is_err()); // Invalid country code
+    }
+
+    #[test]
+    fn test_get_currency_decimals() {
+        // Test zero decimal currencies
+        assert_eq!(get_currency_decimals("JPY"), 0);
+        assert_eq!(get_currency_decimals("KRW"), 0);
+        assert_eq!(get_currency_decimals("VND"), 0);
+        assert_eq!(get_currency_decimals("CLP"), 0);
+
+        // Test two decimal currencies (default)
+        assert_eq!(get_currency_decimals("USD"), 2);
+        assert_eq!(get_currency_decimals("EUR"), 2);
+        assert_eq!(get_currency_decimals("GBP"), 2);
+        assert_eq!(get_currency_decimals("CHF"), 2);
+
+        // Test three decimal currencies
+        assert_eq!(get_currency_decimals("BHD"), 3);
+        assert_eq!(get_currency_decimals("KWD"), 3);
+        assert_eq!(get_currency_decimals("OMR"), 3);
+        assert_eq!(get_currency_decimals("TND"), 3);
+
+        // Test four decimal currencies
+        assert_eq!(get_currency_decimals("CLF"), 4);
+
+        // Test unknown currency (defaults to 2)
+        assert_eq!(get_currency_decimals("XXX"), 2);
+    }
+
+    #[test]
+    fn test_validate_non_commodity_currency() {
+        // Valid non-commodity currencies
+        assert!(validate_non_commodity_currency("USD").is_ok());
+        assert!(validate_non_commodity_currency("EUR").is_ok());
+        assert!(validate_non_commodity_currency("JPY").is_ok());
+
+        // Invalid commodity currencies (C08)
+        assert!(validate_non_commodity_currency("XAU").is_err()); // Gold
+        assert!(validate_non_commodity_currency("XAG").is_err()); // Silver
+        assert!(validate_non_commodity_currency("XPD").is_err()); // Palladium
+        assert!(validate_non_commodity_currency("XPT").is_err()); // Platinum
+
+        // Verify error message contains C08
+        let err = validate_non_commodity_currency("XAU").unwrap_err();
+        if let ParseError::InvalidFormat { message } = err {
+            assert!(message.contains("C08"));
+            assert!(message.contains("XAU"));
+        } else {
+            panic!("Expected InvalidFormat error");
+        }
+    }
+
+    #[test]
+    fn test_parse_currency_non_commodity() {
+        // Valid non-commodity currencies
+        assert_eq!(parse_currency_non_commodity("USD").unwrap(), "USD");
+        assert_eq!(parse_currency_non_commodity("EUR").unwrap(), "EUR");
+        assert_eq!(parse_currency_non_commodity("JPY").unwrap(), "JPY");
+
+        // Invalid commodity currencies
+        assert!(parse_currency_non_commodity("XAU").is_err());
+        assert!(parse_currency_non_commodity("XAG").is_err());
+
+        // Invalid format
+        assert!(parse_currency_non_commodity("US").is_err()); // Too short
+        assert!(parse_currency_non_commodity("usd").is_err()); // Lowercase
+    }
+
+    #[test]
+    fn test_validate_amount_decimals() {
+        // USD (2 decimals allowed)
+        assert!(validate_amount_decimals(100.0, "USD").is_ok());
+        assert!(validate_amount_decimals(100.5, "USD").is_ok());
+        assert!(validate_amount_decimals(100.50, "USD").is_ok());
+        assert!(validate_amount_decimals(100.505, "USD").is_err()); // 3 decimals
+
+        // JPY (0 decimals allowed)
+        assert!(validate_amount_decimals(100.0, "JPY").is_ok());
+        assert!(validate_amount_decimals(1500000.0, "JPY").is_ok());
+        assert!(validate_amount_decimals(100.5, "JPY").is_err()); // Has decimals
+        assert!(validate_amount_decimals(100.50, "JPY").is_err()); // Has decimals
+
+        // BHD (3 decimals allowed)
+        assert!(validate_amount_decimals(100.0, "BHD").is_ok());
+        assert!(validate_amount_decimals(100.5, "BHD").is_ok());
+        assert!(validate_amount_decimals(100.505, "BHD").is_ok());
+        assert!(validate_amount_decimals(100.5055, "BHD").is_err()); // 4 decimals
+
+        // Verify error message contains C03
+        let err = validate_amount_decimals(100.505, "USD").unwrap_err();
+        if let ParseError::InvalidFormat { message } = err {
+            assert!(message.contains("C03"));
+            assert!(message.contains("USD"));
+        } else {
+            panic!("Expected InvalidFormat error");
+        }
+    }
+
+    #[test]
+    fn test_parse_amount_with_currency() {
+        // Valid amounts with correct decimals
+        assert_eq!(parse_amount_with_currency("100.50", "USD").unwrap(), 100.50);
+        assert_eq!(
+            parse_amount_with_currency("1500000", "JPY").unwrap(),
+            1500000.0
+        );
+        assert_eq!(
+            parse_amount_with_currency("100.505", "BHD").unwrap(),
+            100.505
+        );
+
+        // European format (comma separator)
+        assert_eq!(parse_amount_with_currency("100,50", "EUR").unwrap(), 100.50);
+
+        // Invalid: too many decimals
+        assert!(parse_amount_with_currency("100.505", "USD").is_err());
+        assert!(parse_amount_with_currency("100.5", "JPY").is_err());
+        assert!(parse_amount_with_currency("100.5055", "BHD").is_err());
+
+        // Invalid format
+        assert!(parse_amount_with_currency("abc", "USD").is_err());
+    }
+
+    #[test]
+    fn test_format_swift_amount_for_currency() {
+        // USD (2 decimals)
+        assert_eq!(format_swift_amount_for_currency(1234.56, "USD"), "1234,56");
+        assert_eq!(format_swift_amount_for_currency(1000.00, "USD"), "1000");
+        assert_eq!(format_swift_amount_for_currency(1000.50, "USD"), "1000,5");
+
+        // JPY (0 decimals)
+        assert_eq!(
+            format_swift_amount_for_currency(1500000.0, "JPY"),
+            "1500000"
+        );
+        assert_eq!(format_swift_amount_for_currency(1234.0, "JPY"), "1234");
+
+        // BHD (3 decimals)
+        assert_eq!(format_swift_amount_for_currency(123.456, "BHD"), "123,456");
+        assert_eq!(format_swift_amount_for_currency(100.5, "BHD"), "100,5");
+        assert_eq!(format_swift_amount_for_currency(100.0, "BHD"), "100");
+
+        // EUR (2 decimals)
+        assert_eq!(format_swift_amount_for_currency(5000.00, "EUR"), "5000");
+        assert_eq!(format_swift_amount_for_currency(250.75, "EUR"), "250,75");
     }
 }

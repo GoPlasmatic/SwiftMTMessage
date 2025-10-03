@@ -216,86 +216,52 @@ impl crate::traits::SwiftMessageBody for MT950 {
         "950"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all fields with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position to preserve field order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Reconstruct block4 in the correct order
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
-        }
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+    fn to_mt_string(&self) -> String {
         use crate::traits::SwiftField;
-        let mut fields = std::collections::HashMap::new();
+        let mut result = String::new();
 
-        // Add mandatory fields
-        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
-        fields.insert("25".to_string(), vec![self.field_25.authorisation.clone()]);
-        fields.insert("28C".to_string(), vec![self.field_28c.to_swift_string()]);
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
 
-        // Handle Field60 enum
+        result.push_str(&self.field_25.to_swift_string());
+        result.push_str("\r\n");
+
+        result.push_str(&self.field_28c.to_swift_string());
+        result.push_str("\r\n");
+
         match &self.field_60 {
-            Field60::F(field) => {
-                fields.insert("60F".to_string(), vec![field.to_swift_string()]);
-            }
-            Field60::M(field) => {
-                fields.insert("60M".to_string(), vec![field.to_swift_string()]);
-            }
+            Field60::F(f) => result.push_str(&f.to_swift_string()),
+            Field60::M(f) => result.push_str(&f.to_swift_string()),
         }
+        result.push_str("\r\n");
 
-        // Add optional statement lines
         if let Some(ref field_61_vec) = self.field_61 {
-            let values: Vec<String> = field_61_vec.iter().map(|f| f.to_swift_string()).collect();
-            fields.insert("61".to_string(), values);
+            for field in field_61_vec {
+                result.push_str(&field.to_swift_string());
+                result.push_str("\r\n");
+            }
         }
 
-        // Handle Field62 enum
         match &self.field_62 {
-            Field62::F(field) => {
-                fields.insert("62F".to_string(), vec![field.to_swift_string()]);
-            }
-            Field62::M(field) => {
-                fields.insert("62M".to_string(), vec![field.to_swift_string()]);
-            }
+            Field62::F(f) => result.push_str(&f.to_swift_string()),
+            Field62::M(f) => result.push_str(&f.to_swift_string()),
+        }
+        result.push_str("\r\n");
+
+        if let Some(ref field) = self.field_64 {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        // Add optional field 64
-        if let Some(ref field_64) = self.field_64 {
-            fields.insert("64".to_string(), vec![field_64.to_swift_string()]);
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
         }
 
-        fields
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "25", "28C", "60", "62"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["61", "64"]
+        result
     }
 }

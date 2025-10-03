@@ -122,60 +122,30 @@ impl crate::traits::SwiftMessageBody for MT199 {
         "199"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all fields with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position to preserve field order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Reconstruct block4 in the correct order
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
-        }
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
+    fn to_mt_string(&self) -> String {
+        use crate::traits::SwiftField;
+        let mut result = String::new();
 
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
-        let mut fields = std::collections::HashMap::new();
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
 
-        // Add mandatory field 20
-        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
-
-        // Add optional field 21
-        if let Some(ref field_21) = self.field_21 {
-            fields.insert("21".to_string(), vec![field_21.reference.clone()]);
+        if let Some(ref field) = self.field_21 {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        // Add mandatory field 79
-        fields.insert("79".to_string(), vec![self.field_79.information.join("\n")]);
+        result.push_str(&self.field_79.to_swift_string());
+        result.push_str("\r\n");
 
-        fields
-    }
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
+        }
 
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "79"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["21"]
+        result
     }
 }

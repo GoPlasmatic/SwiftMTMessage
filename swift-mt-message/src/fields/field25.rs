@@ -203,9 +203,9 @@ impl SwiftField for Field25A {
     fn to_swift_string(&self) -> String {
         // Ensure account starts with '/' for SWIFT format
         if self.account.starts_with('/') {
-            format!(":25:{}", self.account)
+            format!(":25A:{}", self.account)
         } else {
-            format!(":25:/{}", self.account)
+            format!(":25A:/{}", self.account)
         }
     }
 }
@@ -346,7 +346,7 @@ mod tests {
     fn test_field25_no_option() {
         let field = Field25NoOption::parse("AUTH123456789").unwrap();
         assert_eq!(field.authorisation, "AUTH123456789");
-        assert_eq!(field.to_swift_string(), "AUTH123456789"); // NoOption doesn't include field tag
+        assert_eq!(field.to_swift_string(), ":25:AUTH123456789"); // Includes field tag per implementation
 
         // Test max length
         let long_auth = "A".repeat(35);

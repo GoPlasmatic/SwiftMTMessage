@@ -302,7 +302,7 @@ impl SwiftField for Field13C {
 
     fn to_swift_string(&self) -> String {
         format!(
-            "{}{}{}{}",
+            ":13C:{}{}{}{}",
             self.code,
             self.time.format("%H%M"),
             self.sign,
@@ -412,7 +412,7 @@ impl SwiftField for Field13D {
 
     fn to_swift_string(&self) -> String {
         format!(
-            "{}{}{}{}",
+            ":13D:{}{}{}{}",
             self.date.format("%y%m%d"),
             self.time.format("%H%M"),
             self.offset_sign,

@@ -223,90 +223,48 @@ impl crate::traits::SwiftMessageBody for MT935 {
         "935"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all fields with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position to preserve field order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Reconstruct block4 in the correct order
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
-        }
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+    fn to_mt_string(&self) -> String {
         use crate::traits::SwiftField;
-        let mut fields = std::collections::HashMap::new();
+        let mut result = String::new();
 
-        // Add mandatory field 20
-        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
 
-        // Add rate change sequences
-        // Note: This will group fields by type, which may not maintain sequence order
-        for seq in &self.rate_changes {
-            // Add field 23 or 25
-            if let Some(ref field_23) = seq.field_23 {
-                fields
-                    .entry("23".to_string())
-                    .or_insert_with(Vec::new)
-                    .push(field_23.to_swift_string());
-            }
-            if let Some(ref field_25) = seq.field_25 {
-                fields
-                    .entry("25".to_string())
-                    .or_insert_with(Vec::new)
-                    .push(field_25.authorisation.clone());
+        // Rate change sequences
+        for rate_change in &self.rate_changes {
+            if let Some(ref field) = rate_change.field_23 {
+                result.push_str(&field.to_swift_string());
+                result.push_str("\r\n");
             }
 
-            // Add field 30
-            fields
-                .entry("30".to_string())
-                .or_insert_with(Vec::new)
-                .push(seq.field_30.to_swift_string());
+            if let Some(ref field) = rate_change.field_25 {
+                result.push_str(&field.to_swift_string());
+                result.push_str("\r\n");
+            }
 
-            // Add field 37H (multiple)
-            for field_37h in &seq.field_37h {
-                fields
-                    .entry("37H".to_string())
-                    .or_insert_with(Vec::new)
-                    .push(field_37h.to_swift_string());
+            result.push_str(&rate_change.field_30.to_swift_string());
+            result.push_str("\r\n");
+
+            for field_37h in &rate_change.field_37h {
+                result.push_str(&field_37h.to_swift_string());
+                result.push_str("\r\n");
             }
         }
 
-        // Add optional field 72
-        if let Some(ref field_72) = self.field_72 {
-            fields.insert("72".to_string(), vec![field_72.information.join("\n")]);
+        if let Some(ref field) = self.field_72 {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        fields
-    }
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
+        }
 
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "30", "37H"] // Field 23 or 25 is conditionally required
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["23", "25", "72"]
+        result
     }
 }

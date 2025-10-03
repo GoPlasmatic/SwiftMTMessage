@@ -112,13 +112,6 @@
           "var": "amount"
         }
       },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "ordering_bic"
-          }
-        }
-      },
       "72": {
         "information": [
           "/BNF/URGENT LIQUIDITY TRANSFER",
@@ -167,6 +160,11 @@
       "58A": {
         "bic": {
           "var": "receiver_bic"
+        }
+      },
+      "52A": {
+        "bic": {
+          "var": "ordering_bic"
         }
       }
     }

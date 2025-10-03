@@ -222,7 +222,7 @@ impl SwiftField for Field56A {
         }
 
         result.push(self.bic.clone());
-        result.join("\n")
+        format!(":56A:{}", result.join("\n"))
     }
 }
 
@@ -253,7 +253,7 @@ impl SwiftField for Field56C {
     }
 
     fn to_swift_string(&self) -> String {
-        format!("/{}", self.party_identifier)
+        format!(":56C:/{}", self.party_identifier)
     }
 }
 
@@ -299,7 +299,7 @@ impl SwiftField for Field56D {
             result.push(line.clone());
         }
 
-        result.join("\n")
+        format!(":56D:{}", result.join("\n"))
     }
 }
 

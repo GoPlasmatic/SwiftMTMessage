@@ -112,13 +112,6 @@
           "var": "amount"
         }
       },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "receiver_bic"
-          }
-        }
-      },
       "72": {
         "information": [
           {
@@ -183,6 +176,11 @@
       "58A": {
         "bic": {
           "var": "ordering_bic"
+        }
+      },
+      "52A": {
+        "bic": {
+          "var": "receiver_bic"
         }
       }
     }

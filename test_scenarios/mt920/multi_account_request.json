@@ -73,7 +73,7 @@
                     "12": {
                         "type_code": "940"
                     },
-                    "25": {
+                    "25A": {
                         "account": {
                             "var": "account1"
                         }
@@ -83,7 +83,7 @@
                     "12": {
                         "type_code": "941"
                     },
-                    "25": {
+                    "25A": {
                         "account": {
                             "var": "account2"
                         }
@@ -93,7 +93,7 @@
                     "12": {
                         "type_code": "950"
                     },
-                    "25": {
+                    "25A": {
                         "account": {
                             "var": "account3"
                         }

@@ -190,91 +190,14 @@ impl crate::traits::SwiftMessageBody for MT910 {
         "910"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all fields with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position to preserve field order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Reconstruct block4 in the correct order
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(
-                ":{}:{}
-",
-                tag, value
-            ));
-        }
-        Self::parse_from_block4(&block4)
-    }
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        // Call the existing public method implementation
+        MT910::parse_from_block4(block4)
     }
 
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
-        use crate::traits::SwiftField;
-        let mut fields = std::collections::HashMap::new();
-
-        fields.insert("20".to_string(), vec![self.field_20.to_swift_value()]);
-        fields.insert("21".to_string(), vec![self.field_21.to_swift_value()]);
-        fields.insert("25".to_string(), vec![self.field_25.to_swift_value()]);
-        fields.insert("32A".to_string(), vec![self.field_32a.to_swift_value()]);
-
-        if let Some(ref field) = self.field_13d {
-            fields.insert("13D".to_string(), vec![field.to_swift_value()]);
-        }
-
-        if let Some(ref field) = self.field_50 {
-            if let Some(variant_tag) = field.get_variant_tag() {
-                fields.insert(format!("50{}", variant_tag), vec![field.to_swift_value()]);
-            } else {
-                fields.insert("50".to_string(), vec![field.to_swift_value()]);
-            }
-        }
-
-        if let Some(ref field) = self.field_52 {
-            if let Some(variant_tag) = field.get_variant_tag() {
-                fields.insert(format!("52{}", variant_tag), vec![field.to_swift_value()]);
-            } else {
-                fields.insert("52".to_string(), vec![field.to_swift_value()]);
-            }
-        }
-
-        if let Some(ref field) = self.field_56 {
-            if let Some(variant_tag) = field.get_variant_tag() {
-                fields.insert(format!("56{}", variant_tag), vec![field.to_swift_value()]);
-            } else {
-                fields.insert("56".to_string(), vec![field.to_swift_value()]);
-            }
-        }
-
-        if let Some(ref field) = self.field_72 {
-            fields.insert("72".to_string(), vec![field.to_swift_value()]);
-        }
-
-        fields
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "21", "25", "32A"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["13D", "50", "52", "56", "72"]
+    fn to_mt_string(&self) -> String {
+        // Call the existing public method implementation
+        MT910::to_mt_string(self)
     }
 }
 

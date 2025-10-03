@@ -1,9 +1,7 @@
-use crate::errors::{ParseError, ParseResult, ParserConfig};
+use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
-use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// MT205 - Financial Institution Transfer Execution
 ///
@@ -166,154 +164,96 @@ impl crate::traits::SwiftMessageBody for MT205 {
         "205"
     }
 
-    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
-        // Reconstruct block4 from fields
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position
-        all_fields.sort_by_key(|f| f.2);
-
-        // Build block4
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
-        }
-
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: HashMap<String, Vec<(String, usize)>>,
-        _config: &ParserConfig,
-    ) -> Result<ParseResult<Self>, ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
+    fn to_mt_string(&self) -> String {
+        use crate::traits::SwiftField;
+        let mut result = String::new();
 
-    fn to_fields(&self) -> HashMap<String, Vec<String>> {
-        let mut fields = HashMap::new();
+        result.push_str(&self.transaction_reference.to_swift_string());
+        result.push_str("\r\n");
 
-        fields.insert(
-            "20".to_string(),
-            vec![self.transaction_reference.to_swift_string()],
-        );
-        fields.insert(
-            "21".to_string(),
-            vec![self.related_reference.to_swift_string()],
-        );
+        result.push_str(&self.related_reference.to_swift_string());
+        result.push_str("\r\n");
 
-        if let Some(ref times) = self.time_indication {
-            let time_strings: Vec<String> = times.iter().map(|t| t.to_swift_string()).collect();
-            fields.insert("13C".to_string(), time_strings);
-        }
-
-        fields.insert(
-            "32A".to_string(),
-            vec![self.value_date_amount.to_swift_string()],
-        );
-
-        if let Some(ref inst_amt) = self.instructed_amount {
-            fields.insert("33B".to_string(), vec![inst_amt.to_swift_string()]);
-        }
-
-        if let Some(ref ord_inst) = self.ordering_institution {
-            match ord_inst {
-                Field52OrderingInstitution::A(f) => {
-                    fields.insert("52A".to_string(), vec![f.to_swift_string()]);
-                }
-                Field52OrderingInstitution::D(f) => {
-                    fields.insert("52D".to_string(), vec![f.to_swift_string()]);
-                }
+        if let Some(ref field_13c_vec) = self.time_indication {
+            for field in field_13c_vec {
+                result.push_str(&field.to_swift_string());
+                result.push_str("\r\n");
             }
         }
 
-        if let Some(ref corr) = self.senders_correspondent {
-            match corr {
-                Field53::A(f) => {
-                    fields.insert("53A".to_string(), vec![f.to_swift_string()]);
-                }
-                Field53::B(f) => {
-                    fields.insert("53B".to_string(), vec![f.to_swift_string()]);
-                }
-                Field53::D(f) => {
-                    fields.insert("53D".to_string(), vec![f.to_swift_string()]);
-                }
-            }
+        result.push_str(&self.value_date_amount.to_swift_string());
+        result.push_str("\r\n");
+
+        if let Some(ref field) = self.instructed_amount {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        if let Some(ref rec_corr) = self.receivers_correspondent {
-            match rec_corr {
-                Field54::A(f) => {
-                    fields.insert("54A".to_string(), vec![f.to_swift_string()]);
-                }
-                Field54::B(f) => {
-                    fields.insert("54B".to_string(), vec![f.to_swift_string()]);
-                }
-                Field54::D(f) => {
-                    fields.insert("54D".to_string(), vec![f.to_swift_string()]);
-                }
+        if let Some(ref field) = self.ordering_institution {
+            match field {
+                Field52OrderingInstitution::A(f) => result.push_str(&f.to_swift_string()),
+                Field52OrderingInstitution::D(f) => result.push_str(&f.to_swift_string()),
             }
+            result.push_str("\r\n");
         }
 
-        if let Some(ref inter) = self.intermediary {
-            match inter {
-                Field56::A(f) => {
-                    fields.insert("56A".to_string(), vec![f.to_swift_string()]);
-                }
-                Field56::C(f) => {
-                    fields.insert("56C".to_string(), vec![f.to_swift_string()]);
-                }
-                Field56::D(f) => {
-                    fields.insert("56D".to_string(), vec![f.to_swift_string()]);
-                }
+        if let Some(ref field) = self.senders_correspondent {
+            match field {
+                Field53::A(f) => result.push_str(&f.to_swift_string()),
+                Field53::B(f) => result.push_str(&f.to_swift_string()),
+                Field53::D(f) => result.push_str(&f.to_swift_string()),
             }
+            result.push_str("\r\n");
         }
 
-        if let Some(ref acc_with) = self.account_with_institution {
-            match acc_with {
-                Field57::A(f) => {
-                    fields.insert("57A".to_string(), vec![f.to_swift_string()]);
-                }
-                Field57::B(f) => {
-                    fields.insert("57B".to_string(), vec![f.to_swift_string()]);
-                }
-                Field57::C(f) => {
-                    fields.insert("57C".to_string(), vec![f.to_swift_string()]);
-                }
-                Field57::D(f) => {
-                    fields.insert("57D".to_string(), vec![f.to_swift_string()]);
-                }
+        if let Some(ref field) = self.receivers_correspondent {
+            match field {
+                Field54::A(f) => result.push_str(&f.to_swift_string()),
+                Field54::B(f) => result.push_str(&f.to_swift_string()),
+                Field54::D(f) => result.push_str(&f.to_swift_string()),
             }
+            result.push_str("\r\n");
+        }
+
+        if let Some(ref field) = self.intermediary {
+            match field {
+                Field56::A(f) => result.push_str(&f.to_swift_string()),
+                Field56::C(f) => result.push_str(&f.to_swift_string()),
+                Field56::D(f) => result.push_str(&f.to_swift_string()),
+            }
+            result.push_str("\r\n");
+        }
+
+        if let Some(ref field) = self.account_with_institution {
+            match field {
+                Field57::A(f) => result.push_str(&f.to_swift_string()),
+                Field57::B(f) => result.push_str(&f.to_swift_string()),
+                Field57::C(f) => result.push_str(&f.to_swift_string()),
+                Field57::D(f) => result.push_str(&f.to_swift_string()),
+            }
+            result.push_str("\r\n");
         }
 
         match &self.beneficiary_institution {
-            Field58::A(f) => {
-                fields.insert("58A".to_string(), vec![f.to_swift_string()]);
-            }
-            Field58::D(f) => {
-                fields.insert("58D".to_string(), vec![f.to_swift_string()]);
-            }
+            Field58::A(f) => result.push_str(&f.to_swift_string()),
+            Field58::D(f) => result.push_str(&f.to_swift_string()),
+        }
+        result.push_str("\r\n");
+
+        if let Some(ref field) = self.sender_to_receiver {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        if let Some(ref sender_info) = self.sender_to_receiver {
-            fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
         }
 
-        fields
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "21", "32A", "58"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["13C", "33B", "52", "53", "54", "56", "57", "72"]
+        result
     }
 }

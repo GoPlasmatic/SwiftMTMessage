@@ -209,7 +209,7 @@ impl SwiftField for Field34F {
     fn to_swift_string(&self) -> String {
         let indicator_str = self.indicator.map_or(String::new(), |c| c.to_string());
         format!(
-            "{}{}{}",
+            ":34F:{}{}{}",
             self.currency,
             indicator_str,
             self.amount.to_string().replace('.', ",")

@@ -89,115 +89,6 @@ pub struct MT103 {
 
 // Additional methods for MT103
 impl MT103 {
-    /// Parse message from Block 4 content
-    pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "103");
-
-        // Parse mandatory fields in proper order
-        let field_20 = parser.parse_field::<Field20>("20")?;
-        let field_23b = parser.parse_field::<Field23B>("23B")?;
-        let field_32a = parser.parse_field::<Field32A>("32A")?;
-        let field_50 = parser.parse_variant_field::<Field50OrderingCustomerAFK>("50")?;
-
-        // Parse optional fields that come before field 59
-        let field_51a = parser.parse_optional_field::<Field51A>("51A")?;
-        let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
-        let field_53 = parser.parse_optional_variant_field::<Field53SenderCorrespondent>("53")?;
-        let field_54 = parser.parse_optional_variant_field::<Field54ReceiverCorrespondent>("54")?;
-        let field_55 =
-            parser.parse_optional_variant_field::<Field55ThirdReimbursementInstitution>("55")?;
-        let field_56 = parser.parse_optional_variant_field::<Field56Intermediary>("56")?;
-        let field_57 =
-            parser.parse_optional_variant_field::<Field57AccountWithInstitution>("57")?;
-
-        // Parse mandatory field 59 (after optional routing fields)
-        let field_59 = parser.parse_variant_field::<Field59>("59")?;
-
-        // Parse optional fields that come after field 59
-        let field_70 = parser.parse_optional_field::<Field70>("70")?;
-
-        // Parse mandatory field 71A
-        let field_71a = parser.parse_field::<Field71A>("71A")?;
-
-        // Parse remaining optional fields
-        let field_26t = parser.parse_optional_field::<Field26T>("26T")?;
-        let field_33b = parser.parse_optional_field::<Field33B>("33B")?;
-        let field_36 = parser.parse_optional_field::<Field36>("36")?;
-        let field_71g = parser.parse_optional_field::<Field71G>("71G")?;
-        let field_72 = parser.parse_optional_field::<Field72>("72")?;
-        let field_77b = parser.parse_optional_field::<Field77B>("77B")?;
-        let field_77t = parser.parse_optional_field::<Field77T>("77T")?;
-
-        // Parse repeated fields
-        parser = parser.with_duplicates(true);
-
-        let mut field_13c = Vec::new();
-        while let Ok(field) = parser.parse_field::<Field13C>("13C") {
-            field_13c.push(field);
-        }
-
-        let mut field_23e = Vec::new();
-        while let Ok(field) = parser.parse_field::<Field23E>("23E") {
-            field_23e.push(field);
-        }
-
-        let mut field_71f = Vec::new();
-        while let Ok(field) = parser.parse_field::<Field71F>("71F") {
-            field_71f.push(field);
-        }
-
-        parser = parser.with_duplicates(false);
-
-        // Verify all content is consumed
-        if !parser.is_complete() {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "Unparsed content remaining in message: {}",
-                    parser.remaining()
-                ),
-            });
-        }
-
-        Ok(Self {
-            field_20,
-            field_23b,
-            field_32a,
-            field_50,
-            field_59,
-            field_71a,
-            field_13c: if field_13c.is_empty() {
-                None
-            } else {
-                Some(field_13c)
-            },
-            field_23e: if field_23e.is_empty() {
-                None
-            } else {
-                Some(field_23e)
-            },
-            field_26t,
-            field_33b,
-            field_36,
-            field_51a,
-            field_52,
-            field_53,
-            field_54,
-            field_55,
-            field_56,
-            field_57,
-            field_70,
-            field_71f: if field_71f.is_empty() {
-                None
-            } else {
-                Some(field_71f)
-            },
-            field_71g,
-            field_72,
-            field_77b,
-            field_77t,
-        })
-    }
-
     /// Validation rules for the message
     pub fn validate() -> &'static str {
         r#"{"rules": [{"id": "BASIC", "description": "Basic validation", "condition": true}]}"#
@@ -216,7 +107,7 @@ impl MT103 {
             // Assume input is already block 4 content
             input.to_string()
         };
-        Self::parse_from_block4(&block4)
+        <Self as crate::traits::SwiftMessageBody>::parse_from_block4(&block4)
     }
 
     /// Convert to SWIFT MT text format
@@ -430,189 +321,117 @@ impl crate::traits::SwiftMessageBody for MT103 {
         "103"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all fields with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        let mut parser = crate::message_parser::MessageParser::new(block4, "103");
+
+        // Parse mandatory fields in proper order
+        let field_20 = parser.parse_field::<Field20>("20")?;
+        let field_23b = parser.parse_field::<Field23B>("23B")?;
+        let field_32a = parser.parse_field::<Field32A>("32A")?;
+        let field_50 = parser.parse_variant_field::<Field50OrderingCustomerAFK>("50")?;
+
+        // Parse optional fields that come before field 59
+        let field_51a = parser.parse_optional_field::<Field51A>("51A")?;
+        let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+        let field_53 = parser.parse_optional_variant_field::<Field53SenderCorrespondent>("53")?;
+        let field_54 = parser.parse_optional_variant_field::<Field54ReceiverCorrespondent>("54")?;
+        let field_55 =
+            parser.parse_optional_variant_field::<Field55ThirdReimbursementInstitution>("55")?;
+        let field_56 = parser.parse_optional_variant_field::<Field56Intermediary>("56")?;
+        let field_57 =
+            parser.parse_optional_variant_field::<Field57AccountWithInstitution>("57")?;
+
+        // Parse mandatory field 59 (after optional routing fields)
+        let field_59 = parser.parse_variant_field::<Field59>("59")?;
+
+        // Parse optional fields that come after field 59
+        let field_70 = parser.parse_optional_field::<Field70>("70")?;
+
+        // Parse mandatory field 71A
+        let field_71a = parser.parse_field::<Field71A>("71A")?;
+
+        // Parse remaining optional fields
+        let field_26t = parser.parse_optional_field::<Field26T>("26T")?;
+        let field_33b = parser.parse_optional_field::<Field33B>("33B")?;
+        let field_36 = parser.parse_optional_field::<Field36>("36")?;
+        let field_71g = parser.parse_optional_field::<Field71G>("71G")?;
+        let field_72 = parser.parse_optional_field::<Field72>("72")?;
+        let field_77b = parser.parse_optional_field::<Field77B>("77B")?;
+        let field_77t = parser.parse_optional_field::<Field77T>("77T")?;
+
+        // Parse repeated fields
+        parser = parser.with_duplicates(true);
+
+        let mut field_13c = Vec::new();
+        while let Ok(field) = parser.parse_field::<Field13C>("13C") {
+            field_13c.push(field);
         }
 
-        // Sort by position to preserve field order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Reconstruct block4 in the correct order
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(
-                ":{}:{}
-",
-                tag, value
-            ));
-        }
-        Self::parse_from_block4(&block4)
-    }
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
-        use crate::traits::SwiftField;
-        let mut fields = std::collections::HashMap::new();
-
-        fields.insert("20".to_string(), vec![self.field_20.to_swift_value()]);
-        fields.insert("23B".to_string(), vec![self.field_23b.to_swift_value()]);
-        fields.insert("32A".to_string(), vec![self.field_32a.to_swift_value()]);
-
-        // Handle variant fields
-        if let Some(variant_tag) = self.field_50.get_variant_tag() {
-            fields.insert(
-                format!("50{}", variant_tag),
-                vec![self.field_50.to_swift_value()],
-            );
-        } else {
-            fields.insert("50".to_string(), vec![self.field_50.to_swift_value()]);
+        let mut field_23e = Vec::new();
+        while let Ok(field) = parser.parse_field::<Field23E>("23E") {
+            field_23e.push(field);
         }
 
-        if let Some(variant_tag) = self.field_59.get_variant_tag() {
-            fields.insert(
-                format!("59{}", variant_tag),
-                vec![self.field_59.to_swift_value()],
-            );
-        } else {
-            fields.insert("59".to_string(), vec![self.field_59.to_swift_value()]);
+        let mut field_71f = Vec::new();
+        while let Ok(field) = parser.parse_field::<Field71F>("71F") {
+            field_71f.push(field);
         }
 
-        fields.insert("71A".to_string(), vec![self.field_71a.to_swift_value()]);
+        parser = parser.with_duplicates(false);
 
-        // Optional fields
-        if let Some(ref field_13c_vec) = self.field_13c {
-            fields.insert(
-                "13C".to_string(),
-                field_13c_vec.iter().map(|f| f.to_swift_value()).collect(),
-            );
+        // Verify all content is consumed
+        if !parser.is_complete() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: format!(
+                    "Unparsed content remaining in message: {}",
+                    parser.remaining()
+                ),
+            });
         }
 
-        if let Some(ref field_23e_vec) = self.field_23e {
-            fields.insert(
-                "23E".to_string(),
-                field_23e_vec.iter().map(|f| f.to_swift_value()).collect(),
-            );
-        }
-
-        if let Some(ref field) = self.field_26t {
-            fields.insert("26T".to_string(), vec![field.to_swift_value()]);
-        }
-
-        if let Some(ref field) = self.field_33b {
-            fields.insert("33B".to_string(), vec![field.to_swift_value()]);
-        }
-
-        if let Some(ref field) = self.field_36 {
-            fields.insert("36".to_string(), vec![field.to_swift_value()]);
-        }
-
-        if let Some(ref field) = self.field_51a {
-            fields.insert("51A".to_string(), vec![field.to_swift_value()]);
-        }
-
-        // Optional variant fields
-        if let Some(ref field) = self.field_52 {
-            if let Some(variant_tag) = field.get_variant_tag() {
-                fields.insert(format!("52{}", variant_tag), vec![field.to_swift_value()]);
+        Ok(Self {
+            field_20,
+            field_23b,
+            field_32a,
+            field_50,
+            field_59,
+            field_71a,
+            field_13c: if field_13c.is_empty() {
+                None
             } else {
-                fields.insert("52".to_string(), vec![field.to_swift_value()]);
-            }
-        }
-
-        if let Some(ref field) = self.field_53 {
-            if let Some(variant_tag) = field.get_variant_tag() {
-                fields.insert(format!("53{}", variant_tag), vec![field.to_swift_value()]);
+                Some(field_13c)
+            },
+            field_23e: if field_23e.is_empty() {
+                None
             } else {
-                fields.insert("53".to_string(), vec![field.to_swift_value()]);
-            }
-        }
-
-        if let Some(ref field) = self.field_54 {
-            if let Some(variant_tag) = field.get_variant_tag() {
-                fields.insert(format!("54{}", variant_tag), vec![field.to_swift_value()]);
+                Some(field_23e)
+            },
+            field_26t,
+            field_33b,
+            field_36,
+            field_51a,
+            field_52,
+            field_53,
+            field_54,
+            field_55,
+            field_56,
+            field_57,
+            field_70,
+            field_71f: if field_71f.is_empty() {
+                None
             } else {
-                fields.insert("54".to_string(), vec![field.to_swift_value()]);
-            }
-        }
-
-        if let Some(ref field) = self.field_55 {
-            if let Some(variant_tag) = field.get_variant_tag() {
-                fields.insert(format!("55{}", variant_tag), vec![field.to_swift_value()]);
-            } else {
-                fields.insert("55".to_string(), vec![field.to_swift_value()]);
-            }
-        }
-
-        if let Some(ref field) = self.field_56 {
-            if let Some(variant_tag) = field.get_variant_tag() {
-                fields.insert(format!("56{}", variant_tag), vec![field.to_swift_value()]);
-            } else {
-                fields.insert("56".to_string(), vec![field.to_swift_value()]);
-            }
-        }
-
-        if let Some(ref field) = self.field_57 {
-            if let Some(variant_tag) = field.get_variant_tag() {
-                fields.insert(format!("57{}", variant_tag), vec![field.to_swift_value()]);
-            } else {
-                fields.insert("57".to_string(), vec![field.to_swift_value()]);
-            }
-        }
-
-        if let Some(ref field) = self.field_70 {
-            fields.insert("70".to_string(), vec![field.to_swift_value()]);
-        }
-
-        if let Some(ref field_71f_vec) = self.field_71f {
-            fields.insert(
-                "71F".to_string(),
-                field_71f_vec.iter().map(|f| f.to_swift_value()).collect(),
-            );
-        }
-
-        if let Some(ref field) = self.field_71g {
-            fields.insert("71G".to_string(), vec![field.to_swift_value()]);
-        }
-
-        if let Some(ref field) = self.field_72 {
-            fields.insert("72".to_string(), vec![field.to_swift_value()]);
-        }
-
-        if let Some(ref field) = self.field_77b {
-            fields.insert("77B".to_string(), vec![field.to_swift_value()]);
-        }
-
-        if let Some(ref field) = self.field_77t {
-            fields.insert("77T".to_string(), vec![field.to_swift_value()]);
-        }
-
-        fields
+                Some(field_71f)
+            },
+            field_71g,
+            field_72,
+            field_77b,
+            field_77t,
+        })
     }
 
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "23B", "32A", "50", "59", "71A"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec![
-            "13C", "23E", "26T", "33B", "36", "51A", "52", "53", "54", "55", "56", "57", "70",
-            "71F", "71G", "72", "77B", "77T",
-        ]
+    fn to_mt_string(&self) -> String {
+        // Call the existing public method implementation
+        MT103::to_mt_string(self)
     }
 }
 
@@ -635,7 +454,7 @@ JANE SMITH
 LOS ANGELES, CA 90001
 :71A:OUR
 -"#;
-        let result = MT103::parse_from_block4(mt103_text);
+        let result = <MT103 as crate::traits::SwiftMessageBody>::parse_from_block4(mt103_text);
         assert!(result.is_ok());
         let mt103 = result.unwrap();
         assert_eq!(mt103.field_20.reference, "123456789012345");
@@ -658,7 +477,7 @@ JANE SMITH
 LOS ANGELES, CA 90001
 :71A:OUR
 -"#;
-        let result = MT103::parse_from_block4(mt103_text);
+        let result = <MT103 as crate::traits::SwiftMessageBody>::parse_from_block4(mt103_text);
         assert!(result.is_ok());
         let mt103 = result.unwrap();
 

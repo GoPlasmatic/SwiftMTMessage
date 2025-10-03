@@ -1,9 +1,7 @@
-use crate::errors::{ParseError, ParseResult, ParserConfig};
+use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
-use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// MT200 - Financial Institution Transfer for Own Account
 ///
@@ -79,107 +77,54 @@ impl crate::traits::SwiftMessageBody for MT200 {
         "200"
     }
 
-    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
-        // Reconstruct block4 from fields
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position
-        all_fields.sort_by_key(|f| f.2);
-
-        // Build block4
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
-        }
-
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: HashMap<String, Vec<(String, usize)>>,
-        _config: &ParserConfig,
-    ) -> Result<ParseResult<Self>, ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
+    fn to_mt_string(&self) -> String {
+        use crate::traits::SwiftField;
+        let mut result = String::new();
 
-    fn to_fields(&self) -> HashMap<String, Vec<String>> {
-        let mut fields = HashMap::new();
+        // Mandatory fields
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
+        result.push_str(&self.field_32a.to_swift_string());
+        result.push_str("\r\n");
 
-        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
-        fields.insert(
-            "32A".to_string(),
-            vec![format!(
-                "{}{}{}",
-                self.field_32a.value_date.format("%y%m%d"),
-                self.field_32a.currency,
-                self.field_32a.amount.to_string().replace('.', ",")
-            )],
-        );
-
-        if let Some(ref field_53b) = self.field_53b {
-            fields.insert("53B".to_string(), vec![field_53b.to_swift_value()]);
+        // Optional Field 53B
+        if let Some(ref field) = self.field_53b {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
+        // Optional Field 56
         if let Some(ref field_56) = self.field_56 {
             match field_56 {
-                Field56IntermediaryAD::A(f) => {
-                    fields.insert("56A".to_string(), vec![f.to_swift_value()]);
-                }
-                Field56IntermediaryAD::D(f) => {
-                    fields.insert("56D".to_string(), vec![f.to_swift_value()]);
-                }
+                Field56IntermediaryAD::A(f) => result.push_str(&f.to_swift_string()),
+                Field56IntermediaryAD::D(f) => result.push_str(&f.to_swift_string()),
             }
+            result.push_str("\r\n");
         }
 
+        // Mandatory Field 57
         match &self.field_57 {
-            Field57DebtInstitution::A(f) => {
-                let mut value = String::new();
-                if let Some(ref party) = f.party_identifier {
-                    value.push_str(&format!("/{}\n", party));
-                }
-                value.push_str(&f.bic);
-                fields.insert("57A".to_string(), vec![value]);
-            }
-            Field57DebtInstitution::B(f) => {
-                let mut value = String::new();
-                if let Some(ref party) = f.party_identifier {
-                    value.push_str(&format!("/{}\n", party));
-                }
-                if let Some(ref loc) = f.location {
-                    value.push_str(loc);
-                }
-                fields.insert("57B".to_string(), vec![value]);
-            }
-            Field57DebtInstitution::D(f) => {
-                let mut lines = Vec::new();
-                if let Some(ref party) = f.party_identifier {
-                    lines.push(format!("/{}", party));
-                }
-                lines.extend(f.name_and_address.clone());
-                fields.insert("57D".to_string(), vec![lines.join("\n")]);
-            }
+            Field57DebtInstitution::A(f) => result.push_str(&f.to_swift_string()),
+            Field57DebtInstitution::B(f) => result.push_str(&f.to_swift_string()),
+            Field57DebtInstitution::D(f) => result.push_str(&f.to_swift_string()),
+        }
+        result.push_str("\r\n");
+
+        // Optional Field 72
+        if let Some(ref field) = self.field_72 {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        if let Some(ref field_72) = self.field_72 {
-            fields.insert("72".to_string(), vec![field_72.information.join("\n")]);
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
         }
 
-        fields
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "32A", "57"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["53B", "56", "72"]
+        result
     }
 }

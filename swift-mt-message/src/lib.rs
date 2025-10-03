@@ -53,8 +53,6 @@ pub mod parsed_message;
 pub mod parser;
 pub mod sample;
 pub mod scenario_config;
-pub mod serde_helpers;
-pub mod slash_handler;
 pub mod swift_error_codes;
 pub mod swift_message;
 pub mod traits;

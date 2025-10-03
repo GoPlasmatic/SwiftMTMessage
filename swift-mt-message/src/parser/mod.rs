@@ -11,7 +11,7 @@ pub use generated::{extract_base_tag, normalize_field_tag, parse_block4_fields};
 pub use parser_impl::{
     FieldConsumptionTracker, ParsingContext, SwiftParser,
     find_field_with_variant_sequential_constrained, find_field_with_variant_sequential_numbered,
-    parse_sequences, parse_swift_message_from_string, serialize_swift_message_to_string,
+    parse_sequences,
 };
 
 // Re-export sequence parser types

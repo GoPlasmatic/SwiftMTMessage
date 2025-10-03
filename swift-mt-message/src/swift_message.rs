@@ -5,7 +5,6 @@ use crate::{
     errors::ParseError,
     headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader},
     messages,
-    parser::extract_base_tag,
     traits::SwiftMessageBody,
 };
 use serde::{Deserialize, Serialize};
@@ -393,9 +392,8 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
 
     pub fn to_mt_message(&self) -> String {
         // Pre-allocate capacity based on typical message size
-        // Headers ~200 chars + fields vary but typically 20-100 chars each
-        let estimated_size = 200 + self.fields.to_fields().len() * 50;
-        let mut swift_message = String::with_capacity(estimated_size);
+        // Headers ~200 chars + typical message body ~2000 chars
+        let mut swift_message = String::with_capacity(2200);
 
         // Block 1: Basic Header
         let block1 = &self.basic_header.to_string();
@@ -412,90 +410,20 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         }
 
         // Block 4: Text Block with fields
-        let mut block4 = String::new();
+        // Use the message type's to_mt_string() implementation
+        let mut block4_content = self.fields.to_mt_string();
 
-        // Get optional field tags for this message type to determine which fields can be skipped
-        let optional_fields: std::collections::HashSet<String> = T::optional_fields()
-            .into_iter()
-            .map(|s| s.to_string())
-            .collect();
-
-        // Use to_ordered_fields for proper sequence ordering
-        let ordered_fields = self.fields.to_ordered_fields();
-
-        // Debug output disabled for cleaner test results
-        // #[cfg(debug_assertions)]
-        // {
-        //     eprintln!("DEBUG to_mt_message: ordered_fields returned {} entries", ordered_fields.len());
-        //     eprintln!("DEBUG to_mt_message: all field tags:");
-        //     for (i, (tag, val)) in ordered_fields.iter().enumerate() {
-        //         eprintln!(
-        //             "  [{}] tag='{}', value_prefix='{}'",
-        //             i,
-        //             tag,
-        //             &val[..val.len().min(30)]
-        //         );
-        //     }
-        // }
-
-        // Output fields in the correct order
-        for (field_tag, field_value) in ordered_fields.iter() {
-            // Skip empty optional fields
-            if optional_fields.contains(field_tag) && field_value.trim().is_empty() {
-                continue;
-            }
-
-            // Debug output disabled for cleaner test results
-            // #[cfg(debug_assertions)]
-            // {
-            //     eprintln!("  Writing field [{}]: tag='{}', value_starts_with_colon={}, value_prefix='{}'",
-            //         i, field_tag, field_value.starts_with(':'), &field_value[..field_value.len().min(40)]);
-            //     eprintln!("    block4 length before: {}", block4.len());
-            // }
-
-            // field_value already includes the field tag prefix from to_swift_string()
-            // but we need to check if it starts with ':' to avoid double prefixing
-            if field_value.starts_with(':') {
-                // Value already has field tag prefix, use as-is
-                let to_add = format!("\n{field_value}");
-                // #[cfg(debug_assertions)]
-                // eprintln!("    Adding (with prefix): '{}' (len={})", &to_add[..to_add.len().min(60)], to_add.len());
-                block4.push_str(&to_add);
-            } else {
-                // Value doesn't have field tag prefix, add it
-                // Extract the MT tag, handling numbered fields and variant letters
-                let mt_tag = if field_tag.contains('#') {
-                    // For numbered fields like "50#1", "50#2", extract base tag
-                    extract_base_tag(field_tag).to_string()
-                } else if field_tag.len() > 2
-                    && field_tag
-                        .chars()
-                        .last()
-                        .is_some_and(|c| c.is_ascii_uppercase())
-                {
-                    // If the tag ends with an uppercase letter (variant), keep it
-                    // This handles cases like "50K", "59A" etc.
-                    field_tag.clone()
-                } else {
-                    // For regular fields, use the tag as-is
-                    field_tag.clone()
-                };
-                let to_add = format!("\n:{}:{field_value}", mt_tag);
-                // #[cfg(debug_assertions)]
-                // eprintln!("    Adding (without prefix): '{}' (len={})", &to_add[..to_add.len().min(60)], to_add.len());
-                block4.push_str(&to_add);
-            }
-
-            // #[cfg(debug_assertions)]
-            // eprintln!("    block4 length after: {}", block4.len());
+        // Convert \r\n to \n for consistency with existing format
+        if block4_content.contains("\r\n") {
+            block4_content = block4_content.replace("\r\n", "\n");
         }
 
-        // Debug output disabled for cleaner test results
-        // #[cfg(debug_assertions)]
-        // {
-        //     eprintln!("DEBUG: Final block4 length = {}", block4.len());
-        //     eprintln!("DEBUG: Generated Block 4 content (first 500 chars):\n{}", &block4[..block4.len().min(500)]);
-        // }
+        // Add leading newline if content doesn't already have one
+        let block4 = if block4_content.starts_with('\n') {
+            block4_content
+        } else {
+            format!("\n{}", block4_content)
+        };
 
         swift_message.push_str(&format!("{{4:{block4}\n-}}\n"));
 

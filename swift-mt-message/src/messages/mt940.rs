@@ -149,94 +149,62 @@ impl crate::traits::SwiftMessageBody for MT940 {
         "940"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all fields with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position to preserve field order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Reconstruct block4 in the correct order
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
-        }
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+    fn to_mt_string(&self) -> String {
         use crate::traits::SwiftField;
-        let mut fields = std::collections::HashMap::new();
+        let mut result = String::new();
 
-        // Add mandatory fields
-        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
 
-        if let Some(ref field_21) = self.field_21 {
-            fields.insert("21".to_string(), vec![field_21.reference.clone()]);
+        if let Some(ref field) = self.field_21 {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        fields.insert("25".to_string(), vec![self.field_25.authorisation.clone()]);
-        fields.insert("28C".to_string(), vec![self.field_28c.to_swift_string()]);
-        fields.insert("60F".to_string(), vec![self.field_60f.to_swift_string()]);
+        result.push_str(&self.field_25.to_swift_string());
+        result.push_str("\r\n");
 
-        // Add statement lines
-        let mut field_61_values = Vec::new();
-        let mut field_86_values = Vec::new();
+        result.push_str(&self.field_28c.to_swift_string());
+        result.push_str("\r\n");
 
-        for line in &self.statement_lines {
-            field_61_values.push(line.field_61.to_swift_string());
-            if let Some(ref field_86) = line.field_86 {
-                field_86_values.push(field_86.to_swift_string());
+        result.push_str(&self.field_60f.to_swift_string());
+        result.push_str("\r\n");
+
+        // Statement lines
+        for statement_line in &self.statement_lines {
+            result.push_str(&statement_line.field_61.to_swift_string());
+            result.push_str("\r\n");
+
+            if let Some(ref field) = statement_line.field_86 {
+                result.push_str(&field.to_swift_string());
+                result.push_str("\r\n");
             }
         }
 
-        fields.insert("61".to_string(), field_61_values);
-        if !field_86_values.is_empty() {
-            fields.insert("86".to_string(), field_86_values);
+        result.push_str(&self.field_62f.to_swift_string());
+        result.push_str("\r\n");
+
+        if let Some(ref field) = self.field_64 {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        // Add closing balance
-        fields.insert("62F".to_string(), vec![self.field_62f.to_swift_string()]);
-
-        // Add optional fields
-        if let Some(ref field_64) = self.field_64 {
-            fields.insert("64".to_string(), vec![field_64.to_swift_string()]);
-        }
-
-        // Add optional repetitive Field 65 (Forward Available Balance)
         if let Some(ref field_65_vec) = self.field_65 {
-            let field_65_values: Vec<String> =
-                field_65_vec.iter().map(|f| f.to_swift_string()).collect();
-            if !field_65_values.is_empty() {
-                fields.insert("65".to_string(), field_65_values);
+            for field in field_65_vec {
+                result.push_str(&field.to_swift_string());
+                result.push_str("\r\n");
             }
         }
 
-        fields
-    }
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
+        }
 
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "25", "28C", "60F", "61", "62F"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["21", "86", "64", "65"]
+        result
     }
 }

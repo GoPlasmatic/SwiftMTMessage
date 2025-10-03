@@ -29,20 +29,10 @@ impl MT192 {
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
         let mut parser = crate::message_parser::MessageParser::new(block4, "192");
 
-        // Parse mandatory fields - MT192 fields can appear in different orders
-        // Check for field 11S first as it may come before 20 and 21 in some messages
-        let field_11s = if parser.detect_field("11S") {
-            parser.parse_field::<Field11S>("11S")?
-        } else {
-            // If 11S is not found at the start, parse 20 and 21 first
-            let _field_20 = parser.parse_field::<Field20>("20")?;
-            let _field_21 = parser.parse_field::<Field21NoOption>("21")?;
-            parser.parse_field::<Field11S>("11S")?
-        };
-
-        // Parse fields 20 and 21
+        // Parse mandatory fields in order: 20, 21, 11S
         let field_20 = parser.parse_field::<Field20>("20")?;
         let field_21 = parser.parse_field::<Field21NoOption>("21")?;
+        let field_11s = parser.parse_field::<Field11S>("11S")?;
 
         // Parse optional field 79
         let field_79 = parser.parse_optional_field::<Field79>("79")?;
@@ -101,75 +91,33 @@ impl crate::traits::SwiftMessageBody for MT192 {
         "192"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all fields with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position to preserve field order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Reconstruct block4 in the correct order
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
-        }
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
+    fn to_mt_string(&self) -> String {
+        use crate::traits::SwiftField;
+        let mut result = String::new();
 
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
-        use chrono::Datelike;
-        let mut fields = std::collections::HashMap::new();
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
 
-        // Add mandatory fields
-        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
-        fields.insert("21".to_string(), vec![self.field_21.reference.clone()]);
+        result.push_str(&self.field_21.to_swift_string());
+        result.push_str("\r\n");
 
-        // Add field 11S
-        let mut field_11s_value = format!(
-            "{}{:02}{:02}{:02}",
-            self.field_11s.message_type,
-            self.field_11s.date.year() % 100,
-            self.field_11s.date.month(),
-            self.field_11s.date.day()
-        );
-        if let Some(ref session) = self.field_11s.session_number {
-            field_11s_value.push_str(session);
-        }
-        if let Some(ref seq) = self.field_11s.input_sequence_number {
-            field_11s_value.push_str(seq);
-        }
-        fields.insert("11S".to_string(), vec![field_11s_value]);
+        result.push_str(&self.field_11s.to_swift_string());
+        result.push_str("\r\n");
 
-        // Add optional field 79
-        if let Some(ref field_79) = self.field_79 {
-            fields.insert("79".to_string(), vec![field_79.information.join("\n")]);
+        if let Some(ref field) = self.field_79 {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        fields
-    }
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
+        }
 
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "21", "11S"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["79"]
+        result
     }
 }

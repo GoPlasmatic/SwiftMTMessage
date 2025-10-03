@@ -18,7 +18,7 @@ pub struct MT920Sequence {
     #[serde(rename = "12")]
     pub field_12: Field12,
 
-    #[serde(rename = "25")]
+    #[serde(rename = "25A")]
     pub field_25: Field25A,
 
     #[serde(rename = "34F_1")]
@@ -45,7 +45,7 @@ impl MT920 {
         // Detect and parse each sequence (field 12 marks the start of a new sequence)
         while parser.detect_field("12") {
             let field_12 = parser.parse_field::<Field12>("12")?;
-            let field_25 = parser.parse_field::<Field25A>("25")?;
+            let field_25 = parser.parse_field::<Field25A>("25A")?;
             let floor_limit_debit = parser.parse_optional_field::<Field34F>("34F_1")?;
             let floor_limit_credit = parser.parse_optional_field::<Field34F>("34F_2")?;
 
@@ -184,107 +184,14 @@ impl crate::traits::SwiftMessageBody for MT920 {
         "920"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all field occurrences with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields.iter() {
-            for (value, pos) in values {
-                all_fields.push((tag.clone(), value.clone(), *pos));
-            }
-        }
-
-        // Sort by position to maintain original order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Build block4 content preserving field order
-        let mut block4_parts = Vec::new();
-        for (tag, value, _) in all_fields {
-            block4_parts.push(format!(":{}:{}", tag, value));
-        }
-
-        let block4 = block4_parts.join("\n") + "\n-";
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        // Call the existing public method implementation
+        MT920::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
-        use crate::traits::SwiftField;
-        let mut fields = std::collections::HashMap::new();
-
-        // Add header field
-        fields.insert("20".to_string(), vec![self.field_20.to_swift_value()]);
-
-        // Add sequence fields
-        for seq in &self.sequence {
-            fields
-                .entry("12".to_string())
-                .or_insert_with(Vec::new)
-                .push(seq.field_12.to_swift_value());
-
-            fields
-                .entry("25".to_string())
-                .or_insert_with(Vec::new)
-                .push(seq.field_25.to_swift_value());
-
-            if let Some(ref field) = seq.floor_limit_debit {
-                fields
-                    .entry("34F_1".to_string())
-                    .or_insert_with(Vec::new)
-                    .push(field.to_swift_value());
-            }
-
-            if let Some(ref field) = seq.floor_limit_credit {
-                fields
-                    .entry("34F_2".to_string())
-                    .or_insert_with(Vec::new)
-                    .push(field.to_swift_value());
-            }
-        }
-
-        fields
-    }
-
-    fn to_ordered_fields(&self) -> Vec<(String, String)> {
-        use crate::traits::SwiftField;
-        let mut ordered_fields = Vec::new();
-
-        // Add header field first
-        ordered_fields.push(("20".to_string(), self.field_20.to_swift_value()));
-
-        // Add sequences in order - fields within each sequence must stay together
-        for seq in &self.sequence {
-            ordered_fields.push(("12".to_string(), seq.field_12.to_swift_value()));
-            ordered_fields.push(("25".to_string(), seq.field_25.to_swift_value()));
-
-            if let Some(ref field) = seq.floor_limit_debit {
-                ordered_fields.push(("34F_1".to_string(), field.to_swift_value()));
-            }
-
-            if let Some(ref field) = seq.floor_limit_credit {
-                ordered_fields.push(("34F_2".to_string(), field.to_swift_value()));
-            }
-        }
-
-        ordered_fields
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "12", "25"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["34F_1", "34F_2"]
+    fn to_mt_string(&self) -> String {
+        // Call the existing public method implementation
+        MT920::to_mt_string(self)
     }
 }
 

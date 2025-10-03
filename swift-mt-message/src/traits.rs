@@ -1,19 +1,41 @@
 //! Core traits for SWIFT field and message types
+//!
+//! This module defines the fundamental traits used throughout the SWIFT message parser:
+//! - `SwiftField`: For individual field types (Field20, Field50, etc.)
+//! - `SwiftMessageBody`: For complete message types (MT103, MT202, etc.)
 
-use crate::{Result, SwiftResult};
+use crate::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fmt::Debug;
 
-/// Core trait for all Swift field types
+/// Core trait for all SWIFT field types
+///
+/// This trait is implemented by all field types (Field20, Field50, etc.) to provide
+/// parsing, serialization, and variant handling capabilities.
+///
+/// ## Implementation Notes
+///
+/// - Simple fields (e.g., Field20) implement `parse()` and `to_swift_string()`
+/// - Enum fields (e.g., Field50) also implement `parse_with_variant()` and `get_variant_tag()`
+/// - All fields automatically get `to_swift_value()` via the default implementation
 pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::Debug {
     /// Parse field value from string representation
+    ///
+    /// This is the primary parsing method for simple (non-enum) fields.
+    /// Input should be the field content without the `:TAG:` prefix.
     fn parse(value: &str) -> Result<Self>
     where
         Self: Sized;
 
     /// Parse field value with variant hint for enum fields
-    /// Default implementation falls back to regular parse
+    ///
+    /// Used by the MessageParser to parse enum fields like Field50A, Field50K, etc.
+    /// Default implementation delegates to `parse()` for simple fields.
+    ///
+    /// ## Parameters
+    /// - `value`: Field content without tag prefix
+    /// - `variant`: Variant letter (e.g., "A", "K", "F") or empty string for no-option variant
+    /// - `field_tag`: Base field tag (e.g., "50", "52") for error reporting
     fn parse_with_variant(
         value: &str,
         _variant: Option<&str>,
@@ -25,105 +47,87 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
         Self::parse(value)
     }
 
-    /// Convert field back to SWIFT string format (includes tag)
+    /// Convert field to SWIFT format string (includes `:TAG:` prefix)
+    ///
+    /// Returns the complete SWIFT field representation, e.g., `:20:PAYMENT123` or `:50K:/ACC\nNAME`
     fn to_swift_string(&self) -> String;
 
-    /// Get the field value without tag (for JSON serialization)
+    /// Get the field value without `:TAG:` prefix
+    ///
+    /// Returns only the field content, without the SWIFT tag prefix.
+    /// Used by `to_ordered_fields()` implementations.
+    ///
+    /// ## Example
+    /// - Input: `:20:PAYMENT123` → Output: `PAYMENT123`
+    /// - Input: `:50K:/ACCOUNT\nNAME` → Output: `/ACCOUNT\nNAME`
+    ///
+    /// Default implementation automatically strips the prefix from `to_swift_string()`.
     fn to_swift_value(&self) -> String {
-        // Default implementation: if to_swift_string includes tag, strip it
         let swift_str = self.to_swift_string();
-        if let Some(pos) = swift_str.find(':')
-            && let Some(second_colon) = swift_str[pos + 1..].find(':')
+        // Format is :TAG:VALUE or :TAGX:VALUE (where X is variant like A, K, etc.)
+        // Find first : then find second : and return everything after it
+        if let Some(first_colon) = swift_str.find(':')
+            && let Some(second_colon) = swift_str[first_colon + 1..].find(':')
         {
-            // Format is :TAG:VALUE, return VALUE
-            return swift_str[pos + second_colon + 2..].to_string();
+            return swift_str[first_colon + second_colon + 2..].to_string();
         }
         swift_str
     }
 
-    /// Get the variant tag for this field value (for enum fields)
-    /// Returns None for non-enum fields
+    /// Get the variant tag for enum field values
+    ///
+    /// Returns the variant letter (e.g., "A", "K", "F") for enum fields like Field50OrderingCustomerAFK.
+    /// Returns `None` for simple (non-enum) fields.
+    ///
+    /// This is used during serialization to determine which variant is active.
     fn get_variant_tag(&self) -> Option<&'static str> {
         None
     }
 }
 
 /// Core trait for Swift message types
+///
+/// This trait defines the interface for all SWIFT MT message types (MT103, MT202, etc.).
+/// It provides methods for parsing, serialization, and metadata about message structure.
 pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::Any {
-    /// Get the message type identifier (e.g., "103", "202")
+    /// Get the message type identifier (e.g., "103", "202", "940")
     fn message_type() -> &'static str;
 
-    /// Create from field map with sequential consumption tracking
-    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> SwiftResult<Self>
-    where
-        Self: Sized;
-
-    /// Create from field map with configuration for error collection
-    fn from_fields_with_config(
-        fields: HashMap<String, Vec<(String, usize)>>,
-        config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError>
+    /// Parse message from Block 4 content
+    ///
+    /// Block 4 contains the actual message fields in SWIFT format.
+    /// Each message type implements this to parse its specific field structure.
+    fn parse_from_block4(_block4: &str) -> Result<Self>
     where
         Self: Sized,
     {
-        // Default implementation: use fail-fast mode if config.fail_fast is true
-        if config.fail_fast {
-            match Self::from_fields(fields) {
-                Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-                Err(e) => Err(e),
-            }
-        } else {
-            // For non-fail-fast mode, derived types should override this method
-            // Default behavior falls back to fail-fast
-            match Self::from_fields(fields) {
-                Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-                Err(e) => Err(e),
-            }
-        }
+        panic!("parse_from_block4 not implemented for message type")
     }
 
-    /// Convert to field map
-    fn to_fields(&self) -> HashMap<String, Vec<String>>;
-
-    /// Convert to ordered field list for MT serialization
-    /// Returns fields in the correct sequence order for multi-sequence messages
-    fn to_ordered_fields(&self) -> Vec<(String, String)> {
-        // Default implementation: just flatten the HashMap in numeric order
-        let field_map = self.to_fields();
-        let mut ordered_fields = Vec::new();
-
-        // Create ascending field order by sorting field tags numerically
-        // Use stable sort and include the full tag as secondary sort key for deterministic ordering
-        let mut field_tags: Vec<(&String, u32)> = field_map
-            .keys()
-            .map(|tag| {
-                let num = tag
-                    .chars()
-                    .take_while(|c| c.is_ascii_digit())
-                    .fold(0u32, |acc, c| acc * 10 + (c as u32 - '0' as u32));
-                (tag, num)
-            })
-            .collect();
-        // Sort by numeric value first, then by full tag string for stable ordering
-        field_tags.sort_by(|(tag_a, num_a), (tag_b, num_b)| {
-            num_a.cmp(num_b).then_with(|| tag_a.cmp(tag_b))
-        });
-
-        // Output fields in ascending numerical order
-        for (field_tag, _) in field_tags {
-            if let Some(field_values) = field_map.get(field_tag) {
-                for field_value in field_values {
-                    ordered_fields.push((field_tag.clone(), field_value.clone()));
-                }
-            }
-        }
-
-        ordered_fields
-    }
-
-    /// Get required field tags for this message type
-    fn required_fields() -> Vec<&'static str>;
-
-    /// Get optional field tags for this message type
-    fn optional_fields() -> Vec<&'static str>;
+    /// Convert message to SWIFT MT format string (Block 4 content only)
+    ///
+    /// Returns the message fields in SWIFT MT format, ready for serialization.
+    /// The output does not include Block 4 wrapper braces `{4:...}`.
+    ///
+    /// Each message type must implement custom serialization logic that matches
+    /// its custom parsing logic in `parse_from_block4()`.
+    ///
+    /// ## Format
+    /// - Fields are formatted as `:TAG:VALUE\r\n`
+    /// - Enum fields include variant letter: `:50K:value` or `:59A:value`
+    /// - No trailing `\r\n` at the end
+    ///
+    /// ## Example Implementation
+    /// ```ignore
+    /// fn to_mt_string(&self) -> String {
+    ///     use crate::traits::SwiftField;
+    ///     let mut result = String::new();
+    ///     result.push_str(&self.field_20.to_swift_string());
+    ///     result.push_str("\r\n");
+    ///     // ... add other fields in correct order
+    ///     result.truncate(result.len() - 2); // Remove trailing \r\n
+    ///     result
+    /// }
+    /// ```
+    fn to_mt_string(&self) -> String;
 }

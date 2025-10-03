@@ -33,13 +33,13 @@ fn json_to_mt(
     json_value: &Value,
 ) -> std::result::Result<String, DataflowError> {
     // Debug logging for MT104
-    if message_type == "104" || message_type == "MT104" {
-        if let Some(fields_obj) = json_value.get("fields") {
-            eprintln!(
-                "DEBUG MT104 - fields keys: {:?}",
-                fields_obj.as_object().map(|o| o.keys().collect::<Vec<_>>())
-            );
-        }
+    if (message_type == "104" || message_type == "MT104")
+        && let Some(fields_obj) = json_value.get("fields")
+    {
+        eprintln!(
+            "DEBUG MT104 - fields keys: {:?}",
+            fields_obj.as_object().map(|o| o.keys().collect::<Vec<_>>())
+        );
     }
 
     macro_rules! convert_json {

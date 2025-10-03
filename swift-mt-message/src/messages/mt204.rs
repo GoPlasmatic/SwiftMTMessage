@@ -1,9 +1,7 @@
-use crate::errors::{ParseError, ParseResult, ParserConfig};
+use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
-use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 /// MT204 - Financial Markets Direct Debit Message
 ///
@@ -103,104 +101,71 @@ impl crate::traits::SwiftMessageBody for MT204 {
         "204"
     }
 
-    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
-        // Reconstruct block4 from fields
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
+    }
+
+    fn to_mt_string(&self) -> String {
+        use crate::traits::SwiftField;
+        let mut result = String::new();
+
+        result.push_str(&self.sum_of_amounts.to_swift_string());
+        result.push_str("\r\n");
+
+        result.push_str(&self.transaction_reference.to_swift_string());
+        result.push_str("\r\n");
+
+        result.push_str(&self.execution_date.to_swift_string());
+        result.push_str("\r\n");
+
+        if let Some(ref field) = self.account_with_institution {
+            match field {
+                Field57::A(f) => result.push_str(&f.to_swift_string()),
+                Field57::B(f) => result.push_str(&f.to_swift_string()),
+                Field57::C(f) => result.push_str(&f.to_swift_string()),
+                Field57::D(f) => result.push_str(&f.to_swift_string()),
+            }
+            result.push_str("\r\n");
+        }
+
+        if let Some(ref field) = self.sender_to_receiver {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
+        }
+
+        // Transactions (currently not parsed, but structure is in place)
+        for txn in &self.transactions {
+            result.push_str(&txn.transaction_reference.to_swift_string());
+            result.push_str("\r\n");
+
+            if let Some(ref field) = txn.related_reference {
+                result.push_str(&field.to_swift_string());
+                result.push_str("\r\n");
+            }
+
+            result.push_str(&txn.currency_amount.to_swift_string());
+            result.push_str("\r\n");
+
+            if let Some(ref field) = txn.senders_correspondent {
+                match field {
+                    Field53::A(f) => result.push_str(&f.to_swift_string()),
+                    Field53::B(f) => result.push_str(&f.to_swift_string()),
+                    Field53::D(f) => result.push_str(&f.to_swift_string()),
+                }
+                result.push_str("\r\n");
+            }
+
+            if let Some(ref field) = txn.sender_to_receiver {
+                result.push_str(&field.to_swift_string());
+                result.push_str("\r\n");
             }
         }
 
-        // Sort by position
-        all_fields.sort_by_key(|f| f.2);
-
-        // Build block4
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
         }
 
-        Self::parse_from_block4(&block4)
-    }
-
-    fn from_fields_with_config(
-        fields: HashMap<String, Vec<(String, usize)>>,
-        _config: &ParserConfig,
-    ) -> Result<ParseResult<Self>, ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn to_fields(&self) -> HashMap<String, Vec<String>> {
-        let mut fields = HashMap::new();
-
-        fields.insert(
-            "20".to_string(),
-            vec![self.transaction_reference.to_swift_string()],
-        );
-        fields.insert(
-            "19".to_string(),
-            vec![self.sum_of_amounts.to_swift_string()],
-        );
-        fields.insert(
-            "30".to_string(),
-            vec![self.execution_date.to_swift_string()],
-        );
-
-        if let Some(ref acc_with) = self.account_with_institution {
-            match acc_with {
-                Field57::A(f) => {
-                    fields.insert("57A".to_string(), vec![f.to_swift_string()]);
-                }
-                Field57::B(f) => {
-                    fields.insert("57B".to_string(), vec![f.to_swift_string()]);
-                }
-                Field57::C(f) => {
-                    fields.insert("57C".to_string(), vec![f.to_swift_string()]);
-                }
-                Field57::D(f) => {
-                    fields.insert("57D".to_string(), vec![f.to_swift_string()]);
-                }
-            }
-        }
-
-        if let Some(ref sender_info) = self.sender_to_receiver {
-            fields.insert("72".to_string(), vec![sender_info.to_swift_string()]);
-        }
-
-        // Add transaction fields
-        for transaction in &self.transactions {
-            // Note: This is simplified - actual implementation would need to handle
-            // transaction sequence numbers and proper field ordering
-            fields
-                .entry("20".to_string())
-                .or_insert_with(Vec::new)
-                .push(transaction.transaction_reference.to_swift_string());
-
-            if let Some(ref related) = transaction.related_reference {
-                fields
-                    .entry("21".to_string())
-                    .or_insert_with(Vec::new)
-                    .push(related.to_swift_string());
-            }
-
-            fields
-                .entry("32B".to_string())
-                .or_insert_with(Vec::new)
-                .push(transaction.currency_amount.to_swift_string());
-        }
-
-        fields
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "19", "30"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["57", "72", "21", "32B", "53"]
+        result
     }
 }

@@ -210,195 +210,11 @@ impl crate::traits::SwiftMessageBody for MT110 {
         "110"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all fields with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position to preserve field order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Reconstruct block4 in the correct order
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
-        }
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
-        use crate::traits::SwiftField;
-        let mut fields = std::collections::HashMap::new();
-
-        // Add header fields
-        fields.insert("20".to_string(), vec![self.field_20.to_swift_value()]);
-
-        if let Some(ref field_53) = self.field_53a {
-            match field_53 {
-                Field53SenderCorrespondent::A(f) => {
-                    fields.insert("53A".to_string(), vec![f.to_swift_value()]);
-                }
-                Field53SenderCorrespondent::B(f) => {
-                    fields.insert("53B".to_string(), vec![f.to_swift_value()]);
-                }
-                Field53SenderCorrespondent::D(f) => {
-                    fields.insert("53D".to_string(), vec![f.to_swift_value()]);
-                }
-            }
-        }
-
-        if let Some(ref field_54) = self.field_54a {
-            match field_54 {
-                Field54ReceiverCorrespondent::A(f) => {
-                    fields.insert("54A".to_string(), vec![f.to_swift_value()]);
-                }
-                Field54ReceiverCorrespondent::B(f) => {
-                    fields.insert("54B".to_string(), vec![f.to_swift_value()]);
-                }
-                Field54ReceiverCorrespondent::D(f) => {
-                    fields.insert("54D".to_string(), vec![f.to_swift_value()]);
-                }
-            }
-        }
-
-        if let Some(ref field_72) = self.field_72 {
-            fields.insert("72".to_string(), vec![field_72.information.join("\n")]);
-        }
-
-        // Add cheque details
-        for cheque in &self.cheques {
-            // Field 21 (can repeat)
-            fields
-                .entry("21".to_string())
-                .or_insert_with(Vec::new)
-                .push(cheque.field_21.to_swift_value());
-
-            // Field 30 (can repeat)
-            fields
-                .entry("30".to_string())
-                .or_insert_with(Vec::new)
-                .push(format!(
-                    "{:02}{:02}{:02}",
-                    cheque.field_30.execution_date.year() % 100,
-                    cheque.field_30.execution_date.month(),
-                    cheque.field_30.execution_date.day()
-                ));
-
-            // Amount field (32A, 32B, 32C, or 32D)
-            match &cheque.field_32 {
-                Field32AB::A(f) => {
-                    fields
-                        .entry("32A".to_string())
-                        .or_insert_with(Vec::new)
-                        .push(f.to_swift_value());
-                }
-                Field32AB::B(f) => {
-                    fields
-                        .entry("32B".to_string())
-                        .or_insert_with(Vec::new)
-                        .push(f.to_swift_value());
-                }
-            }
-
-            // Optional payer field
-            if let Some(ref field_50) = cheque.field_50 {
-                match field_50 {
-                    Field50OrderingCustomerAFK::A(f) => {
-                        fields
-                            .entry("50A".to_string())
-                            .or_insert_with(Vec::new)
-                            .push(f.to_swift_value());
-                    }
-                    Field50OrderingCustomerAFK::F(f) => {
-                        fields
-                            .entry("50F".to_string())
-                            .or_insert_with(Vec::new)
-                            .push(f.to_swift_value());
-                    }
-                    Field50OrderingCustomerAFK::K(f) => {
-                        fields
-                            .entry("50K".to_string())
-                            .or_insert_with(Vec::new)
-                            .push(f.to_swift_value());
-                    }
-                }
-            }
-
-            // Optional drawer bank (supports A, B, D variants)
-            if let Some(ref field_52) = cheque.field_52 {
-                match field_52 {
-                    Field52DrawerBank::A(f) => {
-                        fields
-                            .entry("52A".to_string())
-                            .or_insert_with(Vec::new)
-                            .push(f.to_swift_value());
-                    }
-                    Field52DrawerBank::B(f) => {
-                        fields
-                            .entry("52B".to_string())
-                            .or_insert_with(Vec::new)
-                            .push(f.to_swift_value());
-                    }
-                    Field52DrawerBank::D(f) => {
-                        fields
-                            .entry("52D".to_string())
-                            .or_insert_with(Vec::new)
-                            .push(f.to_swift_value());
-                    }
-                }
-            }
-
-            // Payee (mandatory, can be various variants)
-            match &cheque.field_59 {
-                Field59::NoOption(f) => {
-                    fields
-                        .entry("59".to_string())
-                        .or_insert_with(Vec::new)
-                        .push(f.to_swift_value());
-                }
-                Field59::A(f) => {
-                    fields
-                        .entry("59A".to_string())
-                        .or_insert_with(Vec::new)
-                        .push(f.to_swift_value());
-                }
-                Field59::F(f) => {
-                    fields
-                        .entry("59F".to_string())
-                        .or_insert_with(Vec::new)
-                        .push(f.to_swift_value());
-                }
-            }
-        }
-
-        fields
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "21", "30", "32", "59F"] // Note: 32 can be 32A or 32B
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["53", "54", "72", "50", "52"]
-    }
-
-    fn to_ordered_fields(&self) -> Vec<(String, String)> {
+    fn to_mt_string(&self) -> String {
         use crate::traits::SwiftField;
         let mut ordered_fields = Vec::new();
 
@@ -502,6 +318,17 @@ impl crate::traits::SwiftMessageBody for MT110 {
             }
         }
 
-        ordered_fields
+        // Convert ordered_fields to MT string format
+        let mut result = String::new();
+        for (tag, value) in ordered_fields {
+            result.push_str(&format!(":{tag}:{value}\r\n"));
+        }
+
+        // Remove trailing \r\n if present
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
+        }
+
+        result
     }
 }

@@ -121,106 +121,50 @@ impl crate::traits::SwiftMessageBody for MT190 {
         "190"
     }
 
-    fn from_fields(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-    ) -> crate::SwiftResult<Self> {
-        // Collect all fields with their positions
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position to preserve field order
-        all_fields.sort_by_key(|(_, _, pos)| *pos);
-
-        // Reconstruct block4 in the correct order
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(":{}:{}\n", tag, value));
-        }
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: std::collections::HashMap<String, Vec<(String, usize)>>,
-        _config: &crate::errors::ParserConfig,
-    ) -> std::result::Result<crate::errors::ParseResult<Self>, crate::errors::ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(crate::errors::ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
-
-    fn to_fields(&self) -> std::collections::HashMap<String, Vec<String>> {
+    fn to_mt_string(&self) -> String {
         use crate::traits::SwiftField;
-        use chrono::Datelike;
-        let mut fields = std::collections::HashMap::new();
+        let mut result = String::new();
 
-        // Add mandatory fields
-        fields.insert("20".to_string(), vec![self.field_20.reference.clone()]);
-        fields.insert("21".to_string(), vec![self.field_21.reference.clone()]);
-        fields.insert("25".to_string(), vec![self.field_25.authorisation.clone()]);
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
 
-        // Add amount field (32C or 32D)
+        result.push_str(&self.field_21.to_swift_string());
+        result.push_str("\r\n");
+
+        result.push_str(&self.field_25.to_swift_string());
+        result.push_str("\r\n");
+
         match &self.field_32 {
-            Field32AmountCD::C(field_32c) => {
-                fields.insert(
-                    "32C".to_string(),
-                    vec![format!(
-                        "{:02}{:02}{:02}{}{}",
-                        field_32c.value_date.year() % 100,
-                        field_32c.value_date.month(),
-                        field_32c.value_date.day(),
-                        field_32c.currency,
-                        field_32c.amount.to_string().replace('.', ",")
-                    )],
-                );
+            Field32AmountCD::C(f) => result.push_str(&f.to_swift_string()),
+            Field32AmountCD::D(f) => result.push_str(&f.to_swift_string()),
+        }
+        result.push_str("\r\n");
+
+        if let Some(ref field) = self.field_52 {
+            match field {
+                Field52OrderingInstitution::A(f) => result.push_str(&f.to_swift_string()),
+                Field52OrderingInstitution::D(f) => result.push_str(&f.to_swift_string()),
             }
-            Field32AmountCD::D(field_32d) => {
-                fields.insert(
-                    "32D".to_string(),
-                    vec![format!(
-                        "{:02}{:02}{:02}{}{}",
-                        field_32d.value_date.year() % 100,
-                        field_32d.value_date.month(),
-                        field_32d.value_date.day(),
-                        field_32d.currency,
-                        field_32d.amount.to_string().replace('.', ",")
-                    )],
-                );
-            }
+            result.push_str("\r\n");
         }
 
-        // Add optional fields
-        if let Some(ref field_52) = self.field_52 {
-            match field_52 {
-                Field52OrderingInstitution::A(f) => {
-                    fields.insert("52A".to_string(), vec![f.to_swift_value()]);
-                }
-                Field52OrderingInstitution::D(f) => {
-                    fields.insert("52D".to_string(), vec![f.to_swift_value()]);
-                }
-            }
+        result.push_str(&self.field_71b.to_swift_string());
+        result.push_str("\r\n");
+
+        if let Some(ref field) = self.field_72 {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        // Add mandatory field 71B
-        fields.insert("71B".to_string(), vec![self.field_71b.details.join("\n")]);
-
-        // Add optional field 72
-        if let Some(ref field_72) = self.field_72 {
-            fields.insert("72".to_string(), vec![field_72.information.join("\n")]);
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
         }
 
-        fields
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "21", "25", "32", "71B"] // Note: 32 can be 32C or 32D
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["52", "72"]
+        result
     }
 }

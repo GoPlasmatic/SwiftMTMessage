@@ -44,7 +44,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::errors::{ParseError, ParserConfig, Result, SwiftValidationError};
+use crate::errors::{ParseError, Result, SwiftValidationError};
 use crate::headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 use crate::messages::{
     MT101, MT103, MT104, MT107, MT110, MT111, MT112, MT190, MT191, MT192, MT196, MT199, MT200,
@@ -53,12 +53,6 @@ use crate::messages::{
 };
 use crate::swift_error_codes::t_series;
 use crate::{ParsedSwiftMessage, SwiftMessage, SwiftMessageBody};
-
-/// Type alias for the field parsing result with position tracking
-///
-/// Maps field tags to vectors of (field_value, position_in_message) tuples.
-/// This enables sequential consumption of duplicate fields while maintaining message order.
-type FieldParseResult = Result<HashMap<String, Vec<(String, usize)>>>;
 
 /// Parsing context that flows through the parsing pipeline
 #[derive(Debug, Clone)]
@@ -483,9 +477,7 @@ pub fn find_field_with_variant_sequential_constrained(
 /// ## Thread Safety
 /// SwiftParser is stateless and thread-safe. All methods are static and can be called
 /// concurrently from multiple threads.
-pub struct SwiftParser {
-    config: ParserConfig,
-}
+pub struct SwiftParser {}
 
 impl Default for SwiftParser {
     fn default() -> Self {
@@ -496,14 +488,7 @@ impl Default for SwiftParser {
 impl SwiftParser {
     /// Create a new parser with default configuration
     pub fn new() -> Self {
-        Self {
-            config: ParserConfig::default(),
-        }
-    }
-
-    /// Create a new parser with custom configuration
-    pub fn with_config(config: ParserConfig) -> Self {
-        Self { config }
+        Self {}
     }
 
     /// Parse a message and return ParseResult with all errors collected
@@ -543,40 +528,17 @@ impl SwiftParser {
             )));
         }
 
-        // Parse block 4 fields with position tracking
-        let field_map_with_positions = Self::parse_block4_fields(&block4.unwrap_or_default())?;
+        // Parse block 4 using MessageParser-based approach
+        let fields = T::parse_from_block4(&block4.unwrap_or_default())?;
 
-        // Use configuration-aware parsing
-        let parse_result = T::from_fields_with_config(field_map_with_positions, &self.config)?;
-
-        match parse_result {
-            crate::errors::ParseResult::Success(fields) => {
-                Ok(crate::errors::ParseResult::Success(SwiftMessage {
-                    basic_header,
-                    application_header,
-                    user_header,
-                    trailer,
-                    message_type,
-                    fields,
-                }))
-            }
-            crate::errors::ParseResult::PartialSuccess(fields, errors) => {
-                Ok(crate::errors::ParseResult::PartialSuccess(
-                    SwiftMessage {
-                        basic_header,
-                        application_header,
-                        user_header,
-                        trailer,
-                        message_type,
-                        fields,
-                    },
-                    errors,
-                ))
-            }
-            crate::errors::ParseResult::Failure(errors) => {
-                Ok(crate::errors::ParseResult::Failure(errors))
-            }
-        }
+        Ok(crate::errors::ParseResult::Success(SwiftMessage {
+            basic_header,
+            application_header,
+            user_header,
+            trailer,
+            message_type,
+            fields,
+        }))
     }
     /// Parse a raw SWIFT message string into a typed message (static method for backward compatibility)
     pub fn parse<T: SwiftMessageBody>(raw_message: &str) -> Result<SwiftMessage<T>> {
@@ -617,42 +579,17 @@ impl SwiftParser {
             )));
         }
 
-        // Parse block 4 fields with position tracking
-        let field_map_with_positions = Self::parse_block4_fields(&block4.unwrap_or_default())?;
+        // Parse block 4 using MessageParser-based approach
+        let fields = T::parse_from_block4(&block4.unwrap_or_default())?;
 
-        // Use configuration-aware parsing
-        let parse_result = T::from_fields_with_config(field_map_with_positions, &self.config)?;
-
-        match parse_result {
-            crate::errors::ParseResult::Success(fields) => Ok(SwiftMessage {
-                basic_header,
-                application_header,
-                user_header,
-                trailer,
-                message_type,
-                fields,
-            }),
-            crate::errors::ParseResult::PartialSuccess(fields, errors) => {
-                // For partial success, we could log the errors but still return the message
-                // For now, we'll return the message but the errors are available in the ParseResult
-                eprintln!("Warning: Parsed with {} non-critical errors", errors.len());
-                for error in &errors {
-                    eprintln!("  - {error}");
-                }
-                Ok(SwiftMessage {
-                    basic_header,
-                    application_header,
-                    user_header,
-                    trailer,
-                    message_type,
-                    fields,
-                })
-            }
-            crate::errors::ParseResult::Failure(errors) => {
-                // Convert to MultipleErrors
-                Err(ParseError::MultipleErrors(errors))
-            }
-        }
+        Ok(SwiftMessage {
+            basic_header,
+            application_header,
+            user_header,
+            trailer,
+            message_type,
+            fields,
+        })
     }
 
     /// Parse a raw SWIFT message string with automatic message type detection (static method for backward compatibility)
@@ -860,12 +797,6 @@ impl SwiftParser {
         }
     }
 
-    /// Parse block 4 fields into a field map with enhanced position tracking
-    fn parse_block4_fields(block4: &str) -> FieldParseResult {
-        // Use the generated parser function from the generated module
-        crate::parser::parse_block4_fields(block4)
-    }
-
     /// Find the matching closing brace for a block that starts with an opening brace
     /// Handles nested braces correctly
     fn find_matching_brace(text: &str) -> Option<usize> {
@@ -895,39 +826,41 @@ impl SwiftParser {
     }
 }
 
-/// Parse a SwiftMessage from a string representation
-/// This is a placeholder implementation for the macro system
-pub fn parse_swift_message_from_string(value: &str) -> Result<HashMap<String, Vec<String>>> {
-    // For now, this is a stub implementation
-    // In a real implementation, this would parse the string representation
-    // of a SwiftMessage back into a field map
-
-    // As a temporary solution, we'll assume the value is a simple field representation
-    // and try to parse it as a mini SWIFT block
-    let mut field_map = HashMap::new();
-
-    // Split by lines and parse each field
-    for line in value.lines() {
-        if line.trim().is_empty() {
-            continue;
-        }
-
-        // Look for field pattern :XX:value
-        if let Some(colon_pos) = line.find(':')
-            && let Some(second_colon) = line[colon_pos + 1..].find(':')
-        {
-            let second_colon_pos = colon_pos + 1 + second_colon;
-            let field_tag = line[colon_pos + 1..second_colon_pos].to_string();
-            let _field_value = line[second_colon_pos + 1..].to_string();
-
-            field_map
-                .entry(field_tag)
-                .or_insert_with(Vec::new)
-                .push(format!(":{}", &line[colon_pos + 1..]));
+/// Reconstruct a Block 4 string from a field map
+///
+/// Converts a HashMap of fields (with position tracking) into a Block 4 string
+/// that can be parsed using parse_from_block4()
+fn reconstruct_block4_from_fields(fields: &HashMap<String, Vec<(String, usize)>>) -> String {
+    // Flatten and sort all fields by position
+    let mut all_fields: Vec<(&str, &str, usize)> = Vec::new();
+    for (tag, values) in fields {
+        for (value, pos) in values {
+            all_fields.push((tag, value, *pos));
         }
     }
+    all_fields.sort_by_key(|(_, _, pos)| *pos);
 
-    Ok(field_map)
+    // Build the Block 4 string
+    let mut result = String::new();
+    for (tag, value, _) in all_fields {
+        // Remove the tag prefix if it exists in the value
+        let clean_value = if value.starts_with(&format!(":{tag}:")) {
+            &value[tag.len() + 2..]
+        } else if let Some(stripped) = value.strip_prefix(':') {
+            // Handle variant fields like :50K:, :53A:, etc.
+            if let Some(second_colon) = stripped.find(':') {
+                &value[second_colon + 2..]
+            } else {
+                value
+            }
+        } else {
+            value
+        };
+
+        result.push_str(&format!(":{tag}:{clean_value}\n"));
+    }
+
+    result
 }
 
 /// Parse sequence fields (e.g., transactions in MT101, MT104)
@@ -1025,8 +958,9 @@ where
                 }
             }
 
-            // Parse the transaction
-            if let Ok(transaction) = T::from_fields(tx_fields) {
+            // Reconstruct block4 string from fields and parse using parse_from_block4
+            let block4_str = reconstruct_block4_from_fields(&tx_fields);
+            if let Ok(transaction) = T::parse_from_block4(&block4_str) {
                 transactions.push(transaction);
             }
         }
@@ -1094,7 +1028,8 @@ where
         if is_sequence_start {
             // If we were already in a sequence, parse the previous one
             if in_sequence && !current_sequence_fields.is_empty() {
-                if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
+                let block4_str = reconstruct_block4_from_fields(&current_sequence_fields);
+                if let Ok(sequence_item) = T::parse_from_block4(&block4_str) {
                     sequences.push(sequence_item);
                 }
                 current_sequence_fields.clear();
@@ -1110,7 +1045,8 @@ where
                 // New Field 61 - if we already have one in the sequence, start a new sequence
                 if has_field_61_in_sequence && !current_sequence_fields.is_empty() {
                     // Complete the previous sequence
-                    if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
+                    let block4_str = reconstruct_block4_from_fields(&current_sequence_fields);
+                    if let Ok(sequence_item) = T::parse_from_block4(&block4_str) {
                         sequences.push(sequence_item);
                     }
                     current_sequence_fields.clear();
@@ -1154,7 +1090,8 @@ where
             // For MT942, if we encounter a field that shouldn't be in the sequence,
             // we should end the current sequence and not consume this field
             if !current_sequence_fields.is_empty() {
-                if let Ok(sequence_item) = T::from_fields(current_sequence_fields.clone()) {
+                let block4_str = reconstruct_block4_from_fields(&current_sequence_fields);
+                if let Ok(sequence_item) = T::parse_from_block4(&block4_str) {
                     sequences.push(sequence_item);
                 }
                 current_sequence_fields.clear();
@@ -1170,7 +1107,8 @@ where
 
     // Parse the last sequence if there is one
     if in_sequence && !current_sequence_fields.is_empty() {
-        match T::from_fields(current_sequence_fields) {
+        let block4_str = reconstruct_block4_from_fields(&current_sequence_fields);
+        match T::parse_from_block4(&block4_str) {
             Ok(sequence_item) => {
                 sequences.push(sequence_item);
             }
@@ -1244,7 +1182,8 @@ where
                     current_sequence_fields.len()
                 );
 
-                match T::from_fields(current_sequence_fields.clone()) {
+                let block4_str = reconstruct_block4_from_fields(&current_sequence_fields);
+                match T::parse_from_block4(&block4_str) {
                     Ok(sequence_item) => {
                         sequences.push(sequence_item);
                         #[cfg(debug_assertions)]
@@ -1288,7 +1227,8 @@ where
             current_sequence_fields.len()
         );
 
-        match T::from_fields(current_sequence_fields) {
+        let block4_str = reconstruct_block4_from_fields(&current_sequence_fields);
+        match T::parse_from_block4(&block4_str) {
             Ok(sequence_item) => {
                 sequences.push(sequence_item);
                 #[cfg(debug_assertions)]
@@ -1311,30 +1251,4 @@ where
     );
 
     Ok(sequences)
-}
-
-/// Serialize a SwiftMessage field map to a string representation
-/// This is a placeholder implementation for the macro system
-pub fn serialize_swift_message_to_string(fields: &HashMap<String, Vec<String>>) -> String {
-    // For now, this is a stub implementation
-    // In a real implementation, this would serialize the field map
-    // into a string representation of a SwiftMessage
-
-    let mut result = String::new();
-
-    // Simple serialization: just join all field values with newlines
-    for field_values in fields.values() {
-        for field_value in field_values {
-            // field_value should already be in the format ":XX:value"
-            result.push_str(field_value);
-            result.push('\n');
-        }
-    }
-
-    // Remove trailing newline
-    if result.ends_with('\n') {
-        result.pop();
-    }
-
-    result
 }

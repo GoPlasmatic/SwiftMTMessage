@@ -112,21 +112,6 @@
           "var": "amount"
         }
       },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "ordering_bic"
-          },
-          "party_identifier": {
-            "cat": [
-              "//CH",
-              {
-                "var": "lei_code"
-              }
-            ]
-          }
-        }
-      },
       "72": {
         "information": [
           "/BNF/REGULATORY RESERVE TRANSFER",
@@ -163,6 +148,19 @@
       "58A": {
         "bic": {
           "var": "receiver_bic"
+        },
+        "party_identifier": {
+          "cat": [
+            "//CH",
+            {
+              "var": "lei_code"
+            }
+          ]
+        }
+      },
+      "52A": {
+        "bic": {
+          "var": "ordering_bic"
         },
         "party_identifier": {
           "cat": [

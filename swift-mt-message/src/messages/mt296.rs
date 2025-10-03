@@ -1,7 +1,6 @@
-use crate::errors::{ParseError, ParseResult, ParserConfig};
+use crate::errors::ParseError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
-use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -100,87 +99,51 @@ impl crate::traits::SwiftMessageBody for MT296 {
         "296"
     }
 
-    fn from_fields(fields: HashMap<String, Vec<(String, usize)>>) -> crate::SwiftResult<Self> {
-        // Reconstruct block4 from fields
-        let mut all_fields: Vec<(String, String, usize)> = Vec::new();
-        for (tag, values) in fields {
-            for (value, position) in values {
-                all_fields.push((tag.clone(), value, position));
-            }
-        }
-
-        // Sort by position
-        all_fields.sort_by_key(|f| f.2);
-
-        // Build block4
-        let mut block4 = String::new();
-        for (tag, value, _) in all_fields {
-            block4.push_str(&format!(
-                ":{}:{}
-",
-                tag, value
-            ));
-        }
-
-        Self::parse_from_block4(&block4)
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        Self::parse_from_block4(block4)
     }
 
-    fn from_fields_with_config(
-        fields: HashMap<String, Vec<(String, usize)>>,
-        _config: &ParserConfig,
-    ) -> Result<ParseResult<Self>, ParseError> {
-        match Self::from_fields(fields) {
-            Ok(msg) => Ok(ParseResult::Success(msg)),
-            Err(e) => Err(e),
-        }
-    }
+    fn to_mt_string(&self) -> String {
+        use crate::traits::SwiftField;
+        let mut result = String::new();
 
-    fn to_fields(&self) -> HashMap<String, Vec<String>> {
-        let mut fields = HashMap::new();
+        result.push_str(&self.field_20.to_swift_string());
+        result.push_str("\r\n");
 
-        fields.insert("20".to_string(), vec![self.field_20.to_swift_string()]);
-        fields.insert("21".to_string(), vec![self.field_21.to_swift_string()]);
-        fields.insert("76".to_string(), vec![self.field_76.to_swift_string()]);
+        result.push_str(&self.field_21.to_swift_string());
+        result.push_str("\r\n");
 
-        if let Some(ref narr) = self.field_77a {
-            fields.insert("77A".to_string(), vec![narr.to_swift_string()]);
+        result.push_str(&self.field_76.to_swift_string());
+        result.push_str("\r\n");
+
+        if let Some(ref field) = self.field_77a {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        if let Some(ref orig_msg_r) = self.field_11r {
-            fields.insert("11R".to_string(), vec![orig_msg_r.to_swift_string()]);
+        if let Some(ref field) = self.field_11r {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        if let Some(ref orig_msg_s) = self.field_11s {
-            fields.insert("11S".to_string(), vec![orig_msg_s.to_swift_string()]);
+        if let Some(ref field) = self.field_11s {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        if let Some(ref narrative) = self.field_79 {
-            fields.insert("79".to_string(), vec![narrative.to_swift_string()]);
+        if let Some(ref field) = self.field_79 {
+            result.push_str(&field.to_swift_string());
+            result.push_str("\r\n");
         }
 
-        // Add original message fields
-        for (key, value) in &self.original_fields {
-            if let Some(str_val) = value.as_str() {
-                fields.insert(key.clone(), vec![str_val.to_string()]);
-            } else if let Some(arr_val) = value.as_array() {
-                let str_vals: Vec<String> = arr_val
-                    .iter()
-                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                    .collect();
-                if !str_vals.is_empty() {
-                    fields.insert(key.clone(), str_vals);
-                }
-            }
+        // Note: original_fields are not serialized as they are dynamic
+        // and would require special handling
+
+        // Remove trailing \r\n
+        if result.ends_with("\r\n") {
+            result.truncate(result.len() - 2);
         }
 
-        fields
-    }
-
-    fn required_fields() -> Vec<&'static str> {
-        vec!["20", "21", "76"]
-    }
-
-    fn optional_fields() -> Vec<&'static str> {
-        vec!["77A", "11", "79"]
+        result
     }
 }

@@ -1,7 +1,7 @@
 use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
-use crate::message_parser::MessageParser;
-use crate::parsing_utils::*;
+use crate::parser::MessageParser;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT210 - Notice to Receive
@@ -78,14 +78,6 @@ impl MT210 {
             value_date,
             transactions,
         })
-    }
-
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT210_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     // ========================================================================

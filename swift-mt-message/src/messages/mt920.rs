@@ -1,6 +1,6 @@
 use crate::errors::SwiftValidationError;
 use crate::fields::{field34::Field34F, *};
-use crate::parsing_utils::*;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT920: Request Message
@@ -33,7 +33,7 @@ pub struct MT920Sequence {
 impl MT920 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "920");
+        let mut parser = crate::parser::MessageParser::new(block4, "920");
 
         // Parse header field
         let field_20 = parser.parse_field::<Field20>("20")?;
@@ -70,14 +70,6 @@ impl MT920 {
         verify_parser_complete(&parser)?;
 
         Ok(Self { field_20, sequence })
-    }
-
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT920_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Parse from SWIFT MT text format
@@ -177,9 +169,10 @@ impl MT920 {
 
             if has_debit && !has_credit {
                 // Only debit field present - D/C Mark must NOT be used
-                if let Some(ref debit_field) = seq.floor_limit_debit {
-                    if debit_field.indicator.is_some() {
-                        errors.push(SwiftValidationError::business_error(
+                if let Some(ref debit_field) = seq.floor_limit_debit
+                    && debit_field.indicator.is_some()
+                {
+                    errors.push(SwiftValidationError::business_error(
                             "C23",
                             "34F",
                             vec![],
@@ -189,7 +182,6 @@ impl MT920 {
                             ),
                             "When only one field 34F is present, the floor limit applies to both debit and credit amounts, and the D/C Mark subfield must not be used",
                         ));
-                    }
                 }
             } else if has_debit && has_credit {
                 // Both fields present - First must have 'D', second must have 'C'
@@ -235,9 +227,9 @@ impl MT920 {
         for (idx, seq) in self.sequence.iter().enumerate() {
             if let (Some(debit_field), Some(credit_field)) =
                 (&seq.floor_limit_debit, &seq.floor_limit_credit)
+                && debit_field.currency != credit_field.currency
             {
-                if debit_field.currency != credit_field.currency {
-                    errors.push(SwiftValidationError::business_error(
+                errors.push(SwiftValidationError::business_error(
                         "C40",
                         "34F",
                         vec![],
@@ -249,7 +241,6 @@ impl MT920 {
                         ),
                         "Within each repetitive sequence, the currency code must be the same for each occurrence of field 34F",
                     ));
-                }
             }
         }
 

@@ -693,6 +693,17 @@ pub mod error_codes {
 
 /// Helper functions for creating SWIFT validation errors
 impl SwiftValidationError {
+    /// Get the SWIFT error code for this validation error
+    pub fn error_code(&self) -> &str {
+        match self {
+            SwiftValidationError::Format(err) => &err.code,
+            SwiftValidationError::Business(err) => &err.code,
+            SwiftValidationError::Content(err) => &err.code,
+            SwiftValidationError::Relation(err) => &err.code,
+            SwiftValidationError::General(err) => &err.code,
+        }
+    }
+
     /// Create a T-series format validation error
     pub fn format_error(
         code: &str,

@@ -1,6 +1,6 @@
 use crate::errors::SwiftValidationError;
 use crate::fields::*;
-use crate::parsing_utils::*;
+use crate::parser::utils::*;
 use std::collections::HashSet;
 
 // MT103: Single Customer Credit Transfer
@@ -92,14 +92,6 @@ pub struct MT103 {
 
 // Additional methods for MT103
 impl MT103 {
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT103_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
-    }
-
     /// Parse from SWIFT MT text format
     pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
         let block4 = extract_block4(input)?;
@@ -379,16 +371,14 @@ impl MT103 {
     /// C4: Third Reimbursement Institution Dependencies (Error code: E06)
     /// If field 55a is present, both fields 53a and 54a must also be present
     fn validate_c4_third_reimbursement(&self) -> Option<SwiftValidationError> {
-        if self.has_field_55() {
-            if !self.has_field_53() || !self.has_field_54() {
-                return Some(SwiftValidationError::content_error(
-                    "E06",
-                    "55a",
-                    "",
-                    "Fields 53a (Sender's Correspondent) and 54a (Receiver's Correspondent) are mandatory when field 55a (Third Reimbursement Institution) is present",
-                    "If field 55a is present, both fields 53a and 54a must also be present",
-                ));
-            }
+        if self.has_field_55() && (!self.has_field_53() || !self.has_field_54()) {
+            return Some(SwiftValidationError::content_error(
+                "E06",
+                "55a",
+                "",
+                "Fields 53a (Sender's Correspondent) and 54a (Receiver's Correspondent) are mandatory when field 55a (Third Reimbursement Institution) is present",
+                "If field 55a is present, both fields 53a and 54a must also be present",
+            ));
         }
 
         None
@@ -562,22 +552,22 @@ impl MT103 {
     fn validate_c16_teli_phoi_restriction(&self) -> Vec<SwiftValidationError> {
         let mut errors = Vec::new();
 
-        if !self.has_field_56() {
-            if let Some(ref field_23e_vec) = self.field_23e {
-                for field_23e in field_23e_vec {
-                    let code = &field_23e.instruction_code;
-                    if code == "TELI" || code == "PHOI" {
-                        errors.push(SwiftValidationError::content_error(
-                            "E44",
-                            "23E",
-                            code,
-                            &format!(
-                                "Field 23E code '{}' is not allowed when field 56a is not present",
-                                code
-                            ),
-                            "If field 56a is not present, no field 23E may contain TELI or PHOI",
-                        ));
-                    }
+        if !self.has_field_56()
+            && let Some(ref field_23e_vec) = self.field_23e
+        {
+            for field_23e in field_23e_vec {
+                let code = &field_23e.instruction_code;
+                if code == "TELI" || code == "PHOI" {
+                    errors.push(SwiftValidationError::content_error(
+                        "E44",
+                        "23E",
+                        code,
+                        &format!(
+                            "Field 23E code '{}' is not allowed when field 56a is not present",
+                            code
+                        ),
+                        "If field 56a is not present, no field 23E may contain TELI or PHOI",
+                    ));
                 }
             }
         }
@@ -590,22 +580,22 @@ impl MT103 {
     fn validate_c17_tele_phon_restriction(&self) -> Vec<SwiftValidationError> {
         let mut errors = Vec::new();
 
-        if !self.has_field_57() {
-            if let Some(ref field_23e_vec) = self.field_23e {
-                for field_23e in field_23e_vec {
-                    let code = &field_23e.instruction_code;
-                    if code == "TELE" || code == "PHON" {
-                        errors.push(SwiftValidationError::content_error(
-                            "E45",
-                            "23E",
-                            code,
-                            &format!(
-                                "Field 23E code '{}' is not allowed when field 57a is not present",
-                                code
-                            ),
-                            "If field 57a is not present, no field 23E may contain TELE or PHON",
-                        ));
-                    }
+        if !self.has_field_57()
+            && let Some(ref field_23e_vec) = self.field_23e
+        {
+            for field_23e in field_23e_vec {
+                let code = &field_23e.instruction_code;
+                if code == "TELE" || code == "PHON" {
+                    errors.push(SwiftValidationError::content_error(
+                        "E45",
+                        "23E",
+                        code,
+                        &format!(
+                            "Field 23E code '{}' is not allowed when field 57a is not present",
+                            code
+                        ),
+                        "If field 57a is not present, no field 23E may contain TELE or PHON",
+                    ));
                 }
             }
         }
@@ -861,7 +851,7 @@ impl crate::traits::SwiftMessageBody for MT103 {
     }
 
     fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "103");
+        let mut parser = crate::parser::MessageParser::new(block4, "103");
 
         // Parse mandatory fields in proper order
         let field_20 = parser.parse_field::<Field20>("20")?;

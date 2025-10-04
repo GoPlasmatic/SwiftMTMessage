@@ -1,4 +1,4 @@
-use crate::{ParseError, SwiftParser, ValidationError, ValidationResult};
+use crate::{ParseError, SwiftParser, SwiftValidationError};
 use async_trait::async_trait;
 use dataflow_rs::engine::error::DataflowError;
 use dataflow_rs::engine::{
@@ -125,12 +125,12 @@ impl Validate {
         // Try to parse the message
         match SwiftParser::parse_auto(mt_content) {
             Ok(parsed_message) => {
-                // Use the built-in validation from ParsedSwiftMessage
-                let validation_result: ValidationResult = parsed_message.validate();
+                // Use the new network validation rules from SwiftMessageBody trait
+                let validation_errors = self.validate_network_rules(&parsed_message);
 
-                if !validation_result.is_valid {
-                    // Convert ValidationError enum variants to error strings
-                    for validation_error in validation_result.errors {
+                if !validation_errors.is_empty() {
+                    // Convert SwiftValidationError instances to formatted error strings
+                    for validation_error in validation_errors {
                         errors.push(self.format_validation_error(&validation_error));
                     }
                 }
@@ -164,7 +164,7 @@ impl Validate {
                         errors: validation_errors,
                     } => {
                         for validation_error in validation_errors {
-                            errors.push(self.format_validation_error(validation_error));
+                            errors.push(validation_error.to_string());
                         }
                     }
                     _ => {
@@ -183,36 +183,102 @@ impl Validate {
         }))
     }
 
-    /// Format a ValidationError into a human-readable string
-    fn format_validation_error(&self, error: &ValidationError) -> String {
+    /// Validate network rules on parsed message using the SwiftMessageBody trait
+    fn validate_network_rules(
+        &self,
+        parsed_message: &crate::parsed_message::ParsedSwiftMessage,
+    ) -> Vec<SwiftValidationError> {
+        use crate::parsed_message::ParsedSwiftMessage;
+
+        // Call validate_network_rules on the message body (stop_on_first_error = false to get all errors)
+        match parsed_message {
+            ParsedSwiftMessage::MT101(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT103(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT104(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT107(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT110(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT111(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT112(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT190(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT191(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT192(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT196(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT199(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT200(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT202(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT204(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT205(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT210(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT290(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT291(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT292(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT296(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT299(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT900(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT910(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT920(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT935(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT940(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT941(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT942(msg) => msg.fields.validate_network_rules(false),
+            ParsedSwiftMessage::MT950(msg) => msg.fields.validate_network_rules(false),
+        }
+    }
+
+    /// Format a SwiftValidationError into a human-readable string
+    fn format_validation_error(&self, error: &SwiftValidationError) -> String {
+        use crate::errors::SwiftValidationError;
+
         match error {
-            ValidationError::FormatValidation { field_tag, message } => {
+            SwiftValidationError::Format(err) => {
                 format!(
-                    "Field {}: Format validation failed - {}",
-                    field_tag, message
+                    "[{}] Field {}: {} - Invalid value '{}' (expected: {})",
+                    err.code, err.field, err.message, err.value, err.expected
                 )
             }
-            ValidationError::LengthValidation {
-                field_tag,
-                expected,
-                actual,
-            } => {
+            SwiftValidationError::Content(err) => {
                 format!(
-                    "Field {}: Length validation failed - expected {}, got {}",
-                    field_tag, expected, actual
+                    "[{}] Field {}: {} - Content '{}' violates requirement: {}",
+                    err.code, err.field, err.message, err.content, err.requirements
                 )
             }
-            ValidationError::PatternValidation { field_tag, message } => {
+            SwiftValidationError::Relation(err) => {
+                let related = if !err.related_fields.is_empty() {
+                    format!(" (related: {})", err.related_fields.join(", "))
+                } else {
+                    String::new()
+                };
+                let instruction = err
+                    .instruction_context
+                    .as_ref()
+                    .map(|ctx| format!(" [{}]", ctx))
+                    .unwrap_or_default();
                 format!(
-                    "Field {}: Pattern validation failed - {}",
-                    field_tag, message
+                    "[{}] Field {}: {}{}{}",
+                    err.code, err.field, err.message, related, instruction
                 )
             }
-            ValidationError::ValueValidation { field_tag, message } => {
-                format!("Field {}: Value validation failed - {}", field_tag, message)
+            SwiftValidationError::Business(err) => {
+                let related = if !err.related_fields.is_empty() {
+                    format!(" (related: {})", err.related_fields.join(", "))
+                } else {
+                    String::new()
+                };
+                format!(
+                    "[{}] Field {}: {} - Rule: {}{}",
+                    err.code, err.field, err.message, err.rule_description, related
+                )
             }
-            ValidationError::BusinessRuleValidation { rule_name, message } => {
-                format!("Business Rule '{}': {}", rule_name, message)
+            SwiftValidationError::General(err) => {
+                let category = err
+                    .category
+                    .as_ref()
+                    .map(|c| format!(" [{}]", c))
+                    .unwrap_or_default();
+                format!(
+                    "[{}] Field {}: {} - Value '{}'{}",
+                    err.code, err.field, err.message, err.value, category
+                )
             }
         }
     }

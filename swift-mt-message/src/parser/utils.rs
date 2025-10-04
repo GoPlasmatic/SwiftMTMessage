@@ -1,5 +1,5 @@
+use super::MessageParser;
 use crate::errors::ParseError;
-use crate::message_parser::MessageParser;
 use crate::traits::SwiftField;
 
 /// Extract Block 4 content from SWIFT message input.
@@ -7,10 +7,8 @@ use crate::traits::SwiftField;
 /// Otherwise, assumes input is already Block 4 content.
 pub fn extract_block4(input: &str) -> Result<String, ParseError> {
     if input.starts_with("{") {
-        crate::parser::SwiftParser::extract_block(input, 4)?.ok_or_else(|| {
-            ParseError::InvalidFormat {
-                message: "Block 4 not found".to_string(),
-            }
+        super::SwiftParser::extract_block(input, 4)?.ok_or_else(|| ParseError::InvalidFormat {
+            message: "Block 4 not found".to_string(),
         })
     } else {
         Ok(input.to_string())

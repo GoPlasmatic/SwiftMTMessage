@@ -1,7 +1,7 @@
 use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
-use crate::message_parser::MessageParser;
-use crate::parsing_utils::*;
+use crate::parser::MessageParser;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT291 - Request for Payment of Charges, Interest and Other Expenses
@@ -92,14 +92,6 @@ impl MT291 {
         append_optional_field(&mut result, &self.field_72);
 
         finalize_mt_string(result, false)
-    }
-
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT291_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     // ========================================================================

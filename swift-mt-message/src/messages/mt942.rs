@@ -1,6 +1,6 @@
 use crate::errors::SwiftValidationError;
 use crate::fields::*;
-use crate::parsing_utils::*;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT942: Interim Transaction Report
@@ -118,7 +118,7 @@ pub struct MT942StatementLine {
 impl MT942 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "942");
+        let mut parser = crate::parser::MessageParser::new(block4, "942");
 
         // Parse mandatory fields in flexible order
         // Field 13D might appear first due to HashMap ordering issues
@@ -180,14 +180,6 @@ impl MT942 {
             field_90c,
             field_86,
         })
-    }
-
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT942_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     // ========================================================================

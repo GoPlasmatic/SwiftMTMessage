@@ -1,6 +1,6 @@
 use crate::errors::SwiftValidationError;
 use crate::fields::*;
-use crate::parsing_utils::*;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT192: Request for Cancellation
@@ -29,7 +29,7 @@ pub struct MT192 {
 impl MT192 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "192");
+        let mut parser = crate::parser::MessageParser::new(block4, "192");
 
         // Parse mandatory fields in order: 20, 21, 11S
         let field_20 = parser.parse_field::<Field20>("20")?;
@@ -45,14 +45,6 @@ impl MT192 {
             field_11s,
             field_79,
         })
-    }
-
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT192_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Parse from generic SWIFT input (tries to detect blocks)
@@ -138,9 +130,10 @@ impl MT192 {
     fn validate_field_79_codes(&self) -> Vec<SwiftValidationError> {
         let mut errors = Vec::new();
 
-        if let Some(code) = self.get_field_79_cancellation_code() {
-            if !Self::MT192_VALID_79_CODES.contains(&code.as_str()) {
-                errors.push(SwiftValidationError::content_error(
+        if let Some(code) = self.get_field_79_cancellation_code()
+            && !Self::MT192_VALID_79_CODES.contains(&code.as_str())
+        {
+            errors.push(SwiftValidationError::content_error(
                     "T47",
                     "79",
                     &code,
@@ -151,7 +144,6 @@ impl MT192 {
                     ),
                     "Cancellation reason must be one of the allowed codes when using /CODE/ format in field 79",
                 ));
-            }
         }
 
         errors

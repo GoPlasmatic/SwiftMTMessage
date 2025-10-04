@@ -1,14 +1,12 @@
 //! Complete SWIFT message with headers and body
 
 use crate::{
-    Result, ValidationError, ValidationResult,
-    errors::ParseError,
+    ValidationError, ValidationResult,
     headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader},
-    messages,
     traits::SwiftMessageBody,
 };
 use serde::{Deserialize, Serialize};
-use std::{any::Any, sync::Arc};
+use std::any::Any;
 
 /// Complete SWIFT message with headers and body
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -124,270 +122,33 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         false
     }
 
-    /// Validate message against business rules using JSONLogic
-    /// This validation method has access to both headers and message fields,
-    /// allowing for comprehensive validation of MT103 and other message types.
+    /// Validate message using SWIFT SR2025 network validation rules
+    ///
+    /// This method validates the message body using the new `validate_network_rules()` method
+    /// which provides detailed SWIFT error codes and structured validation errors.
+    ///
+    /// Returns a `ValidationResult` containing any validation errors found.
     pub fn validate(&self) -> ValidationResult {
-        // Check if the message type has validation rules
-        let validation_rules = match T::message_type() {
-            "101" => messages::MT101::validate(),
-            "103" => messages::MT103::validate(),
-            "104" => messages::MT104::validate(),
-            "107" => messages::MT107::validate(),
-            "110" => messages::MT110::validate(),
-            "111" => messages::MT111::validate(),
-            "112" => messages::MT112::validate(),
-            "190" => messages::MT190::validate(),
-            "191" => messages::MT191::validate(),
-            "200" => messages::MT200::validate(),
-            "202" => messages::MT202::validate(),
-            "204" => messages::MT204::validate(),
-            "205" => messages::MT205::validate(),
-            "210" => messages::MT210::validate(),
-            "290" => messages::MT290::validate(),
-            "291" => messages::MT291::validate(),
-            "900" => messages::MT900::validate(),
-            "910" => messages::MT910::validate(),
-            "920" => messages::MT920::validate(),
-            "935" => messages::MT935::validate(),
-            "940" => messages::MT940::validate(),
-            "941" => messages::MT941::validate(),
-            "942" => messages::MT942::validate(),
-            "950" => messages::MT950::validate(),
-            "192" => messages::MT192::validate(),
-            "196" => messages::MT196::validate(),
-            "292" => messages::MT292::validate(),
-            "296" => messages::MT296::validate(),
-            "199" => messages::MT199::validate(),
-            "299" => messages::MT299::validate(),
-            _ => {
-                return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
-                    rule_name: "UNSUPPORTED_MESSAGE_TYPE".to_string(),
-                    message: format!(
-                        "No validation rules defined for message type {}",
-                        T::message_type()
-                    ),
-                });
-            }
-        };
+        // Use the new validate_network_rules method
+        let validation_errors = self.fields.validate_network_rules(false);
 
-        // Parse the validation rules JSON
-        let rules_json: serde_json::Value = match serde_json::from_str(validation_rules) {
-            Ok(json) => json,
-            Err(e) => {
-                return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
-                    rule_name: "JSON_PARSE".to_string(),
-                    message: format!("Failed to parse validation rules JSON: {e}"),
-                });
-            }
-        };
-
-        // Extract rules array from the JSON
-        let rules = match rules_json.get("rules").and_then(|r| r.as_array()) {
-            Some(rules) => rules,
-            None => {
-                return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
-                    rule_name: "RULES_FORMAT".to_string(),
-                    message: "Validation rules must contain a 'rules' array".to_string(),
-                });
-            }
-        };
-
-        // Get constants if they exist
-        let constants = rules_json
-            .get("constants")
-            .and_then(|c| c.as_object())
-            .cloned()
-            .unwrap_or_default();
-
-        // Create comprehensive data context with headers and fields
-        let context_value = match self.create_validation_context(&constants) {
-            Ok(context) => {
-                // Debug: Always show validation context in debug mode
-                if std::env::var("TEST_DEBUG").is_ok()
-                    && let Ok(context_str) = serde_json::to_string_pretty(&context)
-                {
-                    eprintln!("\n=== VALIDATION CONTEXT for {} ===", T::message_type());
-                    eprintln!("{}", context_str);
-                    eprintln!("=== END VALIDATION CONTEXT ===\n");
+        // Convert SwiftValidationError to ValidationError for backward compatibility
+        let errors: Vec<ValidationError> = validation_errors
+            .into_iter()
+            .map(|swift_error| {
+                let message = format!("{}", swift_error);
+                ValidationError::BusinessRuleValidation {
+                    rule_name: swift_error.error_code().to_string(),
+                    message,
                 }
-                context
-            }
-            Err(e) => {
-                return ValidationResult::with_error(ValidationError::BusinessRuleValidation {
-                    rule_name: "CONTEXT_CREATION".to_string(),
-                    message: format!("Failed to create validation context: {e}"),
-                });
-            }
-        };
-        let context_arc = Arc::new(context_value.clone());
-
-        // Validate each rule using datalogic-rs
-        let mut errors = Vec::new();
-        let mut warnings = Vec::new();
-
-        for (rule_index, rule) in rules.iter().enumerate() {
-            let rule_id = rule
-                .get("id")
-                .and_then(|id| id.as_str())
-                .map(|s| s.to_string())
-                .unwrap_or_else(|| format!("RULE_{rule_index}"));
-
-            let rule_description = rule
-                .get("description")
-                .and_then(|desc| desc.as_str())
-                .unwrap_or("No description");
-
-            if let Some(condition) = rule.get("condition") {
-                // Create DataLogic instance for evaluation
-                let dl = datalogic_rs::DataLogic::new();
-                let condition_compiled = match dl.compile(condition) {
-                    Ok(compiled) => compiled.clone(),
-                    Err(e) => {
-                        errors.push(ValidationError::BusinessRuleValidation {
-                            rule_name: rule_id.clone(),
-                            message: format!("Failed to compile JSONLogic for rule {rule_id}: {e}"),
-                        });
-                        continue;
-                    }
-                };
-
-                match dl.evaluate(&condition_compiled, context_arc.clone()) {
-                    Ok(result) => {
-                        match result.as_bool() {
-                            Some(true) => {
-                                // Rule passed
-                                continue;
-                            }
-                            Some(false) => {
-                                // Rule failed
-                                errors.push(ValidationError::BusinessRuleValidation {
-                                    rule_name: rule_id.clone(),
-                                    message: format!(
-                                        "Business rule validation failed: {rule_id} - {rule_description}"
-                                    ),
-                                });
-                            }
-                            None => {
-                                // Rule returned non-boolean value
-                                warnings.push(format!(
-                                    "Rule {rule_id} returned non-boolean value: {result:?}"
-                                ));
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        // JSONLogic evaluation error
-                        errors.push(ValidationError::BusinessRuleValidation {
-                            rule_name: rule_id.clone(),
-                            message: format!("JSONLogic evaluation error for rule {rule_id}: {e}"),
-                        });
-                    }
-                }
-            } else {
-                warnings.push(format!("Rule {rule_id} has no condition"));
-            }
-        }
+            })
+            .collect();
 
         ValidationResult {
             is_valid: errors.is_empty(),
             errors,
-            warnings,
+            warnings: Vec::new(),
         }
-    }
-
-    /// Create a comprehensive validation context that includes headers, fields, and constants
-    fn create_validation_context(
-        &self,
-        constants: &serde_json::Map<String, serde_json::Value>,
-    ) -> Result<serde_json::Value> {
-        // Serialize the entire message (including headers) to JSON for data context
-        let full_message_data = match serde_json::to_value(self) {
-            Ok(data) => data,
-            Err(e) => {
-                return Err(ParseError::SerializationError {
-                    message: format!("Failed to serialize complete message: {e}"),
-                });
-            }
-        };
-
-        // Create a comprehensive data context
-        let mut data_context = serde_json::Map::new();
-
-        // Add the complete message data
-        if let serde_json::Value::Object(msg_obj) = full_message_data {
-            for (key, value) in msg_obj {
-                data_context.insert(key, value);
-            }
-        }
-
-        // Add constants to data context
-        for (key, value) in constants {
-            data_context.insert(key.clone(), value.clone());
-        }
-
-        // Extract sender and receiver BIC from headers for enhanced validation context
-        let (sender_country, receiver_country) = self.extract_country_codes_from_bics();
-
-        // Add enhanced message context including BIC-derived information
-        let (receiver_bic, priority, delivery_monitoring) = match &self.application_header {
-            ApplicationHeader::Input(input) => (
-                input.destination_address.clone(),
-                input.priority.clone(),
-                input
-                    .delivery_monitoring
-                    .as_ref()
-                    .unwrap_or(&"3".to_string())
-                    .clone(),
-            ),
-            ApplicationHeader::Output(_) => (
-                String::new(), // No receiver BIC for output messages
-                self.application_header
-                    .priority()
-                    .unwrap_or("N")
-                    .to_string(),
-                String::new(), // No delivery monitoring for output messages
-            ),
-        };
-
-        data_context.insert(
-            "message_context".to_string(),
-            serde_json::json!({
-                "message_type": self.message_type,
-                "sender_country": sender_country,
-                "receiver_country": receiver_country,
-                "sender_bic": self.basic_header.logical_terminal,
-                "receiver_bic": receiver_bic,
-                "message_priority": priority,
-                "delivery_monitoring": delivery_monitoring,
-            }),
-        );
-
-        Ok(serde_json::Value::Object(data_context))
-    }
-
-    /// Extract country codes from BIC codes in the headers
-    fn extract_country_codes_from_bics(&self) -> (String, String) {
-        // Extract sender country from basic header BIC (positions 4-5)
-        let sender_country = if self.basic_header.logical_terminal.len() >= 6 {
-            self.basic_header.logical_terminal[4..6].to_string()
-        } else {
-            "XX".to_string() // Unknown country
-        };
-
-        // Extract receiver country from application header destination BIC
-        let receiver_country = match &self.application_header {
-            ApplicationHeader::Input(input) => {
-                if input.destination_address.len() >= 6 {
-                    input.destination_address[4..6].to_string()
-                } else {
-                    "XX".to_string()
-                }
-            }
-            ApplicationHeader::Output(_) => "XX".to_string(), // No receiver for output messages
-        };
-
-        (sender_country, receiver_country)
     }
 
     pub fn to_mt_message(&self) -> String {

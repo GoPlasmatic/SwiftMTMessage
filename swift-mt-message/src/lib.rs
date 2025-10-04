@@ -47,11 +47,9 @@
 pub mod errors;
 pub mod fields;
 pub mod headers;
-pub mod message_parser;
 pub mod messages;
 pub mod parsed_message;
 pub mod parser;
-pub mod parsing_utils;
 pub mod sample;
 pub mod scenario_config;
 pub mod swift_error_codes;

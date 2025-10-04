@@ -1,7 +1,7 @@
 use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
-use crate::message_parser::MessageParser;
-use crate::parsing_utils::*;
+use crate::parser::MessageParser;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT200 - Financial Institution Transfer for Own Account
@@ -67,14 +67,6 @@ impl MT200 {
         })
     }
 
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT200_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
-    }
-
     /// Parse from generic SWIFT input (tries to detect blocks)
     pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
         let block4 = extract_block4(input)?;
@@ -115,17 +107,16 @@ impl MT200 {
             // Parse field 72 content for codes (format: /CODE/additional text)
             for line in &field_72.information {
                 let trimmed = line.trim();
-                if trimmed.starts_with('/') {
-                    if let Some(end_idx) = trimmed[1..].find('/') {
-                        let code = &trimmed[1..=end_idx];
+                if let Some(without_prefix) = trimmed.strip_prefix('/') {
+                    if let Some(end_idx) = without_prefix.find('/') {
+                        let code = &without_prefix[..end_idx];
                         codes.push(code.to_uppercase());
-                    } else if trimmed.len() > 1 {
+                    } else if !without_prefix.is_empty() {
                         // Code without trailing slash
-                        let code = &trimmed[1..];
-                        if let Some(space_idx) = code.find(|c: char| c.is_whitespace()) {
-                            codes.push(code[..space_idx].to_uppercase());
+                        if let Some(space_idx) = without_prefix.find(|c: char| c.is_whitespace()) {
+                            codes.push(without_prefix[..space_idx].to_uppercase());
                         } else {
-                            codes.push(code.to_uppercase());
+                            codes.push(without_prefix.to_uppercase());
                         }
                     }
                 }

@@ -1,6 +1,6 @@
 use crate::errors::SwiftValidationError;
 use crate::fields::*;
-use crate::parsing_utils::*;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT107: General Direct Debit Message
@@ -163,7 +163,7 @@ pub struct MT107 {
 impl MT107 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "107");
+        let mut parser = crate::parser::MessageParser::new(block4, "107");
 
         // Parse Sequence A - General Information
         let field_20 = parser.parse_field::<Field20>("20")?;
@@ -274,7 +274,7 @@ impl MT107 {
 
     /// Helper to parse field 50 which can be either instructing party (C/L) or creditor (A/K)
     fn parse_field_50(
-        parser: &mut crate::message_parser::MessageParser,
+        parser: &mut crate::parser::MessageParser,
     ) -> Result<(Option<Field50InstructingParty>, Option<Field50Creditor>), crate::errors::ParseError>
     {
         // Detect which variant of field 50 is present
@@ -301,14 +301,6 @@ impl MT107 {
 
         // No field 50 present
         Ok((None, None))
-    }
-
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT107_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     // ========================================================================
@@ -922,21 +914,20 @@ impl MT107 {
             }
 
             // Check 71F currency consistency
-            if let Some(ref tx_71f) = transaction.field_71f {
-                if let Some(ref_currency) = ref_71f_currency {
-                    if &tx_71f.currency != ref_currency {
-                        errors.push(SwiftValidationError::content_error(
-                            "C02",
-                            "71F",
-                            &tx_71f.currency,
-                            &format!(
-                                "Transaction {}: Currency code in field 71F ({}) must be the same as in Sequence C ({})",
-                                idx + 1, tx_71f.currency, ref_currency
-                            ),
-                            "The currency code in field 71F must be the same for all occurrences in Sequences B and C",
-                        ));
-                    }
-                }
+            if let Some(ref tx_71f) = transaction.field_71f
+                && let Some(ref_currency) = ref_71f_currency
+                && &tx_71f.currency != ref_currency
+            {
+                errors.push(SwiftValidationError::content_error(
+                        "C02",
+                        "71F",
+                        &tx_71f.currency,
+                        &format!(
+                            "Transaction {}: Currency code in field 71F ({}) must be the same as in Sequence C ({})",
+                            idx + 1, tx_71f.currency, ref_currency
+                        ),
+                        "The currency code in field 71F must be the same for all occurrences in Sequences B and C",
+                    ));
             }
 
             // Check 71G currency consistency
@@ -954,9 +945,10 @@ impl MT107 {
                     ));
                 }
 
-                if let Some(ref_currency) = ref_71g_currency {
-                    if &tx_71g.currency != ref_currency {
-                        errors.push(SwiftValidationError::content_error(
+                if let Some(ref_currency) = ref_71g_currency
+                    && &tx_71g.currency != ref_currency
+                {
+                    errors.push(SwiftValidationError::content_error(
                             "C02",
                             "71G",
                             &tx_71g.currency,
@@ -966,7 +958,6 @@ impl MT107 {
                             ),
                             "The currency code in field 71G must be the same for all occurrences in Sequences B and C",
                         ));
-                    }
                 }
             }
         }

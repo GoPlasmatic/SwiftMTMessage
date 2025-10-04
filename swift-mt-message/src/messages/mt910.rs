@@ -1,6 +1,6 @@
 use crate::errors::SwiftValidationError;
 use crate::fields::*;
-use crate::parsing_utils::*;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT910: Confirmation of Credit
@@ -39,7 +39,7 @@ pub struct MT910 {
 impl MT910 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "910");
+        let mut parser = crate::parser::MessageParser::new(block4, "910");
 
         // Parse mandatory fields
         let field_20 = parser.parse_field::<Field20>("20")?;
@@ -68,14 +68,6 @@ impl MT910 {
             field_56,
             field_72,
         })
-    }
-
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT910_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Parse from SWIFT MT text format

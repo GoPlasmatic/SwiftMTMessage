@@ -1,6 +1,6 @@
 use crate::errors::SwiftValidationError;
 use crate::fields::*;
-use crate::parsing_utils::*;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 // MT191: Request for Payment of Charges, Interest and Other Expenses
@@ -41,7 +41,7 @@ pub struct MT191 {
 impl MT191 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "191");
+        let mut parser = crate::parser::MessageParser::new(block4, "191");
 
         // Parse mandatory fields
         let field_20 = parser.parse_field::<Field20>("20")?;
@@ -74,14 +74,6 @@ impl MT191 {
     pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
         let block4 = extract_block4(input)?;
         Self::parse_from_block4(&block4)
-    }
-
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT191_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Convert to SWIFT MT text format

@@ -7,9 +7,7 @@ use crate::errors::{InvalidFieldFormatError, ParseError};
 use crate::traits::SwiftField;
 use std::collections::HashSet;
 
-pub mod field_extractor;
-
-pub use field_extractor::extract_field_content;
+use super::field_extractor::extract_field_content;
 
 /// Message parser that tracks position while parsing SWIFT messages
 #[derive(Debug)]

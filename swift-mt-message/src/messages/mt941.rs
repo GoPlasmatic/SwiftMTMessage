@@ -1,6 +1,6 @@
 use crate::errors::SwiftValidationError;
 use crate::fields::*;
-use crate::parsing_utils::*;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
 /// MT941: Balance Report Message
@@ -113,7 +113,7 @@ pub struct MT941 {
 impl MT941 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "941");
+        let mut parser = crate::parser::MessageParser::new(block4, "941");
 
         // Parse mandatory fields
         let field_20 = parser.parse_field::<Field20>("20")?;
@@ -171,14 +171,6 @@ impl MT941 {
         })
     }
 
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT941_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
-    }
-
     // ========================================================================
     // NETWORK VALIDATION RULES (SR 2025 MT941)
     // ========================================================================
@@ -206,9 +198,10 @@ impl MT941 {
         let base_currency = self.get_base_currency();
 
         // Check 60F if present
-        if let Some(ref field_60f) = self.field_60f {
-            if &field_60f.currency[0..2] != base_currency {
-                errors.push(SwiftValidationError::content_error(
+        if let Some(ref field_60f) = self.field_60f
+            && &field_60f.currency[0..2] != base_currency
+        {
+            errors.push(SwiftValidationError::content_error(
                     "C27",
                     "60F",
                     &field_60f.currency,
@@ -219,13 +212,13 @@ impl MT941 {
                     ),
                     "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
                 ));
-            }
         }
 
         // Check 90D if present
-        if let Some(ref field_90d) = self.field_90d {
-            if &field_90d.currency[0..2] != base_currency {
-                errors.push(SwiftValidationError::content_error(
+        if let Some(ref field_90d) = self.field_90d
+            && &field_90d.currency[0..2] != base_currency
+        {
+            errors.push(SwiftValidationError::content_error(
                     "C27",
                     "90D",
                     &field_90d.currency,
@@ -236,13 +229,13 @@ impl MT941 {
                     ),
                     "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
                 ));
-            }
         }
 
         // Check 90C if present
-        if let Some(ref field_90c) = self.field_90c {
-            if &field_90c.currency[0..2] != base_currency {
-                errors.push(SwiftValidationError::content_error(
+        if let Some(ref field_90c) = self.field_90c
+            && &field_90c.currency[0..2] != base_currency
+        {
+            errors.push(SwiftValidationError::content_error(
                     "C27",
                     "90C",
                     &field_90c.currency,
@@ -253,13 +246,13 @@ impl MT941 {
                     ),
                     "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
                 ));
-            }
         }
 
         // Check 64 if present
-        if let Some(ref field_64) = self.field_64 {
-            if &field_64.currency[0..2] != base_currency {
-                errors.push(SwiftValidationError::content_error(
+        if let Some(ref field_64) = self.field_64
+            && &field_64.currency[0..2] != base_currency
+        {
+            errors.push(SwiftValidationError::content_error(
                     "C27",
                     "64",
                     &field_64.currency,
@@ -270,7 +263,6 @@ impl MT941 {
                     ),
                     "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
                 ));
-            }
         }
 
         // Check 65 if present (can be repetitive)

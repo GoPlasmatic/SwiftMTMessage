@@ -470,6 +470,10 @@ impl ParsedSwiftMessage {
         }
     }
 
+    /// Validate using SWIFT SR2025 network validation rules
+    ///
+    /// This method validates the message using the new `validate_network_rules()` method
+    /// which provides detailed SWIFT error codes and structured validation errors.
     pub fn validate(&self) -> ValidationResult {
         match self {
             ParsedSwiftMessage::MT101(mt101) => mt101.validate(),

@@ -1,6 +1,6 @@
 use crate::errors::SwiftValidationError;
 use crate::fields::*;
-use crate::parsing_utils::*;
+use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -122,7 +122,7 @@ pub struct MT101 {
 impl MT101 {
     /// Parse message from Block 4 content
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        let mut parser = crate::message_parser::MessageParser::new(block4, "101");
+        let mut parser = crate::parser::MessageParser::new(block4, "101");
 
         // Parse mandatory and optional fields in sequence A
         let field_20 = parser.parse_field::<Field20>("20")?;
@@ -219,14 +219,6 @@ impl MT101 {
             field_25,
             transactions,
         })
-    }
-
-    /// Validation rules for the message (legacy method for backward compatibility)
-    ///
-    /// **Note**: This method returns a static JSON string for legacy validation systems.
-    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
-    pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "MT101_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Parse from generic SWIFT input (tries to detect blocks)
@@ -571,9 +563,7 @@ impl MT101 {
     /// C8: Customer Specified Reference and Currency Consistency (Error code: D98)
     /// If field 21R is present, all transactions must have the same currency in field 32B
     fn validate_c8_currency_consistency(&self) -> Option<SwiftValidationError> {
-        if self.field_21r.is_none() {
-            return None; // Rule doesn't apply if field 21R is not present
-        }
+        self.field_21r.as_ref()?;
 
         if self.transactions.is_empty() {
             return None;
@@ -614,9 +604,10 @@ impl MT101 {
 
             if amount_is_zero {
                 // Check if field 23E has EQUI code
-                let has_equi = transaction.field_23e.as_ref().map_or(false, |codes| {
-                    codes.iter().any(|code| code.instruction_code == "EQUI")
-                });
+                let has_equi = transaction
+                    .field_23e
+                    .as_ref()
+                    .is_some_and(|codes| codes.iter().any(|code| code.instruction_code == "EQUI"));
 
                 if has_equi {
                     // Amount = 0 AND 23E = EQUI → 33B MANDATORY, 21F OPTIONAL

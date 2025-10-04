@@ -1,4 +1,4 @@
-use crate::errors::ParseError;
+use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
 use crate::message_parser::MessageParser;
 use crate::parsing_utils::*;
@@ -89,9 +89,70 @@ impl MT296 {
         })
     }
 
-    /// Static validation rules for MT296
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": []}"#
+        r#"{"rules": [{"id": "MT296_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MTn96)
+    // ========================================================================
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Check if field 79 (Narrative Description of Original Message) is present
+    fn has_field_79(&self) -> bool {
+        self.field_79.is_some()
+    }
+
+    /// Check if copy of original message fields is present
+    fn has_original_fields(&self) -> bool {
+        !self.original_fields.is_empty()
+    }
+
+    // ========================================================================
+    // VALIDATION RULES (C1)
+    // ========================================================================
+
+    /// C1: Field 79 or Copy of Fields Requirement (Error code: C31)
+    /// Either field 79 or a copy of original message fields, but not both, may be present
+    fn validate_c1_field_79_or_copy(&self) -> Option<SwiftValidationError> {
+        let has_79 = self.has_field_79();
+        let has_copy = self.has_original_fields();
+
+        if has_79 && has_copy {
+            // Both present - NOT ALLOWED
+            return Some(SwiftValidationError::content_error(
+                "C31",
+                "79",
+                "",
+                "Field 79 and copy of original message fields must not both be present",
+                "Either field 79 or a copy of at least the mandatory fields of the message to which the answer relates, but not both, may be present in the message",
+            ));
+        }
+
+        None
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Field 79 or Copy of Fields Requirement
+        if let Some(error) = self.validate_c1_field_79_or_copy() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        all_errors
     }
 }
 
@@ -119,5 +180,10 @@ impl crate::traits::SwiftMessageBody for MT296 {
         // and would require special handling
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT296::validate_network_rules(self, stop_on_first_error)
     }
 }

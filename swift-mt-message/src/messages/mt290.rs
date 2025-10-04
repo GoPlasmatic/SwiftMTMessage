@@ -1,4 +1,4 @@
-use crate::errors::ParseError;
+use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
 use crate::message_parser::MessageParser;
 use crate::parsing_utils::*;
@@ -76,22 +76,22 @@ impl MT290 {
         })
     }
 
-    /// Static validation rules for MT290
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": []}"#
-    }
-}
-
-impl crate::traits::SwiftMessageBody for MT290 {
-    fn message_type() -> &'static str {
-        "290"
+        r#"{"rules": [{"id": "MT290_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
-    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        Self::parse_from_block4(block4)
+    /// Parse from generic SWIFT input (tries to detect blocks)
+    pub fn parse(input: &str) -> Result<Self, ParseError> {
+        let block4 = extract_block4(input)?;
+        Self::parse_from_block4(&block4)
     }
 
-    fn to_mt_string(&self) -> String {
+    /// Convert to SWIFT MT text format
+    pub fn to_mt_string(&self) -> String {
         let mut result = String::new();
 
         append_field(&mut result, &self.field_20);
@@ -102,6 +102,43 @@ impl crate::traits::SwiftMessageBody for MT290 {
         append_field(&mut result, &self.field_71b);
         append_optional_field(&mut result, &self.field_72);
 
-        finalize_mt_string(result, false)
+        result.push('-');
+        result
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT290)
+    // ========================================================================
+
+    /// Main validation method - validates all network rules
+    ///
+    /// **Note**: MT290 has no network validated rules according to SR 2025 specification.
+    /// This method is provided for API consistency and always returns an empty vector.
+    ///
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, _stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // MT290 has no network validated rules per SR 2025 specification
+        Vec::new()
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT290 {
+    fn message_type() -> &'static str {
+        "290"
+    }
+
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        // Call the existing public method implementation
+        MT290::parse_from_block4(block4)
+    }
+
+    fn to_mt_string(&self) -> String {
+        // Call the existing public method implementation
+        MT290::to_mt_string(self)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT290::validate_network_rules(self, stop_on_first_error)
     }
 }

@@ -1,5 +1,7 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::parsing_utils::*;
+use std::collections::HashSet;
 
 // MT103: Single Customer Credit Transfer
 // Used to convey funds transfer instructions between financial institutions where the ordering
@@ -90,9 +92,12 @@ pub struct MT103 {
 
 // Additional methods for MT103
 impl MT103 {
-    /// Validation rules for the message
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "BASIC", "description": "Basic validation", "condition": true}]}"#
+        r#"{"rules": [{"id": "MT103_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Parse from SWIFT MT text format
@@ -194,6 +199,659 @@ impl MT103 {
         // Additional STP validation rules could be added here
         // For now, return true if basic checks pass
         true
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT103 STP & REMIT)
+    // ========================================================================
+
+    /// Field 23B valid bank operation codes for MT103
+    const MT103_VALID_23B_CODES: &'static [&'static str] =
+        &["CRED", "CRTS", "SPAY", "SPRI", "SSTD"];
+
+    /// Field 23E valid instruction codes for MT103 (combined STP and REMIT)
+    const MT103_VALID_23E_CODES: &'static [&'static str] = &[
+        "CHQB", "CORT", "HOLD", "INTC", "PHOB", "PHOI", "PHON", "REPA", "SDVA", "TELB", "TELE",
+        "TELI",
+    ];
+
+    /// Field 23E codes that allow additional information
+    const CODES_WITH_ADDITIONAL_INFO: &'static [&'static str] = &[
+        "PHON", "PHOB", "PHOI", "TELE", "TELB", "TELI", "HOLD", "REPA",
+    ];
+
+    /// Field 23E valid codes for REMIT when 23B is SPRI
+    const REMIT_SPRI_ALLOWED_23E: &'static [&'static str] = &["SDVA", "TELB", "PHOB", "INTC"];
+
+    /// Field 23E invalid code combinations
+    const INVALID_23E_COMBINATIONS: &'static [(&'static str, &'static [&'static str])] = &[
+        ("SDVA", &["HOLD", "CHQB"]),
+        ("INTC", &["HOLD", "CHQB"]),
+        ("REPA", &["HOLD", "CHQB", "CORT"]),
+        ("CORT", &["HOLD", "CHQB"]),
+        ("HOLD", &["CHQB"]),
+        ("PHOB", &["TELB"]),
+        ("PHON", &["TELE"]),
+        ("PHOI", &["TELI"]),
+    ];
+
+    /// Field 23E code ordering for validation (D98)
+    const FIELD_23E_CODE_ORDER: &'static [&'static str] = &[
+        "SDVA", "INTC", "REPA", "CORT", "HOLD", "CHQB", "PHOB", "TELB", "PHON", "TELE", "PHOI",
+        "TELI",
+    ];
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Check if field 56a is present
+    fn has_field_56(&self) -> bool {
+        self.field_56.is_some()
+    }
+
+    /// Check if field 57a is present
+    fn has_field_57(&self) -> bool {
+        self.field_57.is_some()
+    }
+
+    /// Check if field 53a is present
+    fn has_field_53(&self) -> bool {
+        self.field_53.is_some()
+    }
+
+    /// Check if field 54a is present
+    fn has_field_54(&self) -> bool {
+        self.field_54.is_some()
+    }
+
+    /// Check if field 55a is present
+    fn has_field_55(&self) -> bool {
+        self.field_55.is_some()
+    }
+
+    /// Check if field 71F is present (any occurrence)
+    fn has_field_71f(&self) -> bool {
+        self.field_71f.is_some() && !self.field_71f.as_ref().unwrap().is_empty()
+    }
+
+    /// Check if field 71G is present
+    fn has_field_71g(&self) -> bool {
+        self.field_71g.is_some()
+    }
+
+    // ========================================================================
+    // VALIDATION RULES (C1-C18, T36, T48, etc.)
+    // ========================================================================
+
+    /// C1: Currency/Instructed Amount and Exchange Rate (Error code: D75)
+    /// If field 33B is present and currency differs from 32A, field 36 must be present
+    fn validate_c1_currency_exchange(&self) -> Option<SwiftValidationError> {
+        if let Some(ref field_33b) = self.field_33b {
+            let currency_32a = &self.field_32a.currency;
+            let currency_33b = &field_33b.currency;
+
+            if currency_32a != currency_33b {
+                // Currencies differ - field 36 is mandatory
+                if self.field_36.is_none() {
+                    return Some(SwiftValidationError::content_error(
+                        "D75",
+                        "36",
+                        "",
+                        "Field 36 (Exchange Rate) is mandatory when field 33B is present and currency code differs from field 32A",
+                        "If field 33B is present and the currency code is different from the currency code in field 32A, field 36 must be present",
+                    ));
+                }
+            } else {
+                // Currencies are the same - field 36 is not allowed
+                if self.field_36.is_some() {
+                    return Some(SwiftValidationError::content_error(
+                        "D75",
+                        "36",
+                        "",
+                        "Field 36 (Exchange Rate) is not allowed when field 33B currency code is the same as field 32A",
+                        "If field 33B is present and the currency code is equal to the currency code in field 32A, field 36 must not be present",
+                    ));
+                }
+            }
+        } else {
+            // Field 33B not present - field 36 is not allowed
+            if self.field_36.is_some() {
+                return Some(SwiftValidationError::content_error(
+                    "D75",
+                    "36",
+                    "",
+                    "Field 36 (Exchange Rate) is not allowed when field 33B is not present",
+                    "Field 36 is only allowed when field 33B is present",
+                ));
+            }
+        }
+
+        None
+    }
+
+    /// C3: Field 23B and 23E Code Dependencies (Error codes: E01, E02)
+    /// Restricts field 23E codes based on field 23B value
+    fn validate_c3_bank_op_instruction_codes(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+        let bank_op_code = &self.field_23b.instruction_code;
+
+        if bank_op_code == "SPRI" {
+            // For SPRI: field 23E may contain only SDVA or INTC (STP) or SDVA, TELB, PHOB, INTC (REMIT)
+            // We'll allow the broader REMIT set to cover both cases
+            if let Some(ref field_23e_vec) = self.field_23e {
+                for field_23e in field_23e_vec {
+                    let code = &field_23e.instruction_code;
+                    if !Self::REMIT_SPRI_ALLOWED_23E.contains(&code.as_str()) {
+                        errors.push(SwiftValidationError::content_error(
+                            "E01",
+                            "23E",
+                            code,
+                            &format!(
+                                "When field 23B is SPRI, field 23E may only contain codes: {}. Code '{}' is not allowed",
+                                Self::REMIT_SPRI_ALLOWED_23E.join(", "),
+                                code
+                            ),
+                            "If field 23B contains SPRI, field 23E may contain only SDVA, TELB, PHOB, or INTC",
+                        ));
+                    }
+                }
+            }
+        } else if bank_op_code == "SSTD" || bank_op_code == "SPAY" {
+            // For SSTD or SPAY: field 23E must not be used
+            if self.field_23e.is_some() {
+                errors.push(SwiftValidationError::content_error(
+                    "E02",
+                    "23E",
+                    "",
+                    &format!(
+                        "When field 23B is {} or {}, field 23E must not be used",
+                        "SSTD", "SPAY"
+                    ),
+                    "If field 23B contains one of the codes SSTD or SPAY, field 23E must not be used",
+                ));
+            }
+        }
+
+        errors
+    }
+
+    /// C4: Third Reimbursement Institution Dependencies (Error code: E06)
+    /// If field 55a is present, both fields 53a and 54a must also be present
+    fn validate_c4_third_reimbursement(&self) -> Option<SwiftValidationError> {
+        if self.has_field_55() {
+            if !self.has_field_53() || !self.has_field_54() {
+                return Some(SwiftValidationError::content_error(
+                    "E06",
+                    "55a",
+                    "",
+                    "Fields 53a (Sender's Correspondent) and 54a (Receiver's Correspondent) are mandatory when field 55a (Third Reimbursement Institution) is present",
+                    "If field 55a is present, both fields 53a and 54a must also be present",
+                ));
+            }
+        }
+
+        None
+    }
+
+    /// C5 (C9): Intermediary and Account With Institution (Error code: C81)
+    /// If field 56a is present, field 57a must also be present
+    fn validate_c5_intermediary(&self) -> Option<SwiftValidationError> {
+        if self.has_field_56() && !self.has_field_57() {
+            return Some(SwiftValidationError::content_error(
+                "C81",
+                "57a",
+                "",
+                "Field 57a (Account With Institution) is mandatory when field 56a (Intermediary) is present",
+                "If field 56a is present, field 57a must also be present",
+            ));
+        }
+
+        None
+    }
+
+    /// C6 (C10): Field 23B SPRI and Field 56A (Error codes: E16, E17)
+    /// If field 23B is SPRI, field 56a must not be present
+    /// If field 23B is SSTD or SPAY, field 56a may be used with option A or C only
+    fn validate_c6_field_56_restrictions(&self) -> Option<SwiftValidationError> {
+        let bank_op_code = &self.field_23b.instruction_code;
+
+        if bank_op_code == "SPRI" && self.has_field_56() {
+            return Some(SwiftValidationError::content_error(
+                "E16",
+                "56a",
+                "",
+                "Field 56a (Intermediary Institution) must not be present when field 23B is SPRI",
+                "If field 23B contains the code SPRI, field 56a must not be present",
+            ));
+        }
+
+        None
+    }
+
+    /// C7 (C14): Details of Charges and Sender's/Receiver's Charges (Error codes: E13, D50, E15)
+    /// Complex rules for fields 71A, 71F, and 71G
+    fn validate_c7_charges(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+        let charges_code = &self.field_71a.code;
+
+        match charges_code.as_str() {
+            "OUR" => {
+                // If 71A is OUR, field 71F is not allowed, field 71G is optional
+                if self.has_field_71f() {
+                    errors.push(SwiftValidationError::content_error(
+                        "E13",
+                        "71F",
+                        "",
+                        "Field 71F (Sender's Charges) is not allowed when field 71A is OUR",
+                        "If field 71A contains OUR, then field 71F is not allowed",
+                    ));
+                }
+            }
+            "SHA" => {
+                // If 71A is SHA, field 71F is optional, field 71G is not allowed
+                if self.has_field_71g() {
+                    errors.push(SwiftValidationError::content_error(
+                        "D50",
+                        "71G",
+                        "",
+                        "Field 71G (Receiver's Charges) is not allowed when field 71A is SHA",
+                        "If field 71A contains SHA, then field 71G is not allowed",
+                    ));
+                }
+            }
+            "BEN" => {
+                // If 71A is BEN, at least one occurrence of 71F is mandatory, 71G is not allowed
+                if !self.has_field_71f() {
+                    errors.push(SwiftValidationError::content_error(
+                        "E15",
+                        "71F",
+                        "",
+                        "At least one occurrence of field 71F (Sender's Charges) is mandatory when field 71A is BEN",
+                        "If field 71A contains BEN, then at least one occurrence of field 71F is mandatory",
+                    ));
+                }
+                if self.has_field_71g() {
+                    errors.push(SwiftValidationError::content_error(
+                        "E15",
+                        "71G",
+                        "",
+                        "Field 71G (Receiver's Charges) is not allowed when field 71A is BEN",
+                        "If field 71A contains BEN, then field 71G is not allowed",
+                    ));
+                }
+            }
+            _ => {}
+        }
+
+        errors
+    }
+
+    /// C8 (C15): Sender's/Receiver's Charges and Field 33B (Error code: D51)
+    /// If either field 71F or field 71G is present, then field 33B is mandatory
+    fn validate_c8_charges_instructed_amount(&self) -> Option<SwiftValidationError> {
+        if (self.has_field_71f() || self.has_field_71g()) && self.field_33b.is_none() {
+            return Some(SwiftValidationError::content_error(
+                "D51",
+                "33B",
+                "",
+                "Field 33B (Currency/Instructed Amount) is mandatory when field 71F or 71G is present",
+                "If either field 71F (at least one occurrence) or field 71G is present, then field 33B is mandatory",
+            ));
+        }
+
+        None
+    }
+
+    /// C9 (C18): Currency Codes in Fields 71G and 32A (Error code: C02)
+    /// The currency code in fields 71G and 32A must be the same
+    fn validate_c9_receiver_charges_currency(&self) -> Option<SwiftValidationError> {
+        if let Some(ref field_71g) = self.field_71g {
+            let currency_32a = &self.field_32a.currency;
+            let currency_71g = &field_71g.currency;
+
+            if currency_32a != currency_71g {
+                return Some(SwiftValidationError::content_error(
+                    "C02",
+                    "71G",
+                    currency_71g,
+                    &format!(
+                        "Currency code in field 71G ({}) must be the same as in field 32A ({})",
+                        currency_71g, currency_32a
+                    ),
+                    "The currency code in fields 71G and 32A must be the same",
+                ));
+            }
+        }
+
+        None
+    }
+
+    /// C13: Field 59a Account Restriction for Cheque (Error code: E18)
+    /// If any field 23E contains CHQB, subfield 1 (Account) in field 59a is not allowed
+    fn validate_c13_chqb_beneficiary_account(&self) -> Option<SwiftValidationError> {
+        if let Some(ref field_23e_vec) = self.field_23e {
+            let has_chqb = field_23e_vec.iter().any(|f| f.instruction_code == "CHQB");
+
+            if has_chqb {
+                // Check if field 59 has account - this depends on the variant
+                // Field59F has party_identifier instead of account, and account is not restricted for F variant
+                let has_account = match &self.field_59 {
+                    Field59::NoOption(f) => f.account.is_some(),
+                    Field59::A(f) => f.account.is_some(),
+                    Field59::F(_) => false, // Option F uses party_identifier, not account
+                };
+
+                if has_account {
+                    return Some(SwiftValidationError::content_error(
+                        "E18",
+                        "59a",
+                        "",
+                        "Subfield 1 (Account) in field 59a (Beneficiary Customer) is not allowed when field 23E contains code CHQB",
+                        "If any field 23E contains the code CHQB, subfield 1 (Account) in field 59a Beneficiary Customer is not allowed",
+                    ));
+                }
+            }
+        }
+
+        None
+    }
+
+    /// C16: Field 23E TELI/PHOI Restriction (Error code: E44)
+    /// If field 56a is not present, no field 23E may contain TELI or PHOI
+    fn validate_c16_teli_phoi_restriction(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        if !self.has_field_56() {
+            if let Some(ref field_23e_vec) = self.field_23e {
+                for field_23e in field_23e_vec {
+                    let code = &field_23e.instruction_code;
+                    if code == "TELI" || code == "PHOI" {
+                        errors.push(SwiftValidationError::content_error(
+                            "E44",
+                            "23E",
+                            code,
+                            &format!(
+                                "Field 23E code '{}' is not allowed when field 56a is not present",
+                                code
+                            ),
+                            "If field 56a is not present, no field 23E may contain TELI or PHOI",
+                        ));
+                    }
+                }
+            }
+        }
+
+        errors
+    }
+
+    /// C17: Field 23E TELE/PHON Restriction (Error code: E45)
+    /// If field 57a is not present, no field 23E may contain TELE or PHON
+    fn validate_c17_tele_phon_restriction(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        if !self.has_field_57() {
+            if let Some(ref field_23e_vec) = self.field_23e {
+                for field_23e in field_23e_vec {
+                    let code = &field_23e.instruction_code;
+                    if code == "TELE" || code == "PHON" {
+                        errors.push(SwiftValidationError::content_error(
+                            "E45",
+                            "23E",
+                            code,
+                            &format!(
+                                "Field 23E code '{}' is not allowed when field 57a is not present",
+                                code
+                            ),
+                            "If field 57a is not present, no field 23E may contain TELE or PHON",
+                        ));
+                    }
+                }
+            }
+        }
+
+        errors
+    }
+
+    /// Validate Field 23B bank operation code (Error code: T36)
+    fn validate_field_23b(&self) -> Option<SwiftValidationError> {
+        let code = &self.field_23b.instruction_code;
+
+        if !Self::MT103_VALID_23B_CODES.contains(&code.as_str()) {
+            return Some(SwiftValidationError::format_error(
+                "T36",
+                "23B",
+                code,
+                &format!("One of: {}", Self::MT103_VALID_23B_CODES.join(", ")),
+                &format!(
+                    "Bank operation code '{}' is not valid for MT103. Valid codes: {}",
+                    code,
+                    Self::MT103_VALID_23B_CODES.join(", ")
+                ),
+            ));
+        }
+
+        None
+    }
+
+    /// Validate Field 23E instruction codes (Error codes: T48, D97, D98, D67, E46)
+    /// Complex validation for instruction code combinations and restrictions
+    fn validate_field_23e(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        if let Some(ref field_23e_vec) = self.field_23e {
+            let mut seen_codes = HashSet::new();
+            let mut code_positions: Vec<(String, usize)> = Vec::new();
+
+            for field_23e in field_23e_vec {
+                let code = &field_23e.instruction_code;
+
+                // T48: Validate instruction code is in allowed list
+                if !Self::MT103_VALID_23E_CODES.contains(&code.as_str()) {
+                    errors.push(SwiftValidationError::format_error(
+                        "T48",
+                        "23E",
+                        code,
+                        &format!("One of: {}", Self::MT103_VALID_23E_CODES.join(", ")),
+                        &format!(
+                            "Instruction code '{}' is not valid for MT103. Valid codes: {}",
+                            code,
+                            Self::MT103_VALID_23E_CODES.join(", ")
+                        ),
+                    ));
+                }
+
+                // D97: Additional information only allowed for specific codes
+                if field_23e.additional_info.is_some()
+                    && !Self::CODES_WITH_ADDITIONAL_INFO.contains(&code.as_str())
+                {
+                    errors.push(SwiftValidationError::content_error(
+                        "D97",
+                        "23E",
+                        code,
+                        &format!(
+                            "Additional information is only allowed for codes: {}. Code '{}' does not allow additional information",
+                            Self::CODES_WITH_ADDITIONAL_INFO.join(", "),
+                            code
+                        ),
+                        "Additional information in field 23E is only allowed for codes: PHON, PHOB, PHOI, TELE, TELB, TELI, HOLD, REPA",
+                    ));
+                }
+
+                // E46: Same code must not be present more than once
+                if seen_codes.contains(code) {
+                    errors.push(SwiftValidationError::relation_error(
+                        "E46",
+                        "23E",
+                        vec![],
+                        &format!(
+                            "Instruction code '{}' appears more than once. Same code must not be repeated",
+                            code
+                        ),
+                        "When field 23E is repeated, the same code must not be present more than once",
+                    ));
+                }
+                seen_codes.insert(code.clone());
+
+                // Track position for ordering check
+                if let Some(pos) = Self::FIELD_23E_CODE_ORDER.iter().position(|&c| c == code) {
+                    code_positions.push((code.clone(), pos));
+                }
+            }
+
+            // D98: Check code ordering
+            for i in 1..code_positions.len() {
+                if code_positions[i].1 < code_positions[i - 1].1 {
+                    errors.push(SwiftValidationError::content_error(
+                        "D98",
+                        "23E",
+                        &code_positions[i].0,
+                        &format!(
+                            "Instruction codes must appear in the following order: {}. Code '{}' appears out of order",
+                            Self::FIELD_23E_CODE_ORDER.join(", "),
+                            code_positions[i].0
+                        ),
+                        "When field 23E is repeated, codes must appear in specified order",
+                    ));
+                    break;
+                }
+            }
+
+            // D67: Check for invalid combinations
+            for field_23e in field_23e_vec {
+                let code = &field_23e.instruction_code;
+
+                for &(base_code, forbidden_codes) in Self::INVALID_23E_COMBINATIONS {
+                    if code == base_code {
+                        for other_field in field_23e_vec {
+                            let other_code = &other_field.instruction_code;
+                            if forbidden_codes.contains(&other_code.as_str()) {
+                                errors.push(SwiftValidationError::content_error(
+                                    "D67",
+                                    "23E",
+                                    code,
+                                    &format!(
+                                        "Instruction code '{}' cannot be combined with code '{}'. Invalid combination",
+                                        code, other_code
+                                    ),
+                                    &format!(
+                                        "Code '{}' cannot be combined with: {}",
+                                        base_code,
+                                        forbidden_codes.join(", ")
+                                    ),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        errors
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // Field 23B Validation
+        if let Some(error) = self.validate_field_23b() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // Field 23E Validation
+        let f23e_errors = self.validate_field_23e();
+        all_errors.extend(f23e_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        // C1: Currency/Instructed Amount and Exchange Rate
+        if let Some(error) = self.validate_c1_currency_exchange() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C3: Field 23B and 23E Code Dependencies
+        let c3_errors = self.validate_c3_bank_op_instruction_codes();
+        all_errors.extend(c3_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        // C4: Third Reimbursement Institution Dependencies
+        if let Some(error) = self.validate_c4_third_reimbursement() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C5 (C9): Intermediary and Account With Institution
+        if let Some(error) = self.validate_c5_intermediary() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C6 (C10): Field 23B SPRI and Field 56A
+        if let Some(error) = self.validate_c6_field_56_restrictions() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C7 (C14): Details of Charges
+        let c7_errors = self.validate_c7_charges();
+        all_errors.extend(c7_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        // C8 (C15): Charges and Instructed Amount
+        if let Some(error) = self.validate_c8_charges_instructed_amount() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C9 (C18): Receiver's Charges Currency
+        if let Some(error) = self.validate_c9_receiver_charges_currency() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C13: CHQB Beneficiary Account Restriction
+        if let Some(error) = self.validate_c13_chqb_beneficiary_account() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C16: TELI/PHOI Restriction
+        let c16_errors = self.validate_c16_teli_phoi_restriction();
+        all_errors.extend(c16_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        // C17: TELE/PHON Restriction
+        let c17_errors = self.validate_c17_tele_phon_restriction();
+        all_errors.extend(c17_errors);
+
+        all_errors
     }
 }
 
@@ -306,6 +964,11 @@ impl crate::traits::SwiftMessageBody for MT103 {
     fn to_mt_string(&self) -> String {
         // Call the existing public method implementation
         MT103::to_mt_string(self)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT103::validate_network_rules(self, stop_on_first_error)
     }
 }
 

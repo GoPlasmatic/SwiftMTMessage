@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
@@ -181,77 +182,199 @@ impl MT942 {
         })
     }
 
-    /// Static validation rules for MT942
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [
-            {"id": "C1", "description": "The first two characters of the three-character currency code in fields 34F, 61, 90D, and 90C must be the same for all occurrences"},
-            {"id": "C2", "description": "The debit/credit mark in the first occurrence of field 34F may be D or C, but the second occurrence must have C"}
-        ]}"#
+        r#"{"rules": [{"id": "MT942_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
-    /// Validate the message instance according to MT942 rules
-    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
-        // C1: Currency consistency validation
-        // Base currency from mandatory floor limit debit
-        let base_currency = &self.floor_limit_debit.currency[0..2];
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT942)
+    // ========================================================================
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Get the base currency from the mandatory debit floor limit
+    fn get_base_currency(&self) -> &str {
+        &self.floor_limit_debit.currency[0..2]
+    }
+
+    // ========================================================================
+    // VALIDATION RULES (C1-C3)
+    // ========================================================================
+
+    /// C1: Currency Code Consistency (Error code: C27)
+    /// The first two characters of the three character currency code in fields 34F,
+    /// 90D, and 90C must be the same for all occurrences
+    fn validate_c1_currency_consistency(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+        let base_currency = self.get_base_currency();
 
         // Check floor limit credit if present
-        if let Some(ref floor_limit_credit) = self.floor_limit_credit
-            && &floor_limit_credit.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT942: Currency code mismatch - credit floor limit currency '{}' does not match base currency '{}'",
-                    &floor_limit_credit.currency[0..2],
-                    base_currency
-                ),
-            });
-        }
-
-        // Check 90D if present
-        if let Some(ref field_90d) = self.field_90d
-            && &field_90d.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT942: Currency code mismatch - field 90D currency '{}' does not match base currency '{}'",
-                    &field_90d.currency[0..2],
-                    base_currency
-                ),
-            });
-        }
-
-        // Check 90C if present
-        if let Some(ref field_90c) = self.field_90c
-            && &field_90c.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT942: Currency code mismatch - field 90C currency '{}' does not match base currency '{}'",
-                    &field_90c.currency[0..2],
-                    base_currency
-                ),
-            });
-        }
-
-        // C2: Debit/Credit mark validation for Field 34F
         if let Some(ref floor_limit_credit) = self.floor_limit_credit {
-            // Second occurrence must have C indicator
-            if floor_limit_credit.indicator != Some('C') {
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: format!(
-                        "MT942: Second occurrence of field 34F must have indicator 'C', found '{:?}'",
-                        floor_limit_credit.indicator
+            let credit_currency = &floor_limit_credit.currency[0..2];
+            if credit_currency != base_currency {
+                errors.push(SwiftValidationError::content_error(
+                    "C27",
+                    "34F",
+                    &floor_limit_credit.currency,
+                    &format!(
+                        "Currency code in second field 34F ({}) must match first field 34F ({}). First two characters must be the same for all currency fields",
+                        credit_currency, base_currency
                     ),
-                });
+                    "The first two characters of the three character currency code in fields 34F, 90D, and 90C must be the same for all occurrences",
+                ));
             }
         }
 
-        // Note: Field 61 does not contain a currency field directly.
-        // Currency consistency for Field 61 is implicitly validated through the
-        // statement's base currency in other balance fields.
+        // Check field 90D if present
+        if let Some(ref field_90d) = self.field_90d {
+            let field_90d_currency = &field_90d.currency[0..2];
+            if field_90d_currency != base_currency {
+                errors.push(SwiftValidationError::content_error(
+                    "C27",
+                    "90D",
+                    &field_90d.currency,
+                    &format!(
+                        "Currency code in field 90D ({}) must match field 34F ({}). First two characters must be the same for all currency fields",
+                        field_90d_currency, base_currency
+                    ),
+                    "The first two characters of the three character currency code in fields 34F, 90D, and 90C must be the same for all occurrences",
+                ));
+            }
+        }
 
-        Ok(())
+        // Check field 90C if present
+        if let Some(ref field_90c) = self.field_90c {
+            let field_90c_currency = &field_90c.currency[0..2];
+            if field_90c_currency != base_currency {
+                errors.push(SwiftValidationError::content_error(
+                    "C27",
+                    "90C",
+                    &field_90c.currency,
+                    &format!(
+                        "Currency code in field 90C ({}) must match field 34F ({}). First two characters must be the same for all currency fields",
+                        field_90c_currency, base_currency
+                    ),
+                    "The first two characters of the three character currency code in fields 34F, 90D, and 90C must be the same for all occurrences",
+                ));
+            }
+        }
+
+        errors
+    }
+
+    /// C2: Floor Limit Indicator D/C Mark (Error code: C23)
+    /// When only one field 34F is present, the second subfield (D/C Mark) must not be used.
+    /// When both fields 34F are present, subfield 2 of the first 34F must contain 'D',
+    /// and subfield 2 of the second 34F must contain 'C'
+    fn validate_c2_floor_limit_dc_mark(&self) -> Option<SwiftValidationError> {
+        if let Some(ref floor_limit_credit) = self.floor_limit_credit {
+            // Two occurrences - first must have 'D', second must have 'C'
+
+            // Check first occurrence (debit) has 'D'
+            if self.floor_limit_debit.indicator != Some('D') {
+                return Some(SwiftValidationError::content_error(
+                    "C23",
+                    "34F",
+                    &format!("{:?}", self.floor_limit_debit.indicator),
+                    &format!(
+                        "When two field 34F are present, first occurrence must have D/C mark 'D', found '{:?}'",
+                        self.floor_limit_debit.indicator
+                    ),
+                    "When both fields 34F are present, subfield 2 of the first 34F must contain the value 'D', and subfield 2 of the second 34F must contain the value 'C'",
+                ));
+            }
+
+            // Check second occurrence (credit) has 'C'
+            if floor_limit_credit.indicator != Some('C') {
+                return Some(SwiftValidationError::content_error(
+                    "C23",
+                    "34F",
+                    &format!("{:?}", floor_limit_credit.indicator),
+                    &format!(
+                        "When two field 34F are present, second occurrence must have D/C mark 'C', found '{:?}'",
+                        floor_limit_credit.indicator
+                    ),
+                    "When both fields 34F are present, subfield 2 of the first 34F must contain the value 'D', and subfield 2 of the second 34F must contain the value 'C'",
+                ));
+            }
+        } else {
+            // Single occurrence - D/C mark must not be used
+            if self.floor_limit_debit.indicator.is_some() {
+                return Some(SwiftValidationError::content_error(
+                    "C23",
+                    "34F",
+                    &format!("{:?}", self.floor_limit_debit.indicator),
+                    &format!(
+                        "When only one field 34F is present, D/C mark must not be used, found '{:?}'",
+                        self.floor_limit_debit.indicator
+                    ),
+                    "When only one field 34F is present, the second subfield (D/C Mark) must not be used",
+                ));
+            }
+        }
+
+        None
+    }
+
+    /// C3: Field 86 Positioning and Relationship to Field 61 (Error code: C24)
+    /// If field 86 is present in any occurrence of the repetitive sequence, it must be
+    /// preceded by a field 61 except if that field 86 is the last field in the message,
+    /// then field 61 is optional
+    fn validate_c3_field_86_positioning(&self) -> Vec<SwiftValidationError> {
+        let errors = Vec::new();
+
+        // Check each statement line
+        for statement_line in self.statement_lines.iter() {
+            if statement_line.field_86.is_some() {
+                // Within the repetitive sequence, field 86 must be preceded by field 61
+                // This is structurally enforced by our data model (field_86 is part of MT942StatementLine)
+                // So this check is always satisfied for statement_lines
+
+                // The rule is primarily about ensuring field 86 within statement lines
+                // is properly associated with a field 61, which our structure guarantees
+            }
+        }
+
+        // If there's a message-level field 86 (self.field_86), it's the last field
+        // and doesn't need to be preceded by field 61, so it's valid
+
+        // The structural validation is implicitly handled by the parsing logic
+        // No explicit validation error needed here as the structure enforces the rule
+
+        errors
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Currency Code Consistency
+        let c1_errors = self.validate_c1_currency_consistency();
+        all_errors.extend(c1_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        // C2: Floor Limit Indicator D/C Mark
+        if let Some(error) = self.validate_c2_floor_limit_dc_mark() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C3: Field 86 Positioning
+        let c3_errors = self.validate_c3_field_86_positioning();
+        all_errors.extend(c3_errors);
+
+        all_errors
     }
 }
 
@@ -287,5 +410,10 @@ impl crate::traits::SwiftMessageBody for MT942 {
         append_optional_field(&mut result, &self.field_86);
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT942::validate_network_rules(self, stop_on_first_error)
     }
 }

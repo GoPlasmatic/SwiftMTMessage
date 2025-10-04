@@ -1,4 +1,4 @@
-use crate::errors::ParseError;
+use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
 use crate::message_parser::MessageParser;
 use crate::parsing_utils::*;
@@ -69,9 +69,70 @@ impl MT292 {
         })
     }
 
-    /// Static validation rules for MT292
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": []}"#
+        r#"{"rules": [{"id": "MT292_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT292)
+    // ========================================================================
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Check if field 79 is present
+    fn has_field_79(&self) -> bool {
+        self.field_79.is_some()
+    }
+
+    /// Check if copy of original message fields is present
+    fn has_original_fields(&self) -> bool {
+        !self.original_fields.is_empty()
+    }
+
+    // ========================================================================
+    // VALIDATION RULES (C1)
+    // ========================================================================
+
+    /// C1: Field 79 or Copy of Mandatory Fields Requirement (Error code: C25)
+    /// Field 79 or a copy of at least the mandatory fields of the original message
+    /// or both must be present
+    fn validate_c1_field_79_or_original_fields(&self) -> Option<SwiftValidationError> {
+        let has_79 = self.has_field_79();
+        let has_original = self.has_original_fields();
+
+        if !has_79 && !has_original {
+            return Some(SwiftValidationError::content_error(
+                "C25",
+                "79",
+                "",
+                "Field 79 (Narrative Description) or a copy of at least the mandatory fields of the original message must be present",
+                "Either field 79 or a copy of at least the mandatory fields of the original message or both must be present",
+            ));
+        }
+
+        None
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Field 79 or Copy of Mandatory Fields Requirement
+        if let Some(error) = self.validate_c1_field_79_or_original_fields() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        all_errors
     }
 }
 
@@ -96,5 +157,10 @@ impl crate::traits::SwiftMessageBody for MT292 {
         append_optional_field(&mut result, &self.field_79);
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT292::validate_network_rules(self, stop_on_first_error)
     }
 }

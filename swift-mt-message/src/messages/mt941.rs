@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
@@ -170,88 +171,144 @@ impl MT941 {
         })
     }
 
-    /// Static validation rules for MT941
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [
-            {"id": "C1", "description": "The first two characters of the three-character currency code in fields 60F, 90D, 90C, 62F, 64, and 65 must be the same for all occurrences of these fields"}
-        ]}"#
+        r#"{"rules": [{"id": "MT941_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
-    /// Validate the message instance according to MT941 rules
-    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
-        // C1: Currency consistency validation
-        // Extract currency from mandatory field 62F
-        let base_currency = &self.field_62f.currency[0..2];
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT941)
+    // ========================================================================
+
+    // No validation constants needed for MT941 - only currency consistency check
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Get the base currency (first two characters) from mandatory field 62F
+    fn get_base_currency(&self) -> &str {
+        &self.field_62f.currency[0..2]
+    }
+
+    // ========================================================================
+    // VALIDATION RULES
+    // ========================================================================
+
+    /// C1: Currency Code Consistency (Error code: C27)
+    /// The first two characters of the three character currency code in fields 60F, 90D,
+    /// 90C, 62F, 64 and 65 must be the same for all occurrences of these fields
+    fn validate_c1_currency_consistency(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+        let base_currency = self.get_base_currency();
 
         // Check 60F if present
-        if let Some(ref field_60f) = self.field_60f
-            && &field_60f.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT941: Currency code mismatch - field 60F currency '{}' does not match field 62F currency '{}'",
-                    &field_60f.currency[0..2],
-                    base_currency
-                ),
-            });
+        if let Some(ref field_60f) = self.field_60f {
+            if &field_60f.currency[0..2] != base_currency {
+                errors.push(SwiftValidationError::content_error(
+                    "C27",
+                    "60F",
+                    &field_60f.currency,
+                    &format!(
+                        "Currency code in field 60F ({}) must have the same first two characters as field 62F ({})",
+                        &field_60f.currency[0..2],
+                        base_currency
+                    ),
+                    "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
+                ));
+            }
         }
 
         // Check 90D if present
-        if let Some(ref field_90d) = self.field_90d
-            && &field_90d.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT941: Currency code mismatch - field 90D currency '{}' does not match field 62F currency '{}'",
-                    &field_90d.currency[0..2],
-                    base_currency
-                ),
-            });
+        if let Some(ref field_90d) = self.field_90d {
+            if &field_90d.currency[0..2] != base_currency {
+                errors.push(SwiftValidationError::content_error(
+                    "C27",
+                    "90D",
+                    &field_90d.currency,
+                    &format!(
+                        "Currency code in field 90D ({}) must have the same first two characters as field 62F ({})",
+                        &field_90d.currency[0..2],
+                        base_currency
+                    ),
+                    "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
+                ));
+            }
         }
 
         // Check 90C if present
-        if let Some(ref field_90c) = self.field_90c
-            && &field_90c.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT941: Currency code mismatch - field 90C currency '{}' does not match field 62F currency '{}'",
-                    &field_90c.currency[0..2],
-                    base_currency
-                ),
-            });
+        if let Some(ref field_90c) = self.field_90c {
+            if &field_90c.currency[0..2] != base_currency {
+                errors.push(SwiftValidationError::content_error(
+                    "C27",
+                    "90C",
+                    &field_90c.currency,
+                    &format!(
+                        "Currency code in field 90C ({}) must have the same first two characters as field 62F ({})",
+                        &field_90c.currency[0..2],
+                        base_currency
+                    ),
+                    "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
+                ));
+            }
         }
 
         // Check 64 if present
-        if let Some(ref field_64) = self.field_64
-            && &field_64.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT941: Currency code mismatch - field 64 currency '{}' does not match field 62F currency '{}'",
-                    &field_64.currency[0..2],
-                    base_currency
-                ),
-            });
+        if let Some(ref field_64) = self.field_64 {
+            if &field_64.currency[0..2] != base_currency {
+                errors.push(SwiftValidationError::content_error(
+                    "C27",
+                    "64",
+                    &field_64.currency,
+                    &format!(
+                        "Currency code in field 64 ({}) must have the same first two characters as field 62F ({})",
+                        &field_64.currency[0..2],
+                        base_currency
+                    ),
+                    "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
+                ));
+            }
         }
 
-        // Check 65 if present
+        // Check 65 if present (can be repetitive)
         if let Some(ref field_65_vec) = self.field_65 {
             for (idx, field_65) in field_65_vec.iter().enumerate() {
                 if &field_65.currency[0..2] != base_currency {
-                    return Err(crate::errors::ParseError::InvalidFormat {
-                        message: format!(
-                            "MT941: Currency code mismatch - field 65[{}] currency '{}' does not match field 62F currency '{}'",
+                    errors.push(SwiftValidationError::content_error(
+                        "C27",
+                        "65",
+                        &field_65.currency,
+                        &format!(
+                            "Currency code in field 65[{}] ({}) must have the same first two characters as field 62F ({})",
                             idx,
                             &field_65.currency[0..2],
                             base_currency
                         ),
-                    });
+                        "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
+                    ));
                 }
             }
         }
 
-        Ok(())
+        errors
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Currency Code Consistency
+        let c1_errors = self.validate_c1_currency_consistency();
+        all_errors.extend(c1_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        all_errors
     }
 }
 
@@ -282,5 +339,114 @@ impl crate::traits::SwiftMessageBody for MT941 {
         append_optional_field(&mut result, &self.field_86);
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT941::validate_network_rules(self, stop_on_first_error)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::traits::SwiftField;
+
+    #[test]
+    fn test_mt941_validate_c1_currency_consistency_pass() {
+        // Valid message - all currency codes have the same first two characters
+        let mt941 = MT941 {
+            field_20: Field20::parse("BALREP001").unwrap(),
+            field_21: None,
+            field_25: Field25AccountIdentification::parse("1234567890").unwrap(),
+            field_28: Field28::parse("1").unwrap(),
+            field_13d: None,
+            field_60f: Some(Field60F::parse("C251003EUR595771,95").unwrap()),
+            field_90d: Some(Field90D::parse("72EUR385920,").unwrap()),
+            field_90c: Some(Field90C::parse("44EUR450000,").unwrap()),
+            field_62f: Field62F::parse("C251003EUR659851,95").unwrap(),
+            field_64: Some(Field64::parse("C251003EUR480525,87").unwrap()),
+            field_65: Some(vec![Field65::parse("C251004EUR530691,95").unwrap()]),
+            field_86: None,
+        };
+
+        let errors = mt941.validate_network_rules(false);
+        assert!(
+            errors.is_empty(),
+            "Expected no validation errors, got: {:?}",
+            errors
+        );
+    }
+
+    #[test]
+    fn test_mt941_validate_c1_currency_consistency_fail_60f() {
+        // Invalid message - field 60F has different currency prefix
+        let mt941 = MT941 {
+            field_20: Field20::parse("BALREP001").unwrap(),
+            field_21: None,
+            field_25: Field25AccountIdentification::parse("1234567890").unwrap(),
+            field_28: Field28::parse("1").unwrap(),
+            field_13d: None,
+            field_60f: Some(Field60F::parse("C251003USD595771,95").unwrap()), // USD instead of EUR
+            field_90d: None,
+            field_90c: None,
+            field_62f: Field62F::parse("C251003EUR659851,95").unwrap(),
+            field_64: None,
+            field_65: None,
+            field_86: None,
+        };
+
+        let errors = mt941.validate_network_rules(false);
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].message().contains("60F"));
+        assert!(errors[0].message().contains("US"));
+        assert!(errors[0].message().contains("EU"));
+    }
+
+    #[test]
+    fn test_mt941_validate_c1_currency_consistency_fail_multiple() {
+        // Invalid message - multiple fields have different currency prefixes
+        let mt941 = MT941 {
+            field_20: Field20::parse("BALREP001").unwrap(),
+            field_21: None,
+            field_25: Field25AccountIdentification::parse("1234567890").unwrap(),
+            field_28: Field28::parse("1").unwrap(),
+            field_13d: None,
+            field_60f: Some(Field60F::parse("C251003USD595771,95").unwrap()), // USD
+            field_90d: Some(Field90D::parse("72GBP385920,").unwrap()),        // GBP
+            field_90c: Some(Field90C::parse("44JPY450000,").unwrap()),        // JPY
+            field_62f: Field62F::parse("C251003EUR659851,95").unwrap(),       // EUR
+            field_64: Some(Field64::parse("C251003CHF480525,87").unwrap()),   // CHF
+            field_65: Some(vec![
+                Field65::parse("C251004AUD530691,95").unwrap(), // AUD
+                Field65::parse("C251005CAD530691,95").unwrap(), // CAD
+            ]),
+            field_86: None,
+        };
+
+        let errors = mt941.validate_network_rules(false);
+        assert_eq!(errors.len(), 6); // 60F, 90D, 90C, 64, 65[0], 65[1]
+    }
+
+    #[test]
+    fn test_mt941_validate_c1_stop_on_first_error() {
+        // Invalid message - multiple fields have different currency prefixes
+        let mt941 = MT941 {
+            field_20: Field20::parse("BALREP001").unwrap(),
+            field_21: None,
+            field_25: Field25AccountIdentification::parse("1234567890").unwrap(),
+            field_28: Field28::parse("1").unwrap(),
+            field_13d: None,
+            field_60f: Some(Field60F::parse("C251003USD595771,95").unwrap()),
+            field_90d: Some(Field90D::parse("72GBP385920,").unwrap()),
+            field_90c: None,
+            field_62f: Field62F::parse("C251003EUR659851,95").unwrap(),
+            field_64: None,
+            field_65: None,
+            field_86: None,
+        };
+
+        let errors = mt941.validate_network_rules(true); // stop on first error
+        assert_eq!(errors.len(), 1); // Should only return the first error (60F)
     }
 }

@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::{field34::Field34F, *};
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
@@ -71,42 +72,18 @@ impl MT920 {
         Ok(Self { field_20, sequence })
     }
 
-    /// Validation rules for the message
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "BASIC", "description": "Basic validation", "condition": true}]}"#
+        r#"{"rules": [{"id": "MT920_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Parse from SWIFT MT text format
     pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
         let block4 = extract_block4(input)?;
-        let message = Self::parse_from_block4(&block4)?;
-
-        // Apply validation rules
-        message.validate_network_rules()?;
-
-        Ok(message)
-    }
-
-    /// Validate network rules specific to MT920
-    pub fn validate_network_rules(&self) -> Result<(), crate::errors::ParseError> {
-        // C1: At least one sequence must be present
-        if self.sequence.is_empty() {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT920: At least one sequence must be present".to_string(),
-            });
-        }
-
-        // C2: Maximum 100 sequences allowed
-        if self.sequence.len() > 100 {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT920: Maximum 100 sequences allowed, found {}",
-                    self.sequence.len()
-                ),
-            });
-        }
-
-        Ok(())
+        Self::parse_from_block4(&block4)
     }
 
     /// Convert to SWIFT MT text format
@@ -128,26 +105,188 @@ impl MT920 {
         result
     }
 
-    /// Get validation rules in JSON format
-    pub fn validation_rules() -> &'static str {
-        r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "At least one sequence must be present",
-      "condition": {
-        "min_sequences": 1
-      }
-    },
-    {
-      "id": "C2",
-      "description": "Maximum 100 sequences allowed",
-      "condition": {
-        "max_sequences": 100
-      }
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT920)
+    // ========================================================================
+
+    /// Field 12 valid message type codes for MT920
+    const VALID_MESSAGE_TYPES: &'static [&'static str] = &["940", "941", "942", "950"];
+
+    // ========================================================================
+    // VALIDATION RULES (T88, C1, C2, C3)
+    // ========================================================================
+
+    /// T88: Field 12 Message Type Validation (Error code: T88)
+    /// Field 12 must contain one of: 940, 941, 942, 950
+    fn validate_t88_message_type(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        for (idx, seq) in self.sequence.iter().enumerate() {
+            let type_code = &seq.field_12.type_code;
+            if !Self::VALID_MESSAGE_TYPES.contains(&type_code.as_str()) {
+                errors.push(SwiftValidationError::format_error(
+                    "T88",
+                    "12",
+                    type_code,
+                    &format!("One of: {}", Self::VALID_MESSAGE_TYPES.join(", ")),
+                    &format!(
+                        "Sequence {}: Field 12 message type '{}' is not valid. Valid types: {}",
+                        idx + 1,
+                        type_code,
+                        Self::VALID_MESSAGE_TYPES.join(", ")
+                    ),
+                ));
+            }
+        }
+
+        errors
     }
-  ]
-}"#
+
+    /// C1: Field 34F Requirement for MT 942 Requests (Error code: C22)
+    /// If field 12 contains '942', at least field 34F Debit/(Debit and Credit) must be present
+    fn validate_c1_field_34f_requirement(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        for (idx, seq) in self.sequence.iter().enumerate() {
+            if seq.field_12.type_code == "942" && seq.floor_limit_debit.is_none() {
+                errors.push(SwiftValidationError::business_error(
+                    "C22",
+                    "34F",
+                    vec!["12".to_string()],
+                    &format!(
+                        "Sequence {}: Field 34F (Debit/Debit and Credit Floor Limit) is mandatory when field 12 contains '942'",
+                        idx + 1
+                    ),
+                    "When requesting MT 942 (Interim Transaction Report), at least the debit floor limit must be specified",
+                ));
+            }
+        }
+
+        errors
+    }
+
+    /// C2: Field 34F D/C Mark Usage (Error code: C23)
+    /// When only one 34F present: D/C Mark must NOT be used
+    /// When both 34F present: First must have 'D', second must have 'C'
+    fn validate_c2_dc_mark_usage(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        for (idx, seq) in self.sequence.iter().enumerate() {
+            let has_debit = seq.floor_limit_debit.is_some();
+            let has_credit = seq.floor_limit_credit.is_some();
+
+            if has_debit && !has_credit {
+                // Only debit field present - D/C Mark must NOT be used
+                if let Some(ref debit_field) = seq.floor_limit_debit {
+                    if debit_field.indicator.is_some() {
+                        errors.push(SwiftValidationError::business_error(
+                            "C23",
+                            "34F",
+                            vec![],
+                            &format!(
+                                "Sequence {}: D/C Mark must not be used when only one field 34F is present",
+                                idx + 1
+                            ),
+                            "When only one field 34F is present, the floor limit applies to both debit and credit amounts, and the D/C Mark subfield must not be used",
+                        ));
+                    }
+                }
+            } else if has_debit && has_credit {
+                // Both fields present - First must have 'D', second must have 'C'
+                let debit_field = seq.floor_limit_debit.as_ref().unwrap();
+                let credit_field = seq.floor_limit_credit.as_ref().unwrap();
+
+                if debit_field.indicator != Some('D') {
+                    errors.push(SwiftValidationError::business_error(
+                        "C23",
+                        "34F",
+                        vec![],
+                        &format!(
+                            "Sequence {}: First field 34F must contain D/C Mark 'D' when both floor limits are present",
+                            idx + 1
+                        ),
+                        "When both fields 34F are present, the first field (debit floor limit) must contain D/C Mark = 'D'",
+                    ));
+                }
+
+                if credit_field.indicator != Some('C') {
+                    errors.push(SwiftValidationError::business_error(
+                        "C23",
+                        "34F",
+                        vec![],
+                        &format!(
+                            "Sequence {}: Second field 34F must contain D/C Mark 'C' when both floor limits are present",
+                            idx + 1
+                        ),
+                        "When both fields 34F are present, the second field (credit floor limit) must contain D/C Mark = 'C'",
+                    ));
+                }
+            }
+        }
+
+        errors
+    }
+
+    /// C3: Currency Consistency Within Repetitive Sequence (Error code: C40)
+    /// Currency code must be the same for each occurrence of field 34F within each sequence
+    fn validate_c3_currency_consistency(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        for (idx, seq) in self.sequence.iter().enumerate() {
+            if let (Some(debit_field), Some(credit_field)) =
+                (&seq.floor_limit_debit, &seq.floor_limit_credit)
+            {
+                if debit_field.currency != credit_field.currency {
+                    errors.push(SwiftValidationError::business_error(
+                        "C40",
+                        "34F",
+                        vec![],
+                        &format!(
+                            "Sequence {}: Currency code must be the same for all field 34F occurrences. Found '{}' and '{}'",
+                            idx + 1,
+                            debit_field.currency,
+                            credit_field.currency
+                        ),
+                        "Within each repetitive sequence, the currency code must be the same for each occurrence of field 34F",
+                    ));
+                }
+            }
+        }
+
+        errors
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // T88: Message Type Validation
+        let t88_errors = self.validate_t88_message_type();
+        all_errors.extend(t88_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        // C1: Field 34F Requirement for MT 942
+        let c1_errors = self.validate_c1_field_34f_requirement();
+        all_errors.extend(c1_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        // C2: Field 34F D/C Mark Usage
+        let c2_errors = self.validate_c2_dc_mark_usage();
+        all_errors.extend(c2_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        // C3: Currency Consistency
+        let c3_errors = self.validate_c3_currency_consistency();
+        all_errors.extend(c3_errors);
+
+        all_errors
     }
 }
 
@@ -164,6 +303,11 @@ impl crate::traits::SwiftMessageBody for MT920 {
     fn to_mt_string(&self) -> String {
         // Call the existing public method implementation
         MT920::to_mt_string(self)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT920::validate_network_rules(self, stop_on_first_error)
     }
 }
 

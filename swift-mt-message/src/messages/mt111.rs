@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
@@ -66,59 +67,53 @@ impl MT111 {
         })
     }
 
-    /// Static validation rules for MT111
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [
-            {"id": "F20", "description": "Field 20 must not start or end with '/', and must not contain '//'"},
-            {"id": "F21", "description": "Field 21 must not start or end with '/', and must not contain '//'"},
-            {"id": "F30", "description": "Field 30 must be a valid date in YYMMDD format"},
-            {"id": "F32", "description": "Field 32 must contain valid currency and positive amount"},
-            {"id": "F59", "description": "Field 59 must not include account number"}
-        ]}"#
+        r#"{"rules": [{"id": "MT111_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
-    /// Validate the message instance according to MT111 rules
-    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
-        // Validate Field 20 - must not start/end with '/' or contain '//'
-        let reference = &self.field_20.reference;
-        if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message:
-                    "MT111: Field 20 must not start or end with '/', and must not contain '//'"
-                        .to_string(),
-            });
-        }
+    /// Parse from generic SWIFT input (tries to detect blocks)
+    pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
+        let block4 = extract_block4(input)?;
+        Self::parse_from_block4(&block4)
+    }
 
-        // Validate Field 21 - same rules as Field 20
-        let cheque_number = &self.field_21.reference;
-        if cheque_number.starts_with('/')
-            || cheque_number.ends_with('/')
-            || cheque_number.contains("//")
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message:
-                    "MT111: Field 21 must not start or end with '/', and must not contain '//'"
-                        .to_string(),
-            });
-        }
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT111)
+    // ========================================================================
 
-        // Amount validation is handled by Field32A/B parse methods
+    // NOTE: MT111 has no message-level network validation rules (C-series, D-series, E-series, T-series)
+    // per SR 2025 specification. All validation is performed at the field level:
+    // - Field 20, 21: Reference format validation (implemented in field types)
+    // - Field 30: Date validation (implemented in field types)
+    // - Field 32a: Currency and amount validation (implemented in field types)
+    // - Field 52a: BIC validation (implemented in field types)
+    // - Field 59: Account must not be used (enforced by Field59NoOption type)
+    // - Field 75: Narrative format (implemented in field types)
 
-        Ok(())
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, _stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // No message-level network validation rules for MT111
+        Vec::new()
     }
 }
 
-// Implement the SwiftMessageBody trait for MT111
 impl crate::traits::SwiftMessageBody for MT111 {
     fn message_type() -> &'static str {
         "111"
     }
 
     fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        Self::parse_from_block4(block4)
+        // Call the existing public method implementation
+        MT111::parse_from_block4(block4)
     }
 
     fn to_mt_string(&self) -> String {
+        // Call the existing public method implementation
         let mut result = String::new();
 
         append_field(&mut result, &self.field_20);
@@ -130,5 +125,10 @@ impl crate::traits::SwiftMessageBody for MT111 {
         append_optional_field(&mut result, &self.field_75);
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT111::validate_network_rules(self, stop_on_first_error)
     }
 }

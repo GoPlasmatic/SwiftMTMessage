@@ -1,4 +1,4 @@
-use crate::errors::ParseError;
+use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
 use crate::message_parser::MessageParser;
 use crate::parsing_utils::*;
@@ -67,22 +67,22 @@ impl MT200 {
         })
     }
 
-    /// Static validation rules for MT200
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": []}"#
-    }
-}
-
-impl crate::traits::SwiftMessageBody for MT200 {
-    fn message_type() -> &'static str {
-        "200"
+        r#"{"rules": [{"id": "MT200_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
-    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        Self::parse_from_block4(block4)
+    /// Parse from generic SWIFT input (tries to detect blocks)
+    pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
+        let block4 = extract_block4(input)?;
+        Self::parse_from_block4(&block4)
     }
 
-    fn to_mt_string(&self) -> String {
+    /// Convert to SWIFT MT text format
+    pub fn to_mt_string(&self) -> String {
         let mut result = String::new();
 
         append_field(&mut result, &self.field_20);
@@ -92,6 +92,117 @@ impl crate::traits::SwiftMessageBody for MT200 {
         append_field(&mut result, &self.field_57);
         append_optional_field(&mut result, &self.field_72);
 
-        finalize_mt_string(result, false)
+        result.push('-');
+        result
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT200)
+    // ========================================================================
+
+    /// Special codes requiring SWIFT Payments Reject/Return Guidelines compliance
+    const SPECIAL_72_CODES: &'static [&'static str] = &["REJT", "RETN"];
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Extract codes from field 72 content
+    fn extract_72_codes(&self) -> Vec<String> {
+        let mut codes = Vec::new();
+
+        if let Some(ref field_72) = self.field_72 {
+            // Parse field 72 content for codes (format: /CODE/additional text)
+            for line in &field_72.information {
+                let trimmed = line.trim();
+                if trimmed.starts_with('/') {
+                    if let Some(end_idx) = trimmed[1..].find('/') {
+                        let code = &trimmed[1..=end_idx];
+                        codes.push(code.to_uppercase());
+                    } else if trimmed.len() > 1 {
+                        // Code without trailing slash
+                        let code = &trimmed[1..];
+                        if let Some(space_idx) = code.find(|c: char| c.is_whitespace()) {
+                            codes.push(code[..space_idx].to_uppercase());
+                        } else {
+                            codes.push(code.to_uppercase());
+                        }
+                    }
+                }
+            }
+        }
+
+        codes
+    }
+
+    // ========================================================================
+    // VALIDATION RULES
+    // ========================================================================
+
+    /// T80: Field 72 REJT/RETN Compliance
+    /// If /REJT/ or /RETN/ present, must follow SWIFT Payments Reject/Return Guidelines
+    fn validate_t80_field_72_special_codes(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        let codes = self.extract_72_codes();
+
+        for code in &codes {
+            if Self::SPECIAL_72_CODES.contains(&code.as_str()) {
+                // Note: This is a guideline check - actual compliance verification
+                // would require checking the full message structure according to
+                // SWIFT Payments Reject/Return Guidelines
+                errors.push(SwiftValidationError::content_error(
+                    "T80",
+                    "72",
+                    code,
+                    &format!(
+                        "Field 72 contains code /{}/. Message must comply with SWIFT Payments Reject/Return Guidelines",
+                        code
+                    ),
+                    "When field 72 contains /REJT/ or /RETN/, the message must follow SWIFT Payments Reject/Return Guidelines",
+                ));
+            }
+        }
+
+        errors
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // Note: Per SR 2025 specification, MT200 has no standard network validated rules.
+        // However, field-specific validation rules still apply.
+
+        // T80: Field 72 REJT/RETN Guidelines Compliance
+        let t80_errors = self.validate_t80_field_72_special_codes();
+        all_errors.extend(t80_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        all_errors
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT200 {
+    fn message_type() -> &'static str {
+        "200"
+    }
+
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        // Call the existing public method implementation
+        MT200::parse_from_block4(block4)
+    }
+
+    fn to_mt_string(&self) -> String {
+        // Call the existing public method implementation
+        MT200::to_mt_string(self)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT200::validate_network_rules(self, stop_on_first_error)
     }
 }

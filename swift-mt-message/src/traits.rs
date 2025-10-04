@@ -108,4 +108,26 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
     /// }
     /// ```
     fn to_mt_string(&self) -> String;
+
+    /// Validate network rules specific to this message type
+    ///
+    /// Validates SWIFT network validation rules (C-series, D-series, E-series, etc.)
+    /// and returns all validation errors found. This allows comprehensive error
+    /// reporting or early termination based on the stop_on_first_error flag.
+    ///
+    /// ## Parameters
+    /// - `stop_on_first_error`: If true, returns immediately upon finding the first error
+    ///
+    /// ## Returns
+    /// - Empty vector if all validation rules pass
+    /// - Vector of SwiftValidationError instances for each rule violation found
+    ///
+    /// ## Default Implementation
+    /// Returns empty vector (no validation rules to check)
+    fn validate_network_rules(
+        &self,
+        _stop_on_first_error: bool,
+    ) -> Vec<crate::errors::SwiftValidationError> {
+        Vec::new()
+    }
 }

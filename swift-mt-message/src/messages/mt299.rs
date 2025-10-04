@@ -1,4 +1,4 @@
-use crate::errors::ParseError;
+use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
 use crate::message_parser::MessageParser;
 use crate::parsing_utils::*;
@@ -44,9 +44,29 @@ impl MT299 {
         })
     }
 
-    /// Static validation rules for MT299
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
+    /// According to SR 2025 specifications, MT n99 messages have no network validated
+    /// rules beyond standard field-specific rules.
     pub fn validate() -> &'static str {
         r#"{"rules": []}"#
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MTn99)
+    // ========================================================================
+
+    /// Main validation method - validates all network rules
+    ///
+    /// **Note**: According to SR 2025 specifications, MT n99 messages have no
+    /// network validated rules beyond standard field-specific rules, which are
+    /// already enforced during parsing. This method always returns an empty vector.
+    ///
+    /// Returns empty vector as there are no network validation rules for MT299
+    pub fn validate_network_rules(&self, _stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        Vec::new()
     }
 }
 
@@ -67,5 +87,10 @@ impl crate::traits::SwiftMessageBody for MT299 {
         append_field(&mut result, &self.field_79);
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT299::validate_network_rules(self, stop_on_first_error)
     }
 }

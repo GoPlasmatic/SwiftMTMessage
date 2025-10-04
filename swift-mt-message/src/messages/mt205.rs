@@ -1,4 +1,4 @@
-use crate::errors::ParseError;
+use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
 use crate::message_parser::MessageParser;
 use crate::parsing_utils::*;
@@ -121,9 +121,12 @@ impl MT205 {
         })
     }
 
-    /// Static validation rules for MT205
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": []}"#
+        r#"{"rules": [{"id": "MT205_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Check if this message has reject codes
@@ -158,6 +161,46 @@ impl MT205 {
             false
         }
     }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT205)
+    // ========================================================================
+
+    // ========================================================================
+    // VALIDATION RULES (C1)
+    // ========================================================================
+
+    /// C1: Intermediary and Account With Institution Dependency (Error code: C81)
+    /// If field 56a is present, then field 57a must also be present
+    fn validate_c1_intermediary_account_with(&self) -> Option<SwiftValidationError> {
+        if self.intermediary.is_some() && self.account_with_institution.is_none() {
+            return Some(SwiftValidationError::content_error(
+                "C81",
+                "57a",
+                "",
+                "Field 57a (Account With Institution) is mandatory when field 56a (Intermediary) is present",
+                "If field 56a is present, then field 57a must also be present",
+            ));
+        }
+
+        None
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Intermediary and Account With Institution Dependency
+        if let Some(error) = self.validate_c1_intermediary_account_with() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        all_errors
+    }
 }
 
 impl crate::traits::SwiftMessageBody for MT205 {
@@ -186,5 +229,10 @@ impl crate::traits::SwiftMessageBody for MT205 {
         append_optional_field(&mut result, &self.sender_to_receiver);
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT205::validate_network_rules(self, stop_on_first_error)
     }
 }

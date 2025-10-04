@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
@@ -163,51 +164,117 @@ impl MT950 {
         })
     }
 
-    /// Static validation rules for MT950
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [
-            {"id": "C1", "description": "The first two characters of the three-character currency code in fields 60a, 62a, and 64 must be the same"}
-        ]}"#
+        r#"{"rules": [{"id": "MT950_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
-    /// Validate the message instance according to MT950 rules
-    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
-        // C1: Currency consistency validation
-        // Extract currency from field 60 (mandatory)
-        let base_currency = match &self.field_60 {
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT950)
+    // ========================================================================
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Get the first two characters of currency code from field 60
+    fn get_field_60_currency_prefix(&self) -> &str {
+        match &self.field_60 {
             Field60::F(field) => &field.currency[0..2],
             Field60::M(field) => &field.currency[0..2],
-        };
+        }
+    }
 
-        // Check field 62 (mandatory)
-        let field_62_currency = match &self.field_62 {
+    /// Get the first two characters of currency code from field 62
+    fn get_field_62_currency_prefix(&self) -> &str {
+        match &self.field_62 {
             Field62::F(field) => &field.currency[0..2],
             Field62::M(field) => &field.currency[0..2],
-        };
+        }
+    }
 
-        if field_62_currency != base_currency {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT950: Currency code mismatch - field 62 currency '{}' does not match field 60 currency '{}'",
-                    field_62_currency, base_currency
+    /// Get the full currency code from field 60 for error messages
+    fn get_field_60_currency(&self) -> &str {
+        match &self.field_60 {
+            Field60::F(field) => &field.currency,
+            Field60::M(field) => &field.currency,
+        }
+    }
+
+    /// Get the full currency code from field 62 for error messages
+    fn get_field_62_currency(&self) -> &str {
+        match &self.field_62 {
+            Field62::F(field) => &field.currency,
+            Field62::M(field) => &field.currency,
+        }
+    }
+
+    // ========================================================================
+    // VALIDATION RULES
+    // ========================================================================
+
+    /// C1: Currency Code Consistency (Error code: C27)
+    /// The first two characters of the three character currency code in fields 60a, 62a and 64 must be the same
+    fn validate_c1_currency_consistency(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        // Get base currency from field 60 (mandatory)
+        let base_currency_prefix = self.get_field_60_currency_prefix();
+        let base_currency = self.get_field_60_currency();
+
+        // Check field 62 (mandatory)
+        let field_62_prefix = self.get_field_62_currency_prefix();
+        let field_62_currency = self.get_field_62_currency();
+
+        if field_62_prefix != base_currency_prefix {
+            errors.push(SwiftValidationError::business_error(
+                "C27",
+                "62a",
+                vec!["60a".to_string()],
+                &format!(
+                    "Currency code mismatch: field 62a currency '{}' (prefix '{}') must have the same first two characters as field 60a currency '{}' (prefix '{}')",
+                    field_62_currency, field_62_prefix, base_currency, base_currency_prefix
                 ),
-            });
+                "The first two characters of the three character currency code in fields 60a, 62a and 64 must be the same",
+            ));
         }
 
-        // Check field 64 if present
-        if let Some(ref field_64) = self.field_64
-            && &field_64.currency[0..2] != base_currency
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT950: Currency code mismatch - field 64 currency '{}' does not match field 60 currency '{}'",
-                    &field_64.currency[0..2],
-                    base_currency
-                ),
-            });
+        // Check field 64 if present (optional)
+        if let Some(ref field_64) = self.field_64 {
+            let field_64_prefix = &field_64.currency[0..2];
+            if field_64_prefix != base_currency_prefix {
+                errors.push(SwiftValidationError::business_error(
+                    "C27",
+                    "64",
+                    vec!["60a".to_string(), "62a".to_string()],
+                    &format!(
+                        "Currency code mismatch: field 64 currency '{}' (prefix '{}') must have the same first two characters as field 60a currency '{}' (prefix '{}')",
+                        field_64.currency, field_64_prefix, base_currency, base_currency_prefix
+                    ),
+                    "The first two characters of the three character currency code in fields 60a, 62a and 64 must be the same",
+                ));
+            }
         }
 
-        Ok(())
+        errors
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Currency Code Consistency
+        let c1_errors = self.validate_c1_currency_consistency();
+        all_errors.extend(c1_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        all_errors
     }
 }
 
@@ -233,5 +300,10 @@ impl crate::traits::SwiftMessageBody for MT950 {
         append_optional_field(&mut result, &self.field_64);
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT950::validate_network_rules(self, stop_on_first_error)
     }
 }

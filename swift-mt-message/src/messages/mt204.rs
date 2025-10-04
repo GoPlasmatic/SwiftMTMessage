@@ -1,8 +1,10 @@
 use crate::errors::ParseError;
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::message_parser::MessageParser;
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 /// MT204 - Financial Markets Direct Debit Message
 ///
@@ -91,9 +93,152 @@ impl MT204 {
         })
     }
 
-    /// Static validation rules for MT204
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": []}"#
+        r#"{"rules": [{"id": "MT204_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT204)
+    // ========================================================================
+
+    /// Maximum number of repetitive sequences allowed
+    const MAX_SEQUENCE_B_OCCURRENCES: usize = 10;
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Get the sum of all transaction amounts in Sequence B
+    fn calculate_sum_of_transactions(&self) -> f64 {
+        self.transactions
+            .iter()
+            .map(|tx| tx.currency_amount.amount)
+            .sum()
+    }
+
+    /// Get all unique currency codes from Sequence B transactions
+    fn get_transaction_currencies(&self) -> HashSet<String> {
+        self.transactions
+            .iter()
+            .map(|tx| tx.currency_amount.currency.clone())
+            .collect()
+    }
+
+    // ========================================================================
+    // VALIDATION RULES (C1-C3, T10)
+    // ========================================================================
+
+    /// C1: Sum of Amounts Must Equal Total of Transaction Amounts (Error code: C01)
+    /// The amount in field 19 must equal the sum of amounts in all occurrences of field 32B
+    fn validate_c1_sum_of_amounts(&self) -> Option<SwiftValidationError> {
+        if self.transactions.is_empty() {
+            return None; // No transactions to validate
+        }
+
+        let sum_of_transactions = self.calculate_sum_of_transactions();
+        let field_19_amount = self.sum_of_amounts.amount;
+
+        // Use a small epsilon for floating-point comparison (0.01 = 1 cent)
+        let difference = (field_19_amount - sum_of_transactions).abs();
+
+        if difference > 0.01 {
+            return Some(SwiftValidationError::content_error(
+                "C01",
+                "19",
+                &field_19_amount.to_string(),
+                &format!(
+                    "Sum of amounts in field 19 ({:.2}) must equal the sum of all field 32B amounts ({:.2}). Difference: {:.2}",
+                    field_19_amount, sum_of_transactions, difference
+                ),
+                "The amount in field 19 must equal the sum of the amounts in all occurrences of field 32B",
+            ));
+        }
+
+        None
+    }
+
+    /// C2: Currency Code Consistency Across All Transactions (Error code: C02)
+    /// The currency code in field 32B must be the same for all occurrences
+    fn validate_c2_currency_consistency(&self) -> Option<SwiftValidationError> {
+        if self.transactions.is_empty() {
+            return None;
+        }
+
+        let currencies = self.get_transaction_currencies();
+
+        if currencies.len() > 1 {
+            let currency_list: Vec<String> = currencies.into_iter().collect();
+            return Some(SwiftValidationError::content_error(
+                "C02",
+                "32B",
+                &currency_list.join(", "),
+                &format!(
+                    "All occurrences of field 32B must have the same currency code. Found currencies: {}",
+                    currency_list.join(", ")
+                ),
+                "The currency code in the amount field 32B must be the same for all occurrences of this field in the message",
+            ));
+        }
+
+        None
+    }
+
+    /// C3/T10: Maximum Number of Repetitive Sequences (Error code: T10)
+    /// Sequence B must not appear more than ten times
+    fn validate_c3_max_sequences(&self) -> Option<SwiftValidationError> {
+        let count = self.transactions.len();
+
+        if count > Self::MAX_SEQUENCE_B_OCCURRENCES {
+            return Some(SwiftValidationError::content_error(
+                "T10",
+                "Sequence B",
+                &count.to_string(),
+                &format!(
+                    "The repetitive sequence B appears {} times, which exceeds the maximum of {} occurrences",
+                    count,
+                    Self::MAX_SEQUENCE_B_OCCURRENCES
+                ),
+                "The repetitive sequence must not appear more than ten times",
+            ));
+        }
+
+        None
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Sum of Amounts
+        if let Some(error) = self.validate_c1_sum_of_amounts() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C2: Currency Consistency
+        if let Some(error) = self.validate_c2_currency_consistency() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C3/T10: Maximum Sequences
+        if let Some(error) = self.validate_c3_max_sequences() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        all_errors
     }
 }
 
@@ -103,10 +248,12 @@ impl crate::traits::SwiftMessageBody for MT204 {
     }
 
     fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        Self::parse_from_block4(block4)
+        // Call the existing public method implementation
+        MT204::parse_from_block4(block4)
     }
 
     fn to_mt_string(&self) -> String {
+        // Call the existing public method implementation
         let mut result = String::new();
 
         append_field(&mut result, &self.sum_of_amounts);
@@ -125,5 +272,10 @@ impl crate::traits::SwiftMessageBody for MT204 {
         }
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT204::validate_network_rules(self, stop_on_first_error)
     }
 }

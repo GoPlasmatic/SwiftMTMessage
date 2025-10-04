@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
@@ -46,43 +47,134 @@ impl MT192 {
         })
     }
 
-    /// Static validation rules for MT192
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [
-            {"id": "F20", "description": "Field 20 must not start or end with '/', and must not contain '//'"},
-            {"id": "F21", "description": "Field 21 must not start or end with '/', and must not contain '//'"},
-            {"id": "F11S", "description": "Field 11S must have proper format for MT, date, session, and sequence numbers"},
-            {"id": "C1", "description": "Either Field 79 or a copy of mandatory fields from the original message (or both) must be present"}
-        ]}"#
+        r#"{"rules": [{"id": "MT192_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
-    /// Validate the message instance according to MT192 rules
-    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
-        // Validate Field 20 - must not start/end with '/' or contain '//'
-        let reference = &self.field_20.reference;
-        if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message:
-                    "MT192: Field 20 must not start or end with '/', and must not contain '//'"
-                        .to_string(),
-            });
+    /// Parse from generic SWIFT input (tries to detect blocks)
+    pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
+        let block4 = extract_block4(input)?;
+        Self::parse_from_block4(&block4)
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT192)
+    // ========================================================================
+
+    /// Field 79 valid cancellation reason codes for MT192
+    const MT192_VALID_79_CODES: &'static [&'static str] = &[
+        "AGNT", // Incorrect Agent
+        "AM09", // Wrong Amount
+        "COVR", // Cover Cancelled or Returned
+        "CURR", // Incorrect Currency
+        "CUST", // Requested by Customer
+        "CUTA", // Cancel upon Unable to Apply
+        "DUPL", // Duplicate Payment
+        "FRAD", // Fraudulent Origin
+        "TECH", // Technical Problem
+        "UPAY", // Undue Payment
+    ];
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Check if Field 79 is present
+    fn has_field_79(&self) -> bool {
+        self.field_79.is_some()
+    }
+
+    /// Extract cancellation reason code from Field 79 if present
+    /// Returns the 4-character code from the first line if formatted as /CODE/...
+    fn get_field_79_cancellation_code(&self) -> Option<String> {
+        if let Some(ref field_79) = self.field_79 {
+            // Get the first line from the information vector
+            let first_line = field_79.information.first()?;
+            if first_line.starts_with('/') {
+                let parts: Vec<&str> = first_line.split('/').collect();
+                if parts.len() >= 2 && parts[1].len() == 4 {
+                    return Some(parts[1].to_string());
+                }
+            }
+        }
+        None
+    }
+
+    // ========================================================================
+    // VALIDATION RULES (C1)
+    // ========================================================================
+
+    /// C1: Field 79 or Copy of Mandatory Fields Requirement (Error code: C25)
+    /// Field 79 or a copy of at least the mandatory fields of the original message
+    /// or both must be present.
+    ///
+    /// **Implementation Note**: This implementation only validates that Field 79 is present
+    /// since we don't currently support parsing the "copy of mandatory fields" section.
+    /// A full implementation would check for either Field 79 OR copied fields OR both.
+    fn validate_c1_field_79_or_copy(&self) -> Option<SwiftValidationError> {
+        // Check if Field 79 is present
+        // Note: In a complete implementation, we would also check for copied fields
+        // from the original message, but this is not currently supported
+        if !self.has_field_79() {
+            return Some(SwiftValidationError::content_error(
+                "C25",
+                "79",
+                "",
+                "Field 79 (Narrative Description) or a copy of at least the mandatory fields of the original message must be present",
+                "Either field 79 or a copy of at least the mandatory fields of the original message or both must be present to identify the transaction to be cancelled",
+            ));
         }
 
-        // Validate Field 21 - same rules as Field 20
-        let related_ref = &self.field_21.reference;
-        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//")
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message:
-                    "MT192: Field 21 must not start or end with '/', and must not contain '//'"
-                        .to_string(),
-            });
+        None
+    }
+
+    /// Validate Field 79 cancellation reason codes (if present)
+    /// While not explicitly a network validation rule, this validates the cancellation
+    /// reason codes are from the allowed list when present in Field 79.
+    fn validate_field_79_codes(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        if let Some(code) = self.get_field_79_cancellation_code() {
+            if !Self::MT192_VALID_79_CODES.contains(&code.as_str()) {
+                errors.push(SwiftValidationError::content_error(
+                    "T47",
+                    "79",
+                    &code,
+                    &format!(
+                        "Cancellation reason code '{}' is not valid for MT192. Valid codes: {}",
+                        code,
+                        Self::MT192_VALID_79_CODES.join(", ")
+                    ),
+                    "Cancellation reason must be one of the allowed codes when using /CODE/ format in field 79",
+                ));
+            }
         }
 
-        // Note: Condition C1 (Field 79 or original fields) is handled in the parser
-        // In this implementation, Field 79 is optional as we don't support copying original fields
+        errors
+    }
 
-        Ok(())
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Field 79 or Copy of Mandatory Fields Requirement
+        if let Some(error) = self.validate_c1_field_79_or_copy() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // Validate Field 79 cancellation codes (if present)
+        let f79_errors = self.validate_field_79_codes();
+        all_errors.extend(f79_errors);
+
+        all_errors
     }
 }
 
@@ -105,5 +197,10 @@ impl crate::traits::SwiftMessageBody for MT192 {
         append_optional_field(&mut result, &self.field_79);
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT192::validate_network_rules(self, stop_on_first_error)
     }
 }

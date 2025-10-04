@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
@@ -69,62 +70,22 @@ impl MT191 {
         })
     }
 
-    /// Static validation rules for MT191
+    /// Parse from generic SWIFT input (tries to detect blocks)
+    pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
+        let block4 = extract_block4(input)?;
+        Self::parse_from_block4(&block4)
+    }
+
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [
-            {"id": "F20", "description": "Field 20 must not start or end with '/', and must not contain '//'"},
-            {"id": "F21", "description": "Field 21 must not start or end with '/', and must not contain '//'"},
-            {"id": "F32B", "description": "Field 32B must contain valid currency and positive amount"},
-            {"id": "F71B", "description": "Field 71B must contain at least one line of charge details"}
-        ]}"#
+        r#"{"rules": [{"id": "MT191_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
-    /// Validate the message instance according to MT191 rules
-    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
-        // Validate Field 20 - must not start/end with '/' or contain '//'
-        let reference = &self.field_20.reference;
-        if reference.starts_with('/') || reference.ends_with('/') || reference.contains("//") {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message:
-                    "MT191: Field 20 must not start or end with '/', and must not contain '//'"
-                        .to_string(),
-            });
-        }
-
-        // Validate Field 21 - same rules as Field 20
-        let related_ref = &self.field_21.reference;
-        if related_ref.starts_with('/') || related_ref.ends_with('/') || related_ref.contains("//")
-        {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message:
-                    "MT191: Field 21 must not start or end with '/', and must not contain '//'"
-                        .to_string(),
-            });
-        }
-
-        // Validate Field 71B has content
-        if self.field_71b.details.is_empty() {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT191: Field 71B must contain at least one line of charge details"
-                    .to_string(),
-            });
-        }
-
-        Ok(())
-    }
-}
-
-// Implement the SwiftMessageBody trait for MT191
-impl crate::traits::SwiftMessageBody for MT191 {
-    fn message_type() -> &'static str {
-        "191"
-    }
-
-    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        Self::parse_from_block4(block4)
-    }
-
-    fn to_mt_string(&self) -> String {
+    /// Convert to SWIFT MT text format
+    pub fn to_mt_string(&self) -> String {
         let mut result = String::new();
 
         append_field(&mut result, &self.field_20);
@@ -135,6 +96,50 @@ impl crate::traits::SwiftMessageBody for MT191 {
         append_field(&mut result, &self.field_71b);
         append_optional_field(&mut result, &self.field_72);
 
-        finalize_mt_string(result, false)
+        result.push('-');
+        result
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT191)
+    // ========================================================================
+    //
+    // Per SR 2025 MTn91 specification (line 35):
+    // "There are no network validated rules for this message type."
+    //
+    // This implementation follows the MT101 pattern for consistency,
+    // but returns an empty vector as there are no validation rules.
+    // ========================================================================
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    ///
+    /// **Note**: MT191 has no network validated rules per SR 2025 specification.
+    /// This method is provided for consistency with other message types and
+    /// returns an empty vector.
+    pub fn validate_network_rules(&self, _stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // No network validated rules for MT191
+        Vec::new()
+    }
+}
+
+impl crate::traits::SwiftMessageBody for MT191 {
+    fn message_type() -> &'static str {
+        "191"
+    }
+
+    fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
+        // Call the existing public method implementation
+        MT191::parse_from_block4(block4)
+    }
+
+    fn to_mt_string(&self) -> String {
+        // Call the existing public method implementation
+        MT191::to_mt_string(self)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT191::validate_network_rules(self, stop_on_first_error)
     }
 }

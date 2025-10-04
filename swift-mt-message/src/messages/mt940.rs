@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
@@ -118,12 +119,12 @@ impl MT940 {
         })
     }
 
-    /// Static validation rules for MT940
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [
-            {"id": "C1", "description": "The repetitive sequence starting with field 61 must appear at least once and no more than 500 times"},
-            {"id": "C2", "description": "If field 64 is present, fields 60F and 62F must also be present"}
-        ]}"#
+        r#"{"rules": [{"id": "MT940_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Validate the message instance according to MT940 rules
@@ -142,19 +143,174 @@ impl MT940 {
 
         Ok(())
     }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT940)
+    // ========================================================================
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Extract currency code from Field60F (Opening Balance)
+    fn get_field_60f_currency(&self) -> &str {
+        &self.field_60f.currency
+    }
+
+    /// Extract currency code from Field62F (Closing Balance)
+    fn get_field_62f_currency(&self) -> &str {
+        &self.field_62f.currency
+    }
+
+    /// Extract currency code from Field64 (Closing Available Balance)
+    fn get_field_64_currency(&self) -> Option<&str> {
+        self.field_64.as_ref().map(|f| f.currency.as_str())
+    }
+
+    /// Get first two characters of a currency code
+    fn get_currency_prefix(currency: &str) -> &str {
+        if currency.len() >= 2 {
+            &currency[0..2]
+        } else {
+            currency
+        }
+    }
+
+    // ========================================================================
+    // VALIDATION RULES (C1-C2)
+    // ========================================================================
+
+    /// C1: Field 86 Must Follow Field 61 (Error code: C24)
+    /// If field 86 is present in any occurrence of the repetitive sequence, it must be
+    /// preceded by a field 61. In addition, if field 86 is present, it must be present
+    /// on the same page (message) of the statement as the related field 61
+    ///
+    /// Note: This validation is structural and enforced during parsing. The parser ensures
+    /// that field 86 can only appear after field 61 within a statement line. The message
+    /// structure (MT940StatementLine) guarantees this relationship - field 86 can only exist
+    /// within a statement line, which always has a mandatory field 61. Therefore, this rule
+    /// is automatically satisfied by the structure and no additional validation is needed.
+    fn validate_c1_field_86_follows_61(&self) -> Vec<SwiftValidationError> {
+        // This rule is enforced by the message structure itself (MT940StatementLine)
+        // Field 86 can only exist within a statement line, which always has field 61
+        // The parser ensures correct ordering and pairing during message parsing
+        // No additional validation needed - return empty errors
+        Vec::new()
+    }
+
+    /// C2: Currency Code Consistency (Error code: C27)
+    /// The first two characters of the three character currency code in fields 60a,
+    /// 62a, 64 and 65 must be the same for all occurrences of these fields
+    fn validate_c2_currency_consistency(&self) -> Vec<SwiftValidationError> {
+        let mut errors = Vec::new();
+
+        // Get the reference currency prefix from field 60F (Opening Balance)
+        let reference_currency = self.get_field_60f_currency();
+        let reference_prefix = Self::get_currency_prefix(reference_currency);
+
+        // Check field 62F (Closing Balance)
+        let field_62f_currency = self.get_field_62f_currency();
+        let field_62f_prefix = Self::get_currency_prefix(field_62f_currency);
+
+        if field_62f_prefix != reference_prefix {
+            errors.push(SwiftValidationError::content_error(
+                "C27",
+                "62F",
+                field_62f_currency,
+                &format!(
+                    "Currency prefix in field 62F ('{}') must match the prefix in field 60F ('{}') - found '{}' vs '{}'",
+                    field_62f_prefix, reference_prefix, field_62f_currency, reference_currency
+                ),
+                "The first two characters of the currency code must be the same in fields 60a, 62a, 64 and 65",
+            ));
+        }
+
+        // Check field 64 (Closing Available Balance) if present
+        if let Some(field_64_currency) = self.get_field_64_currency() {
+            let field_64_prefix = Self::get_currency_prefix(field_64_currency);
+
+            if field_64_prefix != reference_prefix {
+                errors.push(SwiftValidationError::content_error(
+                    "C27",
+                    "64",
+                    field_64_currency,
+                    &format!(
+                        "Currency prefix in field 64 ('{}') must match the prefix in field 60F ('{}') - found '{}' vs '{}'",
+                        field_64_prefix, reference_prefix, field_64_currency, reference_currency
+                    ),
+                    "The first two characters of the currency code must be the same in fields 60a, 62a, 64 and 65",
+                ));
+            }
+        }
+
+        // Check field 65 (Forward Available Balance) if present
+        if let Some(field_65_vec) = &self.field_65 {
+            for (idx, field_65) in field_65_vec.iter().enumerate() {
+                let field_65_currency = &field_65.currency;
+                let field_65_prefix = Self::get_currency_prefix(field_65_currency);
+
+                if field_65_prefix != reference_prefix {
+                    errors.push(SwiftValidationError::content_error(
+                        "C27",
+                        "65",
+                        field_65_currency,
+                        &format!(
+                            "Currency prefix in field 65 occurrence {} ('{}') must match the prefix in field 60F ('{}') - found '{}' vs '{}'",
+                            idx + 1, field_65_prefix, reference_prefix, field_65_currency, reference_currency
+                        ),
+                        "The first two characters of the currency code must be the same in fields 60a, 62a, 64 and 65",
+                    ));
+                }
+            }
+        }
+
+        errors
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Field 86 Must Follow Field 61
+        let c1_errors = self.validate_c1_field_86_follows_61();
+        all_errors.extend(c1_errors);
+        if stop_on_first_error && !all_errors.is_empty() {
+            return all_errors;
+        }
+
+        // C2: Currency Code Consistency
+        let c2_errors = self.validate_c2_currency_consistency();
+        all_errors.extend(c2_errors);
+
+        all_errors
+    }
 }
 
-// Implement the SwiftMessageBody trait for MT940
 impl crate::traits::SwiftMessageBody for MT940 {
     fn message_type() -> &'static str {
         "940"
     }
 
     fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        Self::parse_from_block4(block4)
+        // Call the existing public method implementation
+        MT940::parse_from_block4(block4)
     }
 
     fn to_mt_string(&self) -> String {
+        // Call the existing public method implementation
+        MT940::to_mt_string(self)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT940::validate_network_rules(self, stop_on_first_error)
+    }
+}
+
+impl MT940 {
+    /// Convert to SWIFT MT text format
+    pub fn to_mt_string(&self) -> String {
         let mut result = String::new();
 
         append_field(&mut result, &self.field_20);

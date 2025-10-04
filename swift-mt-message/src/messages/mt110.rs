@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::Field52DrawerBank;
 use crate::fields::*;
 use crate::parsing_utils::*;
@@ -150,68 +151,112 @@ impl MT110 {
         })
     }
 
-    /// Static validation rules for MT110
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [
-            {"id": "C1", "description": "Maximum 10 cheque details allowed", "condition": true},
-            {"id": "C2", "description": "Currency must be consistent across all cheques", "condition": true}
-        ]}"#
+        r#"{"rules": [{"id": "MT110_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
-    /// Validate the message instance according to MT110 rules
-    pub fn validate_instance(&self) -> Result<(), crate::errors::ParseError> {
-        // NVR C1: Max 10 repetitions
+    /// Parse from generic SWIFT input (tries to detect blocks)
+    pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
+        let block4 = extract_block4(input)?;
+        Self::parse_from_block4(&block4)
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT110)
+    // ========================================================================
+
+    /// C1: Maximum 10 repetitive sequences (Error code: T10)
+    /// The repetitive sequence must not be present more than ten times
+    fn validate_c1_max_repetitions(&self) -> Option<SwiftValidationError> {
         if self.cheques.len() > 10 {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT110: Maximum 10 cheque details allowed (NVR C1)".to_string(),
-            });
+            return Some(SwiftValidationError::content_error(
+                "T10",
+                "21-59a",
+                "",
+                &format!(
+                    "The repetitive sequence (cheque details) appears {} times, but maximum 10 occurrences are allowed",
+                    self.cheques.len()
+                ),
+                "The repetitive sequence containing fields 21, 30, 32a, 50a, 52a, and 59a must not be present more than ten times in the message",
+            ));
         }
 
-        // At least one cheque detail is required
+        None
+    }
+
+    /// C2: Currency Code Consistency (Error code: C02)
+    /// The currency code in field 32a must be the same for all occurrences
+    fn validate_c2_currency_consistency(&self) -> Option<SwiftValidationError> {
         if self.cheques.is_empty() {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT110: At least one cheque detail is required".to_string(),
-            });
+            return None;
         }
 
-        // NVR C2: Currency consistency
-        let mut currency: Option<String> = None;
-        for (idx, cheque) in self.cheques.iter().enumerate() {
+        // Get currency from first cheque
+        let first_currency = match &self.cheques[0].field_32 {
+            Field32AB::A(amt) => &amt.currency,
+            Field32AB::B(amt) => &amt.currency,
+        };
+
+        // Check all subsequent cheques have the same currency
+        for (idx, cheque) in self.cheques.iter().enumerate().skip(1) {
             let cheque_currency = match &cheque.field_32 {
-                Field32AB::A(amt) => Some(amt.currency.clone()),
-                Field32AB::B(amt) => Some(amt.currency.clone()),
+                Field32AB::A(amt) => &amt.currency,
+                Field32AB::B(amt) => &amt.currency,
             };
 
-            if let Some(cheque_curr) = cheque_currency {
-                if let Some(ref expected_currency) = currency {
-                    if cheque_curr != *expected_currency {
-                        return Err(crate::errors::ParseError::InvalidFormat {
-                            message: format!(
-                                "MT110: Currency mismatch in cheque {}: expected {}, found {} (NVR C2)",
-                                idx + 1,
-                                expected_currency,
-                                cheque_curr
-                            ),
-                        });
-                    }
-                } else {
-                    currency = Some(cheque_curr);
-                }
+            if cheque_currency != first_currency {
+                return Some(SwiftValidationError::content_error(
+                    "C02",
+                    "32a",
+                    cheque_currency,
+                    &format!(
+                        "Cheque {}: Currency code in field 32a ({}) must be the same as in other occurrences ({})",
+                        idx + 1,
+                        cheque_currency,
+                        first_currency
+                    ),
+                    "The currency code in the amount field 32a must be the same for all occurrences of this field in the message",
+                ));
             }
         }
 
-        Ok(())
+        None
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Maximum 10 repetitions
+        if let Some(error) = self.validate_c1_max_repetitions() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C2: Currency Code Consistency
+        if let Some(error) = self.validate_c2_currency_consistency() {
+            all_errors.push(error);
+        }
+
+        all_errors
     }
 }
 
-// Implement the SwiftMessageBody trait for MT110
 impl crate::traits::SwiftMessageBody for MT110 {
     fn message_type() -> &'static str {
         "110"
     }
 
     fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
-        Self::parse_from_block4(block4)
+        // Call the existing public method implementation
+        MT110::parse_from_block4(block4)
     }
 
     fn to_mt_string(&self) -> String {
@@ -234,5 +279,125 @@ impl crate::traits::SwiftMessageBody for MT110 {
         }
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT110::validate_network_rules(self, stop_on_first_error)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_c2_currency_consistency_pass() {
+        // Valid message with consistent currency
+        let input = r#":20:TESTREF123
+:21:CHQ001
+:30:250101
+:32B:USD1234,56
+:59:JOHN DOE
+123 MAIN ST
+NEW YORK
+:21:CHQ002
+:30:250102
+:32B:USD2345,67
+:59:JANE SMITH
+456 ELM ST
+BOSTON
+-"#;
+
+        let msg = MT110::parse_from_block4(input).expect("Should parse successfully");
+        let errors = msg.validate_network_rules(false);
+        assert!(
+            errors.is_empty(),
+            "Should have no validation errors for consistent currencies"
+        );
+    }
+
+    #[test]
+    fn test_validate_c2_currency_consistency_fail() {
+        // Invalid message with inconsistent currency
+        let input = r#":20:TESTREF123
+:21:CHQ001
+:30:250101
+:32B:USD1234,56
+:59:JOHN DOE
+123 MAIN ST
+NEW YORK
+:21:CHQ002
+:30:250102
+:32B:EUR2345,67
+:59:JANE SMITH
+456 ELM ST
+BOSTON
+-"#;
+
+        let msg = MT110::parse_from_block4(input).expect("Should parse successfully");
+        let errors = msg.validate_network_rules(false);
+        assert_eq!(errors.len(), 1, "Should have exactly one validation error");
+        assert_eq!(errors[0].code(), "C02");
+        assert!(errors[0].message().contains("Currency code in field 32a"));
+    }
+
+    #[test]
+    fn test_validate_c1_max_repetitions() {
+        // Create a message with 11 cheques (exceeds limit)
+        let mut cheque_details = String::new();
+        for i in 1..=11 {
+            cheque_details.push_str(&format!(
+                r#":21:CHQ{:03}
+:30:250101
+:32B:USD100,00
+:59:PAYEE {}
+ADDRESS LINE
+CITY
+"#,
+                i, i
+            ));
+        }
+
+        let input = format!(":20:TESTREF123\n{}-", cheque_details);
+
+        let msg = MT110::parse_from_block4(&input).expect("Should parse successfully");
+        let errors = msg.validate_network_rules(false);
+        assert_eq!(errors.len(), 1, "Should have exactly one validation error");
+        assert_eq!(errors[0].code(), "T10");
+        assert!(errors[0].message().contains("maximum 10 occurrences"));
+    }
+
+    #[test]
+    fn test_validate_stop_on_first_error() {
+        // Create a message with both errors: too many cheques AND inconsistent currency
+        let mut cheque_details = String::new();
+        for i in 1..=11 {
+            let currency = if i % 2 == 0 { "EUR" } else { "USD" };
+            cheque_details.push_str(&format!(
+                r#":21:CHQ{:03}
+:30:250101
+:32B:{}100,00
+:59:PAYEE {}
+ADDRESS LINE
+CITY
+"#,
+                i, currency, i
+            ));
+        }
+
+        let input = format!(":20:TESTREF123\n{}-", cheque_details);
+
+        let msg = MT110::parse_from_block4(&input).expect("Should parse successfully");
+
+        // With stop_on_first_error = true, should only get first error
+        let errors_stop = msg.validate_network_rules(true);
+        assert_eq!(errors_stop.len(), 1, "Should stop after first error");
+
+        // With stop_on_first_error = false, should get all errors
+        let errors_all = msg.validate_network_rules(false);
+        assert_eq!(errors_all.len(), 2, "Should collect all errors");
+        assert!(errors_all.iter().any(|e| e.code() == "T10"));
+        assert!(errors_all.iter().any(|e| e.code() == "C02"));
     }
 }

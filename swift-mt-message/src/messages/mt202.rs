@@ -1,4 +1,4 @@
-use crate::errors::ParseError;
+use crate::errors::{ParseError, SwiftValidationError};
 use crate::fields::*;
 use crate::message_parser::MessageParser;
 use crate::parsing_utils::*;
@@ -168,9 +168,98 @@ impl MT202 {
         })
     }
 
-    /// Static validation rules for MT202
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": []}"#
+        r#"{"rules": [{"id": "MT202_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
+    }
+
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT202)
+    // ========================================================================
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Check if intermediary (56a) is present in Sequence A
+    fn has_intermediary_in_seq_a(&self) -> bool {
+        self.field_56.is_some()
+    }
+
+    /// Check if account with institution (57a) is present in Sequence A
+    fn has_account_with_in_seq_a(&self) -> bool {
+        self.field_57.is_some()
+    }
+
+    /// Check if intermediary (56a) is present in Sequence B (COV)
+    fn has_intermediary_in_seq_b(&self) -> bool {
+        self.intermediary_b.is_some()
+    }
+
+    /// Check if account with institution (57a) is present in Sequence B (COV)
+    fn has_account_with_in_seq_b(&self) -> bool {
+        self.account_with_institution_b.is_some()
+    }
+
+    // ========================================================================
+    // VALIDATION RULES (C1-C2)
+    // ========================================================================
+
+    /// C1: Intermediary and Account With Institution (Sequence A) (Error code: C81)
+    /// If field 56a is present in sequence A, then field 57a must also be present in sequence A
+    fn validate_c1_intermediary_seq_a(&self) -> Option<SwiftValidationError> {
+        if self.has_intermediary_in_seq_a() && !self.has_account_with_in_seq_a() {
+            return Some(SwiftValidationError::business_error(
+                "C81",
+                "57a",
+                vec!["56a".to_string()],
+                "Field 57a (Account With Institution) is mandatory when field 56a (Intermediary) is present in Sequence A",
+                "If field 56a is present in sequence A, then field 57a must also be present in sequence A",
+            ));
+        }
+        None
+    }
+
+    /// C2: Intermediary and Account With Institution (Sequence B) (Error code: C68)
+    /// If field 56a is present in sequence B, then field 57a must also be present in sequence B
+    fn validate_c2_intermediary_seq_b(&self) -> Option<SwiftValidationError> {
+        if self.has_intermediary_in_seq_b() && !self.has_account_with_in_seq_b() {
+            return Some(SwiftValidationError::business_error(
+                "C68",
+                "57a",
+                vec!["56a".to_string()],
+                "Field 57a (Account With Institution) is mandatory when field 56a (Intermediary) is present in Sequence B",
+                "If field 56a is present in sequence B, then field 57a must also be present in sequence B",
+            ));
+        }
+        None
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Intermediary and Account With Institution (Sequence A)
+        if let Some(error) = self.validate_c1_intermediary_seq_a() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        // C2: Intermediary and Account With Institution (Sequence B)
+        if let Some(error) = self.validate_c2_intermediary_seq_b() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        all_errors
     }
 
     /// Check if this message has reject codes
@@ -238,5 +327,10 @@ impl crate::traits::SwiftMessageBody for MT202 {
         append_optional_field(&mut result, &self.currency_amount_b);
 
         finalize_mt_string(result, false)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT202::validate_network_rules(self, stop_on_first_error)
     }
 }

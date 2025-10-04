@@ -1,3 +1,4 @@
+use crate::errors::SwiftValidationError;
 use crate::fields::*;
 use crate::parsing_utils::*;
 use serde::{Deserialize, Serialize};
@@ -69,40 +70,18 @@ impl MT910 {
         })
     }
 
-    /// Validation rules for the message
+    /// Validation rules for the message (legacy method for backward compatibility)
+    ///
+    /// **Note**: This method returns a static JSON string for legacy validation systems.
+    /// For actual validation, use `validate_network_rules()` which returns detailed errors.
     pub fn validate() -> &'static str {
-        r#"{"rules": [{"id": "BASIC", "description": "Basic validation", "condition": true}]}"#
+        r#"{"rules": [{"id": "MT910_VALIDATION", "description": "Use validate_network_rules() for detailed validation", "condition": true}]}"#
     }
 
     /// Parse from SWIFT MT text format
     pub fn parse(input: &str) -> Result<Self, crate::errors::ParseError> {
         let block4 = extract_block4(input)?;
-        #[cfg(test)]
-        println!("MT910 block4: {}", block4);
-        let message = Self::parse_from_block4(&block4)?;
-
-        // Apply validation rule C1
-        message.validate_c1()?;
-
-        Ok(message)
-    }
-
-    /// Validation rule C1: Either field 50 or field 52 must be present
-    fn validate_c1(&self) -> Result<(), crate::errors::ParseError> {
-        #[cfg(test)]
-        {
-            println!(
-                "MT910 validation - field_50: {:?}, field_52: {:?}",
-                self.field_50.is_some(),
-                self.field_52.is_some()
-            );
-        }
-        if self.field_50.is_none() && self.field_52.is_none() {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT910: Either field 50 (Ordering Customer) or field 52 (Ordering Institution) must be present".to_string()
-            });
-        }
-        Ok(())
+        Self::parse_from_block4(&block4)
     }
 
     /// Convert to SWIFT MT text format
@@ -123,22 +102,61 @@ impl MT910 {
         result
     }
 
-    /// Get validation rules in JSON format
-    pub fn validation_rules() -> &'static str {
-        r#"{
-  "rules": [
-    {
-      "id": "C1",
-      "description": "Either field 50a or field 52a must be present",
-      "condition": {
-        "or": [
-          {"exists": ["fields", "50"]},
-          {"exists": ["fields", "52"]}
-        ]
-      }
+    // ========================================================================
+    // NETWORK VALIDATION RULES (SR 2025 MT910)
+    // ========================================================================
+
+    // ========================================================================
+    // HELPER METHODS
+    // ========================================================================
+
+    /// Check if ordering customer (field 50a) is present
+    fn has_ordering_customer(&self) -> bool {
+        self.field_50.is_some()
     }
-  ]
-}"#
+
+    /// Check if ordering institution (field 52a) is present
+    fn has_ordering_institution(&self) -> bool {
+        self.field_52.is_some()
+    }
+
+    // ========================================================================
+    // VALIDATION RULES (C1)
+    // ========================================================================
+
+    /// C1: Ordering Customer or Ordering Institution Required (Error code: C06)
+    /// Either field 50a or field 52a must be present
+    fn validate_c1_ordering_party(&self) -> Option<SwiftValidationError> {
+        let has_50 = self.has_ordering_customer();
+        let has_52 = self.has_ordering_institution();
+
+        if !has_50 && !has_52 {
+            return Some(SwiftValidationError::business_error(
+                "C06",
+                "50a/52a",
+                vec![],
+                "Either field 50a (Ordering Customer) or field 52a (Ordering Institution) must be present",
+                "At least one of fields 50a or 52a must be present in the message. If field 50a is present, field 52a is optional. If field 52a is present, field 50a is optional. Both fields cannot be absent",
+            ));
+        }
+
+        None
+    }
+
+    /// Main validation method - validates all network rules
+    /// Returns array of validation errors, respects stop_on_first_error flag
+    pub fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        let mut all_errors = Vec::new();
+
+        // C1: Ordering Customer or Ordering Institution
+        if let Some(error) = self.validate_c1_ordering_party() {
+            all_errors.push(error);
+            if stop_on_first_error {
+                return all_errors;
+            }
+        }
+
+        all_errors
     }
 }
 
@@ -155,6 +173,11 @@ impl crate::traits::SwiftMessageBody for MT910 {
     fn to_mt_string(&self) -> String {
         // Call the existing public method implementation
         MT910::to_mt_string(self)
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // Call the existing public method implementation
+        MT910::validate_network_rules(self, stop_on_first_error)
     }
 }
 
@@ -180,15 +203,80 @@ NEW YORK
     }
 
     #[test]
-    fn test_mt910_validation_c1() {
-        // Test without field 50 and 52 - should fail
+    fn test_mt910_validation_c1_fails_without_ordering_party() {
+        // Test without field 50 and 52 - should fail validation
         let mt910_text = r#":20:20240719001
 :21:REF20240719001
 :25:12345678901234567890
 :32A:240719USD1000,00
 -"#;
-        let result = MT910::parse(mt910_text);
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Either field 50"));
+        let result = MT910::parse_from_block4(mt910_text);
+        assert!(result.is_ok());
+        let mt910 = result.unwrap();
+
+        // Validation should fail
+        let errors = mt910.validate_network_rules(false);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].code(), "C06");
+        assert!(errors[0].message().contains("Either field 50a"));
+    }
+
+    #[test]
+    fn test_mt910_validation_c1_passes_with_field_50() {
+        // Test with field 50 only - should pass validation
+        let mt910_text = r#":20:20240719001
+:21:REF20240719001
+:25:12345678901234567890
+:32A:240719USD1000,00
+:50K:JOHN DOE
+123 MAIN STREET
+NEW YORK
+-"#;
+        let result = MT910::parse_from_block4(mt910_text);
+        assert!(result.is_ok());
+        let mt910 = result.unwrap();
+
+        // Validation should pass
+        let errors = mt910.validate_network_rules(false);
+        assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn test_mt910_validation_c1_passes_with_field_52() {
+        // Test with field 52 only - should pass validation
+        let mt910_text = r#":20:20240719001
+:21:REF20240719001
+:25:12345678901234567890
+:32A:240719USD1000,00
+:52A:BANKDEFFAXXX
+-"#;
+        let result = MT910::parse_from_block4(mt910_text);
+        assert!(result.is_ok());
+        let mt910 = result.unwrap();
+
+        // Validation should pass
+        let errors = mt910.validate_network_rules(false);
+        assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn test_mt910_validation_c1_passes_with_both_fields() {
+        // Test with both fields 50 and 52 - should pass validation
+        let mt910_text = r#":20:20240719001
+:21:REF20240719001
+:25:12345678901234567890
+:32A:240719USD1000,00
+:50K:JOHN DOE
+123 MAIN STREET
+NEW YORK
+:52A:BANKDEFFAXXX
+-"#;
+        let result = MT910::parse_from_block4(mt910_text);
+        assert!(result.is_ok());
+        let mt910 = result.unwrap();
+
+        // Validation should pass
+        let errors = mt910.validate_network_rules(false);
+        assert_eq!(errors.len(), 0);
     }
 }

@@ -68,9 +68,40 @@ impl MT210 {
         // Parse mandatory Field 30
         let value_date = parser.parse_field::<Field30>("30")?;
 
-        // Parse transactions
-        // For now, we'll create an empty vector as transaction parsing requires special handling
-        let transactions = Vec::new();
+        // Parse repeating transaction sequences - enable duplicates mode
+        parser = parser.with_duplicates(true);
+        let mut transactions = Vec::new();
+
+        while parser.detect_field("21") || parser.detect_field("32B") {
+            // Parse optional Field 21 - Related Reference
+            let related_reference = parser.parse_optional_field::<Field21NoOption>("21")?;
+
+            // Parse mandatory Field 32B - Currency Code, Amount
+            let currency_amount = parser.parse_field::<Field32B>("32B")?;
+
+            // Parse optional Field 50 - Ordering Customer
+            let ordering_customer = parser.parse_optional_variant_field::<Field50>("50")?;
+
+            // Parse optional Field 52 - Ordering Institution
+            let ordering_institution =
+                parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
+
+            // Parse optional Field 56 - Intermediary Institution
+            let intermediary = parser.parse_optional_variant_field::<Field56>("56")?;
+
+            transactions.push(MT210Transaction {
+                related_reference,
+                currency_amount,
+                ordering_customer,
+                ordering_institution,
+                intermediary,
+            });
+
+            // Limit to 10 sequences
+            if transactions.len() >= 10 {
+                break;
+            }
+        }
 
         Ok(MT210 {
             transaction_reference,

@@ -590,6 +590,31 @@ impl SwiftField for Field32AmountCD {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        // Use the variant letter to determine which type to parse
+        match variant {
+            Some("C") => {
+                let field = Field32C::parse(value)?;
+                Ok(Field32AmountCD::C(field))
+            }
+            Some("D") => {
+                let field = Field32D::parse(value)?;
+                Ok(Field32AmountCD::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field32AmountCD::C(field) => field.to_swift_string(),

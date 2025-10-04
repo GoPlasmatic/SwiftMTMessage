@@ -20,8 +20,8 @@ pub struct MT920Sequence {
     #[serde(rename = "12")]
     pub field_12: Field12,
 
-    #[serde(rename = "25A")]
-    pub field_25: Field25A,
+    #[serde(rename = "25")]
+    pub field_25: Field25,
 
     #[serde(rename = "34F_1")]
     pub floor_limit_debit: Option<Field34F>,
@@ -47,7 +47,7 @@ impl MT920 {
         // Detect and parse each sequence (field 12 marks the start of a new sequence)
         while parser.detect_field("12") {
             let field_12 = parser.parse_field::<Field12>("12")?;
-            let field_25 = parser.parse_field::<Field25A>("25A")?;
+            let field_25 = parser.parse_field::<Field25>("25")?;
             let floor_limit_debit = parser.parse_optional_field::<Field34F>("34F")?;
             let floor_limit_credit = parser.parse_optional_field::<Field34F>("34F")?;
 
@@ -63,6 +63,13 @@ impl MT920 {
                 field_25,
                 floor_limit_debit,
                 floor_limit_credit,
+            });
+        }
+
+        // Validate at least one sequence is present
+        if sequence.is_empty() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "At least one sequence is required in MT920".to_string(),
             });
         }
 
@@ -88,7 +95,16 @@ impl MT920 {
         // Add sequences
         for seq in &self.sequence {
             append_field(&mut result, &seq.field_12);
-            append_field(&mut result, &seq.field_25);
+
+            // Field 25 in MT920 uses tag :25: not :25A:
+            // Manually construct the field output
+            let authorisation_str = if seq.field_25.authorisation.starts_with('/') {
+                seq.field_25.authorisation.clone()
+            } else {
+                format!("/{}", seq.field_25.authorisation)
+            };
+            result.push_str(&format!(":25:{}\n", authorisation_str));
+
             append_optional_field(&mut result, &seq.floor_limit_debit);
             append_optional_field(&mut result, &seq.floor_limit_credit);
         }
@@ -369,7 +385,7 @@ mod tests {
         assert_eq!(mt920.field_20.reference, "REQ123456");
         assert_eq!(mt920.sequence.len(), 1);
         assert_eq!(mt920.sequence[0].field_12.type_code, "940");
-        assert_eq!(mt920.sequence[0].field_25.account, "1234567890");
+        assert_eq!(mt920.sequence[0].field_25.authorisation, "1234567890");
     }
 
     #[test]

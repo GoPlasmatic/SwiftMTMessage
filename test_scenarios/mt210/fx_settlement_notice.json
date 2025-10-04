@@ -29,7 +29,7 @@
         1000000000
       ]
     },
-    "fx_leg2_currency": "USD",
+    "fx_leg2_currency": "JPY",
     "fx_leg2_amount": 10000,
     "counterparty_bic": "DEUTDEFF",
     "session_num": "0001",

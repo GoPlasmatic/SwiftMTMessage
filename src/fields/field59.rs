@@ -602,6 +602,34 @@ impl SwiftField for Field59 {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            None => {
+                let field = Field59NoOption::parse(value)?;
+                Ok(Field59::NoOption(field))
+            }
+            Some("A") => {
+                let field = Field59A::parse(value)?;
+                Ok(Field59::A(field))
+            }
+            Some("F") => {
+                let field = Field59F::parse(value)?;
+                Ok(Field59::F(field))
+            }
+            _ => {
+                // Unknown variant, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field59::A(field) => field.to_swift_string(),
@@ -637,6 +665,30 @@ impl SwiftField for Field59Debtor {
         Err(ParseError::InvalidFormat {
             message: "Field 59 Debtor could not be parsed as option A or No Option".to_string(),
         })
+    }
+
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            None => {
+                let field = Field59NoOption::parse(value)?;
+                Ok(Field59Debtor::NoOption(field))
+            }
+            Some("A") => {
+                let field = Field59A::parse(value)?;
+                Ok(Field59Debtor::A(field))
+            }
+            _ => {
+                // Unknown variant, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
     }
 
     fn to_swift_string(&self) -> String {

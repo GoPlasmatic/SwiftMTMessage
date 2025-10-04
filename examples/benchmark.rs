@@ -1,5 +1,5 @@
 use std::time::Instant;
-use swift_mt_message::{parser::SwiftParser, ParsedSwiftMessage};
+use swift_mt_message::{ParsedSwiftMessage, parser::SwiftParser};
 
 const ITERATIONS: usize = 100_000;
 

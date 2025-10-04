@@ -364,6 +364,34 @@ impl SwiftField for Field53SenderCorrespondent {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field53A::parse(value)?;
+                Ok(Field53SenderCorrespondent::A(field))
+            }
+            Some("B") => {
+                let field = Field53B::parse(value)?;
+                Ok(Field53SenderCorrespondent::B(field))
+            }
+            Some("D") => {
+                let field = Field53D::parse(value)?;
+                Ok(Field53SenderCorrespondent::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field53SenderCorrespondent::A(field) => field.to_swift_string(),

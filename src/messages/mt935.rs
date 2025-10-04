@@ -43,7 +43,6 @@ pub struct MT935RateChange {
 
 impl MT935 {
     /// Parse message from Block 4 content
-    /// This parser handles fields that may be generated out of sequence order
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
         let mut parser = crate::parser::MessageParser::new(block4, "935");
 
@@ -53,111 +52,35 @@ impl MT935 {
         // Enable duplicate field handling for repetitive sequences
         parser = parser.with_duplicates(true);
 
-        // Collect all occurrences of sequence fields
-        let mut field_23_list = Vec::new();
-        let mut field_25_list = Vec::new();
-        let mut field_30_list = Vec::new();
-        let mut field_37h_list = Vec::new();
-
-        // Parse all field 23 occurrences
-        while parser.detect_field("23") {
-            field_23_list.push(parser.parse_field::<Field23>("23")?);
-        }
-
-        // Parse all field 25 occurrences
-        while parser.detect_field("25") {
-            field_25_list.push(parser.parse_field::<Field25NoOption>("25")?);
-        }
-
-        // Parse all field 30 occurrences
-        while parser.detect_field("30") {
-            field_30_list.push(parser.parse_field::<Field30>("30")?);
-        }
-
-        // Parse all field 37H occurrences
-        while parser.detect_field("37H") {
-            field_37h_list.push(parser.parse_field::<Field37H>("37H")?);
-        }
-
-        // Parse optional field 72
-        let field_72 = parser.parse_optional_field::<Field72>("72")?;
-
-        // Now reconstruct the sequences based on what we found
-        // The number of sequences is determined by the number of field 30s (mandatory in each sequence)
-        let num_sequences = field_30_list.len();
-
-        if num_sequences == 0 {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: "MT935: At least one rate change sequence is required".to_string(),
-            });
-        }
-
-        if num_sequences > 10 {
-            return Err(crate::errors::ParseError::InvalidFormat {
-                message: format!(
-                    "MT935: Maximum 10 rate change sequences allowed, found {}",
-                    num_sequences
-                ),
-            });
-        }
-
-        // Build sequences
+        // Parse rate change sequences (1-10 occurrences)
         let mut rate_changes = Vec::new();
 
-        for i in 0..num_sequences {
-            // Get field 23 or 25 for this sequence
-            let field_23 = if i < field_23_list.len() {
-                Some(field_23_list[i].clone())
-            } else {
-                None
-            };
+        while (parser.detect_field("23") || parser.detect_field("25")) && rate_changes.len() < 10 {
+            // Parse optional Field 23 - Further Identification (mutually exclusive with field_25)
+            let field_23 = parser.parse_optional_field::<Field23>("23")?;
 
-            let field_25 = if i < field_25_list.len() {
-                Some(field_25_list[i].clone())
-            } else {
-                None
-            };
+            // Parse optional Field 25 - Account Identification (mutually exclusive with field_23)
+            let field_25 = parser.parse_optional_field::<Field25NoOption>("25")?;
 
-            // Validate that exactly one of field 23 or 25 is present
-            if field_23.is_none() && field_25.is_none() {
-                // For simplicity, if neither is present, we'll just skip the validation
-                // as the test data might not have these fields
-            }
+            // Parse mandatory Field 30 - Effective Date of New Rate
+            let field_30 = parser.parse_field::<Field30>("30")?;
 
-            // Get field 30 (mandatory)
-            let field_30 = field_30_list.get(i).cloned().ok_or_else(|| {
-                crate::errors::ParseError::InvalidFormat {
-                    message: format!("MT935: Missing field 30 for sequence {}", i + 1),
-                }
-            })?;
-
-            // Collect field 37H for this sequence
-            // Since we can't determine which 37H belongs to which sequence when they're all grouped,
-            // we'll distribute them evenly or based on some heuristic
-            let mut sequence_37h = Vec::new();
-
-            // Simple distribution: if we have N sequences and M field 37Hs,
-            // give each sequence approximately M/N fields
-            let fields_per_sequence = field_37h_list.len().div_ceil(num_sequences);
-            let start_idx = i * fields_per_sequence;
-            let end_idx = std::cmp::min((i + 1) * fields_per_sequence, field_37h_list.len());
-
-            for j in start_idx..end_idx {
-                if let Some(field) = field_37h_list.get(j) {
-                    sequence_37h.push(field.clone());
+            // Parse field 37H (New Interest Rate) - can be multiple per sequence
+            let mut field_37h = Vec::new();
+            while let Ok(rate) = parser.parse_field::<Field37H>("37H") {
+                field_37h.push(rate);
+                // Keep parsing 37H until we hit the next sequence marker or end
+                if !parser.detect_field("37H") {
+                    break;
                 }
             }
 
-            // If no 37H fields for this sequence, add at least one from the list if available
-            if sequence_37h.is_empty() && i < field_37h_list.len() {
-                sequence_37h.push(field_37h_list[i].clone());
-            }
-
-            if sequence_37h.is_empty() {
+            // At least one field 37H is required per sequence
+            if field_37h.is_empty() {
                 return Err(crate::errors::ParseError::InvalidFormat {
                     message: format!(
                         "MT935: At least one field 37H is required for sequence {}",
-                        i + 1
+                        rate_changes.len() + 1
                     ),
                 });
             }
@@ -166,9 +89,22 @@ impl MT935 {
                 field_23,
                 field_25,
                 field_30,
-                field_37h: sequence_37h,
+                field_37h,
             });
         }
+
+        // Disable duplicates mode after parsing sequences
+        parser = parser.with_duplicates(false);
+
+        // At least one sequence is required
+        if rate_changes.is_empty() {
+            return Err(crate::errors::ParseError::InvalidFormat {
+                message: "MT935: At least one rate change sequence is required".to_string(),
+            });
+        }
+
+        // Parse optional field 72
+        let field_72 = parser.parse_optional_field::<Field72>("72")?;
 
         Ok(MT935 {
             field_20,

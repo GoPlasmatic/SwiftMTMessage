@@ -432,7 +432,7 @@ mod tests {
         assert_eq!(field.time.format("%H%M").to_string(), "1230");
         assert_eq!(field.sign, '+');
         assert_eq!(field.offset, "0100");
-        assert_eq!(field.to_swift_string(), "/SNDTIME/1230+0100");
+        assert_eq!(field.to_swift_string(), ":13C:/SNDTIME/1230+0100");
 
         let field = Field13C::parse("/CLSTIME/0900-0500").unwrap();
         assert_eq!(field.code, "/CLSTIME/");
@@ -469,7 +469,7 @@ mod tests {
         assert_eq!(field.time.format("%H%M").to_string(), "1230");
         assert_eq!(field.offset_sign, '+');
         assert_eq!(field.offset, "0100");
-        assert_eq!(field.to_swift_string(), "2407191230+0100");
+        assert_eq!(field.to_swift_string(), ":13D:2407191230+0100");
 
         let field = Field13D::parse("2412310000-0800").unwrap();
         assert_eq!(field.date.format("%y%m%d").to_string(), "241231");

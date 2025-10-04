@@ -1,4 +1,4 @@
-use super::field_utils::parse_name_and_address;
+use super::field_utils::{parse_name_and_address, parse_party_identifier};
 use super::swift_utils::{parse_bic, parse_swift_chars};
 use crate::errors::ParseError;
 use crate::traits::SwiftField;
@@ -123,36 +123,12 @@ impl SwiftField for Field52A {
         }
 
         let mut party_identifier = None;
-        let bic_line_idx;
+        let mut bic_line_idx = 0;
 
-        // Check if first line is party identifier (/X/...)
-        if lines[0].starts_with('/') && lines[0].len() > 2 {
-            // Parse party identifier format: /1!a/34x
-            let parts: Vec<&str> = lines[0][1..].splitn(2, '/').collect();
-
-            if parts.len() == 2 && parts[0].len() == 1 {
-                // Validate single character code
-                if !parts[0].chars().all(|c| c.is_ascii_alphabetic()) {
-                    return Err(ParseError::InvalidFormat {
-                        message: "Field 52A party identifier code must be alphabetic".to_string(),
-                    });
-                }
-
-                // Validate identifier (up to 34 chars)
-                if parts[1].len() > 34 {
-                    return Err(ParseError::InvalidFormat {
-                        message: "Field 52A party identifier exceeds 34 characters".to_string(),
-                    });
-                }
-
-                parse_swift_chars(parts[1], "Field 52A party identifier")?;
-                party_identifier = Some(format!("{}/{}", parts[0], parts[1]));
-                bic_line_idx = 1;
-            } else {
-                bic_line_idx = 0;
-            }
-        } else {
-            bic_line_idx = 0;
+        // Check for optional party identifier on first line
+        if let Some(party_id) = parse_party_identifier(lines[0])? {
+            party_identifier = Some(party_id);
+            bic_line_idx = 1;
         }
 
         // Parse BIC
@@ -431,6 +407,30 @@ impl SwiftField for Field52AccountServicingInstitution {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field52A::parse(value)?;
+                Ok(Field52AccountServicingInstitution::A(field))
+            }
+            Some("C") => {
+                let field = Field52C::parse(value)?;
+                Ok(Field52AccountServicingInstitution::C(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field52AccountServicingInstitution::A(field) => field.to_swift_string(),
@@ -467,6 +467,30 @@ impl SwiftField for Field52OrderingInstitution {
             message: "Field 52 Ordering Institution could not be parsed as option A or D"
                 .to_string(),
         })
+    }
+
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field52A::parse(value)?;
+                Ok(Field52OrderingInstitution::A(field))
+            }
+            Some("D") => {
+                let field = Field52D::parse(value)?;
+                Ok(Field52OrderingInstitution::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
     }
 
     fn to_swift_string(&self) -> String {
@@ -523,6 +547,34 @@ impl SwiftField for Field52CreditorBank {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field52A::parse(value)?;
+                Ok(Field52CreditorBank::A(field))
+            }
+            Some("C") => {
+                let field = Field52C::parse(value)?;
+                Ok(Field52CreditorBank::C(field))
+            }
+            Some("D") => {
+                let field = Field52D::parse(value)?;
+                Ok(Field52CreditorBank::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field52CreditorBank::A(field) => field.to_swift_string(),
@@ -566,6 +618,34 @@ impl SwiftField for Field52DrawerBank {
         Err(ParseError::InvalidFormat {
             message: "Field 52 Drawer Bank could not be parsed as option A, B or D".to_string(),
         })
+    }
+
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field52A::parse(value)?;
+                Ok(Field52DrawerBank::A(field))
+            }
+            Some("B") => {
+                let field = Field52B::parse(value)?;
+                Ok(Field52DrawerBank::B(field))
+            }
+            Some("D") => {
+                let field = Field52D::parse(value)?;
+                Ok(Field52DrawerBank::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
     }
 
     fn to_swift_string(&self) -> String {

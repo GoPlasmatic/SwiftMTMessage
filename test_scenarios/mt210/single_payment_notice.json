@@ -108,11 +108,6 @@
           "50F": {
             "account": "DE89370400440532013000",
             "bic": "DEUTDEFF"
-          },
-          "52A": {
-            "bic": {
-              "var": "ordering_bic"
-            }
           }
         }
       ]

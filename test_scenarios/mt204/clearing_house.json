@@ -125,7 +125,7 @@
             ]
           },
           "53A": {
-            "party_identifier": "MEMBER/001",
+            "party_identifier": "/M/EMBER001",
             "bic": "DEUTDEFF"
           }
         },
@@ -149,7 +149,7 @@
             ]
           },
           "53A": {
-            "party_identifier": "MEMBER/002",
+            "party_identifier": "/M/EMBER002",
             "bic": "DEUTDEFF"
           }
         },
@@ -173,7 +173,7 @@
             ]
           },
           "53A": {
-            "party_identifier": "MEMBER/003",
+            "party_identifier": "/M/EMBER003",
             "bic": "DEUTDEFF"
           }
         },
@@ -197,7 +197,7 @@
             ]
           },
           "53A": {
-            "party_identifier": "MEMBER/004",
+            "party_identifier": "/M/EMBER004",
             "bic": "DEUTDEFF"
           }
         }

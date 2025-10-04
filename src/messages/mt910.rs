@@ -45,10 +45,14 @@ impl MT910 {
         let field_20 = parser.parse_field::<Field20>("20")?;
         let field_21 = parser.parse_field::<Field21NoOption>("21")?;
         let field_25 = parser.parse_field::<Field25AccountIdentification>("25")?;
+
+        // Parse optional field 13D (comes before 32A)
+        let field_13d = parser.parse_optional_field::<Field13D>("13D")?;
+
+        // Parse mandatory field 32A
         let field_32a = parser.parse_field::<Field32A>("32A")?;
 
-        // Parse optional fields
-        let field_13d = parser.parse_optional_field::<Field13D>("13D")?;
+        // Parse remaining optional fields
         let field_50 = parser.parse_optional_variant_field::<Field50OrderingCustomerAFK>("50")?;
         let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
         let field_56 = parser.parse_optional_variant_field::<Field56Intermediary>("56")?;
@@ -240,9 +244,12 @@ NEW YORK
 :21:REF20240719001
 :25:12345678901234567890
 :32A:240719USD1000,00
-:52A:BANKDEFFAXXX
+:52A:DEUTDEFFXXX
 -"#;
         let result = MT910::parse_from_block4(mt910_text);
+        if let Err(ref e) = result {
+            eprintln!("Parse error: {:?}", e);
+        }
         assert!(result.is_ok());
         let mt910 = result.unwrap();
 
@@ -261,7 +268,7 @@ NEW YORK
 :50K:JOHN DOE
 123 MAIN STREET
 NEW YORK
-:52A:BANKDEFFAXXX
+:52A:DEUTDEFFXXX
 -"#;
         let result = MT910::parse_from_block4(mt910_text);
         assert!(result.is_ok());

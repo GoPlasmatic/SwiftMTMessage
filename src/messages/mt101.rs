@@ -141,18 +141,23 @@ impl MT101 {
                 match variant.as_str() {
                     "C" | "L" => {
                         // Instructing party variants
-                        instructing = parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
+                        instructing =
+                            parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
                     }
                     "F" | "G" | "H" => {
                         // Ordering customer variants
-                        ordering = parser.parse_optional_variant_field::<Field50OrderingCustomerFGH>("50")?;
+                        ordering = parser
+                            .parse_optional_variant_field::<Field50OrderingCustomerFGH>("50")?;
                     }
                     _ => {
                         // Unknown variant - try instructing party first, then ordering customer
-                        if let Ok(Some(field)) = parser.parse_optional_variant_field::<Field50InstructingParty>("50") {
+                        if let Ok(Some(field)) =
+                            parser.parse_optional_variant_field::<Field50InstructingParty>("50")
+                        {
                             instructing = Some(field);
                         } else {
-                            ordering = parser.parse_optional_variant_field::<Field50OrderingCustomerFGH>("50")?;
+                            ordering = parser
+                                .parse_optional_variant_field::<Field50OrderingCustomerFGH>("50")?;
                         }
                     }
                 }

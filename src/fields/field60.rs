@@ -253,6 +253,32 @@ impl SwiftField for Field60 {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("F") => {
+                let field = Field60F::parse(value)?;
+                Ok(Field60::F(field))
+            }
+            Some("M") => {
+                let field = Field60M::parse(value)?;
+                Ok(Field60::M(field))
+            }
+            _ => {
+                // No variant specified or unknown variant
+                Err(ParseError::InvalidFormat {
+                    message: "Field60 requires variant F or M".to_string(),
+                })
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field60::F(field) => field.to_swift_string(),

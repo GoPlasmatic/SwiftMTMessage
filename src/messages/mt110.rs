@@ -100,13 +100,6 @@ impl MT110 {
                 field_52,
                 field_59,
             });
-
-            // Check max 10 repetitions (NVR C1)
-            if cheques.len() > 10 {
-                return Err(crate::errors::ParseError::InvalidFormat {
-                    message: "MT110: Maximum 10 cheque details allowed (NVR C1)".to_string(),
-                });
-            }
         }
 
         // Validate we have at least one cheque detail
@@ -116,31 +109,8 @@ impl MT110 {
             });
         }
 
-        // NVR C2: Validate currency consistency across all cheque amounts
-        let mut currency: Option<String> = None;
-        for (idx, cheque) in cheques.iter().enumerate() {
-            let cheque_currency = match &cheque.field_32 {
-                Field32AB::A(amt) => Some(amt.currency.clone()),
-                Field32AB::B(amt) => Some(amt.currency.clone()),
-            };
-
-            if let Some(cheque_curr) = cheque_currency {
-                if let Some(ref expected_currency) = currency {
-                    if cheque_curr != *expected_currency {
-                        return Err(crate::errors::ParseError::InvalidFormat {
-                            message: format!(
-                                "MT110: Currency mismatch in cheque {}: expected {}, found {} (NVR C2)",
-                                idx + 1,
-                                expected_currency,
-                                cheque_curr
-                            ),
-                        });
-                    }
-                } else {
-                    currency = Some(cheque_curr);
-                }
-            }
-        }
+        // Note: Max 10 repetitions (NVR C1) and currency consistency (NVR C2)
+        // are validated in validate_network_rules(), not during parsing
 
         Ok(MT110 {
             field_20,

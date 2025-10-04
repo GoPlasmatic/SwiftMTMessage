@@ -125,11 +125,6 @@
             ],
             "bic": "DEUTDEFF"
           },
-          "52A": {
-            "bic": {
-              "var": "custodian_bic"
-            }
-          },
           "56A": {
             "bic": {
               "var": "clearinghouse_bic"
@@ -160,15 +155,6 @@
               "PERIOD: 2024H2"
             ],
             "bic": "DEUTDEFF"
-          },
-          "52D": {
-            "party_identifier": "PAYING-AGENT",
-            "name_and_address": [
-              "SWISS PAYING AGENT",
-              "BOND SERVICES",
-              "ZURICH",
-              "SWITZERLAND"
-            ]
           }
         }
       ]

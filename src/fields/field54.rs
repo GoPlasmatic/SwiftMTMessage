@@ -130,7 +130,7 @@ impl SwiftField for Field54A {
     }
 
     fn to_swift_string(&self) -> String {
-        let mut result = String::new();
+        let mut result = String::from(":54A:");
         if let Some(ref party_id) = self.party_identifier {
             result.push_str(party_id);
             result.push('\n');
@@ -194,7 +194,7 @@ impl SwiftField for Field54B {
     }
 
     fn to_swift_string(&self) -> String {
-        let mut result = String::new();
+        let mut result = String::from(":54B:");
         if let Some(ref party_id) = self.party_identifier {
             result.push_str(party_id);
             if self.location.is_some() {
@@ -259,7 +259,7 @@ impl SwiftField for Field54D {
     }
 
     fn to_swift_string(&self) -> String {
-        let mut result = String::new();
+        let mut result = String::from(":54D:");
         if let Some(ref party_id) = self.party_identifier {
             result.push_str(party_id);
             result.push('\n');
@@ -365,13 +365,13 @@ mod tests {
         let field = Field54A::parse("DEUTDEFFXXX").unwrap();
         assert_eq!(field.bic, "DEUTDEFFXXX");
         assert_eq!(field.party_identifier, None);
-        assert_eq!(field.to_swift_string(), "DEUTDEFFXXX");
+        assert_eq!(field.to_swift_string(), ":54A:DEUTDEFFXXX");
 
         // With party identifier
         let field = Field54A::parse("/A/987654321\nDEUTDEFF").unwrap();
         assert_eq!(field.bic, "DEUTDEFF");
         assert_eq!(field.party_identifier, Some("/A/987654321".to_string()));
-        assert_eq!(field.to_swift_string(), "/A/987654321\nDEUTDEFF");
+        assert_eq!(field.to_swift_string(), ":54A:/A/987654321\nDEUTDEFF");
     }
 
     #[test]

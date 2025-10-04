@@ -193,7 +193,10 @@ impl MT941 {
     /// C1: Currency Code Consistency (Error code: C27)
     /// The first two characters of the three character currency code in fields 60F, 90D,
     /// 90C, 62F, 64 and 65 must be the same for all occurrences of these fields
-    fn validate_c1_currency_consistency(&self) -> Vec<SwiftValidationError> {
+    fn validate_c1_currency_consistency(
+        &self,
+        stop_on_first_error: bool,
+    ) -> Vec<SwiftValidationError> {
         let mut errors = Vec::new();
         let base_currency = self.get_base_currency();
 
@@ -212,6 +215,9 @@ impl MT941 {
                     ),
                     "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
                 ));
+            if stop_on_first_error {
+                return errors;
+            }
         }
 
         // Check 90D if present
@@ -229,6 +235,9 @@ impl MT941 {
                     ),
                     "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
                 ));
+            if stop_on_first_error {
+                return errors;
+            }
         }
 
         // Check 90C if present
@@ -246,6 +255,9 @@ impl MT941 {
                     ),
                     "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
                 ));
+            if stop_on_first_error {
+                return errors;
+            }
         }
 
         // Check 64 if present
@@ -263,6 +275,9 @@ impl MT941 {
                     ),
                     "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
                 ));
+            if stop_on_first_error {
+                return errors;
+            }
         }
 
         // Check 65 if present (can be repetitive)
@@ -281,6 +296,9 @@ impl MT941 {
                         ),
                         "The first two characters of the three character currency code in fields 60F, 90D, 90C, 62F, 64 and 65 must be the same for all occurrences of these fields",
                     ));
+                    if stop_on_first_error {
+                        return errors;
+                    }
                 }
             }
         }
@@ -294,7 +312,7 @@ impl MT941 {
         let mut all_errors = Vec::new();
 
         // C1: Currency Code Consistency
-        let c1_errors = self.validate_c1_currency_consistency();
+        let c1_errors = self.validate_c1_currency_consistency(stop_on_first_error);
         all_errors.extend(c1_errors);
         if stop_on_first_error && !all_errors.is_empty() {
             return all_errors;

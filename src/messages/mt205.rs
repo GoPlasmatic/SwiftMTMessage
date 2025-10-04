@@ -74,11 +74,14 @@ impl MT205 {
         let transaction_reference = parser.parse_field::<Field20>("20")?;
         let related_reference = parser.parse_field::<Field21NoOption>("21")?;
 
-        // Parse optional Field 13C (can be repeated)
+        // Parse optional Field 13C (can be repeated) - enable duplicates mode
+        parser = parser.with_duplicates(true);
         let mut time_indications = Vec::new();
         while let Ok(field) = parser.parse_field::<Field13C>("13C") {
             time_indications.push(field);
         }
+        parser = parser.with_duplicates(false);
+
         let time_indication = if time_indications.is_empty() {
             None
         } else {

@@ -331,6 +331,34 @@ impl SwiftField for Field56Intermediary {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field56A::parse(value)?;
+                Ok(Field56Intermediary::A(field))
+            }
+            Some("C") => {
+                let field = Field56C::parse(value)?;
+                Ok(Field56Intermediary::C(field))
+            }
+            Some("D") => {
+                let field = Field56D::parse(value)?;
+                Ok(Field56Intermediary::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field56Intermediary::A(field) => field.to_swift_string(),
@@ -366,6 +394,30 @@ impl SwiftField for Field56IntermediaryAD {
         Err(ParseError::InvalidFormat {
             message: "Field 56 Intermediary AD could not be parsed as option A or D".to_string(),
         })
+    }
+
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field56A::parse(value)?;
+                Ok(Field56IntermediaryAD::A(field))
+            }
+            Some("D") => {
+                let field = Field56D::parse(value)?;
+                Ok(Field56IntermediaryAD::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
     }
 
     fn to_swift_string(&self) -> String {
@@ -405,7 +457,7 @@ mod tests {
     fn test_field56c() {
         let field = Field56C::parse("/USCLEARING123").unwrap();
         assert_eq!(field.party_identifier, "USCLEARING123");
-        assert_eq!(field.to_swift_string(), "/USCLEARING123");
+        assert_eq!(field.to_swift_string(), ":56C:/USCLEARING123");
     }
 
     #[test]

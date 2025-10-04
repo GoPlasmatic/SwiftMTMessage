@@ -399,6 +399,38 @@ impl SwiftField for Field57 {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field57A::parse(value)?;
+                Ok(Field57::A(field))
+            }
+            Some("B") => {
+                let field = Field57B::parse(value)?;
+                Ok(Field57::B(field))
+            }
+            Some("C") => {
+                let field = Field57C::parse(value)?;
+                Ok(Field57::C(field))
+            }
+            Some("D") => {
+                let field = Field57D::parse(value)?;
+                Ok(Field57::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field57::A(field) => field.to_swift_string(),
@@ -547,6 +579,34 @@ impl SwiftField for Field57DebtInstitution {
         Err(ParseError::InvalidFormat {
             message: "Field 57 must be one of formats: 57A (party + BIC), 57B (party + location), or 57D (name + address)".to_string(),
         })
+    }
+
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field57A::parse(value)?;
+                Ok(Field57DebtInstitution::A(field))
+            }
+            Some("B") => {
+                let field = Field57B::parse(value)?;
+                Ok(Field57DebtInstitution::B(field))
+            }
+            Some("D") => {
+                let field = Field57D::parse(value)?;
+                Ok(Field57DebtInstitution::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
     }
 
     fn to_swift_string(&self) -> String {

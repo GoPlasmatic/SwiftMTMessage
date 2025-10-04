@@ -853,10 +853,39 @@ impl crate::traits::SwiftMessageBody for MT103 {
     fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
         let mut parser = crate::parser::MessageParser::new(block4, "103");
 
-        // Parse mandatory fields in proper order
+        // Parse mandatory field 20
         let field_20 = parser.parse_field::<Field20>("20")?;
+
+        // Parse optional repeating Field13C
+        parser = parser.with_duplicates(true);
+        let mut field_13c = Vec::new();
+        while let Ok(field) = parser.parse_field::<Field13C>("13C") {
+            field_13c.push(field);
+        }
+        parser = parser.with_duplicates(false);
+
+        // Parse mandatory field 23B
         let field_23b = parser.parse_field::<Field23B>("23B")?;
+
+        // Parse optional repeating Field23E
+        parser = parser.with_duplicates(true);
+        let mut field_23e = Vec::new();
+        while let Ok(field) = parser.parse_field::<Field23E>("23E") {
+            field_23e.push(field);
+        }
+        parser = parser.with_duplicates(false);
+
+        // Parse optional field 26T
+        let field_26t = parser.parse_optional_field::<Field26T>("26T")?;
+
+        // Parse mandatory field 32A
         let field_32a = parser.parse_field::<Field32A>("32A")?;
+
+        // Parse optional fields 33B and 36
+        let field_33b = parser.parse_optional_field::<Field33B>("33B")?;
+        let field_36 = parser.parse_optional_field::<Field36>("36")?;
+
+        // Parse mandatory field 50
         let field_50 = parser.parse_variant_field::<Field50OrderingCustomerAFK>("50")?;
 
         // Parse optional fields that come before field 59
@@ -873,40 +902,25 @@ impl crate::traits::SwiftMessageBody for MT103 {
         // Parse mandatory field 59 (after optional routing fields)
         let field_59 = parser.parse_variant_field::<Field59>("59")?;
 
-        // Parse optional fields that come after field 59
+        // Parse optional field 70
         let field_70 = parser.parse_optional_field::<Field70>("70")?;
 
         // Parse mandatory field 71A
         let field_71a = parser.parse_field::<Field71A>("71A")?;
 
-        // Parse remaining optional fields
-        let field_26t = parser.parse_optional_field::<Field26T>("26T")?;
-        let field_33b = parser.parse_optional_field::<Field33B>("33B")?;
-        let field_36 = parser.parse_optional_field::<Field36>("36")?;
-        let field_71g = parser.parse_optional_field::<Field71G>("71G")?;
-        let field_72 = parser.parse_optional_field::<Field72>("72")?;
-        let field_77b = parser.parse_optional_field::<Field77B>("77B")?;
-        let field_77t = parser.parse_optional_field::<Field77T>("77T")?;
-
-        // Parse repeated fields
+        // Parse optional repeating Field71F
         parser = parser.with_duplicates(true);
-
-        let mut field_13c = Vec::new();
-        while let Ok(field) = parser.parse_field::<Field13C>("13C") {
-            field_13c.push(field);
-        }
-
-        let mut field_23e = Vec::new();
-        while let Ok(field) = parser.parse_field::<Field23E>("23E") {
-            field_23e.push(field);
-        }
-
         let mut field_71f = Vec::new();
         while let Ok(field) = parser.parse_field::<Field71F>("71F") {
             field_71f.push(field);
         }
-
         parser = parser.with_duplicates(false);
+
+        // Parse remaining optional fields
+        let field_71g = parser.parse_optional_field::<Field71G>("71G")?;
+        let field_72 = parser.parse_optional_field::<Field72>("72")?;
+        let field_77b = parser.parse_optional_field::<Field77B>("77B")?;
+        let field_77t = parser.parse_optional_field::<Field77T>("77T")?;
 
         // Verify all content is consumed
         verify_parser_complete(&parser)?;

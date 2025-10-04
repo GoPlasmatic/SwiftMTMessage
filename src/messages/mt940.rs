@@ -82,6 +82,9 @@ impl MT940 {
             statement_lines.push(MT940StatementLine { field_61, field_86 });
         }
 
+        // Disable duplicates mode after parsing statement lines
+        parser = parser.with_duplicates(false);
+
         // Must have at least one statement line
         if statement_lines.is_empty() {
             return Err(crate::errors::ParseError::InvalidFormat {
@@ -96,10 +99,12 @@ impl MT940 {
         let field_64 = parser.parse_optional_field::<Field64>("64")?;
 
         // Parse optional repetitive Field 65 (Forward Available Balance)
+        parser = parser.with_duplicates(true);
         let mut forward_balances = Vec::new();
         while let Ok(field_65) = parser.parse_field::<Field65>("65") {
             forward_balances.push(field_65);
         }
+
         let field_65 = if forward_balances.is_empty() {
             None
         } else {

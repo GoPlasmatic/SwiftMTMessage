@@ -35,14 +35,18 @@ impl MT900 {
     pub fn parse_from_block4(block4: &str) -> Result<Self, crate::errors::ParseError> {
         let mut parser = crate::parser::MessageParser::new(block4, "900");
 
-        // Parse mandatory fields
+        // Parse mandatory fields in order matching to_mt_string
         let field_20 = parser.parse_field::<Field20>("20")?;
         let field_21 = parser.parse_field::<Field21NoOption>("21")?;
         let field_25 = parser.parse_field::<Field25AccountIdentification>("25")?;
+
+        // Parse optional Field 13D before Field 32A
+        let field_13d = parser.parse_optional_field::<Field13D>("13D")?;
+
+        // Parse mandatory Field 32A
         let field_32a = parser.parse_field::<Field32A>("32A")?;
 
         // Parse optional fields
-        let field_13d = parser.parse_optional_field::<Field13D>("13D")?;
         let field_52 = parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
         let field_72 = parser.parse_optional_field::<Field72>("72")?;
 

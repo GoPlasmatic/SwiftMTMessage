@@ -507,10 +507,7 @@ fn get_all_test_cases() -> Vec<(String, String, String)> {
 
 /// Get scenarios for a specific message type using index.json
 fn get_scenarios_for_message_type(message_type: &str) -> Vec<String> {
-    let index_path = format!(
-        "test_scenarios/{}/index.json",
-        message_type.to_lowercase()
-    );
+    let index_path = format!("test_scenarios/{}/index.json", message_type.to_lowercase());
 
     match fs::read_to_string(&index_path) {
         Ok(content) => match serde_json::from_str::<ScenarioIndex>(&content) {
@@ -670,9 +667,7 @@ fn normalize_json_value(value: &Value) -> Value {
             }
             Value::Object(normalized)
         }
-        Value::Array(arr) => {
-            Value::Array(arr.iter().map(normalize_json_value).collect())
-        }
+        Value::Array(arr) => Value::Array(arr.iter().map(normalize_json_value).collect()),
         _ => value.clone(),
     }
 }
@@ -728,7 +723,8 @@ fn check_round_trip_success(message: &Message) -> bool {
                                     parsed_obj.get("fields").and_then(|f| f.as_object()),
                                 ) {
                                     // Collect all unique keys from both orig and parsed
-                                    let mut all_keys: std::collections::HashSet<_> = orig_fields.keys().collect();
+                                    let mut all_keys: std::collections::HashSet<_> =
+                                        orig_fields.keys().collect();
                                     all_keys.extend(parsed_fields.keys());
 
                                     for field_key in all_keys {
@@ -737,8 +733,10 @@ fn check_round_trip_success(message: &Message) -> bool {
 
                                         match (orig_field, parsed_field) {
                                             (Some(o), Some(p)) => {
-                                                let orig_str = serde_json::to_string(o).unwrap_or_default();
-                                                let parsed_str = serde_json::to_string(p).unwrap_or_default();
+                                                let orig_str =
+                                                    serde_json::to_string(o).unwrap_or_default();
+                                                let parsed_str =
+                                                    serde_json::to_string(p).unwrap_or_default();
                                                 if orig_str != parsed_str {
                                                     println!("      Field {} differs:", field_key);
                                                     println!("        Original: {}", orig_str);
@@ -746,12 +744,24 @@ fn check_round_trip_success(message: &Message) -> bool {
                                                 }
                                             }
                                             (Some(o), None) => {
-                                                println!("      Field {} only in original:", field_key);
-                                                println!("        Original: {}", serde_json::to_string(o).unwrap_or_default());
+                                                println!(
+                                                    "      Field {} only in original:",
+                                                    field_key
+                                                );
+                                                println!(
+                                                    "        Original: {}",
+                                                    serde_json::to_string(o).unwrap_or_default()
+                                                );
                                             }
                                             (None, Some(p)) => {
-                                                println!("      Field {} only in parsed:", field_key);
-                                                println!("        Parsed: {}", serde_json::to_string(p).unwrap_or_default());
+                                                println!(
+                                                    "      Field {} only in parsed:",
+                                                    field_key
+                                                );
+                                                println!(
+                                                    "        Parsed: {}",
+                                                    serde_json::to_string(p).unwrap_or_default()
+                                                );
                                             }
                                             (None, None) => {} // Shouldn't happen
                                         }

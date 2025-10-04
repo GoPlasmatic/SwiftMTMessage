@@ -360,6 +360,34 @@ impl SwiftField for Field55ThirdReimbursementInstitution {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field55A::parse(value)?;
+                Ok(Field55ThirdReimbursementInstitution::A(field))
+            }
+            Some("B") => {
+                let field = Field55B::parse(value)?;
+                Ok(Field55ThirdReimbursementInstitution::B(field))
+            }
+            Some("D") => {
+                let field = Field55D::parse(value)?;
+                Ok(Field55ThirdReimbursementInstitution::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field55ThirdReimbursementInstitution::A(field) => field.to_swift_string(),

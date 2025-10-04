@@ -18,7 +18,7 @@
     "payment1_ref": {
       "cat": [
         "PAY",
-        100000000000
+        1000000000000
       ]
     },
     "payment1_currency": "USD",
@@ -26,7 +26,7 @@
     "payment2_ref": {
       "cat": [
         "SETTLE",
-        100000000000
+        1000000000
       ]
     },
     "payment2_currency": "USD",
@@ -34,7 +34,7 @@
     "payment3_ref": {
       "cat": [
         "LIQ",
-        100000000000
+        1000000000000
       ]
     },
     "payment3_currency": "USD",

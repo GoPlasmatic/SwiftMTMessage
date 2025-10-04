@@ -362,7 +362,7 @@ mod tests {
     fn test_field25a() {
         let field = Field25A::parse("/GB82WEST12345698765432").unwrap();
         assert_eq!(field.account, "GB82WEST12345698765432"); // Account stored without slash
-        assert_eq!(field.to_swift_string(), ":25:/GB82WEST12345698765432"); // MT format includes field tag and slash
+        assert_eq!(field.to_swift_string(), ":25A:/GB82WEST12345698765432"); // MT format includes field tag and slash
 
         let field = Field25A::parse("/1234567890").unwrap();
         assert_eq!(field.account, "1234567890"); // Account stored without slash

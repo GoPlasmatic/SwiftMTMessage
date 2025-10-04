@@ -71,8 +71,8 @@
                     "12": {
                         "type_code": "940"
                     },
-                    "25A": {
-                        "account": {
+                    "25": {
+                        "authorisation": {
                             "var": "account_number"
                         }
                     }

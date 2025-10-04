@@ -100,48 +100,25 @@ impl SwiftField for Field58A {
     where
         Self: Sized,
     {
-        let mut pos = 0;
+        let lines: Vec<&str> = input.lines().collect();
+
         let mut party_identifier = None;
+        let mut bic_line_idx = 0;
 
-        // Check for optional party identifier starting with /
-        if input.starts_with('/') {
-            // The BIC should be the last 8 or 11 characters
-            // Look for a valid BIC pattern at the end
-            let mut bic_pos = None;
-            for start in 1..input.len() {
-                let potential_bic = &input[start..];
-                if (potential_bic.len() == 8 || potential_bic.len() == 11)
-                    && potential_bic[0..4].chars().all(|c| c.is_ascii_uppercase())
-                    && potential_bic[4..6].chars().all(|c| c.is_ascii_uppercase())
-                    && potential_bic[6..8]
-                        .chars()
-                        .all(|c| c.is_ascii_alphanumeric())
-                    && (potential_bic.len() == 8
-                        || (potential_bic.len() == 11
-                            && potential_bic[8..11]
-                                .chars()
-                                .all(|c| c.is_ascii_alphanumeric())))
-                {
-                    bic_pos = Some(start);
-                    break;
-                }
-            }
-
-            if let Some(bic_start) = bic_pos {
-                party_identifier = Some(input[..bic_start].to_string());
-                pos = bic_start;
-            }
+        // Check for optional party identifier on first line
+        if !lines.is_empty() && lines[0].starts_with('/') {
+            party_identifier = Some(lines[0].to_string());
+            bic_line_idx = 1;
         }
 
-        // Parse BIC code from remaining input
-        let bic_part = &input[pos..];
-        if bic_part.is_empty() {
+        // Ensure we have a BIC line
+        if bic_line_idx >= lines.len() {
             return Err(ParseError::InvalidFormat {
                 message: "Field 58A missing BIC code".to_string(),
             });
         }
 
-        let bic = parse_bic(bic_part)?;
+        let bic = parse_bic(lines[bic_line_idx])?;
 
         Ok(Field58A {
             party_identifier,
@@ -153,7 +130,11 @@ impl SwiftField for Field58A {
         let mut result = ":58A:".to_string();
 
         if let Some(ref party_id) = self.party_identifier {
+            if !party_id.starts_with('/') {
+                result.push('/');
+            }
             result.push_str(party_id);
+            result.push('\n');
         }
 
         result.push_str(&self.bic);
@@ -247,6 +228,30 @@ impl SwiftField for Field58 {
         Err(ParseError::InvalidFormat {
             message: "Field 58 could not be parsed as either option A or D".to_string(),
         })
+    }
+
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field58A::parse(value)?;
+                Ok(Field58::A(field))
+            }
+            Some("D") => {
+                let field = Field58D::parse(value)?;
+                Ok(Field58::D(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
     }
 
     fn to_swift_string(&self) -> String {

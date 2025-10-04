@@ -2,8 +2,8 @@
 
 use std::path::PathBuf;
 use swift_mt_message::{
-    generate_sample, generate_sample_with_config, messages::mt103::MT103, SampleGenerator,
-    ScenarioConfig,
+    SampleGenerator, ScenarioConfig, generate_sample, generate_sample_with_config,
+    messages::mt103::MT103,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -669,6 +669,30 @@ impl SwiftField for Field50InstructingParty {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("C") => {
+                let field = Field50C::parse(value)?;
+                Ok(Field50InstructingParty::C(field))
+            }
+            Some("L") => {
+                let field = Field50L::parse(value)?;
+                Ok(Field50InstructingParty::L(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field50InstructingParty::C(field) => field.to_swift_string(),
@@ -724,6 +748,34 @@ impl SwiftField for Field50OrderingCustomerFGH {
             message: "Field 50 Ordering Customer could not be parsed as option F, G or H"
                 .to_string(),
         })
+    }
+
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("F") => {
+                let field = Field50F::parse(value)?;
+                Ok(Field50OrderingCustomerFGH::F(field))
+            }
+            Some("G") => {
+                let field = Field50G::parse(value)?;
+                Ok(Field50OrderingCustomerFGH::G(field))
+            }
+            Some("H") => {
+                let field = Field50H::parse(value)?;
+                Ok(Field50OrderingCustomerFGH::H(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
     }
 
     fn to_swift_string(&self) -> String {
@@ -790,6 +842,34 @@ impl SwiftField for Field50OrderingCustomerAFK {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field50A::parse(value)?;
+                Ok(Field50OrderingCustomerAFK::A(field))
+            }
+            Some("F") => {
+                let field = Field50F::parse(value)?;
+                Ok(Field50OrderingCustomerAFK::F(field))
+            }
+            Some("K") => {
+                let field = Field50K::parse(value)?;
+                Ok(Field50OrderingCustomerAFK::K(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field50OrderingCustomerAFK::A(field) => field.to_swift_string(),
@@ -852,6 +932,34 @@ impl SwiftField for Field50OrderingCustomerNCF {
         })
     }
 
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            None => {
+                let field = Field50NoOption::parse(value)?;
+                Ok(Field50OrderingCustomerNCF::NoOption(field))
+            }
+            Some("C") => {
+                let field = Field50C::parse(value)?;
+                Ok(Field50OrderingCustomerNCF::C(field))
+            }
+            Some("F") => {
+                let field = Field50F::parse(value)?;
+                Ok(Field50OrderingCustomerNCF::F(field))
+            }
+            _ => {
+                // Unknown variant, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
+    }
+
     fn to_swift_string(&self) -> String {
         match self {
             Field50OrderingCustomerNCF::NoOption(field) => field.to_swift_string(),
@@ -899,6 +1007,30 @@ impl SwiftField for Field50Creditor {
         Err(ParseError::InvalidFormat {
             message: "Field 50 Creditor could not be parsed as option A or K".to_string(),
         })
+    }
+
+    fn parse_with_variant(
+        value: &str,
+        variant: Option<&str>,
+        _field_tag: Option<&str>,
+    ) -> crate::Result<Self>
+    where
+        Self: Sized,
+    {
+        match variant {
+            Some("A") => {
+                let field = Field50A::parse(value)?;
+                Ok(Field50Creditor::A(field))
+            }
+            Some("K") => {
+                let field = Field50K::parse(value)?;
+                Ok(Field50Creditor::K(field))
+            }
+            _ => {
+                // No variant specified, fall back to default parse behavior
+                Self::parse(value)
+            }
+        }
     }
 
     fn to_swift_string(&self) -> String {

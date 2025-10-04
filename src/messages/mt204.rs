@@ -68,7 +68,7 @@ impl MT204 {
     pub fn parse_from_block4(block4: &str) -> Result<Self, ParseError> {
         let mut parser = MessageParser::new(block4, "204");
 
-        // Parse header fields in the correct order
+        // Parse header fields in the correct order (matching to_mt_string)
         let sum_of_amounts = parser.parse_field::<Field19>("19")?;
         let transaction_reference = parser.parse_field::<Field20>("20")?;
         let execution_date = parser.parse_field::<Field30>("30")?;
@@ -79,9 +79,39 @@ impl MT204 {
         // Parse optional Field 72 at message level
         let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
 
-        // Parse transactions
-        // For now, we'll create an empty vector as transaction parsing requires special handling
-        let transactions = Vec::new();
+        // Parse repeating transaction sequences - enable duplicates mode
+        parser = parser.with_duplicates(true);
+        let mut transactions = Vec::new();
+
+        while parser.detect_field("20") {
+            // Parse mandatory Field 20 - Transaction Reference Number
+            let transaction_reference = parser.parse_field::<Field20>("20")?;
+
+            // Parse optional Field 21 - Related Reference
+            let related_reference = parser.parse_optional_field::<Field21NoOption>("21")?;
+
+            // Parse mandatory Field 32B - Currency Code, Amount
+            let currency_amount = parser.parse_field::<Field32B>("32B")?;
+
+            // Parse optional Field 53 - Sender's Correspondent
+            let senders_correspondent = parser.parse_optional_variant_field::<Field53>("53")?;
+
+            // Parse optional Field 72 - Sender to Receiver Information (transaction level)
+            let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
+
+            transactions.push(MT204Transaction {
+                transaction_reference,
+                related_reference,
+                currency_amount,
+                senders_correspondent,
+                sender_to_receiver,
+            });
+
+            // Limit to 10 sequences per validation rules
+            if transactions.len() >= 10 {
+                break;
+            }
+        }
 
         Ok(MT204 {
             transaction_reference,

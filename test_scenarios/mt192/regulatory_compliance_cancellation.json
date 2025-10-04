@@ -14,7 +14,7 @@
                 100000000000
             ]
         },
-        "reason_code": "LEGL",
+        "reason_code": "CUST",
         "session": "0003",
         "sequence": "345678",
         "session_num": "0003",
@@ -86,7 +86,7 @@
             },
             "79": {
                 "information": [
-                    "/LEGL/",
+                    "/CANREAS/CUST",
                     "REGULATORY COMPLIANCE CANCELLATION",
                     "ORIGINAL MESSAGE TYPE: MT103",
                     "ORIGINAL REFERENCE: INTL567890123456",

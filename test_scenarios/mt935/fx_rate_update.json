@@ -73,8 +73,8 @@
             "#": [
                 {
                     "23": {
-                        "function_code": "DEP",
-                        "reference": "FX2024RATE"
+                        "function_code": "USD",
+                        "reference": "CURRENT"
                     },
                     "30": {
                         "execution_date": {
@@ -98,8 +98,8 @@
                 },
                 {
                     "23": {
-                        "function_code": "DEP",
-                        "reference": "FX2024RATE"
+                        "function_code": "GBP",
+                        "reference": "CURRENT"
                     },
                     "30": {
                         "execution_date": {

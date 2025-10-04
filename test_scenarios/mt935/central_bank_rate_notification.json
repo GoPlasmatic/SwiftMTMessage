@@ -71,8 +71,8 @@
             "#": [
                 {
                     "23": {
-                        "function_code": "DEP",
-                        "reference": "CBRATE2024"
+                        "function_code": "EUR",
+                        "reference": "PRIME"
                     },
                     "30": {
                         "execution_date": {

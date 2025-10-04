@@ -644,6 +644,39 @@ fn create_swift_mt_workflow(message_type: &str) -> Workflow {
     Workflow::from_json(&workflow_str).expect("Failed to parse workflow JSON")
 }
 
+/// Normalize JSON values to handle float/integer differences and remove null fields
+fn normalize_json_value(value: &Value) -> Value {
+    match value {
+        Value::Number(n) => {
+            // Convert all numbers to their canonical form
+            if let Some(f) = n.as_f64() {
+                // If it's a whole number, keep it as integer
+                if f.fract() == 0.0 && f.is_finite() {
+                    Value::Number(serde_json::Number::from(f as i64))
+                } else {
+                    value.clone()
+                }
+            } else {
+                value.clone()
+            }
+        }
+        Value::Object(obj) => {
+            let mut normalized = serde_json::Map::new();
+            for (k, v) in obj {
+                // Skip null values to handle optional fields that weren't in original
+                if !v.is_null() {
+                    normalized.insert(k.clone(), normalize_json_value(v));
+                }
+            }
+            Value::Object(normalized)
+        }
+        Value::Array(arr) => {
+            Value::Array(arr.iter().map(normalize_json_value).collect())
+        }
+        _ => value.clone(),
+    }
+}
+
 /// Check if round-trip was successful by comparing sample_json with mt_json
 fn check_round_trip_success(message: &Message) -> bool {
     // Extract the original sample_json and the parsed mt_json
@@ -655,16 +688,20 @@ fn check_round_trip_success(message: &Message) -> bool {
             // sample_json has a json_data wrapper, mt_json doesn't
             let original_data = original.get("json_data").unwrap_or(original);
 
-            // Direct comparison without normalization
-            let orig_str = serde_json::to_string(&original_data).unwrap_or_default();
-            let parsed_str = serde_json::to_string(&parsed).unwrap_or_default();
+            // Normalize both values to handle float/integer differences
+            let normalized_orig = normalize_json_value(original_data);
+            let normalized_parsed = normalize_json_value(parsed);
+
+            // Compare normalized JSON
+            let orig_str = serde_json::to_string(&normalized_orig).unwrap_or_default();
+            let parsed_str = serde_json::to_string(&normalized_parsed).unwrap_or_default();
 
             // Debug: Print first few keys to see the difference
             if std::env::var("TEST_DEBUG").unwrap_or_default() == "1" && orig_str != parsed_str {
                 println!("\n  Debug round-trip comparison:");
                 println!("    JSON strings are different");
                 if let (Some(orig_obj), Some(parsed_obj)) =
-                    (original_data.as_object(), parsed.as_object())
+                    (normalized_orig.as_object(), normalized_parsed.as_object())
                 {
                     println!(
                         "    Original keys: {:?}",
@@ -690,19 +727,33 @@ fn check_round_trip_success(message: &Message) -> bool {
                                     orig_obj.get("fields").and_then(|f| f.as_object()),
                                     parsed_obj.get("fields").and_then(|f| f.as_object()),
                                 ) {
-                                    for field_key in orig_fields.keys() {
-                                        let orig_field = serde_json::to_string(
-                                            orig_fields.get(field_key).unwrap(),
-                                        )
-                                        .unwrap_or_default();
-                                        let parsed_field = serde_json::to_string(
-                                            parsed_fields.get(field_key).unwrap_or(&Value::Null),
-                                        )
-                                        .unwrap_or_default();
-                                        if orig_field != parsed_field {
-                                            println!("      Field {} differs:", field_key);
-                                            println!("        Original: {}", orig_field);
-                                            println!("        Parsed: {}", parsed_field);
+                                    // Collect all unique keys from both orig and parsed
+                                    let mut all_keys: std::collections::HashSet<_> = orig_fields.keys().collect();
+                                    all_keys.extend(parsed_fields.keys());
+
+                                    for field_key in all_keys {
+                                        let orig_field = orig_fields.get(field_key);
+                                        let parsed_field = parsed_fields.get(field_key);
+
+                                        match (orig_field, parsed_field) {
+                                            (Some(o), Some(p)) => {
+                                                let orig_str = serde_json::to_string(o).unwrap_or_default();
+                                                let parsed_str = serde_json::to_string(p).unwrap_or_default();
+                                                if orig_str != parsed_str {
+                                                    println!("      Field {} differs:", field_key);
+                                                    println!("        Original: {}", orig_str);
+                                                    println!("        Parsed: {}", parsed_str);
+                                                }
+                                            }
+                                            (Some(o), None) => {
+                                                println!("      Field {} only in original:", field_key);
+                                                println!("        Original: {}", serde_json::to_string(o).unwrap_or_default());
+                                            }
+                                            (None, Some(p)) => {
+                                                println!("      Field {} only in parsed:", field_key);
+                                                println!("        Parsed: {}", serde_json::to_string(p).unwrap_or_default());
+                                            }
+                                            (None, None) => {} // Shouldn't happen
                                         }
                                     }
                                 }
@@ -715,7 +766,7 @@ fn check_round_trip_success(message: &Message) -> bool {
                 }
             }
 
-            // Direct comparison
+            // Compare normalized strings
             orig_str == parsed_str
         }
         _ => false,

@@ -334,7 +334,7 @@ impl<'a> MessageParser<'a> {
     }
 
     /// Detect variant for optional fields
-    fn detect_variant_optional(&self, base_tag: &str) -> Option<String> {
+    pub fn detect_variant_optional(&self, base_tag: &str) -> Option<String> {
         // Look for common variants
         let common_variants = vec!["A", "B", "C", "D", "F", "K", "L"];
 

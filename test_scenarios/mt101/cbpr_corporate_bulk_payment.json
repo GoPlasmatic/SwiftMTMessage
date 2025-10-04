@@ -81,6 +81,12 @@
           "var": "exec_date"
         }
       },
+      "50F": {
+        "account": {
+          "var": "account_id"
+        },
+        "bic": "DEUTDEFF"
+      },
       "#": [
         {
           "21": {
@@ -185,17 +191,6 @@
           }
         }
       ],
-      "50K": {
-        "account": {
-          "var": "account_id"
-        },
-        "name_and_address": [
-          "COMPANY NAME",
-          "123 STREET",
-          "CITY",
-          "COUNTRY"
-        ]
-      },
       "52A": {
         "bic": {
           "var": "receiver_bic"

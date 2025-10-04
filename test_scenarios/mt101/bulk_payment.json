@@ -77,6 +77,12 @@
           "var": "execution_date"
         }
       },
+      "50F": {
+        "account": "US1234567890123456",
+        "bic": {
+          "var": "sender_bic"
+        }
+      },
       "52A": {
         "bic": {
           "var": "receiver_bic"
@@ -283,16 +289,7 @@
             }
           }
         }
-      ],
-      "50K": {
-        "account": "US1234567890123456",
-        "name_and_address": [
-          "COMPANY NAME",
-          "123 STREET",
-          "CITY",
-          "COUNTRY"
-        ]
-      }
+      ]
     }
   }
 }

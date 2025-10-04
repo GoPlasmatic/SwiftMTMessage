@@ -470,6 +470,14 @@ impl SwiftField for Field50L {
     where
         Self: Sized,
     {
+        // Field 50L should be a single-line party identifier
+        // Reject if contains newlines (which would indicate it's a different variant)
+        if input.contains('\n') {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 50L party identifier must be single line".to_string(),
+            });
+        }
+
         if input.is_empty() || input.len() > 35 {
             return Err(ParseError::InvalidFormat {
                 message: "Field 50L party identifier must be 1-35 characters".to_string(),

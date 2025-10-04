@@ -130,10 +130,36 @@ impl MT101 {
         let field_28d = parser.parse_field::<Field28D>("28D")?;
 
         // Parse optional ordering customer and instructing party (can appear in either order)
-        let instructing_party =
-            parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
-        let ordering_customer =
-            parser.parse_optional_variant_field::<Field50OrderingCustomerFGH>("50")?;
+        // Field 50 can be either instructing party (C/L) or ordering customer (F/G/H)
+        // Check which variant is present and parse accordingly
+        let (instructing_party, ordering_customer) = {
+            let mut instructing = None;
+            let mut ordering = None;
+
+            // Detect which Field 50 variant is present
+            if let Some(variant) = parser.detect_variant_optional("50") {
+                match variant.as_str() {
+                    "C" | "L" => {
+                        // Instructing party variants
+                        instructing = parser.parse_optional_variant_field::<Field50InstructingParty>("50")?;
+                    }
+                    "F" | "G" | "H" => {
+                        // Ordering customer variants
+                        ordering = parser.parse_optional_variant_field::<Field50OrderingCustomerFGH>("50")?;
+                    }
+                    _ => {
+                        // Unknown variant - try instructing party first, then ordering customer
+                        if let Ok(Some(field)) = parser.parse_optional_variant_field::<Field50InstructingParty>("50") {
+                            instructing = Some(field);
+                        } else {
+                            ordering = parser.parse_optional_variant_field::<Field50OrderingCustomerFGH>("50")?;
+                        }
+                    }
+                }
+            }
+
+            (instructing, ordering)
+        };
 
         let field_52a =
             parser.parse_optional_variant_field::<Field52AccountServicingInstitution>("52")?;
@@ -152,11 +178,16 @@ impl MT101 {
             let field_21 = parser.parse_field::<Field21NoOption>("21")?;
             let field_21f = parser.parse_optional_field::<Field21F>("21F")?;
 
-            // Field 23E can appear multiple times
+            // Field 23E can appear multiple times within a transaction
+            // Only parse consecutive 23E fields (stop when we hit any other field)
             let field_23e = if parser.detect_field("23E") {
                 let mut codes = Vec::new();
-                while let Ok(field) = parser.parse_field::<Field23E>("23E") {
-                    codes.push(field);
+                while parser.detect_field("23E") {
+                    if let Ok(field) = parser.parse_field::<Field23E>("23E") {
+                        codes.push(field);
+                    } else {
+                        break;
+                    }
                 }
                 if !codes.is_empty() { Some(codes) } else { None }
             } else {

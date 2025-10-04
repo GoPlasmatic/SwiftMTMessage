@@ -10,8 +10,8 @@
         },
         "account_number": "1000000000000000",
         "currency": "USD",
-        "debit_floor": 1,
-        "credit_floor": 1,
+        "debit_floor": 1000.50,
+        "credit_floor": 500.50,
         "session_num": "0001",
         "sequence_num": "000123",
         "uetr": "550e8400-e29b-41d4-a716-446655440000"
@@ -78,7 +78,7 @@
                             "var": "account_number"
                         }
                     },
-                    "floor_limit_debit": {
+                    "34F_1": {
                         "currency": {
                             "var": "currency"
                         },
@@ -87,7 +87,7 @@
                             "var": "debit_floor"
                         }
                     },
-                    "floor_limit_credit": {
+                    "34F_2": {
                         "currency": {
                             "var": "currency"
                         },

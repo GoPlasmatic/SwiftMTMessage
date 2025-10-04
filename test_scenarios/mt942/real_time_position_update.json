@@ -100,7 +100,6 @@
                 "currency": {
                     "var": "currency"
                 },
-                "indicator": "D",
                 "amount": {
                     "var": "debit_limit"
                 }

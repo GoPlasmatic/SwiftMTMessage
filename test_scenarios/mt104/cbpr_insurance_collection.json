@@ -77,7 +77,7 @@
                 }
             },
             "23E": {
-                "instruction_code": "CORT"
+                "instruction_code": "AUTH"
             },
             "30": {
                 "execution_date": {

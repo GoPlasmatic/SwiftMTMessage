@@ -1,332 +1,324 @@
 {
-    "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "DDMULTI",
-                10000000
-            ]
-        },
-        "currency": "USD",
-        "execution_date": "2024-12-26",
-        "charges": "SHA",
-        "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
-        "batch_ref": {
-            "cat": [
-                "BATCH",
-                100000
-            ]
-        },
-        "total_amount": 1000,
-        "num_transactions": 5,
-        "session_num": "0001",
-        "sequence_num": "000123"
+  "variables": {
+    "sender_bic": "DEUTDEFF",
+    "receiver_bic": "DEUTDEFF",
+    "transaction_ref": {
+      "cat": [
+        "DDMULTI",
+        10000000
+      ]
     },
-    "schema": {
-        "basic_header": {
-            "application_id": "F",
-            "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
-        },
-        "application_header": {
-            "direction": "I",
-            "message_type": "104",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
-            "priority": "N"
-        },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            }
-        },
-        "message_type": "104",
-        "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "execution_date"
-                }
-            },
-            "#": [
-                {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "UTIL",
-                                1000000
-                            ]
-                        }
-                    },
-                    "23E": {
-                        "instruction_code": "SDVA",
-                        "additional_info": "DIRECT DEBIT"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 250
-                    },
-                    "59": {
-                        "account": "1000000000000000",
-                        "name_and_address": [
-                            "ACME CORPORATION",
-                            {
-                                "cat": [
-                                    "CUSTOMER ID ",
-                                    100000
-                                ]
-                            },
-                            "123 MAIN STREET",
-                            {
-                                "cat": [
-                                    "NEW YORK",
-                                    ", ",
-                                    "US"
-                                ]
-                            }
-                        ]
-                    },
-                    "70": {
-                        "narrative": [
-                            "/RFB/UTILITY BILL",
-                            {
-                                "cat": [
-                                    "/MREF/UTIL-MND-",
-                                    100000
-                                ]
-                            },
-                            "/PURP/UTIL",
-                            {
-                                "cat": [
-                                    "/BILL/DEC 2024"
-                                ]
-                            }
-                        ]
-                    },
-                    "71A": {
-                        "code": {
-                            "var": "charges"
-                        }
-                    },
-                    "50K": {
-                        "account": "UTILITY-COMPANY-001",
-                        "name_and_address": [
-                            "GLOBAL UTILITIES INC",
-                            "100 ENERGY BOULEVARD",
-                            "NEW YORK, NY US"
-                        ]
-                    },
-                    "57A": {
-                        "bic": {
-                            "var": "receiver_bic"
-                        }
-                    }
-                },
-                {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "UTIL",
-                                1000000
-                            ]
-                        }
-                    },
-                    "23E": {
-                        "instruction_code": "SDVA",
-                        "additional_info": "DIRECT DEBIT"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 350
-                    },
-                    "59": {
-                        "account": "1000000000000000",
-                        "name_and_address": [
-                            "ACME CORPORATION",
-                            {
-                                "cat": [
-                                    "CUSTOMER ID ",
-                                    100000
-                                ]
-                            },
-                            "123 MAIN STREET",
-                            {
-                                "cat": [
-                                    "NEW YORK",
-                                    ", ",
-                                    "US"
-                                ]
-                            }
-                        ]
-                    },
-                    "70": {
-                        "narrative": [
-                            "/RFB/UTILITY BILL",
-                            {
-                                "cat": [
-                                    "/MREF/UTIL-MND-",
-                                    100000
-                                ]
-                            },
-                            "/PURP/UTIL",
-                            {
-                                "cat": [
-                                    "/BILL/DEC 2024"
-                                ]
-                            }
-                        ]
-                    },
-                    "71A": {
-                        "code": {
-                            "var": "charges"
-                        }
-                    },
-                    "50K": {
-                        "account": "UTILITY-COMPANY-001",
-                        "name_and_address": [
-                            "GLOBAL UTILITIES INC",
-                            "100 ENERGY BOULEVARD",
-                            "NEW YORK, NY US"
-                        ]
-                    },
-                    "57A": {
-                        "bic": {
-                            "var": "receiver_bic"
-                        }
-                    }
-                },
-                {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "UTIL",
-                                1000000
-                            ]
-                        }
-                    },
-                    "23E": {
-                        "instruction_code": "SDVA",
-                        "additional_info": "DIRECT DEBIT"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 400
-                    },
-                    "59": {
-                        "account": "1000000000000000",
-                        "name_and_address": [
-                            "ACME CORPORATION",
-                            {
-                                "cat": [
-                                    "BUSINESS CUSTOMER ",
-                                    100000
-                                ]
-                            },
-                            "123 MAIN STREET",
-                            {
-                                "cat": [
-                                    "NEW YORK",
-                                    ", ",
-                                    "US"
-                                ]
-                            }
-                        ]
-                    },
-                    "70": {
-                        "narrative": [
-                            "/RFB/UTILITY BILL COMMERCIAL",
-                            {
-                                "cat": [
-                                    "/MREF/UTIL-MND-",
-                                    100000
-                                ]
-                            },
-                            "/PURP/UTIL",
-                            {
-                                "cat": [
-                                    "/BILL/DEC 2024"
-                                ]
-                            }
-                        ]
-                    },
-                    "71A": {
-                        "code": {
-                            "var": "charges"
-                        }
-                    },
-                    "50K": {
-                        "account": "UTILITY-COMPANY-001",
-                        "name_and_address": [
-                            "GLOBAL UTILITIES INC",
-                            "100 ENERGY BOULEVARD",
-                            "NEW YORK, NY US"
-                        ]
-                    },
-                    "57A": {
-                        "bic": {
-                            "var": "receiver_bic"
-                        }
-                    }
-                }
-            ],
-            "32B": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "total_amount"
-                }
-            },
-            "19": {
-                "amount": {
-                    "var": "total_amount"
-                }
-            },
-            "77B": {
-                "narrative": [
-                    "/TRNS/MONTHLY UTILITY DIRECT DEBIT",
-                    "/EXEC/BATCH PROCESSING",
-                    "/COLL/AUTHORISED MANDATES"
-                ]
-            }
+    "currency": "USD",
+    "execution_date": "2024-12-26",
+    "charges": "SHA",
+    "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+    "uetr": "550e8400-e29b-41d4-a716-446655440000",
+    "batch_ref": {
+      "cat": [
+        "BATCH",
+        100000
+      ]
+    },
+    "total_amount": 1000,
+    "num_transactions": 5,
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "104",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      }
+    },
+    "message_type": "104",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
         }
+      },
+      "30": {
+        "execution_date": {
+          "var": "execution_date"
+        }
+      },
+      "#": [
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "UTIL",
+                1000000
+              ]
+            }
+          },
+          "23E": {
+            "instruction_code": "AUTH"
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": 250
+          },
+          "59": {
+            "account": "1000000000000000",
+            "name_and_address": [
+              "ACME CORPORATION",
+              {
+                "cat": [
+                  "CUSTOMER ID ",
+                  100000
+                ]
+              },
+              "123 MAIN STREET",
+              {
+                "cat": [
+                  "NEW YORK",
+                  ", ",
+                  "US"
+                ]
+              }
+            ]
+          },
+          "70": {
+            "narrative": [
+              "/RFB/UTILITY BILL",
+              {
+                "cat": [
+                  "/MREF/UTIL-MND-",
+                  100000
+                ]
+              },
+              "/PURP/UTIL",
+              {
+                "cat": [
+                  "/BILL/DEC 2024"
+                ]
+              }
+            ]
+          },
+          "71A": {
+            "code": {
+              "var": "charges"
+            }
+          },
+          "50K": {
+            "account": "UTILITY-COMPANY-001",
+            "name_and_address": [
+              "GLOBAL UTILITIES INC",
+              "100 ENERGY BOULEVARD",
+              "NEW YORK, NY US"
+            ]
+          },
+          "57A": {
+            "bic": {
+              "var": "receiver_bic"
+            }
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "UTIL",
+                1000000
+              ]
+            }
+          },
+          "23E": {
+            "instruction_code": "AUTH"
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": 350
+          },
+          "59": {
+            "account": "1000000000000000",
+            "name_and_address": [
+              "ACME CORPORATION",
+              {
+                "cat": [
+                  "CUSTOMER ID ",
+                  100000
+                ]
+              },
+              "123 MAIN STREET",
+              {
+                "cat": [
+                  "NEW YORK",
+                  ", ",
+                  "US"
+                ]
+              }
+            ]
+          },
+          "70": {
+            "narrative": [
+              "/RFB/UTILITY BILL",
+              {
+                "cat": [
+                  "/MREF/UTIL-MND-",
+                  100000
+                ]
+              },
+              "/PURP/UTIL",
+              {
+                "cat": [
+                  "/BILL/DEC 2024"
+                ]
+              }
+            ]
+          },
+          "71A": {
+            "code": {
+              "var": "charges"
+            }
+          },
+          "50K": {
+            "account": "UTILITY-COMPANY-001",
+            "name_and_address": [
+              "GLOBAL UTILITIES INC",
+              "100 ENERGY BOULEVARD",
+              "NEW YORK, NY US"
+            ]
+          },
+          "57A": {
+            "bic": {
+              "var": "receiver_bic"
+            }
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "UTIL",
+                1000000
+              ]
+            }
+          },
+          "23E": {
+            "instruction_code": "AUTH"
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": 400
+          },
+          "59": {
+            "account": "1000000000000000",
+            "name_and_address": [
+              "ACME CORPORATION",
+              {
+                "cat": [
+                  "BUSINESS CUSTOMER ",
+                  100000
+                ]
+              },
+              "123 MAIN STREET",
+              {
+                "cat": [
+                  "NEW YORK",
+                  ", ",
+                  "US"
+                ]
+              }
+            ]
+          },
+          "70": {
+            "narrative": [
+              "/RFB/UTILITY BILL COMMERCIAL",
+              {
+                "cat": [
+                  "/MREF/UTIL-MND-",
+                  100000
+                ]
+              },
+              "/PURP/UTIL",
+              {
+                "cat": [
+                  "/BILL/DEC 2024"
+                ]
+              }
+            ]
+          },
+          "71A": {
+            "code": {
+              "var": "charges"
+            }
+          },
+          "50K": {
+            "account": "UTILITY-COMPANY-001",
+            "name_and_address": [
+              "GLOBAL UTILITIES INC",
+              "100 ENERGY BOULEVARD",
+              "NEW YORK, NY US"
+            ]
+          },
+          "57A": {
+            "bic": {
+              "var": "receiver_bic"
+            }
+          }
+        }
+      ],
+      "32B": {
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "total_amount"
+        }
+      },
+      "77B": {
+        "narrative": [
+          "/TRNS/MONTHLY UTILITY DIRECT DEBIT",
+          "/EXEC/BATCH PROCESSING",
+          "/COLL/AUTHORISED MANDATES"
+        ]
+      }
     }
+  }
 }

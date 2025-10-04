@@ -73,6 +73,9 @@
                     "var": "execution_date"
                 }
             },
+            "23E": {
+                "instruction_code": "AUTH"
+            },
             "50K": {
                 "account": "CREDITOR-GEN-001",
                 "name_and_address": [

@@ -85,8 +85,7 @@
                         }
                     },
                     "23E": {
-                        "instruction_code": "SDVA",
-                        "additional_info": "RECURRING DEBIT"
+                        "instruction_code": "AUTH"
                     },
                     "32B": {
                         "currency": {

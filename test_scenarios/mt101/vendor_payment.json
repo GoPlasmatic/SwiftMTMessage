@@ -75,6 +75,10 @@
           "var": "execution_date"
         }
       },
+      "50F": {
+        "account": "AP-MASTER-ACCOUNT",
+        "bic": "DEUTDEFF"
+      },
       "#": [
         {
           "21": {
@@ -87,8 +91,7 @@
           },
           "23E": [
             {
-              "instruction_code": "INTC",
-              "additional_info": "/NOTIFY ON COMPLETION"
+              "instruction_code": "INTC"
             }
           ],
           "32B": {
@@ -211,15 +214,6 @@
           }
         }
       ],
-      "50K": {
-        "account": "AP-MASTER-ACCOUNT",
-        "name_and_address": [
-          "COMPANY NAME",
-          "123 STREET",
-          "CITY",
-          "COUNTRY"
-        ]
-      },
       "52A": {
         "bic": {
           "var": "receiver_bic"

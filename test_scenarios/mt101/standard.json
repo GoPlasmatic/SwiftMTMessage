@@ -89,6 +89,15 @@
           "var": "execution_date"
         }
       },
+      "50F": {
+        "account": "1234567890",
+        "bic": "DEUTDEFF"
+      },
+      "52A": {
+        "bic": {
+          "var": "receiver_bic"
+        }
+      },
       "#": [
         {
           "21": {
@@ -170,16 +179,7 @@
             "bic": "DEUTDEFF"
           }
         }
-      ],
-      "50F": {
-        "account": "1234567890",
-        "bic": "DEUTDEFF"
-      },
-      "52A": {
-        "bic": {
-          "var": "receiver_bic"
-        }
-      }
+      ]
     }
   }
 }

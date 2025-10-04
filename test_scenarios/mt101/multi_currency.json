@@ -102,19 +102,13 @@
             "currency": "USD",
             "amount": 10000
           },
-          "33B": {
-            "currency": "EUR",
-            "amount": 10000
-          },
-          "36": {
-            "rate": {
-              "var": "exchange_rate_1"
-            }
-          },
           "56": {
             "A": {
               "bic": "DEUTDEFF"
             }
+          },
+          "57A": {
+            "bic": "DEUTDEFF"
           },
           "59": {
             "account": "DE89370400440532013000",
@@ -131,11 +125,17 @@
               "EUR TO USD SETTLEMENT"
             ]
           },
+          "33B": {
+            "currency": "EUR",
+            "amount": 10000
+          },
           "71A": {
             "code": "SHA"
           },
-          "57A": {
-            "bic": "DEUTDEFF"
+          "36": {
+            "rate": {
+              "var": "exchange_rate_1"
+            }
           }
         },
         {
@@ -156,14 +156,8 @@
             "currency": "GBP",
             "amount": 10000
           },
-          "33B": {
-            "currency": "USD",
-            "amount": 10000
-          },
-          "36": {
-            "rate": {
-              "var": "exchange_rate_2"
-            }
+          "57A": {
+            "bic": "DEUTDEFF"
           },
           "59": {
             "account": "GB82WEST12345698765432",
@@ -180,11 +174,17 @@
               "USD TO GBP SETTLEMENT"
             ]
           },
+          "33B": {
+            "currency": "USD",
+            "amount": 10000
+          },
           "71A": {
             "code": "SHA"
           },
-          "57A": {
-            "bic": "DEUTDEFF"
+          "36": {
+            "rate": {
+              "var": "exchange_rate_2"
+            }
           }
         },
         {
@@ -199,6 +199,9 @@
           "32B": {
             "currency": "JPY",
             "amount": 10000
+          },
+          "57A": {
+            "bic": "DEUTDEFF"
           },
           "59": {
             "account": "JP1234567890123456",
@@ -217,9 +220,6 @@
           },
           "71A": {
             "code": "BEN"
-          },
-          "57A": {
-            "bic": "DEUTDEFF"
           }
         }
       ],

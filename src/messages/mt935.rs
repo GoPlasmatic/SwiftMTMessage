@@ -287,14 +287,19 @@ impl MT935 {
 
         for (idx, seq) in self.rate_changes.iter().enumerate() {
             if let Some(ref field_23) = seq.field_23 {
-                let value = &field_23.reference;
+                // Reconstruct the full value as it appears in SWIFT format
+                let mut value = field_23.function_code.clone();
+                if let Some(days) = field_23.days {
+                    value.push_str(&format!("{:02}", days));
+                }
+                value.push_str(&field_23.reference);
 
                 // Minimum length check: 3 (currency) + at least one function character
                 if value.len() < 4 {
                     errors.push(SwiftValidationError::format_error(
                         "T26",
                         "23",
-                        value,
+                        &value,
                         "3!a[2!n]11x",
                         &format!(
                             "Sequence {}: Field 23 must be at least 4 characters (currency code + function)",
@@ -312,7 +317,7 @@ impl MT935 {
                     errors.push(SwiftValidationError::format_error(
                         "T26",
                         "23",
-                        value,
+                        &value,
                         "3!a[2!n]11x",
                         &format!(
                             "Sequence {}: Currency code '{}' must be 3 alphabetic characters",
@@ -362,7 +367,7 @@ impl MT935 {
                     errors.push(SwiftValidationError::content_error(
                             "T26",
                             "23",
-                            value,
+                            &value,
                             &format!(
                                 "Sequence {}: Number of Days '{}' is only allowed when Function is NOTICE, but found '{}'",
                                 idx + 1, days, function

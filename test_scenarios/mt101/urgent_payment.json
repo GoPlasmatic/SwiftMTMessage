@@ -76,6 +76,10 @@
           "var": "execution_date"
         }
       },
+      "50F": {
+        "account": "TREASURY-URGENT",
+        "bic": "DEUTDEFF"
+      },
       "#": [
         {
           "21": {
@@ -144,7 +148,7 @@
               "instruction_code": "URGP"
             },
             {
-              "instruction_code": "URGP",
+              "instruction_code": "PHON",
               "additional_info": "/+44-20-1234-5678"
             }
           ],
@@ -184,15 +188,6 @@
           }
         }
       ],
-      "50K": {
-        "account": "TREASURY-URGENT",
-        "name_and_address": [
-          "ACME CORPORATION",
-          "123 MAIN STREET",
-          "NEW YORK",
-          "NEW YORK"
-        ]
-      },
       "52A": {
         "bic": {
           "var": "receiver_bic"

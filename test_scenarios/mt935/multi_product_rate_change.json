@@ -72,8 +72,8 @@
             "#": [
                 {
                     "23": {
-                        "function_code": "DEP",
-                        "reference": "DEPRATE025"
+                        "function_code": "EUR",
+                        "reference": "DEPOSIT"
                     },
                     "30": {
                         "execution_date": {
@@ -91,8 +91,8 @@
                 },
                 {
                     "23": {
-                        "function_code": "CUR",
-                        "reference": "SAVRATE025"
+                        "function_code": "EUR",
+                        "reference": "CURRENT"
                     },
                     "30": {
                         "execution_date": {
@@ -110,8 +110,8 @@
                 },
                 {
                     "23": {
-                        "function_code": "PRM",
-                        "reference": "CRDRATE025"
+                        "function_code": "EUR",
+                        "reference": "PRIME"
                     },
                     "30": {
                         "execution_date": {
@@ -129,8 +129,8 @@
                 },
                 {
                     "23": {
-                        "function_code": "CAL",
-                        "reference": "MMRATE2025"
+                        "function_code": "EUR",
+                        "reference": "CALL"
                     },
                     "30": {
                         "execution_date": {

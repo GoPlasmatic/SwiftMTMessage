@@ -1,201 +1,200 @@
 {
-    "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "DDCBPR",
-                1000000000
-            ]
-        },
-        "currency": "USD",
-        "loan_payment": 10000,
-        "execution_date": "2024-12-15",
-        "charges": "SHA",
-        "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "debtor_lei": "LEIXG9JKLMNOPQRSTU2V3W",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
-        "loan_account": {
-            "cat": [
-                "LN",
-                1000000000
-            ]
-        },
-        "batch_ref": {
-            "cat": [
-                "LOANPMT",
-                100000
-            ]
-        },
-        "session_num": "0001",
-        "sequence_num": "000123"
+  "variables": {
+    "sender_bic": "DEUTDEFF",
+    "receiver_bic": "DEUTDEFF",
+    "transaction_ref": {
+      "cat": [
+        "DDCBPR",
+        1000000000
+      ]
     },
-    "schema": {
-        "basic_header": {
-            "application_id": "F",
-            "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
-        },
-        "application_header": {
-            "direction": "I",
-            "message_type": "104",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
-            "priority": "N"
-        },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            }
-        },
-        "message_type": "104",
-        "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "execution_date"
-                }
-            },
-            "#": [
-                {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "LNPMT",
-                                10000000
-                            ]
-                        }
-                    },
-                    "23E": {
-                        "instruction_code": "CORT",
-                        "additional_info": "DIRECT DEBIT"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "loan_payment"
-                        }
-                    },
-                    "59": {
-                        "account": "1000000000000000",
-                        "name_and_address": [
-                            "ACME CORPORATION",
-                            {
-                                "cat": [
-                                    "BORROWER LEI/",
-                                    {
-                                        "var": "debtor_lei"
-                                    }
-                                ]
-                            },
-                            "123 MAIN STREET",
-                            {
-                                "cat": [
-                                    "NEW YORK",
-                                    ", ",
-                                    "US"
-                                ]
-                            }
-                        ]
-                    },
-                    "70": {
-                        "narrative": [
-                            "/RFB/LOAN REPAYMENT",
-                            {
-                                "cat": [
-                                    "/MREF/LOAN-DD-",
-                                    {
-                                        "var": "loan_account"
-                                    }
-                                ]
-                            },
-                            "/PURP/LOAN",
-                            "/INST/MONTHLY INSTALLMENT"
-                        ]
-                    },
-                    "71A": {
-                        "code": {
-                            "var": "charges"
-                        }
-                    },
-                    "77B": {
-                        "narrative": [
-                            "/ORDERRES/FR//LEI123",
-                            "/BENEFRES/US//LEI456",
-                            "/PURP/LOAN REPAYMENT"
-                        ]
-                    },
-                    "50K": {
-                        "account": {
-                            "var": "loan_account"
-                        },
-                        "name_and_address": [
-                            "ACME CORPORATION",
-                            {
-                                "cat": [
-                                    "LEI/",
-                                    {
-                                        "var": "debtor_lei"
-                                    }
-                                ]
-                            },
-                            "123 MAIN STREET",
-                            {
-                                "cat": [
-                                    "NEW YORK",
-                                    ", ",
-                                    "US"
-                                ]
-                            }
-                        ]
-                    },
-                    "57A": {
-                        "bic": {
-                            "var": "receiver_bic"
-                        }
-                    }
-                }
-            ],
-            "32B": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "loan_payment"
-                }
-            }
+    "currency": "USD",
+    "loan_payment": 10000,
+    "execution_date": "2024-12-15",
+    "charges": "SHA",
+    "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+    "debtor_lei": "LEIXG9JKLMNOPQRSTU2V3W",
+    "uetr": "550e8400-e29b-41d4-a716-446655440000",
+    "loan_account": {
+      "cat": [
+        "LN",
+        1000000000
+      ]
+    },
+    "batch_ref": {
+      "cat": [
+        "LOANPMT",
+        100000
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "000123"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "104",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      }
+    },
+    "message_type": "104",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
         }
+      },
+      "30": {
+        "execution_date": {
+          "var": "execution_date"
+        }
+      },
+      "#": [
+        {
+          "21": {
+            "reference": {
+              "cat": [
+                "LNPMT",
+                10000000
+              ]
+            }
+          },
+          "23E": {
+            "instruction_code": "AUTH"
+          },
+          "32B": {
+            "currency": {
+              "var": "currency"
+            },
+            "amount": {
+              "var": "loan_payment"
+            }
+          },
+          "59": {
+            "account": "1000000000000000",
+            "name_and_address": [
+              "ACME CORPORATION",
+              {
+                "cat": [
+                  "BORROWER LEI/",
+                  {
+                    "var": "debtor_lei"
+                  }
+                ]
+              },
+              "123 MAIN STREET",
+              {
+                "cat": [
+                  "NEW YORK",
+                  ", ",
+                  "US"
+                ]
+              }
+            ]
+          },
+          "70": {
+            "narrative": [
+              "/RFB/LOAN REPAYMENT",
+              {
+                "cat": [
+                  "/MREF/LOAN-DD-",
+                  {
+                    "var": "loan_account"
+                  }
+                ]
+              },
+              "/PURP/LOAN",
+              "/INST/MONTHLY INSTALLMENT"
+            ]
+          },
+          "71A": {
+            "code": {
+              "var": "charges"
+            }
+          },
+          "77B": {
+            "narrative": [
+              "/ORDERRES/FR//LEI123",
+              "/BENEFRES/US//LEI456",
+              "/PURP/LOAN REPAYMENT"
+            ]
+          },
+          "50K": {
+            "account": {
+              "var": "loan_account"
+            },
+            "name_and_address": [
+              "ACME CORPORATION",
+              {
+                "cat": [
+                  "LEI/",
+                  {
+                    "var": "debtor_lei"
+                  }
+                ]
+              },
+              "123 MAIN STREET",
+              {
+                "cat": [
+                  "NEW YORK",
+                  ", ",
+                  "US"
+                ]
+              }
+            ]
+          },
+          "57A": {
+            "bic": {
+              "var": "receiver_bic"
+            }
+          }
+        }
+      ],
+      "32B": {
+        "currency": {
+          "var": "currency"
+        },
+        "amount": {
+          "var": "loan_payment"
+        }
+      }
     }
+  }
 }

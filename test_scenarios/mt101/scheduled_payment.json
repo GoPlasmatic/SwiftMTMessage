@@ -76,6 +76,10 @@
           "var": "future_date"
         }
       },
+      "50F": {
+        "account": "CORP/12345",
+        "bic": "DEUTDEFF"
+      },
       "#": [
         {
           "21": {
@@ -88,8 +92,7 @@
           },
           "23E": [
             {
-              "instruction_code": "INTC",
-              "additional_info": "/CONFIRM BEFORE EXECUTION"
+              "instruction_code": "INTC"
             }
           ],
           "32B": {
@@ -198,10 +201,6 @@
           }
         }
       ],
-      "50F": {
-        "account": "CORP/12345",
-        "bic": "DEUTDEFF"
-      },
       "52A": {
         "bic": {
           "var": "receiver_bic"

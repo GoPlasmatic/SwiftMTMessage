@@ -48,8 +48,8 @@ impl MT920 {
         while parser.detect_field("12") {
             let field_12 = parser.parse_field::<Field12>("12")?;
             let field_25 = parser.parse_field::<Field25A>("25A")?;
-            let floor_limit_debit = parser.parse_optional_field::<Field34F>("34F_1")?;
-            let floor_limit_credit = parser.parse_optional_field::<Field34F>("34F_2")?;
+            let floor_limit_debit = parser.parse_optional_field::<Field34F>("34F")?;
+            let floor_limit_credit = parser.parse_optional_field::<Field34F>("34F")?;
 
             // Apply max repetitions validation
             if sequence.len() >= 100 {

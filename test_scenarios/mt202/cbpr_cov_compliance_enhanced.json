@@ -116,12 +116,10 @@
           "var": "amount"
         }
       },
-      "52": {
-        "A": {
-          "party_identifier": "C/COMPLIANCE-VERIFIED",
-          "bic": {
-            "var": "sender_bic"
-          }
+      "52A": {
+        "party_identifier": "C/COMPLIANCE-VERIFIED",
+        "bic": {
+          "var": "sender_bic"
         }
       },
       "72": {

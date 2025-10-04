@@ -1,152 +1,152 @@
 {
-    "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "STMT",
-                100000000000
-            ]
-        },
-        "account_number": "1000000000000000",
-        "statement_num": 1000,
-        "currency": "USD",
-        "opening_balance": 10000,
-        "closing_balance": 10000,
-        "available_balance": 10000,
-        "value_date": "2024-12-20",
-        "amount1": 10000,
-        "amount2": 10000,
-        "amount3": 10000,
-        "ref1": {
-            "cat": [
-                "INV",
-                100000
-            ]
-        },
-        "ref2": {
-            "cat": [
-                "SAL",
-                100000
-            ]
-        },
-        "ref3": {
-            "cat": [
-                "FEE",
-                100000
-            ]
-        },
-        "session_num": "0001",
-        "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+  "variables": {
+    "sender_bic": "DEUTDEFF",
+    "receiver_bic": "DEUTDEFF",
+    "transaction_ref": {
+      "cat": [
+        "STMT",
+        100000000000
+      ]
     },
-    "schema": {
-        "basic_header": {
-            "application_id": "F",
-            "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": "0001",
-            "sequence_number": "000001"
+    "account_number": "1000000000000000",
+    "statement_num": 1000,
+    "currency": "USD",
+    "opening_balance": 10000,
+    "closing_balance": 10000,
+    "available_balance": 10000,
+    "value_date": "2024-12-20",
+    "amount1": 10000,
+    "amount2": 10000,
+    "amount3": 10000,
+    "ref1": {
+      "cat": [
+        "INV",
+        100000
+      ]
+    },
+    "ref2": {
+      "cat": [
+        "SAL",
+        100000
+      ]
+    },
+    "ref3": {
+      "cat": [
+        "FEE",
+        100000
+      ]
+    },
+    "session_num": "0001",
+    "sequence_num": "000123",
+    "uetr": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": "0001",
+      "sequence_number": "000001"
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "950",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
+    },
+    "message_type": "950",
+    "fields": {
+      "20": {
+        "reference": "STMT123456789012"
+      },
+      "25": {
+        "authorisation": "1234567890123456"
+      },
+      "28C": {
+        "statement_number": 1234,
+        "sequence_number": 1
+      },
+      "61": [
+        {
+          "value_date": "2024-12-20",
+          "debit_credit_mark": "C",
+          "amount": 15000,
+          "transaction_type": "NMSC",
+          "customer_reference": "0000000INV123456",
+          "bank_reference": "BA1-1234567890"
         },
-        "application_header": {
-            "direction": "I",
-            "message_type": "950",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
-            "priority": "N"
+        {
+          "value_date": "2024-12-20",
+          "debit_credit_mark": "D",
+          "amount": 25000,
+          "transaction_type": "NMSC",
+          "customer_reference": "0000000SAL789012",
+          "bank_reference": "BA2-1234567890"
         },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
-            "validation_flag": "STP"
-        },
-        "message_type": "950",
-        "fields": {
-            "20": {
-                "reference": "STMT123456789012"
-            },
-            "25": {
-                "authorisation": "1234567890123456"
-            },
-            "28C": {
-                "statement_number": 1234,
-                "sequence_number": 1
-            },
-            "61": [
-                {
-                    "value_date": "2024-12-20",
-                    "debit_credit_mark": "C",
-                    "amount": 15000,
-                    "transaction_type": "NMSC",
-                    "customer_reference": "0000000INV123456",
-                    "bank_reference": "BA1-1234567890"
-                },
-                {
-                    "value_date": "2024-12-20",
-                    "debit_credit_mark": "D",
-                    "amount": 25000,
-                    "transaction_type": "NMSC",
-                    "customer_reference": "0000000SAL789012",
-                    "bank_reference": "BA2-1234567890"
-                },
-                {
-                    "value_date": "2024-12-20",
-                    "debit_credit_mark": "D",
-                    "amount": 8000,
-                    "transaction_type": "NCHG",
-                    "customer_reference": "0000000FEE345678",
-                    "bank_reference": "BA3-1234567890"
-                }
-            ],
-            "64": {
-                "debit_credit_mark": "C",
-                "value_date": "2024-12-20",
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": 495000
-            },
-            "60": {
-                "F": {
-                    "debit_credit_mark": "C",
-                    "value_date": "2024-12-20",
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": 250000
-                }
-            },
-            "62": {
-                "F": {
-                    "debit_credit_mark": "C",
-                    "value_date": "2024-12-20",
-                    "currency": {
-                        "var": "currency"
-                    },
-                    "amount": 258000
-                }
-            }
+        {
+          "value_date": "2024-12-20",
+          "debit_credit_mark": "D",
+          "amount": 8000,
+          "transaction_type": "NCHG",
+          "customer_reference": "0000000FEE345678",
+          "bank_reference": "BA3-1234567890"
         }
+      ],
+      "64": {
+        "debit_credit_mark": "C",
+        "value_date": "2024-12-20",
+        "currency": {
+          "var": "currency"
+        },
+        "amount": 495000
+      },
+      "60": {
+        "F": {
+          "debit_credit_mark": "C",
+          "value_date": "2024-12-20",
+          "currency": {
+            "var": "currency"
+          },
+          "amount": 250000
+        }
+      },
+      "62": {
+        "F": {
+          "debit_credit_mark": "C",
+          "value_date": "2024-12-20",
+          "currency": {
+            "var": "currency"
+          },
+          "amount": 258000
+        }
+      }
     }
+  }
 }

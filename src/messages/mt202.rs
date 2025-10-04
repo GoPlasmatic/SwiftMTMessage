@@ -133,6 +133,9 @@ impl MT202 {
         let field_72 = parser.parse_optional_field::<Field72>("72")?;
 
         // Sequence B - Parse COV fields (optional, for MT202 COV variant)
+        // Enable duplicates for Sequence B as it may have fields 52, 56, 57, 72 again
+        parser = parser.with_duplicates(true);
+
         let ordering_customer_b =
             parser.parse_optional_variant_field::<Field50OrderingCustomerAFK>("50")?;
         let ordering_institution_b =

@@ -90,10 +90,8 @@
           "var": "amount"
         }
       },
-      "52": {
-        "A": {
-          "bic": "DEUTDEFFXXX"
-        }
+      "52A": {
+        "bic": "DEUTDEFFXXX"
       },
       "72": {
         "information": [

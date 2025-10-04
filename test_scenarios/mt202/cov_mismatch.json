@@ -107,11 +107,9 @@
           "var": "mt202_amount"
         }
       },
-      "52": {
-        "A": {
-          "bic": {
-            "var": "sender_bic"
-          }
+      "52A": {
+        "bic": {
+          "var": "sender_bic"
         }
       },
       "72": {

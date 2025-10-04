@@ -102,10 +102,8 @@
             "currency": "USD",
             "amount": 10000
           },
-          "56": {
-            "A": {
-              "bic": "DEUTDEFF"
-            }
+          "56A": {
+            "bic": "DEUTDEFF"
           },
           "57A": {
             "bic": "DEUTDEFF"

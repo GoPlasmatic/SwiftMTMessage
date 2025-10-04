@@ -1,195 +1,193 @@
 {
-    "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "NOTICE",
-                100000
-            ]
-        },
-        "account_id": {
-            "cat": [
-                "GB82WEST",
-                10000000000000
-            ]
-        },
-        "value_date": "2024-12-20",
-        "payment1_ref": {
-            "cat": [
-                "PAY",
-                100000000000
-            ]
-        },
-        "payment1_currency": "USD",
-        "payment1_amount": 10000,
-        "payment2_ref": {
-            "cat": [
-                "SETTLE",
-                100000000000
-            ]
-        },
-        "payment2_currency": "USD",
-        "payment2_amount": 10000,
-        "payment3_ref": {
-            "cat": [
-                "LIQ",
-                100000000000
-            ]
-        },
-        "payment3_currency": "USD",
-        "payment3_amount": 10000,
-        "ordering_bic": "DEUTDEFF",
-        "intermediary_bic": "DEUTDEFF",
-        "session_num": "0001",
-        "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+  "variables": {
+    "sender_bic": "DEUTDEFF",
+    "receiver_bic": "DEUTDEFF",
+    "transaction_ref": {
+      "cat": [
+        "NOTICE",
+        100000
+      ]
     },
-    "schema": {
-        "basic_header": {
-            "application_id": "F",
-            "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
-        },
-        "application_header": {
-            "direction": "I",
-            "message_type": "210",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
-            "priority": "N"
-        },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
-            "validation_flag": "STP"
-        },
-        "message_type": "210",
-        "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "25": {
-                "authorisation": {
-                    "var": "account_id"
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "value_date"
-                }
-            },
-            "#": [
-                {
-                    "21": {
-                        "reference": {
-                            "var": "payment1_ref"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "payment1_currency"
-                        },
-                        "amount": {
-                            "var": "payment1_amount"
-                        }
-                    },
-                    "50": {
-                        "name_and_address": [
-                            "ORDERING CUSTOMER NAME",
-                            "NEW YORK NY 10001"
-                        ]
-                    },
-                    "56A": {
-                        "bic": {
-                            "var": "intermediary_bic"
-                        }
-                    }
-                },
-                {
-                    "21": {
-                        "reference": {
-                            "var": "payment2_ref"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "payment2_currency"
-                        },
-                        "amount": {
-                            "var": "payment2_amount"
-                        }
-                    },
-                    "52A": {
-                        "bic": {
-                            "var": "ordering_bic"
-                        }
-                    },
-                    "56D": {
-                        "party_identifier": "CLRHOUSE001",
-                        "name_and_address": [
-                            "CLEARING HOUSE",
-                            "SETTLEMENT SYSTEM",
-                            "NEW YORK",
-                            "USA"
-                        ]
-                    }
-                },
-                {
-                    "21": {
-                        "reference": {
-                            "var": "payment3_ref"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "payment3_currency"
-                        },
-                        "amount": {
-                            "var": "payment3_amount"
-                        }
-                    },
-                    "52": {
-                        "D": {
-                            "party_identifier": "CB12345",
-                            "name_and_address": [
-                                "CENTRAL BANK",
-                                "LIQUIDITY OPERATIONS",
-                                "MONETARY DEPARTMENT",
-                                "USA"
-                            ]
-                        }
-                    }
-                }
-            ]
+    "account_id": {
+      "cat": [
+        "GB82WEST",
+        10000000000000
+      ]
+    },
+    "value_date": "2024-12-20",
+    "payment1_ref": {
+      "cat": [
+        "PAY",
+        100000000000
+      ]
+    },
+    "payment1_currency": "USD",
+    "payment1_amount": 10000,
+    "payment2_ref": {
+      "cat": [
+        "SETTLE",
+        100000000000
+      ]
+    },
+    "payment2_currency": "USD",
+    "payment2_amount": 10000,
+    "payment3_ref": {
+      "cat": [
+        "LIQ",
+        100000000000
+      ]
+    },
+    "payment3_currency": "USD",
+    "payment3_amount": 10000,
+    "ordering_bic": "DEUTDEFF",
+    "intermediary_bic": "DEUTDEFF",
+    "session_num": "0001",
+    "sequence_num": "000123",
+    "uetr": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "schema": {
+    "basic_header": {
+      "application_id": "F",
+      "service_id": "01",
+      "logical_terminal": {
+        "cat": [
+          {
+            "var": "sender_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "sender_bic": {
+        "var": "sender_bic"
+      },
+      "session_number": {
+        "var": "session_num"
+      },
+      "sequence_number": {
+        "var": "sequence_num"
+      }
+    },
+    "application_header": {
+      "direction": "I",
+      "message_type": "210",
+      "destination_address": {
+        "cat": [
+          {
+            "var": "receiver_bic"
+          },
+          "XXXX"
+        ]
+      },
+      "receiver_bic": {
+        "var": "receiver_bic"
+      },
+      "priority": "N"
+    },
+    "user_header": {
+      "service_type_identifier": "001",
+      "unique_end_to_end_reference": {
+        "var": "uetr"
+      },
+      "validation_flag": "STP"
+    },
+    "message_type": "210",
+    "fields": {
+      "20": {
+        "reference": {
+          "var": "transaction_ref"
         }
+      },
+      "25": {
+        "authorisation": {
+          "var": "account_id"
+        }
+      },
+      "30": {
+        "execution_date": {
+          "var": "value_date"
+        }
+      },
+      "#": [
+        {
+          "21": {
+            "reference": {
+              "var": "payment1_ref"
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "payment1_currency"
+            },
+            "amount": {
+              "var": "payment1_amount"
+            }
+          },
+          "50": {
+            "name_and_address": [
+              "ORDERING CUSTOMER NAME",
+              "NEW YORK NY 10001"
+            ]
+          },
+          "56A": {
+            "bic": {
+              "var": "intermediary_bic"
+            }
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "var": "payment2_ref"
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "payment2_currency"
+            },
+            "amount": {
+              "var": "payment2_amount"
+            }
+          },
+          "52A": {
+            "bic": {
+              "var": "ordering_bic"
+            }
+          },
+          "56D": {
+            "party_identifier": "CLRHOUSE001",
+            "name_and_address": [
+              "CLEARING HOUSE",
+              "SETTLEMENT SYSTEM",
+              "NEW YORK",
+              "USA"
+            ]
+          }
+        },
+        {
+          "21": {
+            "reference": {
+              "var": "payment3_ref"
+            }
+          },
+          "32B": {
+            "currency": {
+              "var": "payment3_currency"
+            },
+            "amount": {
+              "var": "payment3_amount"
+            }
+          },
+          "52D": {
+            "party_identifier": "CB12345",
+            "name_and_address": [
+              "CENTRAL BANK",
+              "LIQUIDITY OPERATIONS",
+              "MONETARY DEPARTMENT",
+              "USA"
+            ]
+          }
+        }
+      ]
     }
+  }
 }

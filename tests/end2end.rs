@@ -422,7 +422,7 @@ fn get_test_cases(
         (Some(mt), None) => {
             // Test all scenarios for given message type
             // Load scenarios with descriptions from index.json
-            let index_path = format!("../test_scenarios/{}/index.json", mt.to_lowercase());
+            let index_path = format!("test_scenarios/{}/index.json", mt.to_lowercase());
 
             if let Ok(content) = fs::read_to_string(&index_path) {
                 if let Ok(index) = serde_json::from_str::<ScenarioIndex>(&content) {
@@ -464,7 +464,7 @@ fn get_test_cases(
 /// Get all available test cases from the test_scenarios directory
 fn get_all_test_cases() -> Vec<(String, String, String)> {
     let mut test_cases = Vec::new();
-    let scenarios_dir = Path::new("../test_scenarios");
+    let scenarios_dir = Path::new("test_scenarios");
 
     if let Ok(entries) = fs::read_dir(scenarios_dir) {
         for entry in entries.flatten() {
@@ -508,7 +508,7 @@ fn get_all_test_cases() -> Vec<(String, String, String)> {
 /// Get scenarios for a specific message type using index.json
 fn get_scenarios_for_message_type(message_type: &str) -> Vec<String> {
     let index_path = format!(
-        "../test_scenarios/{}/index.json",
+        "test_scenarios/{}/index.json",
         message_type.to_lowercase()
     );
 
@@ -538,7 +538,7 @@ fn get_scenarios_for_message_type(message_type: &str) -> Vec<String> {
 /// Fallback method to get scenarios by directory listing
 fn get_scenarios_fallback(message_type: &str) -> Vec<String> {
     let mut scenarios = Vec::new();
-    let scenario_dir = Path::new("../test_scenarios").join(message_type.to_lowercase());
+    let scenario_dir = Path::new("test_scenarios").join(message_type.to_lowercase());
 
     if let Ok(entries) = fs::read_dir(&scenario_dir) {
         for entry in entries.flatten() {
@@ -558,7 +558,7 @@ fn get_scenarios_fallback(message_type: &str) -> Vec<String> {
 /// Load scenario schema from file
 fn load_scenario_schema(message_type: &str, scenario: &str) -> Result<Value, String> {
     let file_path = format!(
-        "../test_scenarios/{}/{}.json",
+        "test_scenarios/{}/{}.json",
         message_type.to_lowercase(),
         scenario
     );

@@ -1,14 +1,13 @@
-//! Example demonstrating error collection in Swift MT Parser
+//! Example demonstrating error handling in Swift MT Parser
 //!
-//! This example shows how to use the new error collection feature that allows
-//! the parser to collect all field parsing errors instead of stopping at the first error.
+//! This example shows how to handle parsing errors when parsing SWIFT MT messages.
 
-use swift_mt_message::errors::{ParseResult, ParserConfig};
+use swift_mt_message::errors::ParseResult;
 use swift_mt_message::messages::MT103;
 use swift_mt_message::parser::SwiftParser;
 
 fn main() {
-    // Example MT103 message with multiple errors
+    // Example MT103 message with errors
     let mt103_with_errors = r#"{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:
 :20:INVALID REF WITH SPACES
 :23B:INVALID_CODE
@@ -27,24 +26,20 @@ AND MORE LINES
 :71A:INVALID_CHARGE_CODE
 -}"#;
 
-    println!("=== Swift MT Parser Error Collection Example ===\n");
+    println!("=== Swift MT Parser Error Handling Example ===\n");
 
-    // Example 1: Traditional fail-fast parsing (default behavior)
-    println!("1. Traditional fail-fast parsing:");
+    // Example 1: Traditional parsing (stops at first error)
+    println!("1. Traditional parsing:");
     match SwiftParser::parse::<MT103>(mt103_with_errors) {
         Ok(msg) => println!("✓ Message parsed successfully: {:?}", msg.fields.field_20),
-        Err(e) => println!("✗ Parsing failed at first error: {e}"),
+        Err(e) => println!("✗ Parsing failed: {e}"),
     }
 
     println!("\n{}\n", "=".repeat(50));
 
     // Example 2: Error collection mode - collect all errors
     println!("2. Error collection mode (collect all errors):");
-    let parser = SwiftParser::with_config(ParserConfig {
-        fail_fast: false,
-        validate_optional_fields: true,
-        collect_all_errors: true,
-    });
+    let parser = SwiftParser::new();
 
     match parser.parse_with_errors::<MT103>(mt103_with_errors) {
         Ok(ParseResult::Success(msg)) => {
@@ -110,11 +105,11 @@ BENEFICIARY NAME
 
     println!("\n{}\n", "=".repeat(50));
 
-    // Example 4: Using the convenience method that handles partial success
-    println!("4. Using parse_message (handles partial success automatically):");
+    // Example 4: Using the convenience method
+    println!("4. Using parse_message convenience method:");
     match parser.parse_message::<MT103>(mt103_with_errors) {
         Ok(msg) => {
-            println!("✓ Message parsed (errors were logged to stderr)");
+            println!("✓ Message parsed successfully");
             println!("  Transaction Reference: {:?}", msg.fields.field_20);
         }
         Err(e) => {

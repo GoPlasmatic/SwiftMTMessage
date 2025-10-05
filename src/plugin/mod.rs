@@ -1,5 +1,7 @@
-// Plugin module for dataflow-rs integration
-// Exposes SWIFT MT functions as AsyncFunctionHandler implementations
+//! # Dataflow Plugin
+//!
+//! Dataflow-rs integration for SWIFT MT message processing.
+//! Provides async function handlers for parse, validate, generate, and publish operations.
 
 pub mod generate;
 pub mod parse;

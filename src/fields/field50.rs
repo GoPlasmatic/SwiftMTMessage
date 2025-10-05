@@ -1,105 +1,36 @@
 //! # Field 50: Ordering Customer
 //!
-//! ## Purpose
-//! Identifies the ordering customer (originator) of the payment instruction. The ordering customer
-//! is the party that instructs the sender of the MT103 to execute the payment. Different options
-//! provide various levels of detail and identification methods for optimal processing efficiency.
+//! Identifies the payment originator. Different variants provide structured
+//! (BIC/account-based) or flexible (name/address-based) identification.
 //!
-//! ## Options Overview
-//! - **Option A**: Account + BIC identification (optimal for STP)
-//! - **Option F**: Party identifier + BIC (structured identification)
-//! - **Option K**: Account + Name/Address details (flexible format)
-//! - **Option C**: BIC identification only (institution-based)
-//! - **Option G**: Account + BIC (alternative format)
-//! - **Option H**: Account + Name/Address (alternative format)
-//! - **Option L**: Party identifier only (simplified identification)
-//! - **No Option**: Name/Address only (basic identification)
+//! **Variants:**
+//! - **A:** Account + numbered name/address lines (STP-optimized)
+//! - **F:** Account + party ID + name/address + BIC (enhanced identification)
+//! - **K:** Account + name/address (flexible format, most common)
+//! - **C:** BIC only (institution-based)
+//! - **G:** Account + BIC
+//! - **H:** Account + name/address
+//! - **L:** Party identifier only
+//! - **No Option:** Name/address only
 //!
-//! ## Usage by Message Type
-//! - **MT103**: Options A, F, K supported (Field50OrderingCustomerAFK)
-//! - **MT101**: Options A, F, K supported for batch payments
-//! - **MT102**: Options available depending on batch type
-//! - **Creditor Payments**: Options A, K supported (Field50Creditor)
-//! - **Instructing Party**: Options C, L supported (Field50InstructingParty)
-//!
-//! ## STP Compliance Guidelines
-//! ### STP Preferred (Optimal Automation)
-//! - **Option A**: Account + BIC - maximum STP efficiency
-//! - **Option F**: Party identifier + BIC - structured processing
-//! - **Option C**: BIC only - institution-based routing
-//!
-//! ### STP Compatible (Good Automation)
-//! - **Option K**: Account + Name/Address with complete information
-//! - **Option G**: Account + BIC alternative format
-//! - **Option H**: Account + Name/Address alternative format
-//!
-//! ### Manual Processing Risk
-//! - **No Option**: Name/Address only - may require manual intervention
-//! - **Option L**: Party identifier only - limited automation
-//!
-//! ## Format Selection Guidelines
-//! ### When to Use Each Option
-//! - **Option A**: Standard customer payments with account and BIC
-//! - **Option F**: Enhanced identification requirements
-//! - **Option K**: Flexible customer identification scenarios
-//! - **Option C**: Institution-to-institution transactions
-//! - **Option G/H**: Alternative formats for specific message types
-//! - **Option L**: Simplified party identification
-//! - **No Option**: Basic customer identification
-//!
-//! ## Business Context Applications
-//! - **Payment Origination**: Customer-initiated payment instructions
-//! - **Corporate Payments**: Business-to-business transaction origination
-//! - **Retail Payments**: Individual customer payment instructions
-//! - **Batch Processing**: Multiple payment origination identification
-//!
-//! ## Network Validation Requirements
-//! - **BIC Validation**: Must be active and reachable in SWIFT network
-//! - **Account Validation**: Must conform to local account standards
-//! - **Character Set**: Standard SWIFT character set compliance
-//! - **Address Standards**: Adequate detail for customer identification
-//!
-//! ## Compliance Framework
-//! - **KYC Standards**: Customer identification and verification
-//! - **AML Requirements**: Anti-money laundering originator screening
-//! - **Regulatory Documentation**: Complete originator record keeping
-//! - **Audit Trail**: Comprehensive origination audit information
-//!
-//! ## Related Fields Integration
-//! - **Field 52A**: Ordering Institution (originator's bank)
-//! - **Field 53A**: Sender's Correspondent (routing)
-//! - **Field 59**: Beneficiary Customer (payment destination)
-//! - **Field 70**: Remittance Information (payment purpose)
-//!
-//! ## Error Prevention Guidelines
-//! - **Complete Information**: Provide full originator identification details
-//! - **Accurate Codes**: Verify BIC codes and account numbers
-//! - **Format Consistency**: Follow established format conventions
-//! - **Compliance Verification**: Screen against sanctions and watch lists
-//!
-//! ## See Also
-//! - Swift FIN User Handbook: Ordering Customer Specifications
-//! - KYC Guidelines: Customer Identification Requirements
-//! - AML/CFT Compliance: Originator Screening Best Practices
-//! - STP Implementation Guide: Ordering Customer Optimization
+//! **Example:**
+//! ```text
+//! :50K:/DE89370400440532013000
+//! JOHN DOE
+//! 123 MAIN STREET
+//! ```
 
 use super::swift_utils::{parse_bic, parse_swift_chars};
 use crate::errors::ParseError;
 use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
 
-/// **Field 50 (No Option): Ordering Customer**
+/// **Field 50 (No Option): Name/Address Only**
 ///
-/// Basic variant of [Field 50 module](index.html). Provides ordering customer identification
-/// using name and address information only.
-///
-/// **Components:**
-/// - Name and address lines (4*35x)
-///
-/// For complete documentation, see the [Field 50 module](index.html).
+/// Free-format name and address (4*35x).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field50NoOption {
-    /// Name and address lines (up to 4 lines of 35 characters each)
+    /// Name/address (max 4 lines, 35 chars each)
     pub name_and_address: Vec<String>,
 }
 
@@ -145,24 +76,15 @@ impl SwiftField for Field50NoOption {
     }
 }
 
-/// **Field 50A: Ordering Customer (Option A)**
+/// **Field 50A: Account + Numbered Name/Address**
 ///
-/// Account + BIC variant of [Field 50 module](index.html). Provides structured identification
-/// using optional account identifier and numbered name/address lines.
-///
-/// **Components:**
-/// - Party identifier (optional, \[/34x\])
-/// - Name and address lines (4*(1!n/33x))
-///
-/// For complete documentation, see the [Field 50 module](index.html).
+/// Structured format with numbered lines (1/text, 2/text, etc.).
+/// Format: [/34x]4*(1!n/33x)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field50A {
-    /// Optional account identifier (IBAN, account number, etc.)
-    /// Format: [/34x] - Up to 34 characters with leading slash
+    /// Optional account/party ID (max 34 chars)
     pub party_identifier: Option<String>,
-
-    /// Name and address lines with mandatory line numbering
-    /// Format: 4*(1!n/33x) - Line number + slash + 33 character text
+    /// Numbered name/address lines (e.g., "1/ACME CORP")
     pub name_and_address: Vec<String>,
 }
 
@@ -267,25 +189,18 @@ impl SwiftField for Field50A {
     }
 }
 
-/// **Field 50F: Ordering Customer (Option F)**
+/// **Field 50F: Account + Party ID + Name/Address + BIC**
 ///
-/// Party identifier + Name/Address + BIC variant of [Field 50 module](index.html).
-///
-/// **Components:**
-/// - Account/Party Identifier (/34x)
-/// - Optional Party Identifier (/34x)
-/// - Name and Address (1-4 lines, 35x each)
-/// - BIC (4!a2!a2!c\[3!c\])
-///
-/// For complete documentation, see the [Field 50 module](index.html).
+/// Enhanced identification with BIC.
+/// Format: account + [/party_id] + [name/address] + BIC
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field50F {
-    /// Account or party identifier
+    /// Account (max 35 chars)
     pub account: String,
-    /// Optional party identifier (e.g., "SEC/1234567890")
+    /// Optional party ID (max 34 chars)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub party_identifier: Option<String>,
-    /// Name and address information (1-4 lines)
+    /// Optional name/address (1-4 lines)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name_and_address: Option<Vec<String>>,
     /// BIC code
@@ -377,24 +292,15 @@ impl SwiftField for Field50F {
     }
 }
 
-/// **Field 50K: Ordering Customer (Option K)**
+/// **Field 50K: Account + Free-Format Name/Address**
 ///
-/// Flexible variant of [Field 50 module](index.html). Provides ordering customer identification
-/// using optional account information and free-format name/address details.
-///
-/// **Components:**
-/// - Account (optional, \[/34x\])
-/// - Name and address lines (4*35x)
-///
-/// For complete documentation, see the [Field 50 module](index.html).
+/// Most common variant. Free-format name and address.
+/// Format: [/34x]4*35x
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field50K {
-    /// Optional account identifier (free format)
-    /// Format: \[/34x\] - Up to 34 characters with leading slash
+    /// Optional account (max 34 chars)
     pub account: Option<String>,
-
-    /// Name and address information in free format
-    /// Format: 4*35x - Up to 4 lines of 35 characters each
+    /// Name/address (max 4 lines, 35 chars each)
     pub name_and_address: Vec<String>,
 }
 
@@ -480,17 +386,12 @@ impl SwiftField for Field50K {
     }
 }
 
-/// **Field 50C: Ordering Customer (Option C)**
+/// **Field 50C: BIC Only**
 ///
-/// BIC-only variant of [Field 50 module](index.html).
-///
-/// **Components:**
-/// - BIC (4!a2!a2!c\[3!c\])
-///
-/// For complete documentation, see the [Field 50 module](index.html).
+/// Institution-based identification.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field50C {
-    /// BIC code
+    /// BIC code (8 or 11 chars)
     pub bic: String,
 }
 
@@ -508,17 +409,12 @@ impl SwiftField for Field50C {
     }
 }
 
-/// **Field 50L: Ordering Customer (Option L)**
+/// **Field 50L: Party Identifier Only**
 ///
-/// Party identifier variant of [Field 50 module](index.html).
-///
-/// **Components:**
-/// - Party identifier (35x)
-///
-/// For complete documentation, see the [Field 50 module](index.html).
+/// Single-line party identifier (35x).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field50L {
-    /// Party identifier
+    /// Party ID (max 35 chars)
     pub party_identifier: String,
 }
 
@@ -553,18 +449,12 @@ impl SwiftField for Field50L {
     }
 }
 
-/// **Field 50G: Ordering Customer (Option G)**
+/// **Field 50G: Account + BIC**
 ///
-/// Account + BIC variant of [Field 50 module](index.html).
-///
-/// **Components:**
-/// - Account (/34x)
-/// - BIC (4!a2!a2!c\[3!c\])
-///
-/// For complete documentation, see the [Field 50 module](index.html).
+/// Simple account and BIC identification.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field50G {
-    /// Account (with leading slash)
+    /// Account (max 34 chars)
     pub account: String,
     /// BIC code
     pub bic: String,
@@ -612,20 +502,14 @@ impl SwiftField for Field50G {
     }
 }
 
-/// **Field 50H: Ordering Customer (Option H)**
+/// **Field 50H: Account + Name/Address**
 ///
-/// Account + Name/Address variant of [Field 50 module](index.html).
-///
-/// **Components:**
-/// - Account (/34x)
-/// - Name and address lines (4*35x)
-///
-/// For complete documentation, see the [Field 50 module](index.html).
+/// Account with free-format name/address.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field50H {
-    /// Account (with leading slash)
+    /// Account (max 34 chars)
     pub account: String,
-    /// Name and address lines
+    /// Name/address (max 4 lines, 35 chars each)
     pub name_and_address: Vec<String>,
 }
 

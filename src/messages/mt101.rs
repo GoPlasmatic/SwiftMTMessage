@@ -4,117 +4,120 @@ use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-// MT101: Request for Transfer
-// Used to instruct the account servicing institution to debit an account held by
-// the sender and to arrange for the payment to the beneficiary(ies).
-// Contains one or more transfer instructions.
-
+/// Sequence B - Transaction details
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT101Transaction {
-    // Transaction Reference
+    /// Transaction reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    // F/X Deal Reference
+    /// F/X deal reference (Field 21F)
     #[serde(rename = "21F")]
     pub field_21f: Option<Field21F>,
 
-    // Instruction Code
+    /// Instruction codes (Field 23E)
     #[serde(rename = "23E")]
     pub field_23e: Option<Vec<Field23E>>,
 
-    // Currency/Amount
+    /// Currency and amount (Field 32B)
     #[serde(rename = "32B")]
     pub field_32b: Field32B,
 
-    // Instructing Party (Transaction level)
+    /// Instructing party (Field 50C/L)
     #[serde(flatten)]
     pub instructing_party_tx: Option<Field50InstructingParty>,
 
-    // Ordering Customer (Transaction level)
+    /// Ordering customer (Field 50F/G/H)
     #[serde(flatten)]
     pub ordering_customer_tx: Option<Field50OrderingCustomerFGH>,
 
-    // Account Servicing Institution
+    /// Account servicing institution (Field 52)
     #[serde(flatten)]
     pub field_52: Option<Field52AccountServicingInstitution>,
 
-    // Intermediary
+    /// Intermediary (Field 56)
     #[serde(flatten)]
     pub field_56: Option<Field56Intermediary>,
 
-    // Account With Institution
+    /// Account with institution (Field 57)
     #[serde(flatten)]
     pub field_57: Option<Field57AccountWithInstitution>,
 
-    // Beneficiary Customer
+    /// Beneficiary customer (Field 59)
     #[serde(flatten)]
     pub field_59: Field59,
 
-    // Remittance Information
+    /// Remittance information (Field 70)
     #[serde(rename = "70")]
     pub field_70: Option<Field70>,
 
-    // Regulatory Reporting
+    /// Regulatory reporting (Field 77B)
     #[serde(rename = "77B")]
     pub field_77b: Option<Field77B>,
 
-    // Currency/Original Amount
+    /// Original amount (Field 33B)
     #[serde(rename = "33B")]
     pub field_33b: Option<Field33B>,
 
-    // Details of Charges
+    /// Details of charges (Field 71A)
     #[serde(rename = "71A")]
     pub field_71a: Field71A,
 
-    // Charges Account
+    /// Charges account (Field 25A)
     #[serde(rename = "25A")]
     pub field_25a: Option<Field25A>,
 
-    // Exchange Rate
+    /// Exchange rate (Field 36)
     #[serde(rename = "36")]
     pub field_36: Option<Field36>,
 }
 
+/// **MT101: Request for Transfer**
+///
+/// Batch payment instruction from ordering customer to account servicing institution.
+/// Contains one or more transfer instructions for beneficiary payments.
+///
+/// **Usage:** Batch payments, salary payments, vendor payments
+/// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT101 {
-    // Sender's Reference
+    /// Sender's reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Customer Specified Reference
+    /// Customer specified reference (Field 21R)
     #[serde(rename = "21R")]
     pub field_21r: Option<Field21R>,
 
-    // Message Index/Total
+    /// Message index/total (Field 28D)
     #[serde(rename = "28D")]
     pub field_28d: Field28D,
 
-    // Instructing Party
+    /// Instructing party (Field 50C/L)
     #[serde(flatten)]
     pub instructing_party: Option<Field50InstructingParty>,
 
-    // Ordering Customer
+    /// Ordering customer (Field 50F/G/H)
     #[serde(flatten)]
     pub ordering_customer: Option<Field50OrderingCustomerFGH>,
 
-    // Account Servicing Institution (Seq A)
+    /// Account servicing institution (Field 52)
     #[serde(flatten)]
     pub field_52a: Option<Field52AccountServicingInstitution>,
 
-    // Sending Institution
+    /// Sending institution (Field 51A)
     #[serde(rename = "51A")]
     pub field_51a: Option<Field51A>,
 
-    // Requested Execution Date
+    /// Requested execution date (Field 30)
     #[serde(rename = "30")]
     pub field_30: Field30,
 
-    // Account Identification
+    /// Account identification (Field 25)
     #[serde(rename = "25")]
     pub field_25: Option<Field25NoOption>,
 
-    // Transaction Details (repeating sequence)
+    /// Transaction details (Sequence B)
     #[serde(rename = "#")]
     pub transactions: Vec<MT101Transaction>,
 }

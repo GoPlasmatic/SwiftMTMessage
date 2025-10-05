@@ -4,52 +4,51 @@ use crate::parser::MessageParser;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-/// MT210 - Notice to Receive
+/// **MT210: Notice to Receive**
 ///
-/// Used to advise the receiver that funds will be coming and should be credited
-/// to the account specified. Typically precedes the actual transfer.
+/// Advises correspondent that funds have been/will be deposited to account.
+///
+/// **Usage:** Deposit notifications, account funding notices
+/// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT210 {
-    /// Field 20 - Transaction Reference Number (Mandatory)
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub transaction_reference: Field20,
 
-    /// Field 25 - Account Identification (Optional)
+    /// Account Identification (Field 25)
     #[serde(rename = "25", skip_serializing_if = "Option::is_none")]
     pub account_identification: Option<Field25NoOption>,
 
-    /// Field 30 - Value Date (Mandatory)
+    /// Value Date (Field 30)
     #[serde(rename = "30")]
     pub value_date: Field30,
 
-    /// Transactions (Repeatable)
+    /// Transactions (repeatable)
     #[serde(rename = "#", default)]
     pub transactions: Vec<MT210Transaction>,
 }
 
-/// Individual transaction within an MT210 message
+/// Individual transaction within MT210
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT210Transaction {
-    /// Field 21 - Related Reference (Optional)
+    /// Related Reference (Field 21)
     #[serde(rename = "21", skip_serializing_if = "Option::is_none")]
     pub related_reference: Option<Field21NoOption>,
 
-    /// Field 32B - Currency Code, Amount (Mandatory)
+    /// Currency Code, Amount (Field 32B)
     #[serde(rename = "32B")]
     pub currency_amount: Field32B,
 
-    /// Field 50 - Ordering Customer (Optional)
-    /// Can be 50, 50C, 50F, or 50K
+    /// Ordering Customer (Field 50)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub ordering_customer: Option<Field50>,
 
-    /// Field 52 - Ordering Institution (Optional)
-    /// Can be 52A or 52D
+    /// Ordering Institution (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub ordering_institution: Option<Field52OrderingInstitution>,
 
-    /// Field 56 - Intermediary Institution (Optional)
-    /// Can be 56A, 56C, or 56D
+    /// Intermediary Institution (Field 56)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub intermediary: Option<Field56>,
 }

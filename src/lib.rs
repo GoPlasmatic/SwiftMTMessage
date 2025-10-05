@@ -1,48 +1,24 @@
-//! # Swift MT Message Parser - Enhanced Architecture
+//! # SWIFT MT Message Parser
 //!
-//! A comprehensive Rust library for parsing SWIFT MT (Message Type) messages with strong typing,
-//! complex field structures, comprehensive validation, and flattened JSON serialization.
+//! Rust library for parsing, validating, and generating SWIFT MT financial messages.
 //!
-//! ## Key Features
+//! ## Features
+//! - **Type-safe parsing** with dedicated field structures
+//! - **SWIFT validation** with 1,335 error codes (T/C/D/E/G series)
+//! - **Sample generation** with configurable scenarios
+//! - **JSON serialization** with clean flattened output
+//! - **30+ message types** (MT101-MT950)
 //!
-//! - **Complex Field Structures**: Full enum-based field variants (Field50: A/F/K, Field59: A/Basic)
-//! - **Flattened JSON Serialization**: Clean JSON output without enum wrapper layers
-//! - **Type-safe field parsing** with dedicated field structs and automatic validation
-//! - **Comprehensive Field Support**: All MT103 fields with proper SWIFT compliance
-//! - **Bidirectional Serialization**: Perfect round-trip JSON serialization/deserialization
-//! - **Extensive Validation**: BIC validation, field length checks, format compliance
+//! ## Quick Start
+//! ```rust
+//! use swift_mt_message::parser::SwiftParser;
 //!
-//! ## Supported Field Types
-//!
-//! ### Complex Enum Fields
-//! - **Field50** (Ordering Customer): 50A (Account+BIC), 50F (Party+Address), 50K (Name+Address)
-//! - **Field59** (Beneficiary Customer): 59A (Account+BIC), 59 (Basic lines)
-//!
-//! ### Institution Fields (with account_line_indicator)
-//! - **Field52A** (Ordering Institution): BIC + optional account + account_line_indicator
-//! - **Field53A-57A** (Correspondent/Intermediary): All with account_line_indicator support
-//!
-//! ### Simple Type Fields
-//! - **Field32A** (Value Date/Currency/Amount): NaiveDate + String + f64
-//! - **Field20, 23B, 70, 71A**: Proper field name alignment with old version
-//!
-//! ## JSON Output Structure
-//!
-//! The library produces clean, flattened JSON without enum wrapper layers:
-//!
-//! ```json
-//! {
-//!   "50": {
-//!     "name_and_address": ["JOHN DOE", "123 MAIN ST"]
-//!   },
-//!   "59": {
-//!     "account": "DE89370400440532013000",
-//!     "bic": "DEUTDEFFXXX"
-//!   }
-//! }
+//! # fn main() -> swift_mt_message::Result<()> {
+//! let message = "{1:F01BANKDEFF...}{2:I103...}{4:\n:20:REF123\n:23B:CRED\n-}";
+//! let parsed = SwiftParser::parse_auto(message)?;
+//! # Ok(())
+//! # }
 //! ```
-//!
-//! Instead of nested enum structures like `{"50": {"K": {...}}}`.
 
 pub mod errors;
 pub mod fields;

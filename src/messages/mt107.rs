@@ -3,159 +3,164 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT107: General Direct Debit Message
-// Used for general direct debit instructions, similar to MT104 but with additional flexibility
-
+/// Sequence B - Transaction details
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT107Transaction {
-    // Transaction Reference
+    /// Transaction reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    // Instruction Code (optional)
+    /// Instruction code (Field 23E)
     #[serde(rename = "23E", skip_serializing_if = "Option::is_none")]
     pub field_23e: Option<Field23E>,
 
-    // Mandate Reference (optional)
+    /// Mandate reference (Field 21C)
     #[serde(rename = "21C", skip_serializing_if = "Option::is_none")]
     pub field_21c: Option<Field21C>,
 
-    // Direct Debit Reference (optional)
+    /// Direct debit reference (Field 21D)
     #[serde(rename = "21D", skip_serializing_if = "Option::is_none")]
     pub field_21d: Option<Field21D>,
 
-    // Registration Reference (optional)
+    /// Registration reference (Field 21E)
     #[serde(rename = "21E", skip_serializing_if = "Option::is_none")]
     pub field_21e: Option<Field21E>,
 
-    // Transaction Amount
+    /// Transaction amount (Field 32B)
     #[serde(rename = "32B")]
     pub field_32b: Field32B,
 
-    // Instructing Party (optional)
+    /// Instructing party (Field 50C/L)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub instructing_party_tx: Option<Field50InstructingParty>,
 
-    // Creditor (optional)
+    /// Creditor (Field 50A/K)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub creditor_tx: Option<Field50Creditor>,
 
-    // Creditor's Bank (optional)
+    /// Creditor's bank (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52CreditorBank>,
 
-    // Debtor's Bank (optional)
+    /// Debtor's bank (Field 57)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_57: Option<Field57DebtorBank>,
 
-    // Debtor (mandatory)
+    /// Debtor (Field 59)
     #[serde(flatten)]
     pub field_59: Field59,
 
-    // Remittance Information (optional)
+    /// Remittance information (Field 70)
     #[serde(rename = "70", skip_serializing_if = "Option::is_none")]
     pub field_70: Option<Field70>,
 
-    // Transaction Type Code (optional)
+    /// Transaction type code (Field 26T)
     #[serde(rename = "26T", skip_serializing_if = "Option::is_none")]
     pub field_26t: Option<Field26T>,
 
-    // Regulatory Reporting (optional)
+    /// Regulatory reporting (Field 77B)
     #[serde(rename = "77B", skip_serializing_if = "Option::is_none")]
     pub field_77b: Option<Field77B>,
 
-    // Original Ordered Amount (optional)
+    /// Original ordered amount (Field 33B)
     #[serde(rename = "33B", skip_serializing_if = "Option::is_none")]
     pub field_33b: Option<Field33B>,
 
-    // Details of Charges (optional)
+    /// Details of charges (Field 71A)
     #[serde(rename = "71A", skip_serializing_if = "Option::is_none")]
     pub field_71a: Option<Field71A>,
 
-    // Sender's Charges (optional)
+    /// Sender's charges (Field 71F)
     #[serde(rename = "71F", skip_serializing_if = "Option::is_none")]
     pub field_71f: Option<Field71F>,
 
-    // Receiver's Charges (optional)
+    /// Receiver's charges (Field 71G)
     #[serde(rename = "71G", skip_serializing_if = "Option::is_none")]
     pub field_71g: Option<Field71G>,
 
-    // Exchange Rate (optional)
+    /// Exchange rate (Field 36)
     #[serde(rename = "36", skip_serializing_if = "Option::is_none")]
     pub field_36: Option<Field36>,
 }
 
+/// **MT107: General Direct Debit Message**
+///
+/// General direct debit instruction with flexible structure and settlement details.
+/// Similar to MT104 but with additional flexibility for complex scenarios.
+///
+/// **Usage:** General direct debits, flexible collections
+/// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT107 {
-    // Sender's Reference
+    /// Sender's reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Instruction Code (optional)
+    /// Instruction code (Field 23E)
     #[serde(rename = "23E", skip_serializing_if = "Option::is_none")]
     pub field_23e: Option<Field23E>,
 
-    // Registration Reference (optional)
+    /// Registration reference (Field 21E)
     #[serde(rename = "21E", skip_serializing_if = "Option::is_none")]
     pub field_21e: Option<Field21E>,
 
-    // Requested Execution Date
+    /// Requested execution date (Field 30)
     #[serde(rename = "30")]
     pub field_30: Field30,
 
-    // Sending Institution (optional)
+    /// Sending institution (Field 51A)
     #[serde(rename = "51A", skip_serializing_if = "Option::is_none")]
     pub field_51a: Option<Field51A>,
 
-    // Instructing Party (message level, optional)
+    /// Instructing party (Field 50C/L)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub instructing_party: Option<Field50InstructingParty>,
 
-    // Creditor (message level, optional)
+    /// Creditor (Field 50A/K)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub creditor: Option<Field50Creditor>,
 
-    // Creditor's Bank (optional)
+    /// Creditor's bank (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52CreditorBank>,
 
-    // Transaction Type Code (optional)
+    /// Transaction type code (Field 26T)
     #[serde(rename = "26T", skip_serializing_if = "Option::is_none")]
     pub field_26t: Option<Field26T>,
 
-    // Regulatory Reporting (optional)
+    /// Regulatory reporting (Field 77B)
     #[serde(rename = "77B", skip_serializing_if = "Option::is_none")]
     pub field_77b: Option<Field77B>,
 
-    // Details of Charges (optional)
+    /// Details of charges (Field 71A)
     #[serde(rename = "71A", skip_serializing_if = "Option::is_none")]
     pub field_71a: Option<Field71A>,
 
-    // Sender to Receiver Information (optional)
+    /// Sender to receiver information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub field_72: Option<Field72>,
 
-    // Transaction Details (repeating sequence)
+    /// Transaction details (Sequence B)
     #[serde(rename = "#")]
     pub transactions: Vec<MT107Transaction>,
 
-    // Settlement Amount (Sequence C - mandatory)
+    /// Settlement amount (Field 32B, Sequence C)
     #[serde(rename = "32B")]
     pub field_32b: Field32B,
 
-    // Sum of Amounts (Sequence C - optional)
+    /// Sum of amounts (Field 19)
     #[serde(rename = "19", skip_serializing_if = "Option::is_none")]
     pub field_19: Option<Field19>,
 
-    // Sum of Sender's Charges (Sequence C - optional)
+    /// Sum of sender's charges (Field 71F)
     #[serde(rename = "71F", skip_serializing_if = "Option::is_none")]
     pub field_71f: Option<Field71F>,
 
-    // Sum of Receiver's Charges (Sequence C - optional)
+    /// Sum of receiver's charges (Field 71G)
     #[serde(rename = "71G", skip_serializing_if = "Option::is_none")]
     pub field_71g: Option<Field71G>,
 
-    // Sender's Correspondent (Sequence C - optional)
+    /// Sender's correspondent (Field 53)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_53: Option<Field53SenderCorrespondent>,
 }

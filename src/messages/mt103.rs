@@ -3,89 +3,110 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use std::collections::HashSet;
 
-// MT103: Single Customer Credit Transfer
-// Used to convey funds transfer instructions between financial institutions where the ordering
-// or beneficiary customer (or both) are non-financial institutions.
-// This is the most common payment message in the SWIFT network.
-
-// MT103 doesn't use the macro due to repeated field limitations
-// We'll implement it manually following the same pattern
-
 use serde::{Deserialize, Serialize};
 
+/// **MT103: Single Customer Credit Transfer**
+///
+/// Customer payment instruction from ordering to beneficiary customer via financial institutions.
+/// Most common SWIFT payment message for cross-border transfers.
+///
+/// **Usage:** Customer credit transfers, STP payments
+/// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT103 {
-    // Mandatory Fields
+    /// Transaction reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
+    /// Bank operation code (Field 23B)
     #[serde(rename = "23B")]
     pub field_23b: Field23B,
 
+    /// Value date, currency, amount (Field 32A)
     #[serde(rename = "32A")]
     pub field_32a: Field32A,
 
+    /// Ordering customer (Field 50)
     #[serde(flatten)]
     pub field_50: Field50OrderingCustomerAFK,
 
+    /// Beneficiary customer (Field 59)
     #[serde(flatten)]
     pub field_59: Field59,
 
+    /// Details of charges (Field 71A)
     #[serde(rename = "71A")]
     pub field_71a: Field71A,
 
-    // Optional Fields
+    /// Time indication (Field 13C)
     #[serde(rename = "13C")]
     pub field_13c: Option<Vec<Field13C>>,
 
+    /// Instruction codes (Field 23E)
     #[serde(rename = "23E")]
     pub field_23e: Option<Vec<Field23E>>,
 
+    /// Transaction type code (Field 26T)
     #[serde(rename = "26T")]
     pub field_26t: Option<Field26T>,
 
+    /// Instructed amount (Field 33B)
     #[serde(rename = "33B")]
     pub field_33b: Option<Field33B>,
 
+    /// Exchange rate (Field 36)
     #[serde(rename = "36")]
     pub field_36: Option<Field36>,
 
+    /// Instructing institution (Field 51A)
     #[serde(rename = "51A")]
     pub field_51a: Option<Field51A>,
 
+    /// Ordering institution (Field 52)
     #[serde(flatten)]
     pub field_52: Option<Field52OrderingInstitution>,
 
+    /// Sender's correspondent (Field 53)
     #[serde(flatten)]
     pub field_53: Option<Field53SenderCorrespondent>,
 
+    /// Receiver's correspondent (Field 54)
     #[serde(flatten)]
     pub field_54: Option<Field54ReceiverCorrespondent>,
 
+    /// Third reimbursement institution (Field 55)
     #[serde(flatten)]
     pub field_55: Option<Field55ThirdReimbursementInstitution>,
 
+    /// Intermediary institution (Field 56)
     #[serde(flatten)]
     pub field_56: Option<Field56Intermediary>,
 
+    /// Account with institution (Field 57)
     #[serde(flatten)]
     pub field_57: Option<Field57AccountWithInstitution>,
 
+    /// Remittance information (Field 70)
     #[serde(rename = "70")]
     pub field_70: Option<Field70>,
 
+    /// Sender's charges (Field 71F)
     #[serde(rename = "71F")]
     pub field_71f: Option<Vec<Field71F>>,
 
+    /// Receiver's charges (Field 71G)
     #[serde(rename = "71G")]
     pub field_71g: Option<Field71G>,
 
+    /// Sender to receiver information (Field 72)
     #[serde(rename = "72")]
     pub field_72: Option<Field72>,
 
+    /// Regulatory reporting (Field 77B)
     #[serde(rename = "77B")]
     pub field_77b: Option<Field77B>,
 
+    /// Envelope contents (Field 77T)
     #[serde(rename = "77T")]
     pub field_77t: Option<Field77T>,
 }

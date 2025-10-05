@@ -3,56 +3,60 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT940: Customer Statement Message
-// Used to transmit detailed account statement information to the account owner,
-// showing all debits and credits for a specific period.
-
+/// **MT940: Customer Statement**
+///
+/// Account statement with transaction details for specified period.
+/// Sent from account servicing institution to account owner.
+///
+/// **Usage:** Daily statements, account reconciliation
+/// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT940 {
-    // Transaction Reference Number
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Related Reference (optional)
+    /// Related Reference (Field 21)
     #[serde(rename = "21", skip_serializing_if = "Option::is_none")]
     pub field_21: Option<Field21NoOption>,
 
-    // Account Identification
+    /// Account Identification (Field 25)
     #[serde(rename = "25")]
     pub field_25: Field25NoOption,
 
-    // Statement Number/Sequence Number
+    /// Statement Number/Sequence Number (Field 28C)
     #[serde(rename = "28C")]
     pub field_28c: Field28C,
 
-    // Opening Balance
+    /// Opening Balance (Field 60F)
     #[serde(rename = "60F")]
     pub field_60f: Field60F,
 
-    // Statement Lines (1-500 occurrences)
+    /// Statement lines (1-500 occurrences)
     #[serde(rename = "statement_lines")]
     pub statement_lines: Vec<MT940StatementLine>,
 
-    // Closing Balance
+    /// Closing Balance (Field 62F)
     #[serde(rename = "62F")]
     pub field_62f: Field62F,
 
-    // Available Balance (optional)
+    /// Available Balance (Field 64)
     #[serde(rename = "64", skip_serializing_if = "Option::is_none")]
     pub field_64: Option<Field64>,
 
-    // Forward Available Balance (optional, repetitive)
+    /// Forward Available Balance (Field 65)
     #[serde(rename = "65", skip_serializing_if = "Option::is_none")]
     pub field_65: Option<Vec<Field65>>,
 }
 
+/// Statement line for MT940
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT940StatementLine {
-    // Statement Line
+    /// Statement Line (Field 61)
     #[serde(rename = "61")]
     pub field_61: Field61,
 
-    // Information to Account Owner (optional)
+    /// Information to Account Owner (Field 86)
     #[serde(rename = "86", skip_serializing_if = "Option::is_none")]
     pub field_86: Option<Field86>,
 }

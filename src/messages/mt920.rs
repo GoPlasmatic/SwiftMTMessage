@@ -3,29 +3,39 @@ use crate::fields::{field34::Field34F, *};
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT920: Request Message
-// Used to request specific account information or statement messages from another financial institution.
-
+/// **MT920: Request Message**
+///
+/// Requests specific account information or statement messages.
+///
+/// **Usage:** Statement requests, account information inquiries
+/// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT920 {
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
+    /// Repetitive sequence (1-100 occurrences)
     #[serde(rename = "#")]
     pub sequence: Vec<MT920Sequence>,
 }
 
+/// Repetitive sequence for MT920 request message
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT920Sequence {
+    /// Message Type (Field 12)
     #[serde(rename = "12")]
     pub field_12: Field12,
 
+    /// Account Identification (Field 25)
     #[serde(rename = "25")]
     pub field_25: Field25,
 
+    /// Debit Floor Limit (Field 34F)
     #[serde(rename = "34F_1")]
     pub floor_limit_debit: Option<Field34F>,
 
+    /// Credit Floor Limit (Field 34F)
     #[serde(rename = "34F_2")]
     pub floor_limit_credit: Option<Field34F>,
 }

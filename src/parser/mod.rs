@@ -1,10 +1,10 @@
-//! SWIFT MT Message Parser modules
+//! # Message Parser
 //!
-//! This module contains all parsing-related functionality for SWIFT MT messages:
-//! - Main parser (`SwiftParser`) for complete SWIFT message parsing
-//! - Simple parser (`MessageParser`) for straightforward message types
-//! - Sequence parser for repetitive sequences (MT101, MT104, MT107, etc.)
-//! - Field extraction and parsing utilities
+//! Core parsing functionality for SWIFT MT messages.
+//!
+//! - **SwiftParser**: Main entry point for complete message parsing
+//! - **MessageParser**: Field-level sequential parsing
+//! - **SequenceParser**: Repetitive sequence handling (MT101, MT104, etc.)
 
 pub mod field_extractor;
 mod generated;

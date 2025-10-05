@@ -4,21 +4,29 @@ use crate::traits::SwiftField;
 use chrono::{Datelike, NaiveDate};
 use serde::{Deserialize, Serialize};
 
-/// Field 11R: MT Reference (Option R)
-/// Used in acknowledgment and response messages to reference the original message.
+/// **Field 11R: MT Reference (Option R)**
+///
+/// References the original message in acknowledgment and response messages.
+///
+/// **Format:** `3!n6!n[4!n][6!n]` (MT type + date + optional session + optional sequence)
+///
+/// **Example:**
+/// ```text
+/// :11R:1032407191234567890
+/// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field11R {
-    /// Message type of the original message being referenced (3!n)
+    /// Message type (3 digits)
     pub message_type: String,
 
-    /// Date of the original message in YYMMDD format (6!n)
+    /// Date (YYMMDD format)
     #[serde(with = "date_string")]
     pub date: NaiveDate,
 
-    /// Optional session number (4!n)
+    /// Session number (4 digits, optional)
     pub session_number: Option<String>,
 
-    /// Optional input sequence number (6!n)
+    /// Input sequence number (6 digits, optional)
     pub input_sequence_number: Option<String>,
 }
 
@@ -118,21 +126,29 @@ impl SwiftField for Field11R {
     }
 }
 
-/// Field 11S: MT Reference (Option S)
-/// Used in cancellation requests and status inquiry messages for transaction control.
+/// **Field 11S: MT Reference (Option S)**
+///
+/// References messages in cancellation requests and status inquiries.
+///
+/// **Format:** `3!n6!n[4!n][6!n]` (MT type + date + optional session + optional sequence)
+///
+/// **Example:**
+/// ```text
+/// :11S:1922407191234567890
+/// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field11S {
-    /// Message type of the original message being referenced (3!n)
+    /// Message type (3 digits)
     pub message_type: String,
 
-    /// Date of the original message in YYMMDD format (6!n)
+    /// Date (YYMMDD format)
     #[serde(with = "date_string")]
     pub date: NaiveDate,
 
-    /// Optional session number (4!n)
+    /// Session number (4 digits, optional)
     pub session_number: Option<String>,
 
-    /// Optional input sequence number (6!n)
+    /// Input sequence number (6 digits, optional)
     pub input_sequence_number: Option<String>,
 }
 
@@ -344,14 +360,22 @@ mod tests {
     }
 }
 
-/// Field 11: MT and Date of Original Message
-/// Used in MT196 and other messages to reference the message type and date of the original message
+/// **Field 11: MT and Date of Original Message**
+///
+/// Identifies the message type and date of the original message being referenced.
+///
+/// **Format:** `3!n6!n` (MT type + date)
+///
+/// **Example:**
+/// ```text
+/// :11:196240719
+/// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field11 {
-    /// Message type of the original message being referenced (3!n)
+    /// Message type (3 digits)
     pub message_type: String,
 
-    /// Date of the original message in YYMMDD format (6!n)
+    /// Date (YYMMDD format)
     pub date: NaiveDate,
 }
 

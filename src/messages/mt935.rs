@@ -3,40 +3,43 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT935: Rate Change Advice
-// Used to advise changes in interest rates, exchange rates, or other financial rates that
-// affect existing agreements, accounts, or financial instruments.
-
+/// **MT935: Rate Change Advice**
+///
+/// Advises changes in interest rates affecting accounts or agreements.
+///
+/// **Usage:** Rate change notifications, interest rate updates
+/// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT935 {
-    // Transaction Reference Number
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Rate Change Sequences (1-10 occurrences)
+    /// Rate change sequences (1-10 occurrences)
     #[serde(rename = "#")]
     pub rate_changes: Vec<MT935RateChange>,
 
-    // Sender to Receiver Information (optional)
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub field_72: Option<Field72>,
 }
 
+/// Rate change sequence for MT935
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT935RateChange {
-    // Further Identification (optional - mutually exclusive with field_25)
+    /// Further Identification (Field 23)
     #[serde(rename = "23", skip_serializing_if = "Option::is_none")]
     pub field_23: Option<Field23>,
 
-    // Account Identification (optional - mutually exclusive with field_23)
+    /// Account Identification (Field 25)
     #[serde(rename = "25", skip_serializing_if = "Option::is_none")]
     pub field_25: Option<Field25NoOption>,
 
-    // Effective Date of New Rate
+    /// Effective Date of New Rate (Field 30)
     #[serde(rename = "30")]
     pub field_30: Field30,
 
-    // New Interest Rate (can be multiple)
+    /// New Interest Rate (Field 37H)
     #[serde(rename = "37H")]
     pub field_37h: Vec<Field37H>,
 }

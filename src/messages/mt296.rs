@@ -5,43 +5,43 @@ use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// MT296 - Answers
+/// **MT296: Answers**
 ///
-/// Used to respond to MT295 (Queries) or MT292 (Request for Cancellation)
-/// or any message without a dedicated response type.
+/// Response to queries, cancellation requests, or messages without dedicated response type.
+///
+/// **Usage:** Responding to MT295 queries, MT292 cancellation requests
+/// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT296 {
-    /// Field 20 - Transaction Reference Number (Mandatory)
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    /// Field 21 - Related Reference (Mandatory)
-    /// Reference of the original message being responded to
+    /// Related Reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    /// Field 76 - Answers (Mandatory)
+    /// Answers (Field 76)
     #[serde(rename = "76")]
     pub field_76: Field76,
 
-    /// Field 77A - Narrative (Optional)
+    /// Narrative (Field 77A)
     #[serde(rename = "77A", skip_serializing_if = "Option::is_none")]
     pub field_77a: Option<Field77A>,
 
-    /// Field 11R - MT and Date of the Original Message - Received (Optional)
+    /// MT and Date of the Original Message - Received (Field 11R)
     #[serde(rename = "11R", skip_serializing_if = "Option::is_none")]
     pub field_11r: Option<Field11R>,
 
-    /// Field 11S - MT and Date of the Original Message - Sent (Optional)
+    /// MT and Date of the Original Message - Sent (Field 11S)
     #[serde(rename = "11S", skip_serializing_if = "Option::is_none")]
     pub field_11s: Option<Field11S>,
 
-    /// Field 79 - Narrative Description of Original Message (Conditional)
+    /// Narrative Description of Original Message (Field 79)
     #[serde(rename = "79", skip_serializing_if = "Option::is_none")]
     pub field_79: Option<Field79>,
 
-    /// Copy of mandatory fields from the original message (Conditional)
-    /// Stored as additional fields that were part of the original message
+    /// Copy of mandatory fields from original message
     #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
     pub original_fields: HashMap<String, serde_json::Value>,
 }

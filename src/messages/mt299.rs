@@ -4,21 +4,23 @@ use crate::parser::MessageParser;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-/// MT299 - Free Format Message
+/// **MT299: Free Format Message**
 ///
-/// Generic message format used to exchange information for which
-/// no specific message type exists.
+/// Free-format text message for interbank communication.
+///
+/// **Usage:** General correspondence, operational messages
+/// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT299 {
-    /// Field 20 - Transaction Reference (Mandatory)
+    /// Transaction Reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    /// Field 21 - Related Reference (Optional)
+    /// Related Reference (Field 21)
     #[serde(rename = "21", skip_serializing_if = "Option::is_none")]
     pub field_21: Option<Field21NoOption>,
 
-    /// Field 79 - Narrative (Mandatory)
+    /// Narrative (Field 79)
     #[serde(rename = "79")]
     pub field_79: Field79,
 }

@@ -1,41 +1,25 @@
-//! Core traits for SWIFT field and message types
+//! # Core Traits
 //!
-//! This module defines the fundamental traits used throughout the SWIFT message parser:
-//! - `SwiftField`: For individual field types (Field20, Field50, etc.)
-//! - `SwiftMessageBody`: For complete message types (MT103, MT202, etc.)
+//! Fundamental traits for SWIFT message parsing and serialization.
+//!
+//! - **SwiftField**: Field-level parsing and serialization
+//! - **SwiftMessageBody**: Message-level operations and validation
 
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-/// Core trait for all SWIFT field types
+/// Trait for SWIFT field types
 ///
-/// This trait is implemented by all field types (Field20, Field50, etc.) to provide
-/// parsing, serialization, and variant handling capabilities.
-///
-/// ## Implementation Notes
-///
-/// - Simple fields (e.g., Field20) implement `parse()` and `to_swift_string()`
-/// - Enum fields (e.g., Field50) also implement `parse_with_variant()` and `get_variant_tag()`
-/// - All fields automatically get `to_swift_value()` via the default implementation
+/// Implemented by all field types for parsing and serialization.
+/// Enum fields (Field50, Field59) support variant-based parsing.
 pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::Debug {
-    /// Parse field value from string representation
-    ///
-    /// This is the primary parsing method for simple (non-enum) fields.
-    /// Input should be the field content without the `:TAG:` prefix.
+    /// Parse field from SWIFT format (without `:TAG:` prefix)
     fn parse(value: &str) -> Result<Self>
     where
         Self: Sized;
 
-    /// Parse field value with variant hint for enum fields
-    ///
-    /// Used by the MessageParser to parse enum fields like Field50A, Field50K, etc.
-    /// Default implementation delegates to `parse()` for simple fields.
-    ///
-    /// ## Parameters
-    /// - `value`: Field content without tag prefix
-    /// - `variant`: Variant letter (e.g., "A", "K", "F") or empty string for no-option variant
-    /// - `field_tag`: Base field tag (e.g., "50", "52") for error reporting
+    /// Parse field with variant (e.g., 50A, 50K) for enum fields
     fn parse_with_variant(
         value: &str,
         _variant: Option<&str>,
@@ -47,34 +31,23 @@ pub trait SwiftField: Serialize + for<'de> Deserialize<'de> + Clone + std::fmt::
         Self::parse(value)
     }
 
-    /// Convert field to SWIFT format string (includes `:TAG:` prefix)
-    ///
-    /// Returns the complete SWIFT field representation, e.g., `:20:PAYMENT123` or `:50K:/ACC\nNAME`
+    /// Convert to SWIFT format (includes `:TAG:` prefix)
     fn to_swift_string(&self) -> String;
 
-    /// Get the variant tag for enum field values
-    ///
-    /// Returns the variant letter (e.g., "A", "K", "F") for enum fields like Field50OrderingCustomerAFK.
-    /// Returns `None` for simple (non-enum) fields.
-    ///
-    /// This is used during serialization to determine which variant is active.
+    /// Get variant tag (e.g., "A", "K") for enum fields, None for simple fields
     fn get_variant_tag(&self) -> Option<&'static str> {
         None
     }
 }
 
-/// Core trait for Swift message types
+/// Trait for SWIFT message types (MT103, MT202, etc.)
 ///
-/// This trait defines the interface for all SWIFT MT message types (MT103, MT202, etc.).
-/// It provides methods for parsing, serialization, and metadata about message structure.
+/// Provides parsing, serialization, and validation for complete messages.
 pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::Any {
     /// Get the message type identifier (e.g., "103", "202", "940")
     fn message_type() -> &'static str;
 
-    /// Parse message from Block 4 content
-    ///
-    /// Block 4 contains the actual message fields in SWIFT format.
-    /// Each message type implements this to parse its specific field structure.
+    /// Parse message from Block 4 content (fields only)
     fn parse_from_block4(_block4: &str) -> Result<Self>
     where
         Self: Sized,
@@ -82,48 +55,10 @@ pub trait SwiftMessageBody: Debug + Clone + Send + Sync + Serialize + std::any::
         panic!("parse_from_block4 not implemented for message type")
     }
 
-    /// Convert message to SWIFT MT format string (Block 4 content only)
-    ///
-    /// Returns the message fields in SWIFT MT format, ready for serialization.
-    /// The output does not include Block 4 wrapper braces `{4:...}`.
-    ///
-    /// Each message type must implement custom serialization logic that matches
-    /// its custom parsing logic in `parse_from_block4()`.
-    ///
-    /// ## Format
-    /// - Fields are formatted as `:TAG:VALUE\r\n`
-    /// - Enum fields include variant letter: `:50K:value` or `:59A:value`
-    /// - No trailing `\r\n` at the end
-    ///
-    /// ## Example Implementation
-    /// ```ignore
-    /// fn to_mt_string(&self) -> String {
-    ///     use crate::traits::SwiftField;
-    ///     let mut result = String::new();
-    ///     result.push_str(&self.field_20.to_swift_string());
-    ///     result.push_str("\r\n");
-    ///     // ... add other fields in correct order
-    ///     result.truncate(result.len() - 2); // Remove trailing \r\n
-    ///     result
-    /// }
-    /// ```
+    /// Convert to SWIFT MT format (Block 4 content, no wrapper braces)
     fn to_mt_string(&self) -> String;
 
-    /// Validate network rules specific to this message type
-    ///
-    /// Validates SWIFT network validation rules (C-series, D-series, E-series, etc.)
-    /// and returns all validation errors found. This allows comprehensive error
-    /// reporting or early termination based on the stop_on_first_error flag.
-    ///
-    /// ## Parameters
-    /// - `stop_on_first_error`: If true, returns immediately upon finding the first error
-    ///
-    /// ## Returns
-    /// - Empty vector if all validation rules pass
-    /// - Vector of SwiftValidationError instances for each rule violation found
-    ///
-    /// ## Default Implementation
-    /// Returns empty vector (no validation rules to check)
+    /// Validate SWIFT network rules (C/D/E series) for this message
     fn validate_network_rules(
         &self,
         _stop_on_first_error: bool,

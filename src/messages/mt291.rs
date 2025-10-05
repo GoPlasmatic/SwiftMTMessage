@@ -4,38 +4,39 @@ use crate::parser::MessageParser;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-/// MT291 - Request for Payment of Charges, Interest and Other Expenses
+/// **MT291: Request for Payment of Charges, Interest and Other Expenses**
 ///
-/// Used by financial institutions to request payment of charges, interest and other expenses.
+/// Request payment of charges, interest, and expenses.
+///
+/// **Usage:** Interbank charge payment requests, expense reimbursement
+/// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT291 {
-    /// Field 20 - Transaction Reference Number (Mandatory)
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    /// Field 21 - Related Reference (Mandatory)
+    /// Related Reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    /// Field 32B - Currency Code, Amount (Mandatory)
+    /// Currency Code, Amount (Field 32B)
     #[serde(rename = "32B")]
     pub field_32b: Field32B,
 
-    /// Field 52 - Ordering Institution (Optional)
-    /// Can be 52A or 52D
+    /// Ordering Institution (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52OrderingInstitution>,
 
-    /// Field 57 - Account With Institution (Optional)
-    /// Can be 57A, 57B, or 57D per MT n91 specification
+    /// Account With Institution (Field 57)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_57: Option<Field57AccountWithABD>,
 
-    /// Field 71B - Details of Charges (Mandatory)
+    /// Details of Charges (Field 71B)
     #[serde(rename = "71B")]
     pub field_71b: Field71B,
 
-    /// Field 72 - Sender to Receiver Information (Optional)
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub field_72: Option<Field72>,
 }

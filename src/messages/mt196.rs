@@ -3,33 +3,35 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT196: Answers
-// Used to provide comprehensive answers and responses to various queries and
-// requests related to customer payments and transactions.
-
+/// **MT196: Answers**
+///
+/// Comprehensive answers and responses to queries and requests related to customer payments.
+///
+/// **Usage:** Query responses, payment inquiries, status updates
+/// **Category:** Category 1 (Customer Payments & Cheques)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT196 {
-    // Sender's Reference
+    /// Sender's Reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Related Reference
+    /// Related Reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    // Answers (mandatory)
+    /// Answers (Field 76)
     #[serde(rename = "76")]
     pub field_76: Field76,
 
-    // Proprietary Message (optional)
+    /// Proprietary Message (Field 77A)
     #[serde(rename = "77A", skip_serializing_if = "Option::is_none")]
     pub field_77a: Option<Field77A>,
 
-    // Message Type and Date (optional)
+    /// Message Type and Date (Field 11)
     #[serde(rename = "11", skip_serializing_if = "Option::is_none")]
     pub field_11: Option<Field11>,
 
-    // Narrative (optional)
+    /// Narrative (Field 79)
     #[serde(rename = "79", skip_serializing_if = "Option::is_none")]
     pub field_79: Option<Field79>,
 }

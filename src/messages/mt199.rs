@@ -3,21 +3,23 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT199: Free Format Message
-// Used for free format communication between financial institutions regarding
-// customer payments and related matters.
-
+/// **MT199: Free Format Message**
+///
+/// Free format communication between financial institutions regarding customer payments.
+///
+/// **Usage:** General payment inquiries, informal communication, status messages
+/// **Category:** Category 1 (Customer Payments & Cheques)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT199 {
-    // Sender's Reference
+    /// Sender's Reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Related Reference (optional)
+    /// Related Reference (Field 21)
     #[serde(rename = "21", skip_serializing_if = "Option::is_none")]
     pub field_21: Option<Field21NoOption>,
 
-    // Narrative (mandatory)
+    /// Narrative (Field 79)
     #[serde(rename = "79")]
     pub field_79: Field79,
 }

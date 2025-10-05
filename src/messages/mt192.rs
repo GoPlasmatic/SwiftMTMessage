@@ -3,25 +3,27 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT192: Request for Cancellation
-// Used by the originator to request the cancellation of a previously sent
-// payment message before execution.
-
+/// **MT192: Request for Cancellation**
+///
+/// Request to cancel a previously sent payment message before execution.
+///
+/// **Usage:** Payment cancellation requests, transaction reversal
+/// **Category:** Category 1 (Customer Payments & Cheques)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT192 {
-    // Sender's Reference
+    /// Sender's Reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Related Reference
+    /// Related Reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    // MT and Date (Session details of original message)
+    /// MT and Date (Field 11S)
     #[serde(rename = "11S")]
     pub field_11s: Field11S,
 
-    // Narrative (optional) - cancellation reason and additional information
+    /// Narrative (Field 79)
     #[serde(rename = "79", skip_serializing_if = "Option::is_none")]
     pub field_79: Option<Field79>,
 }

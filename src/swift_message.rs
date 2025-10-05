@@ -1,4 +1,6 @@
-//! Complete SWIFT message with headers and body
+//! # SwiftMessage
+//!
+//! Complete SWIFT message with headers (Blocks 1-3, 5) and typed message body (Block 4).
 
 use crate::{
     ValidationError, ValidationResult,
@@ -8,7 +10,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
-/// Complete SWIFT message with headers and body
+/// Complete SWIFT message (headers + typed body)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwiftMessage<T: SwiftMessageBody> {
     /// Basic Header (Block 1)
@@ -33,12 +35,7 @@ pub struct SwiftMessage<T: SwiftMessageBody> {
 }
 
 impl<T: SwiftMessageBody> SwiftMessage<T> {
-    /// Check if this message contains reject codes (MT103 specific)
-    ///
-    /// Reject messages are identified by checking:
-    /// 1. Field 20 (Sender's Reference) for "REJT" prefix
-    /// 2. Block 3 field 108 (MUR - Message User Reference) for "REJT"
-    /// 3. Field 72 (Sender to Receiver Information) containing `/REJT/` code
+    /// Check if message contains reject codes (REJT in field 20, block 3 MUR, or field 72)
     pub fn has_reject_codes(&self) -> bool {
         // Check Block 3 field 108 (MUR - Message User Reference)
         if let Some(ref user_header) = self.user_header
@@ -65,12 +62,7 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
         false
     }
 
-    /// Check if this message contains return codes (MT103 specific)
-    ///
-    /// Return messages are identified by checking:
-    /// 1. Field 20 (Sender's Reference) for "RETN" prefix
-    /// 2. Block 3 field 108 (MUR - Message User Reference) for "RETN"
-    /// 3. Field 72 (Sender to Receiver Information) containing `/RETN/` code
+    /// Check if message contains return codes (RETN in field 20, block 3 MUR, or field 72)
     pub fn has_return_codes(&self) -> bool {
         // Check Block 3 field 108 (MUR - Message User Reference)
         if let Some(ref user_header) = self.user_header
@@ -123,11 +115,6 @@ impl<T: SwiftMessageBody> SwiftMessage<T> {
     }
 
     /// Validate message using SWIFT SR2025 network validation rules
-    ///
-    /// This method validates the message body using the new `validate_network_rules()` method
-    /// which provides detailed SWIFT error codes and structured validation errors.
-    ///
-    /// Returns a `ValidationResult` containing any validation errors found.
     pub fn validate(&self) -> ValidationResult {
         // Use the new validate_network_rules method
         let validation_errors = self.fields.validate_network_rules(false);

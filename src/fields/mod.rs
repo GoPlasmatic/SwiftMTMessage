@@ -1,47 +1,32 @@
 //! # SWIFT MT Message Fields
 //!
-//! ## Purpose
-//! Comprehensive field definitions for all SWIFT MT message types, providing type-safe parsing,
-//! validation, and serialization for individual message fields.
-//!
-//! ## Field Architecture
-//! Each field module provides:
-//! - **Type-Safe Structures**: Strongly-typed field definitions with validation
-//! - **Format Compliance**: SWIFT User Handbook format specification adherence
-//! - **Variant Support**: Complex enum fields with multiple format options (e.g., Field50: A/F/K)
-//! - **JSON Serialization**: Clean JSON output without enum wrapper layers
+//! Type-safe field definitions for all SWIFT MT message types with parsing,
+//! validation, and serialization support.
 //!
 //! ## Field Categories
-//! - **Reference Fields**: Transaction references, message references (Field 20, 21)
-//! - **Amount Fields**: Currencies, amounts, exchange rates (Field 32, 33, 36)
-//! - **Party Fields**: Customer and institution identification (Field 50-59)
-//! - **Date/Time Fields**: Value dates, execution dates (Field 30, 32A)
-//! - **Instruction Fields**: Processing instructions and codes (Field 23, 71)
-//! - **Information Fields**: Remittance and additional information (Field 70, 72)
+//! - **Reference:** Transaction/message references (20, 21)
+//! - **Amount:** Currencies, amounts, exchange rates (32, 33, 36)
+//! - **Party:** Customer and institution IDs (50-59)
+//! - **Date/Time:** Value dates, execution dates (30, 32A)
+//! - **Instruction:** Processing codes (23, 71)
+//! - **Information:** Remittance and additional info (70, 72)
 //!
-//! ## Field Format Support
-//! All fields support SWIFT format specifications:
-//! - `n`: Numeric characters (0-9)
-//! - `a`: Alphabetic characters (A-Z, a-z)
-//! - `c`: Capital letters (A-Z)
-//! - `x`: Any character except spaces
-//! - `h`: Hexadecimal characters (0-9, A-F)
-//! - `d`: Decimal numbers with precision
+//! ## Format Notation
+//! - `n` = numeric (0-9)
+//! - `a` = alphabetic (A-Z, a-z)
+//! - `c` = uppercase (A-Z)
+//! - `x` = any char
+//! - `d` = decimal with precision
+//! - `!` = exact length, `*` = max length
 //!
-//! ## Usage Example
+//! ## Usage
 //! ```rust
-//! use swift_mt_message::fields::{Field20, Field32A, Field50OrderingCustomerAFK, Field59};
+//! use swift_mt_message::fields::{Field20, Field32A};
 //! use swift_mt_message::SwiftField;
 //!
 //! # fn main() -> swift_mt_message::Result<()> {
-//! // Parse simple field
-//! let field_20 = Field20::parse("TXN123456")?;
-//!
-//! // Parse complex amount field
-//! let field_32a = Field32A::parse("240315USD1000,00")?;
-//!
-//! // Parse enum field with variant
-//! let field_50 = Field50OrderingCustomerAFK::parse_with_variant("JOHN DOE\n123 MAIN ST", Some("K"), Some("50"))?;
+//! let ref_field = Field20::parse("TXN123456")?;
+//! let amt_field = Field32A::parse("240315USD1000,00")?;
 //! # Ok(())
 //! # }
 //! ```

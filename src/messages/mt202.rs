@@ -4,103 +4,96 @@ use crate::parser::MessageParser;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-/// MT202 Sequence B - Cover Payment Details (MT202 COV)
-/// Contains underlying customer transfer information
+/// Sequence B - Cover Payment Details (MT202 COV)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT202SequenceB {
-    /// Field 50 - Ordering Customer (Optional, COV only)
+    /// Ordering Customer (Field 50)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub ordering_customer: Option<Field50OrderingCustomerAFK>,
 
-    /// Field 52 - Ordering Institution (Optional, COV Sequence B)
+    /// Ordering Institution (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub ordering_institution: Option<Field52OrderingInstitution>,
 
-    /// Field 56 - Intermediary (Optional, COV Sequence B)
+    /// Intermediary (Field 56)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub intermediary: Option<Field56Intermediary>,
 
-    /// Field 57 - Account With Institution (Optional, COV Sequence B)
+    /// Account With Institution (Field 57)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub account_with_institution: Option<Field57AccountWithInstitution>,
 
-    /// Field 59 - Beneficiary Customer (Optional, COV only)
+    /// Beneficiary Customer (Field 59)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub beneficiary_customer: Option<Field59>,
 
-    /// Field 70 - Remittance Information (Optional, COV only)
+    /// Remittance Information (Field 70)
     #[serde(rename = "70", skip_serializing_if = "Option::is_none")]
     pub remittance_information: Option<Field70>,
 
-    /// Field 72 - Sender to Receiver Information (Optional, COV Sequence B)
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub sender_to_receiver_information: Option<Field72>,
 
-    /// Field 33B - Currency/Instructed Amount (Optional, COV only)
+    /// Currency/Instructed Amount (Field 33B)
     #[serde(rename = "33B", skip_serializing_if = "Option::is_none")]
     pub currency_amount: Option<Field33B>,
 }
 
-/// MT202 - General Financial Institution Transfer
+/// **MT202: General Financial Institution Transfer**
 ///
-/// Used for bank-to-bank transfers on behalf of a customer or another financial institution.
-/// Can be used for both direct transfers and cover payments (MT202 COV).
+/// Bank-to-bank transfer on behalf of customer or financial institution.
+/// Supports both direct transfers and cover payments (MT202 COV).
+///
+/// **Usage:** Interbank transfers, cover payments, correspondent banking
+/// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT202 {
-    // Sequence A - Basic Transfer Details
-    /// Field 20 - Transaction Reference Number (Mandatory)
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    /// Field 21 - Related Reference (Mandatory)
+    /// Related Reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    /// Field 13C - Time Indication (Optional, Repetitive)
+    /// Time Indication (Field 13C)
     #[serde(rename = "13C", skip_serializing_if = "Option::is_none")]
     pub field_13c: Option<Vec<Field13C>>,
 
-    /// Field 32A - Value Date, Currency Code, Amount (Mandatory)
+    /// Value Date, Currency Code, Amount (Field 32A)
     #[serde(rename = "32A")]
     pub field_32a: Field32A,
 
-    /// Field 52 - Ordering Institution (Optional)
-    /// Can be 52A or 52D
+    /// Ordering Institution (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52OrderingInstitution>,
 
-    /// Field 53 - Sender's Correspondent (Optional)
-    /// Can be 53A, 53B, or 53D
+    /// Sender's Correspondent (Field 53)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_53: Option<Field53SenderCorrespondent>,
 
-    /// Field 54 - Receiver's Correspondent (Optional)
-    /// Can be 54A, 54B, or 54D
+    /// Receiver's Correspondent (Field 54)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_54: Option<Field54ReceiverCorrespondent>,
 
-    /// Field 56 - Intermediary Institution (Optional)
-    /// Can be 56A or 56D
+    /// Intermediary Institution (Field 56)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_56: Option<Field56Intermediary>,
 
-    /// Field 57 - Account With Institution (Optional)
-    /// Can be 57A, 57B, or 57D
+    /// Account With Institution (Field 57)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_57: Option<Field57AccountWithInstitution>,
 
-    /// Field 58 - Beneficiary Institution (Mandatory)
-    /// Can be 58A or 58D
+    /// Beneficiary Institution (Field 58)
     #[serde(flatten)]
     pub field_58: Field58,
 
-    /// Field 72 - Sender to Receiver Information (Optional)
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub field_72: Option<Field72>,
 
-    // Sequence B - Cover Payment Details (MT202 COV)
-    /// Sequence B is optional - only present for MT202 COV messages
-    /// Uses # container to avoid field tag collisions with Sequence A
+    /// Sequence B - Cover Payment Details
     #[serde(rename = "#", skip_serializing_if = "Option::is_none")]
     pub sequence_b: Option<MT202SequenceB>,
 }

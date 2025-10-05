@@ -4,67 +4,63 @@ use crate::parser::MessageParser;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-/// MT205 - Financial Institution Transfer Execution
+/// **MT205: Financial Institution Transfer Execution**
 ///
-/// Used to advise the execution of a transfer previously initiated by an MT200 or MT202.
-/// Often used for cover payments and to provide additional details about a transfer.
+/// Advises execution of transfer previously initiated by MT200 or MT202.
+///
+/// **Usage:** Cover payments, transfer execution advice, additional transfer details
+/// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT205 {
-    /// Field 20 - Transaction Reference Number (Mandatory)
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub transaction_reference: Field20,
 
-    /// Field 21 - Related Reference (Mandatory)
+    /// Related Reference (Field 21)
     #[serde(rename = "21")]
     pub related_reference: Field21NoOption,
 
-    /// Field 13C - Time Indication (Optional, Repetitive)
+    /// Time Indication (Field 13C)
     #[serde(rename = "13C", skip_serializing_if = "Option::is_none")]
     pub time_indication: Option<Vec<Field13C>>,
 
-    /// Field 23B - Bank Operation Code (Optional)
+    /// Bank Operation Code (Field 23B)
     #[serde(rename = "23B", skip_serializing_if = "Option::is_none")]
     pub bank_operation_code: Option<Field23B>,
 
-    /// Field 32A - Value Date, Currency Code, Amount (Mandatory)
+    /// Value Date, Currency Code, Amount (Field 32A)
     #[serde(rename = "32A")]
     pub value_date_amount: Field32A,
 
-    /// Field 33B - Currency Code, Instructed Amount (Optional)
+    /// Currency Code, Instructed Amount (Field 33B)
     #[serde(rename = "33B", skip_serializing_if = "Option::is_none")]
     pub instructed_amount: Option<Field33B>,
 
-    /// Field 52 - Ordering Institution (Optional)
-    /// Can be 52A or 52D
+    /// Ordering Institution (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub ordering_institution: Option<Field52OrderingInstitution>,
 
-    /// Field 53 - Sender's Correspondent (Optional)
-    /// Can be 53A, 53B, or 53D
+    /// Sender's Correspondent (Field 53)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub senders_correspondent: Option<Field53>,
 
-    /// Field 54 - Receiver's Correspondent (Optional)
-    /// Can be 54A, 54B, or 54D
+    /// Receiver's Correspondent (Field 54)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub receivers_correspondent: Option<Field54>,
 
-    /// Field 56 - Intermediary Institution (Optional)
-    /// Can be 56A or 56D
+    /// Intermediary Institution (Field 56)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub intermediary: Option<Field56>,
 
-    /// Field 57 - Account With Institution (Optional)
-    /// Can be 57A, 57B, or 57D
+    /// Account With Institution (Field 57)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub account_with_institution: Option<Field57>,
 
-    /// Field 58 - Beneficiary Institution (Mandatory)
-    /// Can be 58A or 58D
+    /// Beneficiary Institution (Field 58)
     #[serde(flatten)]
     pub beneficiary_institution: Field58,
 
-    /// Field 72 - Sender to Receiver Information (Optional)
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub sender_to_receiver: Option<Field72>,
 }

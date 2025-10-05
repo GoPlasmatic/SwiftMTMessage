@@ -5,31 +5,31 @@ use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// MT292 - Request for Cancellation
+/// **MT292: Request for Cancellation**
 ///
-/// Used to request a cancellation of a previously sent SWIFT message.
-/// Can be used for full or partial cancellation.
+/// Request to cancel previously sent message.
+///
+/// **Usage:** Payment cancellation requests
+/// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT292 {
-    /// Field 20 - Transaction Reference Number (Mandatory)
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    /// Field 21 - Related Reference (Mandatory)
+    /// Related Reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    /// Field 11S - MT and Date of the Original Message (Mandatory)
+    /// MT and Date of the Original Message (Field 11S)
     #[serde(rename = "11S")]
     pub field_11s: Field11S,
 
-    /// Field 79 - Narrative Description of Original Message (Conditional)
-    /// Must be present if copy of original message fields is not included
+    /// Narrative Description of Original Message (Field 79)
     #[serde(rename = "79", skip_serializing_if = "Option::is_none")]
     pub field_79: Option<Field79>,
 
-    /// Copy of mandatory fields from the original message (Conditional)
-    /// Stored as additional fields that were part of the original message
+    /// Copy of mandatory fields from original message
     #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
     pub original_fields: HashMap<String, serde_json::Value>,
 }

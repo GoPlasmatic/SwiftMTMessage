@@ -3,109 +3,22 @@ use crate::errors::ParseError;
 use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
 
-///   **Field 70: Remittance Information**
+/// **Field 70: Remittance Information**
 ///
-/// ## Purpose
-/// Specifies details of individual transactions or references to other messages containing
-/// details to be transmitted to the beneficiary customer. This field carries payment-related
-/// information that helps the beneficiary identify the purpose of the payment, reconcile
-/// accounts, and process the transaction appropriately. Critical for STP processing and
-/// beneficiary transaction identification.
+/// Payment details and references transmitted to beneficiary for
+/// transaction identification and reconciliation.
 ///
-/// ## Format Specification
-/// - **Swift Format**: `4*35x`
-/// - **Structure**: Up to 4 lines of 35 characters each
-/// - **Content**: Narrative format with structured codes and references
-/// - **Character Set**: SWIFT character set (A-Z, 0-9, space, and limited special characters)
+/// **Format:** `4*35x` (max 4 lines, 35 chars each)
+/// **Common codes:** `/INV/` (invoice), `/RFB/` (reference for beneficiary), `/ROC/` (reference of customer)
 ///
-/// ## Business Context Applications
-/// - **Payment Instructions**: MT 103 STP and customer credit transfers
-/// - **Beneficiary Information**: Details for payment recipient identification
-/// - **Invoice References**: Commercial payment references and invoice details
-/// - **Trade Finance**: Documentary credit and trade transaction references
-///
-/// ## Network Validation Requirements
-/// - **Length Restrictions**: Maximum 4 lines of 35 characters each
-/// - **Character Set**: Must use valid SWIFT character set
-/// - **Format Compliance**: Structured codes must follow specified formats
-/// - **Reference Validation**: Invoice and payment references must be properly formatted
-/// - **STP Requirements**: ISO 11649 Creditor Reference must appear alone on first line for STP
-///
-/// ## Structured Content Codes
-/// ### Payment References
-/// - **INV**: Invoice reference followed by date, reference, and details
-/// - **IPI**: International Payment Instruction (up to 20 characters)
-/// - **RFB**: Reference for Beneficiary (up to 16 characters)
-/// - **ROC**: Reference of Customer
-/// - **TSU**: Trade Services Utility transaction reference
-///
-/// ### Format Examples
-/// ```logic
-/// :70:/INV/20231215/INV-12345/Payment for goods
-/// :70:/RFB/PAY-REF-789456
-/// :70:/ROC/Customer order 123456
-/// :70:PAYMENT FOR SERVICES RENDERED
+/// **Example:**
+/// ```text
+/// :70:/INV/20231215/INV-12345
+/// PAYMENT FOR SERVICES
 /// ```
-///
-/// ## STP Processing Requirements
-/// ### ISO 11649 Creditor Reference
-/// - Must appear alone on first line
-/// - Format: Creditor Reference (up to 25 characters)
-/// - When present, enables full STP processing
-/// - Must not be combined with other information on same line
-///
-/// ### Structured References
-/// - Invoice references enable automated reconciliation
-/// - Payment references support automated matching
-/// - Customer references facilitate transaction identification
-///
-/// ## Regional Considerations
-/// - **European Payments**: ISO 11649 reference standards for SEPA
-/// - **US Payments**: ACH addenda record mappings and requirements
-/// - **Asian Markets**: Local language considerations for beneficiary details
-/// - **Cross-Border**: Multi-language and character set requirements
-///
-/// ## Error Prevention Guidelines
-/// - **Character Validation**: Verify all characters are SWIFT-compliant
-/// - **Line Length**: Ensure no line exceeds 35 characters
-/// - **Reference Formats**: Validate structured reference formats
-/// - **STP Compliance**: Verify ISO 11649 reference format when used
-///
-/// ## Related Fields Integration
-/// - **Field 20**: Sender's Reference (transaction identification)
-/// - **Field 21**: Related Reference (linked transaction reference)
-/// - **Field 59**: Beneficiary Customer (recipient details)
-/// - **Field 72**: Sender to Receiver Information (bank-to-bank info)
-///
-/// ## Compliance Framework
-/// - **Regulatory Reporting**: Transaction purpose for compliance monitoring
-/// - **Anti-Money Laundering**: Payment purpose verification requirements
-/// - **Tax Reporting**: Invoice and payment reference documentation
-/// - **Audit Requirements**: Complete transaction documentation standards
-///
-/// ## Best Practices
-/// - **Clear References**: Use unambiguous invoice/payment references
-/// - **Structured Codes**: Prefer structured codes for STP processing
-/// - **Concise Information**: Keep descriptions clear and brief
-/// - **Character Compliance**: Use only SWIFT-approved characters
-///
-/// ## Common Patterns
-/// - Invoice payments: /INV/ followed by invoice details
-/// - Salary payments: Clear employee/period references
-/// - Trade transactions: Documentary credit references
-/// - Service payments: Contract or service agreement references
-///
-/// ## See Also
-/// - Swift FIN User Handbook: Remittance Information Field Specifications
-/// - ISO 11649: Structured Creditor Reference to Remittance Information
-/// - SEPA Implementation Guidelines: Remittance Information Standards
-/// - Payment Processing Standards: Beneficiary Information Requirements
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field70 {
-    /// Remittance information narrative
-    ///
-    /// Format: 4*35x - Up to 4 lines of 35 characters each
-    /// Contains payment details, invoice references, or other remittance information
+    /// Remittance narrative (max 4 lines, 35 chars each)
     pub narrative: Vec<String>,
 }
 

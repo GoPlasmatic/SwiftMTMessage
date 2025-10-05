@@ -3,93 +3,39 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-/// MT950: Statement Message
+/// **MT950: Statement Message**
 ///
-/// ## Purpose
-/// Used to transmit account statement information with a simplified structure focusing
-/// on balance information and essential transaction data. This message provides streamlined
-/// account reporting for efficient processing and communication.
+/// Detailed account statement for financial institution accounts.
 ///
-/// ## Scope
-/// This message is:
-/// - Sent by account servicing institutions for streamlined statement delivery
-/// - Used for simplified account reporting with essential information
-/// - Applied when detailed narrative information is not required
-/// - Essential for automated processing and high-volume account reporting
-/// - Part of efficient account management and customer communication systems
-///
-/// ## Key Features
-/// - **Simplified Structure**: Streamlined format for efficient processing
-/// - **Essential Information**: Focus on key balance and transaction data
-/// - **Multiple Transactions**: Support for multiple statement line entries
-/// - **Balance Information**: Opening and closing balance with currency consistency
-/// - **Available Balance**: Optional available balance information
-/// - **Automated Processing**: Optimized for automated statement processing systems
-///
-/// ## Common Use Cases
-/// - High-volume account statement processing
-/// - Automated statement delivery systems
-/// - Simplified account reporting for operational accounts
-/// - Batch processing of multiple account statements
-/// - System-to-system account information exchange
-/// - Streamlined cash management reporting
-/// - Efficient correspondent banking statement delivery
-/// - Simplified regulatory reporting requirements
-///
-/// ## Field Structure
-/// - **20**: Transaction Reference (mandatory) - Unique statement reference
-/// - **25**: Account Identification (mandatory) - Account being reported
-/// - **28C**: Statement Number/Sequence (mandatory) - Statement numbering
-/// - **60**: Opening Balance (mandatory) - Starting balance for statement period
-/// - **61**: Statement Line (optional, repetitive) - Individual transaction entries
-/// - **62**: Closing Balance (mandatory) - Ending balance for statement period
-/// - **64**: Available Balance (optional) - Available balance information
-///
-/// ## Field Details
-/// ### Field 61 - Statement Line
-/// Multiple statement lines can be included, each containing:
-/// - **Value Date**: Date when transaction becomes effective
-/// - **Entry Date**: Date when transaction was posted (optional)
-/// - **Credit/Debit Mark**: C (Credit) or D (Debit) entry
-/// - **Amount**: Transaction amount
-/// - **Transaction Type**: SWIFT transaction type identification
-/// - **Reference**: Transaction reference number
-///
-/// ## Network Validation Rules
-/// - **Currency Consistency**: Opening and closing balances must use the same currency
-/// - **Available Balance Currency**: Available balances must use same currency as main balances
-/// - **Reference Format**: Transaction references must follow SWIFT formatting standards
-/// - **Required Fields**: All mandatory fields must be present and properly formatted
-/// - **Balance Logic**: Closing balance should reflect opening balance plus/minus transactions
-/// - **Date Validation**: All dates must be valid and properly sequenced
-
+/// **Usage:** Nostro/vostro statements, interbank reconciliation
+/// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT950 {
-    // Transaction Reference Number
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Account Identification
+    /// Account Identification (Field 25)
     #[serde(rename = "25")]
     pub field_25: Field25NoOption,
 
-    // Statement Number/Sequence Number
+    /// Statement Number/Sequence Number (Field 28C)
     #[serde(rename = "28C")]
     pub field_28c: Field28C,
 
-    // Opening Balance
+    /// Opening Balance (Field 60)
     #[serde(rename = "60")]
     pub field_60: Field60,
 
-    // Statement Lines (optional, repetitive)
+    /// Statement Lines (Field 61)
     #[serde(rename = "61", skip_serializing_if = "Option::is_none")]
     pub field_61: Option<Vec<Field61>>,
 
-    // Closing Balance
+    /// Closing Balance (Field 62)
     #[serde(rename = "62")]
     pub field_62: Field62,
 
-    // Closing Available Balance (optional)
+    /// Closing Available Balance (Field 64)
     #[serde(rename = "64", skip_serializing_if = "Option::is_none")]
     pub field_64: Option<Field64>,
 }

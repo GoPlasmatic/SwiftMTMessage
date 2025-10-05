@@ -1,166 +1,52 @@
 //! # SWIFT Message Headers and Trailers
 //!
-//! ## Purpose
-//! Comprehensive header and trailer structures for SWIFT MT messages, implementing the complete
-//! SWIFT FIN block structure including Basic Header (Block 1), Application Header (Block 2),
-//! User Header (Block 3), and Trailer (Block 5).
+//! SWIFT FIN block structures for MT message headers and trailers.
 //!
 //! ## Block Structure
-//! - **Block 1**: Basic Header - Sender identification and routing information
-//! - **Block 2**: Application Header - Message type and delivery information
-//! - **Block 3**: User Header - Optional user-defined fields and references
-//! - **Block 5**: Trailer - Optional authentication and delivery confirmation
+//! - **Block 1:** Basic Header - Sender identification and routing
+//! - **Block 2:** Application Header - Message type and delivery info
+//! - **Block 3:** User Header - Optional service tags (UETR, validation flags)
+//! - **Block 5:** Trailer - Security (MAC, checksum) and control tags
 //!
-//! ## Features
-//! - **Complete SWIFT Compliance**: Follows SWIFT User Handbook specifications
-//! - **Type-Safe Parsing**: Strongly-typed header structures with validation
-//! - **Authentication Support**: MAC and authentication key handling
-//! - **Sample Generation**: Realistic header generation for testing
-//! - **Network Validation**: BIC validation and routing verification
+//! ## Usage
+//! ```rust
+//! use swift_mt_message::headers::{BasicHeader, ApplicationHeader};
+//!
+//! # fn main() -> swift_mt_message::Result<()> {
+//! let basic = BasicHeader::parse("F01DEUTDEFFAXXX0000123456")?;
+//! let app = ApplicationHeader::parse("I103CHASUS33AXXXN")?;
+//! # Ok(())
+//! # }
+//! ```
 
 use crate::errors::{ParseError, Result};
 use serde::{Deserialize, Serialize};
 
-/// **Basic Header (Block 1): SWIFT Message Identification and Routing**
+/// **Block 1: Basic Header**
 ///
-/// ## Purpose
-/// The Basic Header constitutes the first mandatory block of every SWIFT message, providing
-/// essential identification, routing, and sequencing information. This header enables the
-/// SWIFT network to authenticate the sender, route the message appropriately, and maintain
-/// message sequence integrity across the global financial messaging infrastructure.
+/// Sender identification and message routing information.
 ///
-/// ## Format Specification
-/// - **Block Format**: `{1:F01SSSSSSSSSCCC0000NNNNNN}`
-/// - **Total Length**: Exactly 25 characters
-/// - **Structure**: Application ID + Service ID + LT Address + Session + Sequence
-/// - **Character Set**: Alphanumeric, uppercase only
+/// **Format:** `F01SSSSSSSSSCCC0000NNNNNN` (25 chars)
+/// - App ID (1): F=FIN, A=GPA
+/// - Service (2): 01=FIN, 03=FIN Copy
+/// - LT Address (12): BIC + terminal + branch
+/// - Session (4): 0000-9999
+/// - Sequence (6): 000000-999999
 ///
-/// ## Business Context Applications
-/// - **Message Authentication**: Sender identification and verification
-/// - **Network Routing**: Logical terminal addressing for message delivery
-/// - **Session Management**: Message sequencing within communication sessions
-/// - **Audit Trail**: Complete message tracking and reconciliation
-///
-/// ## Component Breakdown
-/// ### Application Identifier (1 character)
-/// - **F**: FIN application (Financial messages)
-/// - **A**: GPA application (General Purpose Application)
-/// - **L**: GPA application (for certain message types)
-/// - **Usage**: Determines message processing rules and validation
-///
-/// ### Service Identifier (2 characters)
-/// - **01**: FIN service (standard financial messages)
-/// - **03**: FIN Copy service (third-party copy)
-/// - **05**: GPA service
-/// - **21**: ACK/NAK service
-///
-/// ### Logical Terminal Address (12 characters)
-/// - **BIC Code**: First 8 characters (institution identifier)
-/// - **Terminal Code**: Next 1 character (logical terminal)
-/// - **Branch Code**: Last 3 characters (XXX for head office)
-/// - **Format**: Must be valid SWIFT-connected BIC
-///
-/// ## Network Validation Requirements
-/// - **BIC Validation**: Must be active SWIFT participant
-/// - **Service Compatibility**: Service ID must match message type
-/// - **Session Validity**: Session number must be within valid range
-/// - **Sequence Continuity**: Sequence numbers must be sequential
-///
-/// ## Session and Sequence Management
-/// ### Session Number (4 digits)
-/// - **Range**: 0000-9999
-/// - **Purpose**: Groups related messages within a session
-/// - **Reset**: Can be reset based on bilateral agreement
-/// - **Tracking**: Used for message reconciliation
-///
-/// ### Sequence Number (6 digits)
-/// - **Range**: 000000-999999
-/// - **Increment**: Sequential within session
-/// - **Uniqueness**: Combined with session ensures message uniqueness
-/// - **Recovery**: Critical for message recovery procedures
-///
-/// ## Regional Considerations
-/// - **Time Zones**: LT address determines processing time zone
-/// - **Operating Hours**: Service availability based on regional center
-/// - **Holiday Schedules**: Regional holiday impacts on processing
-/// - **Regulatory Compliance**: Regional reporting requirements
-///
-/// ## Error Prevention Guidelines
-/// - **BIC Accuracy**: Verify sender BIC is authorized for service
-/// - **Sequence Management**: Maintain strict sequence number control
-/// - **Session Coordination**: Coordinate session numbers with correspondent
-/// - **Format Compliance**: Ensure exact 25-character length
-///
-/// ## Security and Authentication
-/// - **Sender Authentication**: BIC must match authenticated connection
-/// - **Message Integrity**: Header contributes to message MAC calculation
-/// - **Non-repudiation**: Sender identification cannot be disputed
-/// - **Audit Trail**: Complete tracking from sender to receiver
-///
-/// ## Integration with Other Blocks
-/// - **Block 2**: Message type and routing continuation
-/// - **Block 3**: Optional user header for enhanced services
-/// - **Block 4**: Message text validated based on Block 1 service
-/// - **Block 5**: Trailer with checksums and authentication
-///
-/// ## Compliance Framework
-/// - **SWIFT Standards**: Full compliance with FIN interface standards
-/// - **Service Level Agreements**: Performance guarantees based on service
-/// - **Regulatory Reporting**: Sender identification for compliance
-/// - **Audit Requirements**: Complete message trail maintenance
-///
-/// ## Best Practices
-/// - **BIC Management**: Keep BIC directory updated
-/// - **Sequence Control**: Implement robust sequence management
-/// - **Session Planning**: Plan session number allocation
-/// - **Error Recovery**: Implement sequence gap detection
-///
-/// ## See Also
-/// - SWIFT FIN Interface Standards: Block 1 Specifications
-/// - BIC Directory: Valid SWIFT Participant Codes
-/// - Session Management Guide: Best Practices
-/// - Message Sequencing: Control and Recovery Procedures
+/// **Example:** `F01DEUTDEFFAXXX0000123456`
 #[derive(Debug, Clone, PartialEq)]
 pub struct BasicHeader {
-    /// Application identifier
-    ///
-    /// Format: 1!a - Single alphabetic character
-    /// Values: F (FIN), A (GPA), L (GPA legacy)
-    /// Determines message processing rules and validation requirements
+    /// Application ID (F, A, L)
     pub application_id: String,
-
-    /// Service identifier
-    ///
-    /// Format: 2!n - Two numeric characters
-    /// Common values: 01 (FIN), 03 (FIN Copy), 05 (GPA), 21 (ACK/NAK)
-    /// Specifies the SWIFT service type for message handling
+    /// Service ID (01, 03, 05, 21)
     pub service_id: String,
-
-    /// Logical Terminal (LT) address
-    ///
-    /// Format: 12!c - 12 alphanumeric characters
-    /// Structure: 8-char BIC + 1-char terminal + 3-char branch
-    /// Uniquely identifies the sending terminal in SWIFT network
+    /// Logical terminal address (12 chars)
     pub logical_terminal: String,
-
-    /// Sender BIC extracted from logical terminal
-    ///
-    /// Format: 8!c - First 8 characters of logical terminal
-    /// The sending institution's Bank Identifier Code
+    /// Sender BIC (8 chars)
     pub sender_bic: String,
-
-    /// Session number
-    ///
-    /// Format: 4!n - Four numeric digits (0000-9999)
-    /// Groups related messages within a communication session
-    /// Used for message reconciliation and recovery procedures
+    /// Session number (4 digits)
     pub session_number: String,
-
-    /// Sequence number
-    ///
-    /// Format: 6!n - Six numeric digits (000000-999999)
-    /// Sequential message counter within session
-    /// Critical for message ordering and duplicate detection
+    /// Sequence number (6 digits)
     pub sequence_number: String,
 }
 
@@ -343,51 +229,24 @@ impl std::fmt::Display for BasicHeader {
     }
 }
 
-/// **Input Application Header: Message Sent to SWIFT Network**
+/// **Input Application Header**
 ///
-/// ## Purpose
-/// Represents messages being sent to the SWIFT network for processing and delivery.
-/// Contains routing information, priority settings, and delivery monitoring options.
+/// Message being sent to SWIFT network.
 ///
-/// ## Format Specification
-/// - **Format**: `{2:I103DDDDDDDDDDDDP[M][OOO]}`
-/// - **Length**: 17-21 characters
-/// - **Components**: Direction (I) + Type + Destination + Priority + Optional monitoring/obsolescence
+/// **Format:** `I103DDDDDDDDDDDDP[M][OOO]` (17-21 chars)
 #[derive(Debug, Clone, PartialEq)]
 pub struct InputApplicationHeader {
-    /// Message type
-    ///
-    /// Format: 3!n - Three numeric digits
-    /// Examples: 103 (Customer Transfer), 202 (Bank Transfer), 940 (Statement)
+    /// Message type (3 digits: 103, 202, 940, etc.)
     pub message_type: String,
-
-    /// Destination address
-    ///
-    /// Format: 12!c - 12 alphanumeric characters
-    /// Structure: 8-char BIC + 1-char terminal + 3-char branch
+    /// Destination address (12 chars: BIC + terminal + branch)
     pub destination_address: String,
-
-    /// Receiver BIC extracted from destination address
-    ///
-    /// Format: 8!c - First 8 characters of destination
+    /// Receiver BIC (8 chars)
     pub receiver_bic: String,
-
-    /// Message priority
-    ///
-    /// Format: 1!a - Single alphabetic character
-    /// Values: U (Urgent), N (Normal), S (System)
+    /// Priority (U=Urgent, N=Normal, S=System)
     pub priority: String,
-
-    /// Delivery monitoring option
-    ///
-    /// Format: 1!n - Single numeric digit
-    /// Values: 1 (Non-delivery warning), 2 (Delivery notification), 3 (Both)
+    /// Delivery monitoring (1, 2, 3)
     pub delivery_monitoring: Option<String>,
-
-    /// Obsolescence period
-    ///
-    /// Format: 3!n - Three numeric digits
-    /// Range: 003-999 (units of 5 minutes)
+    /// Obsolescence period (003-999, units of 5 min)
     pub obsolescence_period: Option<String>,
 }
 
@@ -467,190 +326,36 @@ impl<'de> serde::Deserialize<'de> for InputApplicationHeader {
     }
 }
 
-/// **Output Application Header: Message Delivered from SWIFT Network**
+/// **Output Application Header**
 ///
-/// ## Purpose
-/// Represents messages delivered from the SWIFT network to the receiver.
-/// Contains complete Message Input Reference (MIR), timing information, and delivery confirmation.
+/// Message delivered from SWIFT network.
 ///
-/// ## Format Specification
-/// - **Format**: `{2:O103HHMMYYYYMMDDDDDDDDDDDDDDNNNNSSSSSSYYYYMMDDHHMMP}`
-/// - **Length**: 46-47 characters
-/// - **Components**: Direction (O) + Type + Input time + MIR + Output date/time + Priority
+/// **Format:** `O103HHMMYYYYMMDDDDDDDDDDDDDDNNNNSSSSSSYYYYMMDDHHMMP` (46-47 chars)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OutputApplicationHeader {
-    /// Message type
-    ///
-    /// Format: 3!n - Three numeric digits
-    /// Examples: 103 (Customer Transfer), 202 (Bank Transfer), 940 (Statement)
+    /// Message type (3 digits)
     pub message_type: String,
-
-    /// Input time
-    ///
-    /// Format: HHMM - The hour and minute when the sender sent the message
+    /// Input time (HHMM)
     pub input_time: String,
-
-    /// MIR (Message Input Reference)
-    ///
-    /// Complete MIR structure including date, LT address, session, and sequence
+    /// Message Input Reference (MIR)
     pub mir: MessageInputReference,
-
-    /// Output date
-    ///
-    /// Format: YYMMDD - The output date local to the receiver
+    /// Output date (YYMMDD)
     pub output_date: String,
-
-    /// Output time
-    ///
-    /// Format: HHMM - The output time local to the receiver
+    /// Output time (HHMM)
     pub output_time: String,
-
-    /// Message priority
-    ///
-    /// Format: 1!a - Single alphabetic character
-    /// Values: U (Urgent), N (Normal), S (System)
+    /// Priority (U, N, S)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub priority: Option<String>,
 }
 
-/// **Application Header (Block 2): Message Type and Routing Information**
+/// **Block 2: Application Header**
 ///
-/// ## Purpose
-/// The Application Header provides essential message type identification and routing
-/// information, enabling the SWIFT network to properly categorize, prioritize, and
-/// deliver messages. This header determines processing rules, delivery monitoring,
-/// and time-critical handling requirements for financial messages.
+/// Message type and routing information.
+/// Direction-dependent: Input (I) for outgoing, Output (O) for incoming messages.
 ///
-/// ## Format Specification
-/// - **Input Format**: `{2:I103DDDDDDDDDDDDP[M][OOO]}`
-/// - **Output Format**: `{2:O103HHMMYYYYMMDDDDDDDDDDDDDDNNNNSSSSSSYYYYMMDDHHMMP}`
-/// - **Direction Dependent**: Structure varies for input (I) vs output (O)
-/// - **Variable Length**: 17-21 characters for input, 46-47 for output
-///
-/// ## Business Context Applications
-/// - **Message Classification**: Determines processing rules by message type
-/// - **Priority Handling**: Urgent vs normal message processing
-/// - **Delivery Assurance**: Monitoring and non-delivery notifications
-/// - **Time Management**: Obsolescence period for time-sensitive messages
-///
-/// ## Direction Indicator
-/// ### Input Messages (I)
-/// - **Sender Perspective**: Messages being sent to SWIFT
-/// - **Validation**: Full message validation applied
-/// - **Routing**: To destination specified in header
-/// - **Storage**: Stored in sender's message archive
-///
-/// ### Output Messages (O)
-/// - **Receiver Perspective**: Messages delivered from SWIFT
-/// - **Delivery**: Includes delivery timestamp and MIR
-/// - **Status**: Confirmed successful delivery
-/// - **Archive**: Stored in receiver's message archive
-///
-/// ## Message Type Classification
-/// ### Category 1: Customer Payments (MT 1nn)
-/// - **MT 103**: Single Customer Credit Transfer
-/// - **MT 110**: Advice of Cheque
-/// - **Priority**: Often urgent for same-day value
-///
-/// ### Category 2: Bank Transfers (MT 2nn)
-/// - **MT 202**: General Financial Institution Transfer
-/// - **MT 202COV**: Cover Payment
-/// - **Priority**: High priority for bank liquidity
-///
-/// ### Category 9: Balance and Status (MT 9nn)
-/// - **MT 940**: Customer Statement
-/// - **MT 950**: Statement Message
-/// - **Priority**: Normal, end-of-day processing
-///
-/// ## Priority Management
-/// ### Urgent Priority (U)
-/// - **Processing**: Immediate, ahead of normal messages
-/// - **Use Cases**: Time-critical payments, cut-off deadlines
-/// - **Delivery**: Fastest available route
-/// - **Cost**: Premium pricing may apply
-///
-/// ### Normal Priority (N)
-/// - **Processing**: Standard queue processing
-/// - **Use Cases**: Regular payments and messages
-/// - **Delivery**: Standard delivery timeframes
-/// - **Cost**: Standard message pricing
-///
-/// ### System Priority (S)
-/// - **Processing**: System-generated messages
-/// - **Use Cases**: ACKs, NAKs, system notifications
-/// - **Delivery**: Highest priority delivery
-/// - **Access**: Reserved for SWIFT system use
-///
-/// ## Delivery Monitoring Options
-/// ### Non-Delivery Warning (1)
-/// - **Timeout**: Warning if not delivered within set time
-/// - **Action**: Sender notified of delivery delay
-/// - **Use Case**: Important but not critical messages
-///
-/// ### Delivery Notification (3)
-/// - **Confirmation**: Positive delivery confirmation required
-/// - **Notification**: MT 011 sent upon successful delivery
-/// - **Use Case**: Critical messages requiring confirmation
-///
-/// ### No Monitoring (blank)
-/// - **Standard**: Default delivery without monitoring
-/// - **Notification**: No delivery status updates
-/// - **Use Case**: Routine, non-critical messages
-///
-/// ## Obsolescence Period
-/// - **Format**: 3 numeric digits (003-999)
-/// - **Unit**: 5-minute intervals
-/// - **Maximum**: 999 = 83 hours
-/// - **Purpose**: Message validity timeout
-/// - **Action**: Automatic cancellation if not delivered
-///
-/// ## Network Validation Requirements
-/// - **BIC Validation**: Destination must be valid SWIFT participant
-/// - **Message Type**: Must be valid for sender's subscription
-/// - **Priority Rules**: Certain messages restricted to normal priority
-/// - **Monitoring Compatibility**: Not all messages support monitoring
-///
-/// ## Regional Considerations
-/// - **Cut-off Times**: Regional deadlines for urgent messages
-/// - **Processing Windows**: Regional operating hours impact
-/// - **Holiday Handling**: Regional holidays affect delivery
-/// - **Regulatory Priority**: Some regions mandate priority levels
-///
-/// ## Error Prevention Guidelines
-/// - **BIC Verification**: Confirm destination BIC is reachable
-/// - **Type Validation**: Ensure message type is authorized
-/// - **Priority Selection**: Use appropriate priority level
-/// - **Monitoring Choice**: Select monitoring based on criticality
-///
-/// ## Integration with Other Blocks
-/// - **Block 1**: Sender identification coordination
-/// - **Block 3**: Service options based on message type
-/// - **Block 4**: Content validation per message type
-/// - **Block 5**: Delivery confirmations and status
-///
-/// ## Compliance Framework
-/// - **Message Standards**: Type-specific validation rules
-/// - **Priority Policies**: Fair use of urgent priority
-/// - **Delivery SLAs**: Service level compliance
-/// - **Audit Trail**: Complete routing documentation
-///
-/// ## Processing Impact
-/// - **Queue Position**: Priority determines processing order
-/// - **Validation Depth**: Message type determines checks
-/// - **Routing Path**: Optimal path based on priority
-/// - **Cost Calculation**: Priority affects message pricing
-///
-/// ## Best Practices
-/// - **Priority Discipline**: Reserve urgent for true urgency
-/// - **Monitoring Selection**: Match monitoring to risk level
-/// - **Type Accuracy**: Ensure correct message type selection
-/// - **Destination Validation**: Verify BIC before sending
-///
-/// ## See Also
-/// - SWIFT FIN User Handbook: Block 2 Specifications
-/// - Message Type Catalog: Complete MT Message List
-/// - Priority Guidelines: Best Practices for Priority Selection
-/// - Delivery Monitoring: Service Options and Usage
+/// **Variants:**
+/// - **Input:** Message being sent to SWIFT (format: `I103DDDDDDDDDDDDP[M][OOO]`)
+/// - **Output:** Message delivered from SWIFT (format: `O103HHMMYYYYMMDDDDDDDDDDDDDDNNNNSSSSSSYYYYMMDDHHMMP`)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "direction")]
 pub enum ApplicationHeader {
@@ -939,165 +644,17 @@ impl std::fmt::Display for OutputApplicationHeader {
     }
 }
 
-/// **User Header (Block 3): Extended Service Options and Controls**
+/// **Block 3: User Header**
 ///
-/// ## Purpose
-/// The User Header provides optional extended functionality for SWIFT messages,
-/// enabling advanced services, enhanced straight-through processing (STP),
-/// compliance controls, and end-to-end transaction tracking. This header has
-/// become increasingly important for regulatory compliance, particularly with
-/// SWIFT gpi tracking and enhanced payment transparency requirements.
+/// Optional service tags and controls for SWIFT messages.
 ///
-/// ## Format Specification
-/// - **Block Format**: `{3:{tag:value}{tag:value}...}`
-/// - **Tag Format**: Numeric tags with structured values
-/// - **Nesting**: Tags enclosed in curly braces
-/// - **Optional Block**: Entire block 3 may be omitted
-///
-/// ## Business Context Applications
-/// - **SWIFT gpi Tracking**: End-to-end payment tracking via UETR
-/// - **STP Enhancement**: Validation flags for automated processing
-/// - **Regulatory Compliance**: Sanctions screening and payment controls
-/// - **Service Enhancement**: Additional service options and features
-///
-/// ## Critical Tags for Modern Payments
-/// ### Tag 121: Unique End-to-End Transaction Reference (UETR)
-/// - **Format**: 36 characters UUID (8-4-4-4-12 format)
-/// - **Purpose**: Global payment tracking across entire payment chain
-/// - **Mandatory**: Required for SWIFT gpi participant banks
-/// - **Persistence**: Must remain unchanged through payment lifecycle
-///
-/// ### Tag 119: Validation Flag
-/// - **STP**: Straight-Through Processing capability
-/// - **REMIT**: Remittance information present
-/// - **COV**: Cover payment indicator
-/// - **RFDD**: Request for Direct Debit
-///
-/// ## Service Identifiers
-/// ### Tag 103: Service Identifier
-/// - **Purpose**: Identifies specific SWIFT services
-/// - **Values**: Service-specific codes (e.g., "FIN")
-/// - **Usage**: Mainly for FIN Copy service
-/// - **Processing**: Affects message routing and copying
-///
-/// ### Tag 111: Service Type Identifier  
-/// - **Format**: 3 numeric digits
-/// - **Purpose**: Sub-categorizes service types
-/// - **Common**: "001" for standard processing
-/// - **Impact**: May affect fee calculation
-///
-/// ## Message Control and Reference
-/// ### Tag 108: Message User Reference (MUR)
-/// - **Format**: Up to 16 characters
-/// - **Purpose**: Sender's unique reference
-/// - **Usage**: Transaction tracking and reconciliation
-/// - **Uniqueness**: Should be unique per sender
-///
-/// ### Tag 113: Banking Priority
-/// - **Format**: 4 characters
-/// - **Values**: NORM, HIGH, URGP
-/// - **Purpose**: Internal bank priority handling
-/// - **Note**: Different from network priority
-///
-/// ## Compliance and Screening Tags
-/// ### Tag 433: Sanctions Screening Information
-/// - **AOK**: All OK - Passed screening
-/// - **FPO**: False Positive Override
-/// - **NOK**: Not OK - Requires review
-/// - **Additional**: Optional 20 character details
-///
-/// ### Tag 434: Payment Controls Information
-/// - **Format**: 3-letter code + optional details
-/// - **Purpose**: Payment control status
-/// - **Usage**: Compliance and regulatory controls
-/// - **Processing**: May trigger manual review
-///
-/// ## FIN Copy Service Tags
-/// ### Tag 115: Addressee Information
-/// - **Format**: Up to 32 characters
-/// - **Purpose**: Third-party copy recipient
-/// - **Service**: FIN Copy service only
-/// - **Delivery**: Additional message copy sent
-///
-/// ### Tag 165: Payment Release Information
-/// - **Format**: 3-char code + optional 34 chars
-/// - **Service**: FINInform service
-/// - **Purpose**: Payment release notifications
-/// - **Usage**: Corporate payment factories
-///
-/// ## Message Recovery Tags (MIRS)
-/// ### Tag 106: Message Input Reference (MIR)
-/// - **Format**: 28 characters structured
-/// - **Components**: Date + LT + Session + Sequence
-/// - **Purpose**: Original message reference
-/// - **Usage**: Message recovery and reconciliation
-///
-/// ### Tag 423: Balance Checkpoint
-/// - **Format**: YYMMDDHHMMSS\[ss\]
-/// - **Purpose**: Balance snapshot timing
-/// - **Service**: MIRS recovery service
-/// - **Precision**: Optional hundredths of second
-///
-/// ### Tag 424: Related Reference
-/// - **Format**: Up to 16 characters
-/// - **Purpose**: Links related messages
-/// - **Usage**: Message chains and corrections
-/// - **Service**: MIRS functionality
-///
-/// ## Network Validation Requirements
-/// - **Tag Compatibility**: Some tags require specific services
-/// - **Value Validation**: Each tag has specific format rules
-/// - **Service Subscription**: Tags available per service agreement
-/// - **Mandatory Combinations**: Some tags require others
-///
-/// ## Regional and Regulatory Impact
-/// - **SWIFT gpi**: Tag 121 mandatory for participants
-/// - **EU Regulations**: Enhanced screening requirements
-/// - **US Compliance**: Specific control requirements
-/// - **Local Rules**: Additional regional tag usage
-///
-/// ## STP Processing Impact
-/// ### Validation Flag Effects
-/// - **STP Flag**: Enables full automation
-/// - **Format Restrictions**: Stricter field validation
-/// - **Character Sets**: Limited to STP-safe characters
-/// - **Processing Speed**: Faster automated handling
-///
-/// ## Error Prevention Guidelines
-/// - **UETR Format**: Ensure valid UUID format
-/// - **Service Compatibility**: Verify tag availability
-/// - **Value Formats**: Follow exact specifications
-/// - **Mandatory Rules**: Include required combinations
-///
-/// ## Integration with Other Blocks
-/// - **Block 1**: Service must match subscription
-/// - **Block 2**: Message type affects available tags
-/// - **Block 4**: Validation flags affect field rules
-/// - **Block 5**: Some tags reflected in trailer
-///
-/// ## Compliance Framework
-/// - **Regulatory Mandates**: Screening and control requirements
-/// - **Audit Trail**: Enhanced tracking via UETR
-/// - **Service Agreements**: Tag usage per agreement
-/// - **Privacy Rules**: Data handling requirements
-///
-/// ## Best Practices
-/// - **UETR Generation**: Use proper UUID libraries
-/// - **Reference Uniqueness**: Ensure MUR uniqueness
-/// - **Screening Accuracy**: Accurate screening codes
-/// - **Service Alignment**: Use appropriate service tags
-///
-/// ## Future Evolution
-/// - **ISO 20022 Alignment**: Mapping considerations
-/// - **Enhanced Tracking**: Additional tracking features
-/// - **Compliance Evolution**: New regulatory tags
-/// - **Service Innovation**: New service identifiers
-///
-/// ## See Also
-/// - SWIFT FIN User Handbook: Block 3 Tag Specifications
-/// - SWIFT gpi Standards: UETR Implementation Guide
-/// - STP Guidelines: Validation Flag Requirements
-/// - Compliance Framework: Screening Tag Usage
+/// **Format:** `{3:{tag:value}{tag:value}...}`
+/// **Common Tags:**
+/// - **121:** UETR (UUID format) - Mandatory for SWIFT gpi
+/// - **119:** Validation flag (STP, REMIT, COV, RFDD)
+/// - **103:** Service identifier
+/// - **108:** Message user reference
+/// - **433/434:** Sanctions screening and payment controls
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct UserHeader {
     /// Tag 103 - Service Identifier (3!a) - Mandatory for FINcopy Service
@@ -1154,51 +711,61 @@ pub struct UserHeader {
     pub payment_controls_info: Option<PaymentControlsInfo>,
 }
 
-/// Balance checkpoint structure for Tag 423
+/// Balance checkpoint for Tag 423 (MIRS recovery)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct BalanceCheckpoint {
-    pub date: String, // YYMMDD
-    pub time: String, // HHMMSS
-
+    /// Date (YYMMDD)
+    pub date: String,
+    /// Time (HHMMSS)
+    pub time: String,
+    /// Hundredths of second (optional)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hundredths_of_second: Option<String>, // ss (optional)
+    pub hundredths_of_second: Option<String>,
 }
 
-/// Message Input Reference structure for Tag 106
+/// Message Input Reference (Tag 106, MIR format)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MessageInputReference {
-    pub date: String,            // YYMMDD
-    pub lt_identifier: String,   // 12 characters
-    pub branch_code: String,     // 3!c
-    pub session_number: String,  // 4!n
-    pub sequence_number: String, // 6!n
+    /// Date (YYMMDD)
+    pub date: String,
+    /// LT identifier (12 chars)
+    pub lt_identifier: String,
+    /// Branch code (3 chars)
+    pub branch_code: String,
+    /// Session number (4 digits)
+    pub session_number: String,
+    /// Sequence number (6 digits)
+    pub sequence_number: String,
 }
 
-/// Payment release information structure for Tag 165
+/// Payment release info for Tag 165 (FINInform)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PaymentReleaseInfo {
-    pub code: String, // 3!c
-
+    /// Code (3 chars)
+    pub code: String,
+    /// Additional info (max 34 chars)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub additional_info: Option<String>, // 34x (optional)
+    pub additional_info: Option<String>,
 }
 
-/// Sanctions screening information structure for Tag 433
+/// Sanctions screening info for Tag 433
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SanctionsScreeningInfo {
-    pub code_word: String, // 3!a (AOK, FPO, NOK)
-
+    /// Code word (AOK, FPO, NOK)
+    pub code_word: String,
+    /// Additional info (max 20 chars)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub additional_info: Option<String>, // 20x (optional)
+    pub additional_info: Option<String>,
 }
 
-/// Payment controls information structure for Tag 434
+/// Payment controls info for Tag 434
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PaymentControlsInfo {
-    pub code_word: String, // 3!a
-
+    /// Code word (3 chars)
+    pub code_word: String,
+    /// Additional info (max 20 chars)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub additional_info: Option<String>, // 20x (optional)
+    pub additional_info: Option<String>,
 }
 
 impl UserHeader {
@@ -1454,182 +1021,17 @@ impl std::fmt::Display for UserHeader {
     }
 }
 
-/// **Trailer (Block 5): Message Security and Control Information**
+/// **Block 5: Trailer**
 ///
-/// ## Purpose
-/// The Trailer block provides essential security, authentication, and control
-/// information for SWIFT messages. It ensures message integrity through checksums,
-/// enables duplicate detection, supports message authentication, and provides
-/// system-level control information critical for secure and reliable message delivery.
+/// Security and control information for message integrity and authentication.
 ///
-/// ## Format Specification
-/// - **Block Format**: `{5:{tag:value}{tag:value}...}`
-/// - **Tag Types**: Three-letter tags with optional values
-/// - **Security Tags**: MAC and CHK for authentication
-/// - **Control Tags**: Various operational controls
-///
-/// ## Business Context Applications
-/// - **Message Integrity**: Checksum validation for data integrity
-/// - **Security Authentication**: MAC for message authentication
-/// - **Duplicate Detection**: Prevention of duplicate processing
-/// - **Operational Control**: Test messages and system controls
-///
-/// ## Security and Authentication Tags
-/// ### CHK: Checksum (Mandatory)
-/// - **Format**: 12 hexadecimal characters
-/// - **Calculation**: Algorithm-based on message content
-/// - **Purpose**: Detect transmission errors
-/// - **Validation**: Automatic by SWIFT network
-/// - **Failure Action**: Message rejection
-///
-/// ### MAC: Message Authentication Code
-/// - **Format**: Variable length hexadecimal
-/// - **Algorithm**: Agreed between parties
-/// - **Purpose**: Authenticate message origin
-/// - **Usage**: High-value or sensitive messages
-/// - **Bilateral**: Requires key exchange
-///
-/// ## Duplicate Control Tags
-/// ### PDM: Possible Duplicate Message
-/// - **Format**: Optional time + MOR
-/// - **Purpose**: Warn of possible duplicate
-/// - **Action**: Receiver should check for duplicates
-/// - **Components**: Time (HHMM) + Message Output Reference
-///
-/// ### PDE: Possible Duplicate Emission
-/// - **Format**: Optional time + MIR  
-/// - **Purpose**: Sender suspects duplicate sent
-/// - **Usage**: Network recovery scenarios
-/// - **Components**: Time (HHMM) + Message Input Reference
-///
-/// ## Operational Control Tags
-/// ### TNG: Test and Training
-/// - **Format**: Empty tag (presence only)
-/// - **Purpose**: Identifies test messages
-/// - **Processing**: Should not affect production
-/// - **Usage**: Testing and training environments
-/// - **Warning**: Must not be processed as live
-///
-/// ### DLM: Delayed Message
-/// - **Format**: Empty tag (presence only)
-/// - **Purpose**: Indicates delayed transmission
-/// - **Cause**: Network issues or recovery
-/// - **Action**: Check value dates and cut-offs
-///
-/// ## Reference and Tracking Tags
-/// ### MRF: Message Reference
-/// - **Format**: Date + Time + MIR
-/// - **Purpose**: Reference related messages
-/// - **Usage**: Corrections and cancellations
-/// - **Components**: YYMMDD + HHMM + full MIR
-///
-/// ### SYS: System Originated Message
-/// - **Format**: Optional time + MIR
-/// - **Purpose**: System-generated messages
-/// - **Examples**: Automatic responses
-/// - **Processing**: May have special handling
-///
-/// ## Message Reference Structures
-/// ### Message Input Reference (MIR)
-/// - **Date**: YYMMDD format
-/// - **LT Identifier**: 12-character sending LT
-/// - **Session**: 4-digit session number
-/// - **Sequence**: 6-digit sequence number
-/// - **Usage**: Unique message identification
-///
-/// ### Message Output Reference (MOR)
-/// - **Format**: Same structure as MIR
-/// - **Perspective**: Receiver's reference
-/// - **Purpose**: Delivery confirmation
-/// - **Tracking**: End-to-end message tracking
-///
-/// ## Network Validation Requirements
-/// - **CHK Mandatory**: All messages must have checksum
-/// - **Tag Order**: Specific ordering requirements
-/// - **Format Compliance**: Exact format specifications
-/// - **Value Validation**: Tag-specific validations
-///
-/// ## Security Considerations
-/// ### Checksum Protection
-/// - **Coverage**: Entire message content
-/// - **Algorithm**: SWIFT-specified calculation
-/// - **Tampering**: Detects any modification
-/// - **Reliability**: Very low false positive rate
-///
-/// ### MAC Authentication
-/// - **Bilateral Agreement**: Key management required
-/// - **Algorithm Choice**: Per agreement
-/// - **Non-repudiation**: Proves message origin
-/// - **Legal Standing**: Admissible evidence
-///
-/// ## Duplicate Detection Mechanisms
-/// ### System Design
-/// - **Detection Window**: Configurable timeframe
-/// - **Reference Tracking**: MIR/MOR correlation
-/// - **Recovery Support**: Post-incident reconciliation
-/// - **Audit Trail**: Complete duplicate history
-///
-/// ### Processing Rules
-/// - **PDM Messages**: Manual review recommended
-/// - **Duplicate Window**: Typically 24-48 hours
-/// - **Action Required**: Verify before processing
-/// - **Documentation**: Record resolution actions
-///
-/// ## Operational Guidelines
-/// ### Test Message Handling
-/// - **TNG Identification**: Clear test marking
-/// - **Environment Separation**: Test vs production
-/// - **Processing Prevention**: Automatic filtering
-/// - **Audit Exclusion**: Separate test reporting
-///
-/// ### Delayed Message Processing
-/// - **DLM Recognition**: Special handling required
-/// - **Value Date Check**: Verify still valid
-/// - **Cut-off Impact**: May miss deadlines
-/// - **Notification**: Alert relevant parties
-///
-/// ## Error Prevention Guidelines
-/// - **CHK Calculation**: Automatic by system
-/// - **Tag Formatting**: Follow exact specifications
-/// - **Reference Accuracy**: Verify MIR/MOR format
-/// - **Test Separation**: Clear test identification
-///
-/// ## Integration with Other Blocks
-/// - **Block 1-4**: Content for checksum calculation
-/// - **Block 1**: Session/sequence for references
-/// - **Block 2**: Message type affects trailer options
-/// - **Block 3**: Some services require specific tags
-///
-/// ## Compliance Framework
-/// - **Security Standards**: Cryptographic requirements
-/// - **Audit Requirements**: Trailer preservation
-/// - **Legal Admissibility**: Authentication standards
-/// - **Regulatory Compliance**: Security controls
-///
-/// ## Recovery and Reconciliation
-/// ### Message Recovery
-/// - **Reference Tracking**: Via MIR/MOR
-/// - **Duplicate Resolution**: PDM/PDE handling
-/// - **Audit Support**: Complete tag history
-/// - **Dispute Resolution**: Authentication proof
-///
-/// ### System Recovery
-/// - **Checkpoint References**: Recovery points
-/// - **Sequence Verification**: Gap detection
-/// - **Duplicate Prevention**: During recovery
-/// - **Integrity Validation**: CHK verification
-///
-/// ## Best Practices
-/// - **Security First**: Always validate CHK
-/// - **MAC Usage**: For high-value messages
-/// - **Duplicate Vigilance**: Check PDM warnings
-/// - **Test Clarity**: Clearly mark test messages
-///
-/// ## See Also
-/// - SWIFT FIN Security Guide: Authentication Standards
-/// - Checksum Algorithms: Technical Specifications
-/// - Duplicate Detection: Best Practices Guide
-/// - MAC Implementation: Bilateral Agreement Templates
+/// **Format:** `{5:{tag:value}{tag:value}...}`
+/// **Key Tags:**
+/// - **CHK:** Checksum (12 hex chars) - Mandatory for integrity validation
+/// - **MAC:** Message Authentication Code - Optional bilateral authentication
+/// - **TNG:** Test and Training flag - Identifies test messages
+/// - **PDM/PDE:** Possible duplicate detection tags
+/// - **DLM:** Delayed message indicator
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct Trailer {
     /// CHK - Checksum (12!h) - Mandatory
@@ -1665,52 +1067,63 @@ pub struct Trailer {
     pub mac: Option<String>,
 }
 
-/// Possible Duplicate Emission structure for PDE tag
+/// Possible Duplicate Emission for PDE tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PossibleDuplicateEmission {
+    /// Time (HHMM)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub time: Option<String>, // HHMM (optional)
-
+    pub time: Option<String>,
+    /// Message Input Reference
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub message_input_reference: Option<MessageInputReference>, // MIR (optional)
+    pub message_input_reference: Option<MessageInputReference>,
 }
 
-/// Message Reference structure for MRF tag
+/// Message Reference for MRF tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MessageReference {
-    pub date: String,                                   // YYMMDD
-    pub full_time: String,                              // HHMM
-    pub message_input_reference: MessageInputReference, // MIR
+    /// Date (YYMMDD)
+    pub date: String,
+    /// Time (HHMM)
+    pub full_time: String,
+    /// Message Input Reference
+    pub message_input_reference: MessageInputReference,
 }
 
-/// Possible Duplicate Message structure for PDM tag
+/// Possible Duplicate Message for PDM tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PossibleDuplicateMessage {
+    /// Time (HHMM)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub time: Option<String>, // HHMM (optional)
-
+    pub time: Option<String>,
+    /// Message Output Reference
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub message_output_reference: Option<MessageOutputReference>, // MOR (optional)
+    pub message_output_reference: Option<MessageOutputReference>,
 }
 
-/// Message Output Reference structure (similar to MIR but for output)
+/// Message Output Reference (MOR format)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MessageOutputReference {
-    pub date: String,            // YYMMDD
-    pub lt_identifier: String,   // 12 characters
-    pub branch_code: String,     // 3!c
-    pub session_number: String,  // 4!n
-    pub sequence_number: String, // 6!n
+    /// Date (YYMMDD)
+    pub date: String,
+    /// LT identifier (12 chars)
+    pub lt_identifier: String,
+    /// Branch code (3 chars)
+    pub branch_code: String,
+    /// Session number (4 digits)
+    pub session_number: String,
+    /// Sequence number (6 digits)
+    pub sequence_number: String,
 }
 
-/// System Originated Message structure for SYS tag
+/// System Originated Message for SYS tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SystemOriginatedMessage {
+    /// Time (HHMM)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub time: Option<String>, // HHMM (optional)
-
+    pub time: Option<String>,
+    /// Message Input Reference
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub message_input_reference: Option<MessageInputReference>, // MIR (optional)
+    pub message_input_reference: Option<MessageInputReference>,
 }
 
 impl Trailer {

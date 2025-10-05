@@ -3,37 +3,40 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT112: Status of a Request for Stop Payment of a Cheque
-// Used by the drawee bank to notify the drawer bank about actions taken
-// in response to an MT111 stop payment request.
-
+/// **MT112: Status of a Request for Stop Payment of a Cheque**
+///
+/// Response from drawee bank to drawer bank confirming actions taken on MT111 stop payment request.
+/// Provides status information about the stop payment instruction.
+///
+/// **Usage:** Stop payment status notifications
+/// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT112 {
-    // Transaction Reference Number
+    /// Transaction reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Cheque Number
+    /// Cheque number (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    // Date of Issue
+    /// Date of issue (Field 30)
     #[serde(rename = "30")]
     pub field_30: Field30,
 
-    // Amount (can be 32A or 32B per SWIFT spec)
+    /// Amount (Field 32)
     #[serde(flatten)]
     pub field_32: Field32AB,
 
-    // Drawer Bank (optional) - can be A, B, or D
+    /// Drawer bank (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52OrderingInstitution>,
 
-    // Payee (optional) - name and address only
+    /// Payee (Field 59)
     #[serde(rename = "59", skip_serializing_if = "Option::is_none")]
     pub field_59: Option<Field59NoOption>,
 
-    // Answers (mandatory) - status information
+    /// Answers (Field 76)
     #[serde(rename = "76")]
     pub field_76: Field76,
 }

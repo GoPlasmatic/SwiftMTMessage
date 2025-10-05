@@ -3,29 +3,39 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT900: Confirmation of Debit
-// Used to confirm that a debit entry has been posted to an account.
-
+/// **MT900: Confirmation of Debit**
+///
+/// Confirms debit to account servicing institution's account.
+///
+/// **Usage:** Debit confirmations, account reconciliation
+/// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT900 {
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
+    /// Related Reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
+    /// Account Identification (Field 25)
     #[serde(rename = "25")]
     pub field_25: Field25AccountIdentification,
 
+    /// Date/Time Indication (Field 13D)
     #[serde(rename = "13D")]
     pub field_13d: Option<Field13D>,
 
+    /// Value Date, Currency Code, Amount (Field 32A)
     #[serde(rename = "32A")]
     pub field_32a: Field32A,
 
+    /// Ordering Institution (Field 52)
     #[serde(flatten)]
     pub field_52: Option<Field52OrderingInstitution>,
 
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72")]
     pub field_72: Option<Field72>,
 }

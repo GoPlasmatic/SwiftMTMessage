@@ -1,104 +1,18 @@
-//! # Field 32: Value Date, Currency Code, Amount
+//! # Field 32: Value Date, Currency, Amount
 //!
-//! ## Purpose
-//! Specifies the value date, currency, and settlement amount for payment instructions.
-//! This is the core monetary field that defines when and how much will be transferred,
-//! serving as the foundation for all payment processing and settlement calculations.
+//! Settlement amount and value date for payment instructions.
 //!
-//! ## Options Overview
-//! - **Option A**: Value Date + Currency + Amount (complete settlement information)
-//! - **Option B**: Currency + Amount (amount without specific value date)
+//! **Variants:**
+//! - **32A:** Date + Currency + Amount (YYMMDD + 3!a + 15d)
+//! - **32B:** Currency + Amount (3!a + 15d)
+//! - **32C:** Date + Currency + Credit Amount (MT n90 messages)
+//! - **32D:** Date + Currency + Debit Amount (MT n90 messages)
 //!
-//! ## Format Specifications
-//! ### Option A Format
-//! - **Swift Format**: `6!n3!a15d`
-//! - **Components**:
-//!   - `6!n`: Value date (YYMMDD format)
-//!   - `3!a`: Currency code (ISO 4217, 3 alphabetic characters)
-//!   - `15d`: Amount (up to 15 digits including decimal, comma as decimal separator)
-//!
-//! ### Option B Format
-//! - **Swift Format**: `3!a15d`
-//! - **Components**:
-//!   - `3!a`: Currency code (ISO 4217, 3 alphabetic characters)
-//!   - `15d`: Amount (up to 15 digits including decimal, comma as decimal separator)
-//!
-//! ## Presence and Usage
-//! - **Status**: Mandatory in all payment messages (MT103, MT202, etc.)
-//! - **Swift Error Codes**: T40 (invalid date), T52 (invalid currency), T51 (invalid amount)
-//! - **Referenced in Rules**: C1, C7, C8, C9 (MT103), currency validation across message types
-//!
-//! ## Value Date Rules (Option A)
-//! - **Format**: YYMMDD (2-digit year, month, day)
-//! - **Validation**: Must be a valid calendar date
-//! - **Business Rules**: Cannot be more than 1 year in the past or future (typical limit)
-//! - **Weekends/Holidays**: System may adjust for banking days depending on currency
-//!
-//! ## Currency Code Rules
-//! - **Standard**: ISO 4217 three-letter currency codes
-//! - **Validation**: Must be an active, tradeable currency
-//! - **Examples**: USD, EUR, GBP, JPY, CHF, CAD, AUD
-//! - **Restrictions**: Some currencies may be restricted for certain corridors
-//!
-//! ## Amount Rules
-//! - **Format**: Up to 15 digits with decimal precision
-//! - **Decimal Separator**: Comma (,) for decimal values in Swift format
-//! - **Precision**: Typically 2 decimal places, varies by currency (JPY has 0, BHD has 3)
-//! - **Range**: Must be positive (> 0), maximum depends on currency and institution limits
-//!
-//! ## Network Validation Rules
-//! - **C1 (MT103)**: If field 33B differs from 32A currency, field 36 (Exchange Rate) required
-//! - **C7**: Amount must be positive and properly formatted for currency
-//! - **C8**: If charges apply (71F/71G), 33B becomes mandatory for charge calculations
-//! - **C9**: Currency in 71G must match 32A currency for charge consistency
-//!
-//! ## Usage Guidelines
-//! - **Settlement**: This amount determines the final settlement obligation
-//! - **Exchange Rates**: When currency differs from instructed amount (33B), exchange rate (36) needed
-//! - **Charges**: Original instructed amount before any fee deductions
-//! - **Precision**: Must respect currency-specific decimal precision rules
-//!
-//! ## STP Compliance
-//! - **Amount Format**: Must comply with STP formatting standards (no trailing zeros)
-//! - **Currency Support**: STP corridors may support limited currency pairs
-//! - **Validation**: Enhanced validation for STP messages to prevent manual intervention
-//!
-//! ## Regional Considerations
-//! - **SEPA**: EUR payments within SEPA zone have specific amount and date rules
-//! - **US Domestic**: USD payments may require different value date handling
-//! - **Emerging Markets**: Some currencies have additional restrictions or validations
-//!
-//! ## Examples
+//! **Example:**
 //! ```text
-//! :32A:240719EUR1250,50     // July 19, 2024, EUR 1,250.50
-//! :32A:240720USD10000,00    // July 20, 2024, USD 10,000.00
-//! :32A:240721JPY1500000     // July 21, 2024, JPY 1,500,000 (no decimal)
-//! :32B:EUR5000,00          // EUR 5,000.00 (no value date)
+//! :32A:240719USD1000,50
+//! :32B:EUR500,00
 //! ```
-//!
-//! ## Related Fields Integration
-//! - **Field 33B**: Instructed Amount (if different from settlement amount)
-//! - **Field 36**: Exchange Rate (when 33B currency differs from 32A)
-//! - **Field 71F/71G**: Sender's/Receiver's Charges (affect final settlement)
-//! - **Field 30**: Execution Date (in some message types)
-//!
-//! ## Error Prevention
-//! - **Invalid Date**: T40 error if date is malformed or unrealistic
-//! - **Invalid Currency**: T52 error if currency code not recognized
-//! - **Invalid Amount**: T51 error if amount format incorrect or negative
-//! - **Business Rule**: C-rule violations if currency/amount conflicts with other fields
-//!
-//! ## Amount Precision by Currency
-//! - **Most Currencies**: 2 decimal places (USD, EUR, GBP, etc.)
-//! - **Japanese Yen**: 0 decimal places (JPY)
-//! - **Bahraini Dinar**: 3 decimal places (BHD)
-//! - **Cryptocurrency**: Variable precision (check current standards)
-//!
-//! ## See Also
-//! - Swift FIN User Handbook: Currency and Amount Specifications
-//! - ISO 4217: Currency Code Standard
-//! - MT103 Usage Rules: Value Date and Settlement Guidelines
-//! - STP Implementation Guide: Amount Format Requirements
 
 use super::swift_utils::{
     format_swift_amount_for_currency, parse_amount_with_currency, parse_currency_non_commodity,
@@ -109,36 +23,18 @@ use crate::traits::SwiftField;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-/// **Field 32A: Value Date, Currency Code, Amount**
+/// **Field 32A: Value Date, Currency, Amount**
 ///
-/// Complete settlement information variant of [Field 32 module](index.html). Specifies the value date,
-/// currency, and settlement amount for payment instructions.
-///
-/// **Components:**
-/// - Value date (6!n, YYMMDD format)
-/// - Currency code (3!a, ISO 4217)
-/// - Amount (15d, decimal with comma separator)
-///
-/// For complete documentation, see the [Field 32 module](index.html).
+/// Settlement information with value date.
+/// Format: `6!n3!a15d` (YYMMDD + currency + amount)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field32A {
-    /// Value date when the payment becomes effective
-    ///
-    /// Format: 6!n (YYMMDD) - Must be valid calendar date
-    /// Business rule: Typically within 1 year of today
+    /// Value date (YYMMDD)
     #[serde(with = "date_string")]
     pub value_date: NaiveDate,
-
-    /// ISO 4217 three-letter currency code
-    ///
-    /// Format: 3!a - Must be valid, active currency
-    /// Examples: USD, EUR, GBP, JPY, CHF
+    /// ISO 4217 currency code
     pub currency: String,
-
-    /// Settlement amount in the specified currency
-    ///
-    /// Format: 15d - Up to 15 digits, comma decimal separator
-    /// Must be positive, respect currency precision rules
+    /// Settlement amount
     pub amount: f64,
 }
 
@@ -198,19 +94,13 @@ impl SwiftField for Field32A {
     }
 }
 
-/// **Field 32B: Currency Code, Amount**
+/// **Field 32B: Currency, Amount**
 ///
-/// Currency and amount variant of [Field 32 module](index.html). Specifies currency and amount
-/// without a specific value date.
-///
-/// **Components:**
-/// - Currency code (3!a, ISO 4217)
-/// - Amount (15d, decimal with comma separator)
-///
-/// For complete documentation, see the [Field 32 module](index.html).
+/// Currency and amount without value date.
+/// Format: `3!a15d` (currency + amount)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field32B {
-    /// Currency code (ISO 4217)
+    /// ISO 4217 currency code
     pub currency: String,
     /// Amount
     pub amount: f64,
@@ -264,34 +154,18 @@ impl SwiftField for Field32B {
     }
 }
 
-/// **Field 32C: Value Date, Currency Code, Amount (Credit)**
+/// **Field 32C: Value Date, Currency, Credit Amount**
 ///
-/// Credit variant of [Field 32 module](index.html). Specifies the value date,
-/// currency, and amount credited. Used in MT n90 messages (MT190, MT290, etc.)
-/// to indicate credit adjustments.
-///
-/// **Components:**
-/// - Value date (6!n, YYMMDD format)
-/// - Currency code (3!a, ISO 4217)
-/// - Amount (15d, decimal with comma separator)
-///
-/// For complete documentation, see the [Field 32 module](index.html).
+/// Credit amount with value date (MT n90 messages).
+/// Format: `6!n3!a15d`
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field32C {
-    /// Value date when the credit becomes effective
-    ///
-    /// Format: 6!n (YYMMDD) - Must be valid calendar date
+    /// Value date (YYMMDD)
     #[serde(with = "date_string")]
     pub value_date: NaiveDate,
-
-    /// ISO 4217 three-letter currency code
-    ///
-    /// Format: 3!a - Must be valid, active currency
+    /// ISO 4217 currency code
     pub currency: String,
-
-    /// Credit amount in the specified currency
-    ///
-    /// Format: 15d - Up to 15 digits, comma decimal separator
+    /// Credit amount
     pub amount: f64,
 }
 
@@ -366,34 +240,18 @@ impl SwiftField for Field32C {
     }
 }
 
-/// **Field 32D: Value Date, Currency Code, Amount (Debit)**
+/// **Field 32D: Value Date, Currency, Debit Amount**
 ///
-/// Debit variant of [Field 32 module](index.html). Specifies the value date,
-/// currency, and amount debited. Used in MT n90 messages (MT190, MT290, etc.)
-/// to indicate debit adjustments.
-///
-/// **Components:**
-/// - Value date (6!n, YYMMDD format)
-/// - Currency code (3!a, ISO 4217)
-/// - Amount (15d, decimal with comma separator)
-///
-/// For complete documentation, see the [Field 32 module](index.html).
+/// Debit amount with value date (MT n90 messages).
+/// Format: `6!n3!a15d`
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field32D {
-    /// Value date when the debit becomes effective
-    ///
-    /// Format: 6!n (YYMMDD) - Must be valid calendar date
+    /// Value date (YYMMDD)
     #[serde(with = "date_string")]
     pub value_date: NaiveDate,
-
-    /// ISO 4217 three-letter currency code
-    ///
-    /// Format: 3!a - Must be valid, active currency
+    /// ISO 4217 currency code
     pub currency: String,
-
-    /// Debit amount in the specified currency
-    ///
-    /// Format: 15d - Up to 15 digits, comma decimal separator
+    /// Debit amount
     pub amount: f64,
 }
 
@@ -447,12 +305,9 @@ impl SwiftField for Field32D {
     }
 }
 
-/// **Field 32 Enum: Value Date, Currency, Amount Variants**
+/// **Field 32: Settlement Amount Variants**
 ///
-/// Enum wrapper for [Field 32 module](index.html) variants providing different
-/// levels of settlement information detail.
-///
-/// For complete documentation, see the [Field 32 module](index.html).
+/// Enum wrapper for Field 32 variants (A/B/C/D).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field32 {
     #[serde(rename = "32A")]
@@ -508,15 +363,10 @@ impl SwiftField for Field32 {
     }
 }
 
-/// **Field32AB: Amount with Value Date or Currency Only**
+/// **Field32AB: Options A or B only**
 ///
-/// Used in MT110, MT111, MT112 for cheque-related messages to specify amount with optional value date.
-/// This enum provides JSON flattening to directly serialize as "32A" or "32B" fields.
-/// Per SWIFT specifications, these messages only support options A and B.
-///
-/// **Variants:**
-/// - A: Value date + Currency + Amount (Field32A)
-/// - B: Currency + Amount only (Field32B)
+/// Used in MT110, MT111, MT112 (cheque messages).
+/// Supports only 32A (with date) or 32B (without date).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field32AB {
     #[serde(rename = "32A")]
@@ -553,14 +403,10 @@ impl SwiftField for Field32AB {
     }
 }
 
-/// **Field32AmountCD: Credit or Debit Amount**
+/// **Field32AmountCD: Credit or Debit**
 ///
-/// Used in MT190 and similar messages to specify either a credit (32C) or debit (32D) amount.
-/// This enum provides JSON flattening to directly serialize as "32C" or "32D" fields.
-///
-/// **Variants:**
-/// - C: Credit amount with value date (Field32C)
-/// - D: Debit amount with value date (Field32D)
+/// Used in MT190 and similar messages.
+/// Supports 32C (credit) or 32D (debit).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Field32AmountCD {
     #[serde(rename = "32C")]

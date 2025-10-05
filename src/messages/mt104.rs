@@ -3,164 +3,168 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT104: Direct Debit and Request for Debit Transfer Message
-// Used for direct debit instructions where the creditor instructs its bank
-// to collect funds from one or more debtors.
-
+/// Sequence B - Transaction details
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT104Transaction {
-    // Transaction Reference
+    /// Transaction reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    // Instruction Code (optional)
+    /// Instruction code (Field 23E)
     #[serde(rename = "23E")]
     pub field_23e: Option<Field23E>,
 
-    // Mandate Reference (optional)
+    /// Mandate reference (Field 21C)
     #[serde(rename = "21C")]
     pub field_21c: Option<Field21C>,
 
-    // Direct Debit Reference (optional)
+    /// Direct debit reference (Field 21D)
     #[serde(rename = "21D")]
     pub field_21d: Option<Field21D>,
 
-    // Registration Reference (optional)
+    /// Registration reference (Field 21E)
     #[serde(rename = "21E")]
     pub field_21e: Option<Field21E>,
 
-    // Currency/Amount
+    /// Currency and amount (Field 32B)
     #[serde(rename = "32B")]
     pub field_32b: Field32B,
 
-    // Instructing Party (Transaction level)
+    /// Instructing party (Field 50C/L)
     #[serde(flatten)]
     pub instructing_party_tx: Option<Field50InstructingParty>,
 
-    // Creditor (Transaction level)
+    /// Creditor (Field 50A/K)
     #[serde(flatten)]
     pub creditor_tx: Option<Field50Creditor>,
 
-    // Creditor's Bank
+    /// Creditor's bank (Field 52)
     #[serde(flatten)]
     pub field_52: Option<Field52CreditorBank>,
 
-    // Debtor's Bank
+    /// Debtor's bank (Field 57)
     #[serde(flatten)]
     pub field_57: Option<Field57DebtorBank>,
 
-    // Debtor
+    /// Debtor (Field 59)
     #[serde(flatten)]
     pub field_59: Field59Debtor,
 
-    // Remittance Information
+    /// Remittance information (Field 70)
     #[serde(rename = "70")]
     pub field_70: Option<Field70>,
 
-    // Transaction Type Code
+    /// Transaction type code (Field 26T)
     #[serde(rename = "26T")]
     pub field_26t: Option<Field26T>,
 
-    // Regulatory Reporting
+    /// Regulatory reporting (Field 77B)
     #[serde(rename = "77B")]
     pub field_77b: Option<Field77B>,
 
-    // Original Ordered Amount
+    /// Original ordered amount (Field 33B)
     #[serde(rename = "33B")]
     pub field_33b: Option<Field33B>,
 
-    // Details of Charges
+    /// Details of charges (Field 71A)
     #[serde(rename = "71A")]
     pub field_71a: Option<Field71A>,
 
-    // Sender's Charges
+    /// Sender's charges (Field 71F)
     #[serde(rename = "71F")]
     pub field_71f: Option<Field71F>,
 
-    // Receiver's Charges
+    /// Receiver's charges (Field 71G)
     #[serde(rename = "71G")]
     pub field_71g: Option<Field71G>,
 
-    // Exchange Rate
+    /// Exchange rate (Field 36)
     #[serde(rename = "36")]
     pub field_36: Option<Field36>,
 }
 
+/// **MT104: Direct Debit and Request for Debit Transfer**
+///
+/// Creditor instruction to collect funds from one or more debtors via banks.
+/// Supports batch direct debit processing with settlement details.
+///
+/// **Usage:** Direct debits, batch collections, SEPA debits
+/// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT104 {
-    // Sender's Reference
+    /// Sender's reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Customer Specified Reference
+    /// Customer specified reference (Field 21R)
     #[serde(rename = "21R")]
     pub field_21r: Option<Field21R>,
 
-    // Instruction Code
+    /// Instruction code (Field 23E)
     #[serde(rename = "23E")]
     pub field_23e: Option<Field23E>,
 
-    // Registration Reference
+    /// Registration reference (Field 21E)
     #[serde(rename = "21E")]
     pub field_21e: Option<Field21E>,
 
-    // Requested Execution Date
+    /// Requested execution date (Field 30)
     #[serde(rename = "30")]
     pub field_30: Field30,
 
-    // Sending Institution
+    /// Sending institution (Field 51A)
     #[serde(rename = "51A")]
     pub field_51a: Option<Field51A>,
 
-    // Instructing Party
+    /// Instructing party (Field 50C/L)
     #[serde(flatten)]
     pub instructing_party: Option<Field50InstructingParty>,
 
-    // Creditor
+    /// Creditor (Field 50A/K)
     #[serde(flatten)]
     pub creditor: Option<Field50Creditor>,
 
-    // Creditor's Bank
+    /// Creditor's bank (Field 52)
     #[serde(flatten)]
     pub field_52: Option<Field52CreditorBank>,
 
-    // Transaction Type Code
+    /// Transaction type code (Field 26T)
     #[serde(rename = "26T")]
     pub field_26t: Option<Field26T>,
 
-    // Regulatory Reporting
+    /// Regulatory reporting (Field 77B)
     #[serde(rename = "77B")]
     pub field_77b: Option<Field77B>,
 
-    // Details of Charges
+    /// Details of charges (Field 71A)
     #[serde(rename = "71A")]
     pub field_71a: Option<Field71A>,
 
-    // Sender to Receiver Information
+    /// Sender to receiver information (Field 72)
     #[serde(rename = "72")]
     pub field_72: Option<Field72>,
 
-    // Transaction Details (repeating sequence)
+    /// Transaction details (Sequence B)
     #[serde(rename = "#")]
     pub transactions: Vec<MT104Transaction>,
 
-    // Currency and Settlement Amount (Sequence C)
+    /// Settlement amount (Field 32B, Sequence C)
     #[serde(rename = "32B")]
     pub field_32b: Option<Field32B>,
 
-    // Sum of Amounts
+    /// Sum of amounts (Field 19)
     #[serde(rename = "19")]
     pub field_19: Option<Field19>,
 
-    // Sum of Sender's Charges
+    /// Sum of sender's charges (Field 71F)
     #[serde(rename = "71F")]
     pub field_71f: Option<Field71F>,
 
-    // Sum of Receiver's Charges
+    /// Sum of receiver's charges (Field 71G)
     #[serde(rename = "71G")]
     pub field_71g: Option<Field71G>,
 
-    // Sender's Correspondent
+    /// Sender's correspondent (Field 53)
     #[serde(flatten)]
     pub field_53: Option<Field53SenderCorrespondent>,
 }

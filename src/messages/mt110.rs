@@ -4,56 +4,60 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT110: Advice of Cheque(s)
-// Sent by a drawer bank (or its agent) to the drawee bank to advise
-// or confirm the issuance of one or multiple cheques.
-
+/// Cheque details (repeating sequence)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT110Cheque {
-    // Cheque Number
+    /// Cheque number (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    // Date of Issue
+    /// Date of issue (Field 30)
     #[serde(rename = "30")]
     pub field_30: Field30,
 
-    // Amount field - can be variants A or B per SWIFT spec
+    /// Amount (Field 32)
     #[serde(flatten)]
     pub field_32: Field32AB,
 
-    // Payer (optional)
+    /// Payer (Field 50)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_50: Option<Field50OrderingCustomerAFK>,
 
-    // Drawer Bank (optional) - supports A, B, D variants per MT110 spec
+    /// Drawer bank (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52DrawerBank>,
 
-    // Payee
+    /// Payee (Field 59)
     #[serde(flatten)]
     pub field_59: Field59,
 }
 
+/// **MT110: Advice of Cheque(s)**
+///
+/// Advice from drawer bank to drawee bank confirming issuance of one or more cheques.
+/// Supports multiple cheque details in a single message.
+///
+/// **Usage:** Cheque issuance advice, payment notifications
+/// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT110 {
-    // Sender's Reference
+    /// Sender's reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Sender's Correspondent (optional)
+    /// Sender's correspondent (Field 53)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_53a: Option<Field53SenderCorrespondent>,
 
-    // Receiver's Correspondent (optional)
+    /// Receiver's correspondent (Field 54)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_54a: Option<Field54ReceiverCorrespondent>,
 
-    // Sender to Receiver Information (optional)
+    /// Sender to receiver information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub field_72: Option<Field72>,
 
-    // Cheque Details (repeating sequence, max 10)
+    /// Cheque details (max 10)
     #[serde(rename = "#", default)]
     pub cheques: Vec<MT110Cheque>,
 }

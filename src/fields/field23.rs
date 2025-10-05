@@ -3,113 +3,26 @@ use crate::errors::ParseError;
 use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
 
-///   **Field 23: Further Identification**
+/// **Field 23: Further Identification**
 ///
-/// ## Purpose
-/// Provides additional identification information for financial transactions, particularly
-/// in money market and deposit transactions. This field enables precise categorization
-/// of transaction types, timing specifications, and reference information essential
-/// for proper transaction processing and regulatory compliance.
+/// Transaction categorization for money market and deposit operations.
 ///
-/// ## Format Specification
-/// - **Swift Format**: `3!a[2!n]11x`
-/// - **Structure**: Function code + optional days + reference information
-/// - **Total Length**: Maximum 16 characters
-/// - **Components**: Mandatory function code, conditional days, mandatory reference
+/// **Format:** `3!a[2!n]11x` (function code + optional days + reference)
+/// **Function codes:** BASE, CALL, COMMERCIAL, CURRENT, DEPOSIT, NOTICE, PRIME
+/// **Days field:** Required only for NOTICE (1-99)
 ///
-/// ## Business Context Applications
-/// - **Money Market Transactions**: Deposit and call money operations
-/// - **Treasury Operations**: Interest rate and liquidity management
-/// - **Corporate Banking**: Commercial account management
-/// - **Settlement Processing**: Transaction categorization and routing
-///
-/// ## Function Code Categories
-/// ### Deposit Operations
-/// - **DEPOSIT**: Standard deposit transactions
-/// - **NOTICE**: Notice deposit with specific day requirements
-/// - **CALL**: Call money transactions (immediate settlement)
-/// - **CURRENT**: Current account operations
-///
-/// ### Commercial Operations
-/// - **COMMERCIAL**: Commercial transaction identification
-/// - **BASE**: Base rate reference transactions
-/// - **PRIME**: Prime rate related operations
-///
-/// ## Network Validation Requirements
-/// - **Function Code**: Must be valid 3-character alphabetic code
-/// - **Days Field**: Only required/allowed for NOTICE function code
-/// - **Days Range**: 1-99 days when specified for NOTICE transactions
-/// - **Reference Format**: Must comply with 11x character set restrictions
-/// - **Character Set**: Standard SWIFT character set compliance
-///
-/// ## Message Type Integration
-/// - **MT 200**: Financial institution transfer (function classification)
-/// - **MT 202**: General financial institution transfer (operation type)
-/// - **MT 210**: Notice to receive (notice period specification)
-/// - **Treasury Messages**: Various treasury operations requiring identification
-///
-/// ## Regional Considerations
-/// - **Money Market Standards**: Regional money market convention compliance
-/// - **Central Bank Requirements**: Regulatory classification requirements
-/// - **Settlement Systems**: Local settlement system integration
-/// - **Regulatory Reporting**: Transaction classification for reporting purposes
-///
-/// ## Validation Logic
-/// ### Function Code Rules
-/// - **NOTICE**: Requires days field (2!n format, 1-99)
-/// - **Other Codes**: Days field must not be present
-/// - **Reference**: Always required, 11x format compliance
-/// - **Character Validation**: Uppercase alphabetic characters only
-///
-/// ### Processing Impact
-/// - **Settlement Timing**: Function code affects settlement procedures
-/// - **Interest Calculation**: Impacts interest computation methods
-/// - **Regulatory Classification**: Determines reporting categories
-/// - **Risk Assessment**: Influences risk management procedures
-///
-/// ## Error Prevention Guidelines
-/// - **Function Code Verification**: Confirm valid function code selection
-/// - **Days Field Logic**: Only include days for NOTICE transactions
-/// - **Reference Accuracy**: Ensure reference information is correct
-/// - **Format Compliance**: Verify character set and length requirements
-///
-/// ## Related Fields Integration
-/// - **Field 20**: Transaction Reference (transaction context)
-/// - **Field 30**: Value Date (timing coordination)
-/// - **Field 32A**: Currency/Amount (transaction details)
-/// - **Field 52A/D**: Ordering Institution (institutional context)
-///
-/// ## Compliance Framework
-/// - **Money Market Regulations**: Compliance with money market standards
-/// - **Central Bank Reporting**: Regulatory classification requirements
-/// - **Audit Documentation**: Complete transaction categorization
-/// - **Risk Management**: Transaction type classification for risk assessment
-///
-/// ## Best Practices
-/// - **Accurate Classification**: Select appropriate function code
-/// - **Notice Period Management**: Proper days specification for NOTICE
-/// - **Reference Standards**: Consistent reference information format
-/// - **Documentation**: Complete transaction categorization documentation
-///
-/// ## See Also
-/// - Swift FIN User Handbook: Further Identification Field Specifications
-/// - Money Market Standards: Function Code Classifications
-/// - Treasury Operations Guide: Transaction Identification Best Practices
+/// **Example:**
+/// ```text
+/// :23:NOT15REF123
+/// :23:BASREFERENCE
+/// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field23 {
-    /// Function code (3!a format: BASE, CALL, COMMERCIAL, CURRENT, DEPOSIT, NOTICE, PRIME)
-    ///
-    /// Determines transaction processing type and whether days field is required
+    /// Function code (3 chars, uppercase)
     pub function_code: String,
-
-    /// Optional days specification (2!n format, 1-99)
-    ///
-    /// Only present for NOTICE function code, specifies notice period in days
+    /// Days (1-99, only for NOTICE)
     pub days: Option<u32>,
-
-    /// Reference information (11x format)
-    ///
-    /// Additional transaction identification or reference details
+    /// Reference (max 11 chars)
     pub reference: String,
 }
 
@@ -208,41 +121,21 @@ impl SwiftField for Field23 {
     }
 }
 
-///   **Field 23B: Bank Operation Code**
+/// **Field 23B: Bank Operation Code**
 ///
-/// ## Purpose
-/// Specifies the bank operation code for payment instructions, determining the service
-/// level and processing type for customer credit transfers. This field is crucial for
-/// STP (Straight Through Processing) and affects how the payment is processed through
-/// the payment chain.
+/// Service level and processing type for payment instructions.
+/// Affects STP routing, priority, and settlement timing.
 ///
-/// ## Format
-/// - **Swift Format**: `4!c`
-/// - **Description**: Exactly 4 uppercase alphabetic characters
-/// - **Valid Codes**: CRED, CRTS, SPAY, SPRI, SSTD
+/// **Format:** `4!c` (exactly 4 uppercase chars)
+/// **Common codes:** CRED, CRTS, SPAY, SPRI, SSTD, URGP
 ///
-/// ## Code Definitions
-/// - **CRED**: Creditor transfer - Standard credit transfer
-/// - **CRTS**: Credit transfer with time criticality
-/// - **SPAY**: Priority payment - High priority processing
-/// - **SPRI**: Priority payment with immediate processing
-/// - **SSTD**: Standard transfer - Normal processing priority
-///
-/// ## Network Validation Rules
-/// - **Format**: Must be exactly 4 alphabetic characters
-/// - **Case**: Must be uppercase
-/// - **Validity**: Must be one of the defined codes
-///
-/// ## STP Impact
-/// - Determines processing priority and routing
-/// - Affects cut-off times and settlement windows
-/// - Influences fee structures and service levels
+/// **Example:**
+/// ```text
+/// :23B:SSTD
+/// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field23B {
-    /// Bank operation code indicating service level and processing type
-    ///
-    /// Format: 4!c - Exactly 4 alphabetic characters
-    /// Valid codes: CRED, CRTS, SPAY, SPRI, SSTD
+    /// Bank operation code (4 chars, uppercase)
     pub instruction_code: String,
 }
 
@@ -282,38 +175,23 @@ impl SwiftField for Field23B {
     }
 }
 
-///   **Field 23E: Instruction Code**
+/// **Field 23E: Instruction Code**
 ///
-/// ## Purpose
-/// Provides additional instruction codes for payment processing, enabling specific
-/// handling instructions and regulatory compliance indicators. Each instruction consists
-/// of a 4-character code optionally followed by additional information.
+/// Additional processing instructions and compliance indicators.
 ///
-/// ## Format
-/// - **Swift Format**: `4!c[/35x]`
-/// - **Structure**: Instruction code + optional additional information
-/// - **Multiple Instructions**: Can contain multiple instruction codes
+/// **Format:** `4!c[/35x]` (code + optional details)
+/// **Common codes:** CHQB, CORT, HOLD, PHON, REPA, SDVA, TELB, URGP
 ///
-/// ## Common Instruction Codes
-/// ### Regulatory Instructions
-/// - **CHQB**: Cheque settlement instruction
-/// - **CORT**: Corporate trade settlement
-/// - **HOLD**: Hold for compliance review
-/// - **PHON**: Phone verification completed
-/// - **REPA**: Regulatory reporting required
-/// - **SDVA**: Same day value adjustment
-/// - **TELB**: Telephone initiated transfer
-/// - **URGP**: Urgent payment instruction
+/// **Example:**
+/// ```text
+/// :23E:HOLD/COMPLIANCE REVIEW
+/// :23E:URGP
+/// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field23E {
-    /// Instruction code (4!c format)
-    ///
-    /// Specifies the type of instruction for processing
+    /// Instruction code (4 chars, uppercase)
     pub instruction_code: String,
-
-    /// Optional additional information (up to 35 characters)
-    ///
-    /// Provides supplementary details for the instruction code
+    /// Additional info (max 35 chars)
     pub additional_info: Option<String>,
 }
 

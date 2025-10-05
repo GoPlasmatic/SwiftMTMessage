@@ -6,64 +6,63 @@ use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-/// MT204 - Financial Markets Direct Debit Message
+/// **MT204: Financial Markets Direct Debit Message**
 ///
-/// Used for direct debit transactions in financial markets,
-/// typically for clearing and settlement of multiple transactions.
+/// Direct debit transactions in financial markets for clearing and settlement.
+///
+/// **Usage:** Multiple transaction clearing, settlement batches
+/// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT204 {
-    /// Field 20 - Transaction Reference Number (Mandatory)
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub transaction_reference: Field20,
 
-    /// Field 19 - Sum of Amounts (Mandatory)
+    /// Sum of Amounts (Field 19)
     #[serde(rename = "19")]
     pub sum_of_amounts: Field19,
 
-    /// Field 30 - Execution Date (Mandatory)
+    /// Execution Date (Field 30)
     #[serde(rename = "30")]
     pub execution_date: Field30,
 
-    /// Field 57 - Account With Institution (Optional)
-    /// Can be 57A, 57B, or 57D
+    /// Account With Institution (Field 57)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub account_with_institution: Option<Field57>,
 
-    /// Field 58 - Beneficiary Institution (Optional)
-    /// Can be 58A or 58D
+    /// Beneficiary Institution (Field 58)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub beneficiary_institution: Option<Field58>,
 
-    /// Field 72 - Sender to Receiver Information (Optional)
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub sender_to_receiver: Option<Field72>,
 
-    /// Transactions (Repeatable)
+    /// Transactions (repeatable)
     #[serde(rename = "#", default)]
     pub transactions: Vec<MT204Transaction>,
 }
 
-/// Individual transaction within an MT204 message
+/// Individual transaction within MT204
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT204Transaction {
-    /// Field 20 - Transaction Reference Number (Mandatory)
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub transaction_reference: Field20,
 
-    /// Field 21 - Related Reference (Optional)
+    /// Related Reference (Field 21)
     #[serde(rename = "21", skip_serializing_if = "Option::is_none")]
     pub related_reference: Option<Field21NoOption>,
 
-    /// Field 32B - Currency Code, Amount (Mandatory)
+    /// Currency Code, Amount (Field 32B)
     #[serde(rename = "32B")]
     pub currency_amount: Field32B,
 
-    /// Field 53 - Sender's Correspondent (Optional)
-    /// Can be 53A or 53B
+    /// Sender's Correspondent (Field 53)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub senders_correspondent: Option<Field53>,
 
-    /// Field 72 - Sender to Receiver Information (Optional)
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub sender_to_receiver: Option<Field72>,
 }

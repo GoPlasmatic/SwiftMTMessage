@@ -3,124 +3,22 @@ use crate::errors::ParseError;
 use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
 
-///   **Field 72: Sender to Receiver Information**
+/// **Field 72: Sender to Receiver Information**
 ///
-/// ## Purpose
-/// Specifies additional information for the Receiver or other specified party in
-/// financial messages. This field provides structured communication between financial
-/// institutions, enabling additional instructions, clarifications, and institutional
-/// coordination that supplements the main transaction details.
+/// Additional information for receiver or other parties in financial messages,
+/// enabling institutional coordination and processing instructions.
 ///
-/// ## Format Specification
-/// - **Swift Format**: `6*35x`
-/// - **Structure**: Up to 6 lines of 35 characters each
-/// - **Content**: Structured narrative format with specific codes
-/// - **Line Format**: `/8c/[additional information]` (Code)(Narrative)
+/// **Format:** `6*35x` (max 6 lines, 35 chars each)
+/// **Common codes:** `/ACC/` (account), `/BNF/` (beneficiary), `/INST/` (instruction), `/INS/` (instructing institution)
 ///
-/// ## Business Context Applications
-/// - **Institutional Communication**: Additional instructions between banks
-/// - **Processing Instructions**: Specific handling requirements
-/// - **Regulatory Information**: Compliance-related communications
-/// - **Operational Coordination**: Coordination between correspondent banks
-///
-/// ## Network Validation Requirements
-/// - **Line Structure**: Each code must be between slashes at line beginning
-/// - **Continuation**: Continuation text starts with '//'
-/// - **Prohibited Codes**: /REJT/ and /RETN/ codes not allowed (Error T81)
-/// - **ERI Exclusion**: Must not include ERI (Error T82)
-/// - **Character Set**: Must use valid SWIFT character set
-///
-/// ## Structured Code Requirements
-/// ### Mandatory Code Format
-/// - **Line 1**: `/8c/[additional information]` - Code followed by narrative
-/// - **Lines 2-6**: Continuation with '//' or new codes
-/// - **Code Uniqueness**: Each code should appear only once
-/// - **Format Compliance**: Exact adherence to code structure required
-///
-/// ### Primary Code: INS (Instructing Institution)
-/// - **Purpose**: Identifies instructing institution
-/// - **Format**: /INS/[BIC code]
-/// - **Validation**: Must be followed by valid BIC
-/// - **Uniqueness**: Must be unique within message
-/// - **Usage**: Critical for institutional identification
-///
-/// ## Regional Considerations
-/// - **European Networks**: SEPA and TARGET2 institutional communications
-/// - **US Systems**: Federal Reserve and commercial bank coordination
-/// - **Asian Markets**: Regional institutional communication requirements
-/// - **Cross-Border**: International institutional coordination
-///
-/// ## Common Codes and Usage
-/// ### Institutional Codes
-/// - **ACC**: Account information and details
-/// - **BENF**: Beneficiary related information
-/// - **CNTR**: Country specific information
-/// - **INST**: Instruction for next agent
-/// - **INT**: Intermediary information
-/// - **PHONBEN**: Phone number of beneficiary
-/// - **PHONORD**: Phone number of ordering party
-/// - **REC**: Receiver information
-/// - **TELE**: Telecommunication details
-///
-/// ### Processing Instructions
-/// - **BNF**: Details of beneficiary
-/// - **COMM**: Commission and charges
-/// - **DETL**: Transaction details
-/// - **INTA**: Instructing agent
-/// - **PAYA**: Paying agent
-/// - **RECD**: Received from
-/// - **SVCLVL**: Service level
-///
-/// ## Error Prevention Guidelines
-/// - **Code Validation**: Verify codes are properly formatted and valid
-/// - **Slash Format**: Ensure correct slash placement for codes
-/// - **Character Limits**: Respect 35-character line limit
-/// - **Prohibited Content**: Avoid restricted codes (REJT, RETN)
-///
-/// ## Related Fields Integration
-/// - **Field 70**: Remittance Information (beneficiary details)
-/// - **Field 77B**: Regulatory Reporting (compliance information)
-/// - **Field 23E**: Instruction Code (processing instructions)
-/// - **Field 33B**: Currency/Instructed Amount (amount details)
-///
-/// ## Compliance Framework
-/// - **Regulatory Reporting**: Compliance information transmission
-/// - **Anti-Money Laundering**: Additional verification details
-/// - **Sanctions Screening**: Supplementary screening information
-/// - **Audit Trail**: Complete institutional communication record
-///
-/// ## Best Practices
-/// - **Clear Instructions**: Use unambiguous instruction codes
-/// - **Structured Format**: Follow code/narrative structure
-/// - **Concise Content**: Keep information brief and relevant
-/// - **Code Consistency**: Use standard codes consistently
-///
-/// ## Message Type Usage
-/// - **MT 103**: Payment instructions and institutional details
-/// - **MT 202**: Financial institution transfer instructions
-/// - **MT 199**: Free format message with structured codes
-/// - **MT 299**: Free format financial institution transfer
-///
-/// ## Examples
-/// ```logic
-/// :72:/ACC/GB29NWBK60161331926819
+/// **Example:**
+/// ```text
 /// :72:/BNF/BENEFICIARY DETAILS
-/// :72:/PHONBEN/+1-555-123-4567
-/// :72:/INST/CREDIT ACCOUNT IMMEDIATELY
+/// /INST/CREDIT ACCOUNT IMMEDIATELY
 /// ```
-///
-/// ## See Also
-/// - Swift FIN User Handbook: Sender to Receiver Information
-/// - MT Standards: Field 72 Specifications
-/// - Correspondent Banking: Institutional Communication Standards
-/// - Payment Processing: Bank-to-Bank Information Guidelines
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field72 {
-    /// Sender to receiver information
-    ///
-    /// Format: 6*35x - Up to 6 lines of 35 characters each
-    /// Contains structured institutional communications with codes and narrative
-    /// Line 1: /8c/[additional information], subsequent lines: continuation or new codes
+    /// Sender to receiver information (max 6 lines, 35 chars each)
     pub information: Vec<String>,
 }
 

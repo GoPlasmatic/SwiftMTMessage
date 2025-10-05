@@ -3,37 +3,39 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT190: Advice of Charges, Interest and Other Adjustments
-// Used to advise charges, interest and other adjustments that have been
-// debited or credited to an account.
-
+/// **MT190: Advice of Charges, Interest and Other Adjustments**
+///
+/// Notification of charges, interest, and adjustments debited or credited to account.
+///
+/// **Usage:** Charge notifications, interest advice
+/// **Category:** Category 1 (Customer Payments & Cheques)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT190 {
-    // Transaction Reference Number
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Related Reference
+    /// Related Reference (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    // Account Identification
+    /// Account Identification (Field 25)
     #[serde(rename = "25")]
     pub field_25: Field25NoOption,
 
-    // Value Date, Currency Code, Amount (can be 32C or 32D for MT190)
+    /// Value Date, Currency Code, Amount (Field 32)
     #[serde(flatten)]
     pub field_32: Field32AmountCD,
 
-    // Ordering Institution (optional)
+    /// Ordering Institution (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52OrderingInstitution>,
 
-    // Details of Charges
+    /// Details of Charges (Field 71B)
     #[serde(rename = "71B")]
     pub field_71b: Field71B,
 
-    // Sender to Receiver Information (optional)
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub field_72: Option<Field72>,
 }

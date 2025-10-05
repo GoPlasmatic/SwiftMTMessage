@@ -3,37 +3,40 @@ use crate::fields::*;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-// MT111: Request for Stop Payment of a Cheque
-// Sent by the drawer bank (or its agent) to the drawee bank to request
-// stop payment of a cheque.
-
+/// **MT111: Request for Stop Payment of a Cheque**
+///
+/// Request from drawer bank to drawee bank to stop payment of a specific cheque.
+/// Used to prevent payment when cheque is lost, stolen, or disputed.
+///
+/// **Usage:** Cheque stop payment requests
+/// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT111 {
-    // Sender's Reference
+    /// Sender's reference (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    // Cheque Number
+    /// Cheque number (Field 21)
     #[serde(rename = "21")]
     pub field_21: Field21NoOption,
 
-    // Date of Issue
+    /// Date of issue (Field 30)
     #[serde(rename = "30")]
     pub field_30: Field30,
 
-    // Amount (can be 32A or 32B per SWIFT spec)
+    /// Amount (Field 32)
     #[serde(flatten)]
     pub field_32: Field32AB,
 
-    // Drawer Bank (optional) - can be A, B, or D
+    /// Drawer bank (Field 52)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_52: Option<Field52OrderingInstitution>,
 
-    // Payee (optional) - name and address only
+    /// Payee (Field 59)
     #[serde(rename = "59", skip_serializing_if = "Option::is_none")]
     pub field_59: Option<Field59NoOption>,
 
-    // Queries (optional)
+    /// Queries (Field 75)
     #[serde(rename = "75", skip_serializing_if = "Option::is_none")]
     pub field_75: Option<Field75>,
 }

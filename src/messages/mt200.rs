@@ -4,34 +4,35 @@ use crate::parser::MessageParser;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
-/// MT200 - Financial Institution Transfer for Own Account
+/// **MT200: Financial Institution Transfer for Own Account**
 ///
-/// Used by financial institutions to transfer funds for their own account,
-/// typically for nostro account funding, liquidity management, or internal transfers.
+/// Financial institution funds transfer for their own account.
+///
+/// **Usage:** Nostro funding, liquidity management, internal transfers
+/// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MT200 {
-    /// Field 20 - Transaction Reference Number (Mandatory)
+    /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
     pub field_20: Field20,
 
-    /// Field 32A - Value Date, Currency Code, Amount (Mandatory)
+    /// Value Date, Currency Code, Amount (Field 32A)
     #[serde(rename = "32A")]
     pub field_32a: Field32A,
 
-    /// Field 53B - Sender's Correspondent (Optional)
+    /// Sender's Correspondent (Field 53B)
     #[serde(rename = "53B", skip_serializing_if = "Option::is_none")]
     pub field_53b: Option<Field53B>,
 
-    /// Field 56 - Intermediary Institution (Optional)
-    /// Can be 56A or 56D
+    /// Intermediary Institution (Field 56)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub field_56: Option<Field56IntermediaryAD>,
 
-    /// Field 57 - Account With Institution (Mandatory)
+    /// Account With Institution (Field 57)
     #[serde(flatten)]
     pub field_57: Field57DebtInstitution,
 
-    /// Field 72 - Sender to Receiver Information (Optional)
+    /// Sender to Receiver Information (Field 72)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub field_72: Option<Field72>,
 }

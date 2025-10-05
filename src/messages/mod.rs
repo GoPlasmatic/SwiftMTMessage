@@ -1,4 +1,26 @@
-// Message modules using new declarative macros
+//! # SWIFT MT Message Types
+//!
+//! Comprehensive message type implementations for SWIFT MT (Message Type) financial messages.
+//! Each message struct provides parsing, validation, and serialization.
+//!
+//! ## Message Categories
+//! - **Category 1 (MT1xx):** Customer payments and cheques
+//! - **Category 2 (MT2xx):** Financial institution transfers
+//! - **Category 9 (MT9xx):** Cash management and customer statements
+//!
+//! ## Usage
+//! ```rust
+//! use swift_mt_message::messages::MT103;
+//! use swift_mt_message::traits::SwiftMessageBody;
+//!
+//! # fn main() -> swift_mt_message::Result<()> {
+//! let mt103 = MT103::parse_from_block4(":20:REF123\n:23B:CRED\n...")?;
+//! let mt_string = mt103.to_mt_string();
+//! # Ok(())
+//! # }
+//! ```
+
+// Message modules
 pub mod mt101;
 pub mod mt103;
 pub mod mt104;

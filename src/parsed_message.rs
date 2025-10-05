@@ -1,9 +1,11 @@
-//! ParsedSwiftMessage enum for automatic message type detection and parsing
+//! # ParsedSwiftMessage
+//!
+//! Enum for automatic message type detection and parsing. Used by `SwiftParser::parse_auto()`.
 
 use crate::{ValidationResult, messages::*, swift_message::SwiftMessage};
 use serde::{Deserialize, Serialize};
 
-/// Enumeration of all supported SWIFT message types for automatic parsing
+/// Enum of all supported SWIFT message types (30+ types)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "mt_type")]
 pub enum ParsedSwiftMessage {
@@ -471,9 +473,6 @@ impl ParsedSwiftMessage {
     }
 
     /// Validate using SWIFT SR2025 network validation rules
-    ///
-    /// This method validates the message using the new `validate_network_rules()` method
-    /// which provides detailed SWIFT error codes and structured validation errors.
     pub fn validate(&self) -> ValidationResult {
         match self {
             ParsedSwiftMessage::MT101(mt101) => mt101.validate(),

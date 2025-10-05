@@ -1,69 +1,26 @@
-//! # Error Handling for SWIFT MT Message Library
+//! # Error Handling
 //!
-//! ## Purpose
-//! Comprehensive error types and result handling for SWIFT MT message parsing, validation, and processing.
-//! Provides detailed error information for debugging and error recovery.
+//! Comprehensive error types for SWIFT MT message parsing and validation.
 //!
-//! ## Error Categories
-//! - **Parse Errors**: Issues during message parsing and field extraction
-//! - **Validation Errors**: Field format and business rule validation failures
-//! - **Type Errors**: Message type mismatches and unsupported formats
-//! - **IO Errors**: File system and network-related errors
-//! - **Serialization Errors**: JSON and data conversion issues
+//! ## Error Types
+//! - **ParseError**: Message parsing and field extraction failures
+//! - **ValidationError**: Field format and business rule violations
+//! - **SwiftValidationError**: SWIFT network validation (1,335 error codes: T/C/D/E/G series)
 //!
-//! ## Error Design
-//! All errors implement:
-//! - `std::error::Error` trait for standard error handling
-//! - `Serialize`/`Deserialize` for API error responses
-//! - `Clone` for error propagation and logging
-//! - `Debug` for comprehensive debugging information
-//!
-//! ## Usage Examples
+//! ## Example
 //! ```rust
-//! use swift_mt_message::errors::{ParseError, ValidationError, Result};
 //! use swift_mt_message::parser::SwiftParser;
-//! use swift_mt_message::ValidationResult;
+//! use swift_mt_message::ParseError;
 //!
-//! # let invalid_message = "{1:F01BANKDEFFAXXX0123456789}{2:I103BANKDEFFAXXXU3003}{4:-}";
-//! // Handle parsing errors
-//! match SwiftParser::parse_auto(&invalid_message) {
-//!     Ok(message) => println!("Parsed successfully: {:?}", message),
+//! # let msg = "{1:F01BANKDEFF...}{2:I103...}{4:-}";
+//! match SwiftParser::parse_auto(msg) {
+//!     Ok(message) => println!("Success"),
 //!     Err(ParseError::InvalidFieldFormat(err)) => {
-//!         eprintln!("Format error in field {}: {}", err.field_tag, err.component_name);
+//!         eprintln!("Field {}: {}", err.field_tag, err.component_name);
 //!     },
-//!     Err(ParseError::MissingRequiredField { field_tag, field_name, .. }) => {
-//!         eprintln!("Missing required field: {} ({})", field_tag, field_name);
-//!     },
-//!     Err(other) => eprintln!("Other error: {}", other),
-//! }
-//!
-//! // Handle validation errors
-//! let validation_result = ValidationResult::with_errors(vec![
-//!     ValidationError::FormatValidation {
-//!         field_tag: "20".to_string(),
-//!         message: "Invalid format".to_string()
-//!     },
-//! ]);
-//! if !validation_result.is_valid {
-//!     for error in validation_result.errors {
-//!         match error {
-//!             ValidationError::FormatValidation { field_tag, message } => {
-//!                 eprintln!("Field {} format error: {}", field_tag, message);
-//!             },
-//!             ValidationError::BusinessRuleValidation { rule_name, message } => {
-//!                 eprintln!("Business rule {} failed: {}", rule_name, message);
-//!             },
-//!             _ => eprintln!("Validation error: {}", error),
-//!         }
-//!     }
+//!     Err(other) => eprintln!("{}", other),
 //! }
 //! ```
-//!
-//! ## Error Recovery
-//! Many errors provide sufficient context for automated error recovery:
-//! - Field validation errors include expected formats for correction
-//! - Parse errors include position information for partial recovery
-//! - Business rule errors include rule names for selective validation
 
 use serde::{Deserialize, Serialize};
 use std::any::Any;

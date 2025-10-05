@@ -3,59 +3,24 @@ use crate::errors::ParseError;
 use crate::traits::SwiftField;
 use serde::{Deserialize, Serialize};
 
-///   **Field 79: Narrative**
+/// **Field 79: Narrative**
 ///
-/// ## Purpose
-/// Provides extended narrative information for various Swift MT messages, offering
-/// comprehensive text capacity for detailed transaction descriptions, explanations,
-/// and supplementary information. This field supports extensive documentation
-/// requirements across multiple message types, enabling complete transaction
-/// context and detailed communication between financial institutions.
+/// Extended narrative information for detailed transaction descriptions and explanations.
 ///
-/// ## Format Specification
-/// - **Swift Format**: `35*50x`
-/// - **Structure**: Up to 35 lines of 50 characters each
-/// - **Total Capacity**: Maximum 1,750 characters
-/// - **Character Set**: Standard SWIFT character set with extended line capacity
+/// **Format:** `35*50x` (max 35 lines, 50 chars each, total 1750 chars)
+/// **Used in:** MT 199, 299 (free format messages), MT 196, 296 (answer messages)
 ///
-/// ## Business Context Applications
-/// - **Extended Documentation**: Comprehensive transaction documentation
-/// - **Free Format Messages**: Core narrative field for MT 199 and MT 299 messages
-/// - **Query/Answer Support**: Extended information for query and answer messages
-/// - **Cancellation Reasons**: Detailed explanations in cancellation messages
-/// - **Amendment Details**: Complete amendment descriptions and justifications
-///
-/// ## Message Type Integration
-/// ### Primary Applications
-/// - **MT 199**: Free format customer messages
-/// - **MT 196**: Customer payment answers (optional extended narrative)
-/// - **MT 292**: Treasury cancellation (reason details)
-/// - **MT 296**: Treasury answers
-/// - **MT 299**: Free format treasury messages
-/// - **MT 705**: Documentary credits (as Field 79Z)
-/// - **Various n96**: Answer messages requiring extended explanations
-/// - **Various n99**: Free format messages across categories
-///
-/// ## Network Validation Requirements
-/// - **Line Capacity**: Maximum 35 lines of 50 characters each
-/// - **Character Set**: Must use valid SWIFT character set
-/// - **Format Restrictions**: Prohibited content and special character rules
-/// - **Code Validation**: Special validation for specific content codes
-/// - **Reference Patterns**: Restricted slash patterns for security
-///
-/// ## See Also
-/// - Swift FIN User Handbook: Narrative Field Specifications
-/// - Free Format Message Standards: MT 199 and MT 299 Guidelines
-/// - Content Guidelines: Narrative Content Best Practices
-/// - Regulatory Standards: Narrative Documentation Requirements
+/// **Example:**
+/// ```text
+/// :79:PAYMENT DETAILS:
+/// INVOICE NUMBER: 12345
+/// SERVICES PROVIDED: CONSULTING
+/// PERIOD: DECEMBER 2023
+/// ```
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Field79 {
-    /// Extended narrative information
-    ///
-    /// Format: 35*50x - Up to 35 lines of 50 characters each (1,750 total characters)
-    /// Contains comprehensive narrative information, explanations, and documentation
-    /// Used for detailed transaction descriptions, reasons, and extended communication
+    /// Extended narrative information (max 35 lines, 50 chars each)
     pub information: Vec<String>,
 }
 

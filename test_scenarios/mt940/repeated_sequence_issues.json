@@ -146,8 +146,7 @@
             "customer_reference": {
               "var": "ref1"
             },
-            "bank_reference": "BA1-1234567890",
-            "supplementary_details": "DUPLICATE-SEQ-1"
+            "bank_reference": "BA1-1234567890"
           },
           "86": {
             "narrative": [
@@ -172,8 +171,7 @@
             "customer_reference": {
               "var": "ref1"
             },
-            "bank_reference": "BA2-1234567890",
-            "supplementary_details": "DUPLICATE-SEQ-2"
+            "bank_reference": "BA2-1234567890"
           },
           "86": {
             "narrative": [
@@ -198,8 +196,7 @@
             "customer_reference": {
               "var": "ref2"
             },
-            "bank_reference": "BA3-1234567890",
-            "supplementary_details": "NORMAL-TXN"
+            "bank_reference": "BA3-1234567890"
           },
           "86": {
             "narrative": [
@@ -223,8 +220,7 @@
             "customer_reference": {
               "var": "ref1"
             },
-            "bank_reference": "BA4-1234567890",
-            "supplementary_details": "DUPLICATE-SEQ-3"
+            "bank_reference": "BA4-1234567890"
           },
           "86": {
             "narrative": [

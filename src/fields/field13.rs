@@ -293,7 +293,7 @@ impl SwiftField for Field13C {
         }
 
         Ok(Field13C {
-            code: format!("/{}/", code),
+            code,
             time,
             sign: sign_char,
             offset,
@@ -302,7 +302,7 @@ impl SwiftField for Field13C {
 
     fn to_swift_string(&self) -> String {
         format!(
-            ":13C:{}{}{}{}",
+            ":13C:/{}/{}{}{}",
             self.code,
             self.time.format("%H%M"),
             self.sign,
@@ -428,14 +428,14 @@ mod tests {
     #[test]
     fn test_field13c_valid() {
         let field = Field13C::parse("/SNDTIME/1230+0100").unwrap();
-        assert_eq!(field.code, "/SNDTIME/");
+        assert_eq!(field.code, "SNDTIME");
         assert_eq!(field.time.format("%H%M").to_string(), "1230");
         assert_eq!(field.sign, '+');
         assert_eq!(field.offset, "0100");
         assert_eq!(field.to_swift_string(), ":13C:/SNDTIME/1230+0100");
 
         let field = Field13C::parse("/CLSTIME/0900-0500").unwrap();
-        assert_eq!(field.code, "/CLSTIME/");
+        assert_eq!(field.code, "CLSTIME");
         assert_eq!(field.time.format("%H%M").to_string(), "0900");
         assert_eq!(field.sign, '-');
         assert_eq!(field.offset, "0500");

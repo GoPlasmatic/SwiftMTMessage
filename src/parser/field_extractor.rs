@@ -27,8 +27,12 @@ pub fn extract_field_content(input: &str, tag: &str) -> Option<(String, usize)> 
         let has_newline = remaining.as_bytes().get(end) == Some(&b'\n');
         (remaining[..end].to_string(), has_newline)
     } else {
-        // No next field found, take everything until end marker `-`
-        if let Some(end_pos) = remaining.find("\n-") {
+        // No next field found, take everything until end marker
+        // Look for block end markers: "\n-}" or "\n-\n" (trailer separator)
+        // Do NOT stop at "\n-" alone as "-" can be valid field content (e.g., bullet points)
+        if let Some(end_pos) = remaining.find("\n-}") {
+            (remaining[..end_pos].to_string(), true)
+        } else if let Some(end_pos) = remaining.find("\n-\n") {
             (remaining[..end_pos].to_string(), true)
         } else if let Some(end_pos) = remaining.find("-}") {
             (remaining[..end_pos].to_string(), false)

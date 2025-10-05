@@ -169,8 +169,24 @@
           }
         ]
       },
-      "ordering_customer_b": {
-        "K": {
+      "56A": {
+        "bic": {
+          "var": "intermediary_bic"
+        }
+      },
+      "57A": {
+        "bic": {
+          "var": "account_with_bic"
+        }
+      },
+      "58A": {
+        "party_identifier": "S/SANCTIONS-CLEARED",
+        "bic": {
+          "var": "receiver_bic"
+        }
+      },
+      "#": {
+        "50K": {
           "account": "VERIFIED-ACCOUNT-123456",
           "name_and_address": [
             "ACME CORPORATION",
@@ -198,31 +214,23 @@
               ]
             }
           ]
-        }
-      },
-      "ordering_institution_b": {
-        "A": {
+        },
+        "52A": {
           "bic": {
             "var": "sender_bic"
           }
-        }
-      },
-      "intermediary_b": {
-        "A": {
+        },
+        "56A": {
           "bic": {
             "var": "intermediary_bic"
           }
-        }
-      },
-      "account_with_institution_b": {
-        "A": {
+        },
+        "57A": {
           "bic": {
             "var": "account_with_bic"
           }
-        }
-      },
-      "beneficiary_customer_b": {
-        "NoOption": {
+        },
+        "59": {
           "account": "VERIFIED-ACCOUNT-789012",
           "name_and_address": [
             "ACME CORPORATION",
@@ -250,47 +258,31 @@
               ]
             }
           ]
-        }
-      },
-      "remittance_information_b": {
-        "narrative": [
-          {
-            "cat": [
-              "/PURP/",
-              {
-                "var": "purpose_code"
-              }
-            ]
-          },
-          "/COMPL/SANCTIONS SCREENING PASSED",
-          "/COMPL/KYC VERIFICATION COMPLETE",
-          "/COMPL/AML CHECKS CLEARED"
-        ]
-      },
-      "sender_to_receiver_information_b": {
-        "information": [
-          "/ACC/NESTED LEI STRUCTURE",
-          "/ORD/LEIXG8HWVXGGR1B2V5K893",
-          "/BNF/LEIZBQR12345HKLMNOP678",
-          "/ULTD/LEIXG8HWVXGGR1B2V9O897",
-          "/ULTB/LEIZBQR12345HKLMNOP680",
-          "/COMPL/ALL LEIS VERIFIED"
-        ]
-      },
-      "56A": {
-        "bic": {
-          "var": "intermediary_bic"
-        }
-      },
-      "57A": {
-        "bic": {
-          "var": "account_with_bic"
-        }
-      },
-      "58A": {
-        "party_identifier": "S/SANCTIONS-CLEARED",
-        "bic": {
-          "var": "receiver_bic"
+        },
+        "70": {
+          "narrative": [
+            {
+              "cat": [
+                "/PURP/",
+                {
+                  "var": "purpose_code"
+                }
+              ]
+            },
+            "/COMPL/SANCTIONS SCREENING PASSED",
+            "/COMPL/KYC VERIFICATION COMPLETE",
+            "/COMPL/AML CHECKS CLEARED"
+          ]
+        },
+        "72": {
+          "information": [
+            "/ACC/NESTED LEI STRUCTURE",
+            "/ORD/LEIXG8HWVXGGR1B2V5K893",
+            "/BNF/LEIZBQR12345HKLMNOP678",
+            "/ULTD/LEIXG8HWVXGGR1B2V9O897",
+            "/ULTB/LEIZBQR12345HKLMNOP680",
+            "/COMPL/ALL LEIS VERIFIED"
+          ]
         }
       }
     }

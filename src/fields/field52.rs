@@ -245,7 +245,7 @@ impl SwiftField for Field52B {
             result.push(loc.clone());
         }
 
-        result.join("\n")
+        format!(":52B:{}", result.join("\n"))
     }
 }
 
@@ -289,7 +289,7 @@ impl SwiftField for Field52C {
     }
 
     fn to_swift_string(&self) -> String {
-        format!("/{}", self.party_identifier)
+        format!(":52C:/{}", self.party_identifier)
     }
 }
 
@@ -691,7 +691,7 @@ mod tests {
     fn test_field52c() {
         let field = Field52C::parse("/UKCLEARING123").unwrap();
         assert_eq!(field.party_identifier, "UKCLEARING123");
-        assert_eq!(field.to_swift_string(), "/UKCLEARING123");
+        assert_eq!(field.to_swift_string(), ":52C:/UKCLEARING123");
     }
 
     #[test]

@@ -1,4 +1,4 @@
-use super::field_utils::{parse_name_and_address, parse_party_identifier};
+use super::field_utils::parse_party_identifier;
 use super::swift_utils::{parse_bic, parse_max_length};
 use crate::errors::ParseError;
 use crate::traits::SwiftField;
@@ -203,17 +203,44 @@ impl SwiftField for Field53B {
         let lines: Vec<&str> = input.split('\n').collect();
         let mut party_identifier = None;
         let mut location = None;
-        let mut line_idx = 0;
 
-        // Check for party identifier on first line
-        if !lines.is_empty() && lines[0].starts_with('/') {
-            party_identifier = Some(lines[0].to_string());
-            line_idx = 1;
-        }
+        // Field 53B format:
+        // If 2 lines: Line 1 = party_identifier, Line 2 = location
+        // If 1 line: Could be party_identifier OR location - use heuristics:
+        //   - Starts with '/' -> party_identifier
+        //   - Looks like BIC (8-11 uppercase alphanumeric) -> party_identifier
+        //   - Otherwise -> location
+        if lines.len() >= 2 {
+            // Two lines: first is party_identifier, second is location
+            if !lines[0].is_empty() {
+                let party_id = if lines[0].starts_with('/') {
+                    &lines[0][1..] // Remove leading slash for storage
+                } else {
+                    lines[0]
+                };
+                party_identifier = Some(parse_max_length(party_id, 34, "Field53B party_identifier")?);
+            }
+            if !lines[1].is_empty() {
+                location = Some(parse_max_length(lines[1], 35, "Field53B location")?);
+            }
+        } else if lines.len() == 1 && !lines[0].is_empty() {
+            let line = lines[0];
 
-        // Remaining line is location
-        if line_idx < lines.len() && !lines[line_idx].is_empty() {
-            location = Some(parse_max_length(lines[line_idx], 35, "Field53B location")?);
+            // Determine if single line is party_identifier or location
+            let is_party_identifier = line.starts_with('/')
+                || ((8..=11).contains(&line.len())
+                    && line.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()));
+
+            if is_party_identifier {
+                let party_id = if line.starts_with('/') {
+                    &line[1..]
+                } else {
+                    line
+                };
+                party_identifier = Some(parse_max_length(party_id, 34, "Field53B party_identifier")?);
+            } else {
+                location = Some(parse_max_length(line, 35, "Field53B location")?);
+            }
         }
 
         Ok(Field53B {
@@ -261,7 +288,7 @@ impl SwiftField for Field53D {
     where
         Self: Sized,
     {
-        let lines: Vec<&str> = input.split('\n').collect();
+        let mut lines = input.split('\n').collect::<Vec<_>>();
 
         if lines.is_empty() {
             return Err(ParseError::InvalidFormat {
@@ -270,16 +297,47 @@ impl SwiftField for Field53D {
         }
 
         let mut party_identifier = None;
-        let mut start_idx = 0;
 
-        // Check for party identifier on first line
-        if let Some(party_id) = parse_party_identifier(lines[0])? {
-            party_identifier = Some(format!("/{}", party_id));
-            start_idx = 1;
+        // Check if first line is a party identifier
+        // Party identifier can be on its own line (with or without leading /)
+        // If first line is short and there are more lines, it's likely a party identifier
+        if let Some(first_line) = lines.first() {
+            let potential_party_id = if first_line.starts_with('/') {
+                &first_line[1..]
+            } else {
+                first_line
+            };
+
+            // If it looks like a party identifier (short, and more lines follow)
+            if potential_party_id.len() <= 34
+                && !potential_party_id.is_empty()
+                && lines.len() > 1
+            {
+                // Entire first line is party identifier
+                party_identifier = Some(potential_party_id.to_string());
+                lines.remove(0);
+            }
         }
 
-        // Parse remaining lines as name and address
-        let name_and_address = parse_name_and_address(&lines, start_idx, "Field53D")?;
+        // Parse remaining lines as name and address (max 4 lines, max 35 chars each)
+        let mut name_and_address = Vec::new();
+        for (i, line) in lines.iter().enumerate() {
+            if i >= 4 {
+                break;
+            }
+            if line.len() > 35 {
+                return Err(ParseError::InvalidFormat {
+                    message: format!("Field 53D line {} exceeds 35 characters", i + 1),
+                });
+            }
+            name_and_address.push(line.to_string());
+        }
+
+        if name_and_address.is_empty() {
+            return Err(ParseError::InvalidFormat {
+                message: "Field 53D must contain name and address information".to_string(),
+            });
+        }
 
         Ok(Field53D {
             party_identifier,

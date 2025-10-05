@@ -122,55 +122,6 @@
           "/ACC/BENEFICIARY ACCOUNT MISMATCH"
         ]
       },
-      "ordering_customer_b": {
-        "K": {
-          "account": "GB82WEST12345698765432",
-          "name_and_address": [
-            {
-              "var": "ordering_name_mt202"
-            },
-            "123 MAIN STREET",
-            "LONDON EC1A 1BB",
-            "UNITED KINGDOM"
-          ]
-        }
-      },
-      "beneficiary_customer_b": {
-        "NoOption": {
-          "account": {
-            "var": "beneficiary_acct_mt202"
-          },
-          "name_and_address": [
-            "GLOBAL TRADING GMBH",
-            "456 COMMERCE STRASSE",
-            "FRANKFURT 60311",
-            "GERMANY"
-          ]
-        }
-      },
-      "remittance_information_b": {
-        "narrative": [
-          {
-            "cat": [
-              "/INV/",
-              {
-                "var": "invoice_mt202"
-              }
-            ]
-          },
-          "/GOODS/INDUSTRIAL EQUIPMENT",
-          "/MISMATCH/INVOICE REF DIFFERS",
-          "/NOTE/RECONCILIATION REQUIRED"
-        ]
-      },
-      "currency_amount_b": {
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "mt103_amount"
-        }
-      },
       "53B": {
         "party_identifier": {
           "var": "sender_bic"
@@ -189,6 +140,53 @@
       "58A": {
         "bic": {
           "var": "receiver_bic"
+        }
+      },
+      "#": {
+        "50K": {
+          "account": "GB82WEST12345698765432",
+          "name_and_address": [
+            {
+              "var": "ordering_name_mt202"
+            },
+            "123 MAIN STREET",
+            "LONDON EC1A 1BB",
+            "UNITED KINGDOM"
+          ]
+        },
+        "59": {
+          "account": {
+            "var": "beneficiary_acct_mt202"
+          },
+          "name_and_address": [
+            "GLOBAL TRADING GMBH",
+            "456 COMMERCE STRASSE",
+            "FRANKFURT 60311",
+            "GERMANY"
+          ]
+        },
+        "70": {
+          "narrative": [
+            {
+              "cat": [
+                "/INV/",
+                {
+                  "var": "invoice_mt202"
+                }
+              ]
+            },
+            "/GOODS/INDUSTRIAL EQUIPMENT",
+            "/MISMATCH/INVOICE REF DIFFERS",
+            "/NOTE/RECONCILIATION REQUIRED"
+          ]
+        },
+        "33B": {
+          "currency": {
+            "var": "currency"
+          },
+          "amount": {
+            "var": "mt103_amount"
+          }
         }
       }
     }

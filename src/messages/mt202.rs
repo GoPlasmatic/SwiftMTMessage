@@ -4,6 +4,43 @@ use crate::parser::MessageParser;
 use crate::parser::utils::*;
 use serde::{Deserialize, Serialize};
 
+/// MT202 Sequence B - Cover Payment Details (MT202 COV)
+/// Contains underlying customer transfer information
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MT202SequenceB {
+    /// Field 50 - Ordering Customer (Optional, COV only)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub ordering_customer: Option<Field50OrderingCustomerAFK>,
+
+    /// Field 52 - Ordering Institution (Optional, COV Sequence B)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub ordering_institution: Option<Field52OrderingInstitution>,
+
+    /// Field 56 - Intermediary (Optional, COV Sequence B)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub intermediary: Option<Field56Intermediary>,
+
+    /// Field 57 - Account With Institution (Optional, COV Sequence B)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub account_with_institution: Option<Field57AccountWithInstitution>,
+
+    /// Field 59 - Beneficiary Customer (Optional, COV only)
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub beneficiary_customer: Option<Field59>,
+
+    /// Field 70 - Remittance Information (Optional, COV only)
+    #[serde(rename = "70", skip_serializing_if = "Option::is_none")]
+    pub remittance_information: Option<Field70>,
+
+    /// Field 72 - Sender to Receiver Information (Optional, COV Sequence B)
+    #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
+    pub sender_to_receiver_information: Option<Field72>,
+
+    /// Field 33B - Currency/Instructed Amount (Optional, COV only)
+    #[serde(rename = "33B", skip_serializing_if = "Option::is_none")]
+    pub currency_amount: Option<Field33B>,
+}
+
 /// MT202 - General Financial Institution Transfer
 ///
 /// Used for bank-to-bank transfers on behalf of a customer or another financial institution.
@@ -62,37 +99,10 @@ pub struct MT202 {
     pub field_72: Option<Field72>,
 
     // Sequence B - Cover Payment Details (MT202 COV)
-    /// Field 50 - Ordering Customer (Optional, COV only)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub ordering_customer_b: Option<Field50OrderingCustomerAFK>,
-
-    /// Field 52 - Ordering Institution (Optional, COV Sequence B)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub ordering_institution_b: Option<Field52OrderingInstitution>,
-
-    /// Field 56 - Intermediary (Optional, COV Sequence B)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub intermediary_b: Option<Field56Intermediary>,
-
-    /// Field 57 - Account With Institution (Optional, COV Sequence B)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub account_with_institution_b: Option<Field57AccountWithInstitution>,
-
-    /// Field 59 - Beneficiary Customer (Optional, COV only)
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub beneficiary_customer_b: Option<Field59>,
-
-    /// Field 70 - Remittance Information (Optional, COV only)
-    #[serde(rename = "70", skip_serializing_if = "Option::is_none")]
-    pub remittance_information_b: Option<Field70>,
-
-    /// Field 72 - Sender to Receiver Information (Optional, COV Sequence B)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub sender_to_receiver_information_b: Option<Field72>,
-
-    /// Field 33B - Currency/Instructed Amount (Optional, COV only)
-    #[serde(rename = "33B", skip_serializing_if = "Option::is_none")]
-    pub currency_amount_b: Option<Field33B>,
+    /// Sequence B is optional - only present for MT202 COV messages
+    /// Uses # container to avoid field tag collisions with Sequence A
+    #[serde(rename = "#", skip_serializing_if = "Option::is_none")]
+    pub sequence_b: Option<MT202SequenceB>,
 }
 
 impl MT202 {
@@ -139,17 +149,41 @@ impl MT202 {
         // Enable duplicates for Sequence B as it may have fields 52, 56, 57, 72 again
         parser = parser.with_duplicates(true);
 
-        let ordering_customer_b =
+        let ordering_customer =
             parser.parse_optional_variant_field::<Field50OrderingCustomerAFK>("50")?;
-        let ordering_institution_b =
+        let ordering_institution =
             parser.parse_optional_variant_field::<Field52OrderingInstitution>("52")?;
-        let intermediary_b = parser.parse_optional_variant_field::<Field56Intermediary>("56")?;
-        let account_with_institution_b =
+        let intermediary = parser.parse_optional_variant_field::<Field56Intermediary>("56")?;
+        let account_with_institution =
             parser.parse_optional_variant_field::<Field57AccountWithInstitution>("57")?;
-        let beneficiary_customer_b = parser.parse_optional_variant_field::<Field59>("59")?;
-        let remittance_information_b = parser.parse_optional_field::<Field70>("70")?;
-        let sender_to_receiver_information_b = parser.parse_optional_field::<Field72>("72")?;
-        let currency_amount_b = parser.parse_optional_field::<Field33B>("33B")?;
+        let beneficiary_customer = parser.parse_optional_variant_field::<Field59>("59")?;
+        let remittance_information = parser.parse_optional_field::<Field70>("70")?;
+        let sender_to_receiver_information = parser.parse_optional_field::<Field72>("72")?;
+        let currency_amount = parser.parse_optional_field::<Field33B>("33B")?;
+
+        // Build Sequence B only if any COV fields are present
+        let sequence_b = if ordering_customer.is_some()
+            || ordering_institution.is_some()
+            || intermediary.is_some()
+            || account_with_institution.is_some()
+            || beneficiary_customer.is_some()
+            || remittance_information.is_some()
+            || sender_to_receiver_information.is_some()
+            || currency_amount.is_some()
+        {
+            Some(MT202SequenceB {
+                ordering_customer,
+                ordering_institution,
+                intermediary,
+                account_with_institution,
+                beneficiary_customer,
+                remittance_information,
+                sender_to_receiver_information,
+                currency_amount,
+            })
+        } else {
+            None
+        };
 
         Ok(MT202 {
             field_20,
@@ -163,14 +197,7 @@ impl MT202 {
             field_57,
             field_58,
             field_72,
-            ordering_customer_b,
-            ordering_institution_b,
-            intermediary_b,
-            account_with_institution_b,
-            beneficiary_customer_b,
-            remittance_information_b,
-            sender_to_receiver_information_b,
-            currency_amount_b,
+            sequence_b,
         })
     }
 
@@ -194,12 +221,18 @@ impl MT202 {
 
     /// Check if intermediary (56a) is present in Sequence B (COV)
     fn has_intermediary_in_seq_b(&self) -> bool {
-        self.intermediary_b.is_some()
+        self.sequence_b
+            .as_ref()
+            .map(|seq_b| seq_b.intermediary.is_some())
+            .unwrap_or(false)
     }
 
     /// Check if account with institution (57a) is present in Sequence B (COV)
     fn has_account_with_in_seq_b(&self) -> bool {
-        self.account_with_institution_b.is_some()
+        self.sequence_b
+            .as_ref()
+            .map(|seq_b| seq_b.account_with_institution.is_some())
+            .unwrap_or(false)
     }
 
     // ========================================================================
@@ -284,8 +317,11 @@ impl MT202 {
 
     /// Check if this is a cover message (MT202 COV)
     pub fn is_cover_message(&self) -> bool {
-        // Check if Sequence B COV fields are present
-        self.ordering_customer_b.is_some() || self.beneficiary_customer_b.is_some()
+        // Check if Sequence B is present with COV fields
+        self.sequence_b
+            .as_ref()
+            .map(|seq_b| seq_b.ordering_customer.is_some() || seq_b.beneficiary_customer.is_some())
+            .unwrap_or(false)
     }
 }
 
@@ -315,14 +351,16 @@ impl crate::traits::SwiftMessageBody for MT202 {
         append_optional_field(&mut result, &self.field_72);
 
         // Sequence B - Cover Payment Details (MT202 COV)
-        append_optional_field(&mut result, &self.ordering_customer_b);
-        append_optional_field(&mut result, &self.ordering_institution_b);
-        append_optional_field(&mut result, &self.intermediary_b);
-        append_optional_field(&mut result, &self.account_with_institution_b);
-        append_optional_field(&mut result, &self.beneficiary_customer_b);
-        append_optional_field(&mut result, &self.remittance_information_b);
-        append_optional_field(&mut result, &self.sender_to_receiver_information_b);
-        append_optional_field(&mut result, &self.currency_amount_b);
+        if let Some(ref seq_b) = self.sequence_b {
+            append_optional_field(&mut result, &seq_b.ordering_customer);
+            append_optional_field(&mut result, &seq_b.ordering_institution);
+            append_optional_field(&mut result, &seq_b.intermediary);
+            append_optional_field(&mut result, &seq_b.account_with_institution);
+            append_optional_field(&mut result, &seq_b.beneficiary_customer);
+            append_optional_field(&mut result, &seq_b.remittance_information);
+            append_optional_field(&mut result, &seq_b.sender_to_receiver_information);
+            append_optional_field(&mut result, &seq_b.currency_amount);
+        }
 
         finalize_mt_string(result, false)
     }

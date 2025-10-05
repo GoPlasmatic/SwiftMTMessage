@@ -95,16 +95,7 @@ impl MT920 {
         // Add sequences
         for seq in &self.sequence {
             append_field(&mut result, &seq.field_12);
-
-            // Field 25 in MT920 uses tag :25: not :25A:
-            // Manually construct the field output
-            let authorisation_str = if seq.field_25.authorisation.starts_with('/') {
-                seq.field_25.authorisation.clone()
-            } else {
-                format!("/{}", seq.field_25.authorisation)
-            };
-            result.push_str(&format!(":25:{}\n", authorisation_str));
-
+            append_field(&mut result, &seq.field_25);
             append_optional_field(&mut result, &seq.floor_limit_debit);
             append_optional_field(&mut result, &seq.floor_limit_credit);
         }
@@ -370,7 +361,7 @@ mod tests {
                         "type_code": "940"
                     },
                     "25": {
-                        "account": "1234567890"
+                        "authorisation": "1234567890"
                     }
                 }
             ]
@@ -420,7 +411,7 @@ mod tests {
                             "type_code": "940"
                         },
                         "25": {
-                            "account": "1234567890"
+                            "authorisation": "1234567890"
                         }
                     }
                 ]

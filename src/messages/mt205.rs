@@ -22,6 +22,10 @@ pub struct MT205 {
     #[serde(rename = "13C", skip_serializing_if = "Option::is_none")]
     pub time_indication: Option<Vec<Field13C>>,
 
+    /// Field 23B - Bank Operation Code (Optional)
+    #[serde(rename = "23B", skip_serializing_if = "Option::is_none")]
+    pub bank_operation_code: Option<Field23B>,
+
     /// Field 32A - Value Date, Currency Code, Amount (Mandatory)
     #[serde(rename = "32A")]
     pub value_date_amount: Field32A,
@@ -88,6 +92,9 @@ impl MT205 {
             Some(time_indications)
         };
 
+        // Parse optional Field 23B
+        let bank_operation_code = parser.parse_optional_field::<Field23B>("23B")?;
+
         // Parse mandatory Field 32A
         let value_date_amount = parser.parse_field::<Field32A>("32A")?;
 
@@ -112,6 +119,7 @@ impl MT205 {
             transaction_reference,
             related_reference,
             time_indication,
+            bank_operation_code,
             value_date_amount,
             instructed_amount,
             ordering_institution,
@@ -213,6 +221,7 @@ impl crate::traits::SwiftMessageBody for MT205 {
         append_field(&mut result, &self.transaction_reference);
         append_field(&mut result, &self.related_reference);
         append_vec_field(&mut result, &self.time_indication);
+        append_optional_field(&mut result, &self.bank_operation_code);
         append_field(&mut result, &self.value_date_amount);
         append_optional_field(&mut result, &self.instructed_amount);
         append_optional_field(&mut result, &self.ordering_institution);

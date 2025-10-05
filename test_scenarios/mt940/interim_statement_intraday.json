@@ -88,14 +88,6 @@
         },
         "sequence_number": 3
       },
-      "86": {
-        "narrative": [
-          "/SUMMARY/INTRADAY MOVEMENTS",
-          "/TIME/AS OF 14:30 JST",
-          "/PENDING/3 TRANSACTIONS",
-          "/AVAILABLE/JPY 55000000"
-        ]
-      },
       "statement_lines": [
         {
           "61": {

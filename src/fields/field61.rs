@@ -220,25 +220,26 @@ impl SwiftField for Field61 {
                 (remaining.to_string(), None)
             };
 
-        // Split customer reference and supplementary details
+        // Customer reference is up to 16 characters
         let customer_reference;
-        let supplementary_details;
+        let mut supplementary_details = None;
 
         if customer_ref_part.len() <= 16 {
             customer_reference = customer_ref_part;
-            supplementary_details = None;
         } else {
             customer_reference = customer_ref_part[..16].to_string();
-            if customer_ref_part.len() > 16 {
+            // If customer ref part is > 16 chars and no //, rest is supplementary details
+            if after_customer_ref.is_none() && customer_ref_part.len() > 16 {
                 supplementary_details = Some(customer_ref_part[16..].to_string());
-            } else {
-                supplementary_details = None;
             }
         }
 
-        // Parse bank reference (after //)
+        // Parse bank reference and supplementary details (after //)
+        // Format after //: bank_reference[16x] supplementary_details[34x]
         let bank_reference = if let Some(bank_ref_str) = after_customer_ref {
             if bank_ref_str.len() > 16 {
+                // First 16 chars = bank reference, rest = supplementary details
+                supplementary_details = Some(bank_ref_str[16..].to_string());
                 Some(bank_ref_str[..16].to_string())
             } else if !bank_ref_str.is_empty() {
                 Some(bank_ref_str.to_string())
@@ -304,9 +305,13 @@ impl SwiftField for Field61 {
         if let Some(ref bank_reference) = self.bank_reference {
             result.push_str("//");
             result.push_str(bank_reference);
-        }
 
-        if let Some(ref supplementary_details) = self.supplementary_details {
+            // Supplementary details come directly after bank reference if present
+            if let Some(ref supplementary_details) = self.supplementary_details {
+                result.push_str(supplementary_details);
+            }
+        } else if let Some(ref supplementary_details) = self.supplementary_details {
+            // If no bank reference but supplementary details exist, append after customer ref
             result.push_str(supplementary_details);
         }
 
@@ -395,5 +400,21 @@ mod tests {
     #[test]
     fn test_field61_too_short() {
         assert!(Field61::parse("23122").is_err());
+    }
+
+    #[test]
+    fn test_field61_with_supplementary_details() {
+        // Test with bank reference and supplementary details
+        let field = Field61::parse("2412201220C10000,00NMSCREF100000//BA1-1234567890DUPLICATE-SEQ-1").unwrap();
+        assert_eq!(field.customer_reference, "REF100000");
+        assert_eq!(field.bank_reference, Some("BA1-1234567890".to_string()));
+        assert_eq!(field.supplementary_details, Some("DUPLICATE-SEQ-1".to_string()));
+
+        // Test round-trip
+        let swift_str = field.to_swift_string();
+        let reparsed = Field61::parse(&swift_str.replace(":61:", "")).unwrap();
+        assert_eq!(reparsed.customer_reference, field.customer_reference);
+        assert_eq!(reparsed.bank_reference, field.bank_reference);
+        assert_eq!(reparsed.supplementary_details, field.supplementary_details);
     }
 }

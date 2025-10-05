@@ -269,10 +269,12 @@ impl SwiftField for Field50A {
 
 /// **Field 50F: Ordering Customer (Option F)**
 ///
-/// Party identifier + BIC variant of [Field 50 module](index.html).
+/// Party identifier + Name/Address + BIC variant of [Field 50 module](index.html).
 ///
 /// **Components:**
-/// - Account (35x)
+/// - Account/Party Identifier (/34x)
+/// - Optional Party Identifier (/34x)
+/// - Name and Address (1-4 lines, 35x each)
 /// - BIC (4!a2!a2!c\[3!c\])
 ///
 /// For complete documentation, see the [Field 50 module](index.html).
@@ -280,6 +282,12 @@ impl SwiftField for Field50A {
 pub struct Field50F {
     /// Account or party identifier
     pub account: String,
+    /// Optional party identifier (e.g., "SEC/1234567890")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub party_identifier: Option<String>,
+    /// Name and address information (1-4 lines)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name_and_address: Option<Vec<String>>,
     /// BIC code
     pub bic: String,
 }
@@ -291,9 +299,9 @@ impl SwiftField for Field50F {
     {
         let lines: Vec<&str> = input.lines().collect();
 
-        if lines.len() != 2 {
+        if lines.len() < 2 {
             return Err(ParseError::InvalidFormat {
-                message: format!("Field 50F must have exactly 2 lines, found {}", lines.len()),
+                message: format!("Field 50F must have at least 2 lines (account + BIC), found {}", lines.len()),
             });
         }
 
@@ -306,17 +314,59 @@ impl SwiftField for Field50F {
         }
         parse_swift_chars(account, "Field 50F account")?;
 
-        // Parse BIC (second line)
-        let bic = parse_bic(lines[1])?;
+        // Find BIC line (last line)
+        let bic = parse_bic(lines[lines.len() - 1])?;
+
+        // Check if there's a party identifier (line starting with /) after account
+        let mut party_identifier = None;
+        let mut name_start = 1;
+
+        if lines.len() > 2 && lines[1].starts_with('/') {
+            let party_id = &lines[1][1..]; // Remove leading slash
+            if party_id.len() > 34 {
+                return Err(ParseError::InvalidFormat {
+                    message: "Field 50F party identifier exceeds 34 characters".to_string(),
+                });
+            }
+            parse_swift_chars(party_id, "Field 50F party identifier")?;
+            party_identifier = Some(party_id.to_string());
+            name_start = 2;
+        }
+
+        // Parse name and address lines (between party_id/account and BIC)
+        let mut name_and_address = Vec::new();
+        for line in &lines[name_start..lines.len() - 1] {
+            if line.len() > 35 {
+                return Err(ParseError::InvalidFormat {
+                    message: "Field 50F name/address line exceeds 35 characters".to_string(),
+                });
+            }
+            parse_swift_chars(line, "Field 50F name/address")?;
+            name_and_address.push(line.to_string());
+        }
 
         Ok(Field50F {
             account: account.to_string(),
+            party_identifier,
+            name_and_address: if name_and_address.is_empty() { None } else { Some(name_and_address) },
             bic,
         })
     }
 
     fn to_swift_string(&self) -> String {
-        format!(":50F:{}\n{}", self.account, self.bic)
+        let mut lines = vec![self.account.clone()];
+
+        if let Some(ref party_id) = self.party_identifier {
+            lines.push(format!("/{}", party_id));
+        }
+
+        if let Some(ref addr) = self.name_and_address {
+            lines.extend(addr.clone());
+        }
+
+        lines.push(self.bic.clone());
+
+        format!(":50F:{}", lines.join("\n"))
     }
 }
 

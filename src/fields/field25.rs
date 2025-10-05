@@ -140,15 +140,27 @@ impl SwiftField for Field25NoOption {
     where
         Self: Sized,
     {
+        // Strip leading slash delimiter (MT format) - JSON should not contain delimiters
+        let input_stripped = if input.starts_with('/') {
+            &input[1..]
+        } else {
+            input
+        };
+
         // Parse as 35x - up to 35 SWIFT characters
-        let authorisation = parse_max_length(input, 35, "Field 25 authorisation")?;
+        let authorisation = parse_max_length(input_stripped, 35, "Field 25 authorisation")?;
         parse_swift_chars(&authorisation, "Field 25 authorisation")?;
 
         Ok(Field25NoOption { authorisation })
     }
 
     fn to_swift_string(&self) -> String {
-        format!(":25:{}", self.authorisation)
+        // Add leading slash for MT format if not already present
+        if self.authorisation.starts_with('/') {
+            format!(":25:{}", self.authorisation)
+        } else {
+            format!(":25:/{}", self.authorisation)
+        }
     }
 }
 
@@ -344,9 +356,15 @@ mod tests {
 
     #[test]
     fn test_field25_no_option() {
+        // Test without slash - JSON format
         let field = Field25NoOption::parse("AUTH123456789").unwrap();
         assert_eq!(field.authorisation, "AUTH123456789");
-        assert_eq!(field.to_swift_string(), ":25:AUTH123456789"); // Includes field tag per implementation
+        assert_eq!(field.to_swift_string(), ":25:/AUTH123456789"); // MT format adds slash
+
+        // Test with slash - MT format input, should strip for JSON storage
+        let field = Field25NoOption::parse("/1234567890").unwrap();
+        assert_eq!(field.authorisation, "1234567890"); // Stored without slash
+        assert_eq!(field.to_swift_string(), ":25:/1234567890"); // MT format adds slash
 
         // Test max length
         let long_auth = "A".repeat(35);

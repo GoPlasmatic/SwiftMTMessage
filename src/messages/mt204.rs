@@ -29,6 +29,11 @@ pub struct MT204 {
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
     pub account_with_institution: Option<Field57>,
 
+    /// Field 58 - Beneficiary Institution (Optional)
+    /// Can be 58A or 58D
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub beneficiary_institution: Option<Field58>,
+
     /// Field 72 - Sender to Receiver Information (Optional)
     #[serde(rename = "72", skip_serializing_if = "Option::is_none")]
     pub sender_to_receiver: Option<Field72>,
@@ -76,6 +81,9 @@ impl MT204 {
         // Parse optional Field 57 - Account With Institution
         let account_with_institution = parser.parse_optional_variant_field::<Field57>("57")?;
 
+        // Parse optional Field 58 - Beneficiary Institution
+        let beneficiary_institution = parser.parse_optional_variant_field::<Field58>("58")?;
+
         // Parse optional Field 72 at message level
         let sender_to_receiver = parser.parse_optional_field::<Field72>("72")?;
 
@@ -118,6 +126,7 @@ impl MT204 {
             sum_of_amounts,
             execution_date,
             account_with_institution,
+            beneficiary_institution,
             sender_to_receiver,
             transactions,
         })
@@ -282,6 +291,7 @@ impl crate::traits::SwiftMessageBody for MT204 {
         append_field(&mut result, &self.transaction_reference);
         append_field(&mut result, &self.execution_date);
         append_optional_field(&mut result, &self.account_with_institution);
+        append_optional_field(&mut result, &self.beneficiary_institution);
         append_optional_field(&mut result, &self.sender_to_receiver);
 
         // Transactions

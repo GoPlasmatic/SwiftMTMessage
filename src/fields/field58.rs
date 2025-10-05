@@ -107,7 +107,7 @@ impl SwiftField for Field58A {
 
         // Check for optional party identifier on first line
         if !lines.is_empty() && lines[0].starts_with('/') {
-            party_identifier = Some(lines[0].to_string());
+            party_identifier = Some(lines[0][1..].to_string()); // Strip the leading / (format prefix)
             bic_line_idx = 1;
         }
 
@@ -130,9 +130,7 @@ impl SwiftField for Field58A {
         let mut result = ":58A:".to_string();
 
         if let Some(ref party_id) = self.party_identifier {
-            if !party_id.starts_with('/') {
-                result.push('/');
-            }
+            result.push('/'); // Add format prefix
             result.push_str(party_id);
             result.push('\n');
         }
@@ -150,23 +148,14 @@ impl SwiftField for Field58D {
         let mut lines = input.lines().collect::<Vec<_>>();
         let mut party_identifier = None;
 
-        // Check if first line has party identifier
-        if let Some(first_line) = lines.first()
-            && first_line.starts_with('/')
-        {
-            // Find where party identifier ends and name starts
-            if let Some(slash_end) =
-                first_line[1..].find(|c: char| !c.is_alphanumeric() && c != '/')
-            {
-                let party_part = &first_line[..slash_end + 1];
-                party_identifier = Some(party_part.to_string());
-
-                // Update first line to remove party identifier
-                let remaining = &first_line[slash_end + 1..];
-                lines[0] = remaining;
-            } else if first_line.chars().all(|c| c.is_alphanumeric() || c == '/') {
-                // Entire first line is party identifier
-                party_identifier = Some(first_line.to_string());
+        // Check if first line is a party identifier
+        // Party identifier can be on its own line (starting with /)
+        // If first line is short and there are more lines, it's likely a party identifier
+        if let Some(first_line) = lines.first() {
+            // Party identifier should start with / and be short (≤35 chars to account for the /)
+            if first_line.starts_with('/') && first_line.len() <= 35 && lines.len() > 1 {
+                // Entire first line is party identifier (strip the leading / format prefix)
+                party_identifier = Some(first_line[1..].to_string());
                 lines.remove(0);
             }
         }
@@ -202,7 +191,9 @@ impl SwiftField for Field58D {
         let mut result = ":58D:".to_string();
 
         if let Some(ref party_id) = self.party_identifier {
+            result.push('/'); // Add format prefix
             result.push_str(party_id);
+            result.push('\n');
         }
 
         result.push_str(&self.name_and_address.join("\n"));
@@ -282,18 +273,18 @@ mod tests {
 
     #[test]
     fn test_field58a_parse_with_party_identifier() {
-        let field = Field58A::parse("/CHGS123456DEUTDEFF").unwrap();
-        assert_eq!(field.party_identifier, Some("/CHGS123456".to_string()));
+        let field = Field58A::parse("/CHGS123456\nDEUTDEFF").unwrap();
+        assert_eq!(field.party_identifier, Some("CHGS123456".to_string()));
         assert_eq!(field.bic, "DEUTDEFF");
     }
 
     #[test]
     fn test_field58a_to_swift_string() {
         let field = Field58A {
-            party_identifier: Some("/CHGS123456".to_string()),
+            party_identifier: Some("CHGS123456".to_string()),
             bic: "DEUTDEFF".to_string(),
         };
-        assert_eq!(field.to_swift_string(), ":58A:/CHGS123456DEUTDEFF");
+        assert_eq!(field.to_swift_string(), ":58A:/CHGS123456\nDEUTDEFF");
     }
 
     #[test]
@@ -311,7 +302,7 @@ mod tests {
     fn test_field58d_parse_with_party_identifier() {
         let input = "/CH123456\nDEUTSCHE BANK AG\nFRANKFURT AM MAIN";
         let field = Field58D::parse(input).unwrap();
-        assert_eq!(field.party_identifier, Some("/CH123456".to_string()));
+        assert_eq!(field.party_identifier, Some("CH123456".to_string()));
         assert_eq!(field.name_and_address.len(), 2);
         assert_eq!(field.name_and_address[0], "DEUTSCHE BANK AG");
         assert_eq!(field.name_and_address[1], "FRANKFURT AM MAIN");

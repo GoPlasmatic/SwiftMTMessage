@@ -120,8 +120,23 @@
           }
         ]
       },
-      "ordering_customer_b": {
-        "K": {
+      "56A": {
+        "bic": {
+          "var": "intermediary_bic"
+        }
+      },
+      "57A": {
+        "bic": {
+          "var": "account_with_bic"
+        }
+      },
+      "58A": {
+        "bic": {
+          "var": "receiver_bic"
+        }
+      },
+      "#": {
+        "50K": {
           "account": "GB82WEST12345698765432",
           "name_and_address": [
             "ACME CORPORATION",
@@ -142,31 +157,23 @@
               ]
             }
           ]
-        }
-      },
-      "ordering_institution_b": {
-        "A": {
+        },
+        "52A": {
           "bic": {
             "var": "sender_bic"
           }
-        }
-      },
-      "intermediary_b": {
-        "A": {
+        },
+        "56A": {
           "bic": {
             "var": "intermediary_bic"
           }
-        }
-      },
-      "account_with_institution_b": {
-        "A": {
+        },
+        "57A": {
           "bic": {
             "var": "account_with_bic"
           }
-        }
-      },
-      "beneficiary_customer_b": {
-        "NoOption": {
+        },
+        "59": {
           "account": "DE89370400440532013000",
           "name_and_address": [
             "ACME CORPORATION",
@@ -187,51 +194,36 @@
               ]
             }
           ]
-        }
-      },
-      "remittance_information_b": {
-        "narrative": [
-          {
-            "cat": [
-              "/PURP/",
-              {
-                "var": "purpose_code"
-              }
-            ]
-          },
-          "/RFB/CBPR-PAYMENT-REF",
-          "CBPR+ TRANSPARENCY MAINTAINED",
-          "SEE UNDERLYING MT103"
-        ]
-      },
-      "currency_amount_b": {
-        "currency": {
-          "var": "currency"
         },
-        "amount": {
-          "var": "instructed_amount"
-        }
-      },
-      "sender_to_receiver_information_b": {
-        "information": [
-          "/ACC/TRANSPARENCY DATA",
-          "/INS/FEE DEDUCTED 25.00 USD",
-          "/BNF/PROCESSING TIME 2 DAYS"
-        ]
-      },
-      "56A": {
-        "bic": {
-          "var": "intermediary_bic"
-        }
-      },
-      "57A": {
-        "bic": {
-          "var": "account_with_bic"
-        }
-      },
-      "58A": {
-        "bic": {
-          "var": "receiver_bic"
+        "70": {
+          "narrative": [
+            {
+              "cat": [
+                "/PURP/",
+                {
+                  "var": "purpose_code"
+                }
+              ]
+            },
+            "/RFB/CBPR-PAYMENT-REF",
+            "CBPR+ TRANSPARENCY MAINTAINED",
+            "SEE UNDERLYING MT103"
+          ]
+        },
+        "72": {
+          "information": [
+            "/ACC/TRANSPARENCY DATA",
+            "/INS/FEE DEDUCTED 25.00 USD",
+            "/BNF/PROCESSING TIME 2 DAYS"
+          ]
+        },
+        "33B": {
+          "currency": {
+            "var": "currency"
+          },
+          "amount": {
+            "var": "instructed_amount"
+          }
         }
       }
     }

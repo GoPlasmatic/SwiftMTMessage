@@ -162,11 +162,10 @@ The library now supports two parsing modes:
 use swift_mt_message::{ParseResult, ParserConfig, SwiftParser};
 
 // Configure parser for error collection
-let parser = SwiftParser::with_config(ParserConfig {
-    fail_fast: false,              // Continue parsing after errors
-    validate_optional_fields: true, // Validate optional fields too
-    collect_all_errors: true,      // Collect all possible errors
-});
+let mut parser = SwiftParser::new();
+parser.config.fail_fast = false;              // Continue parsing after errors
+parser.config.validate_optional_fields = true; // Validate optional fields too
+parser.config.collect_all_errors = true;      // Collect all possible errors
 
 // Parse returns a ParseResult enum
 match parser.parse_with_errors::<MT103>(message) {
@@ -494,25 +493,23 @@ let message = SwiftParser::parse::<MT103>(&raw_message)?;
 #### Adopting Error Collection Mode
 ```rust
 // New v3.0 approach for error collection
-let parser = SwiftParser::with_config(ParserConfig {
-    fail_fast: false,
-    validate_optional_fields: true,
-    collect_all_errors: true,
-});
+let mut parser = SwiftParser::new();
+parser.config.fail_fast = false;
+parser.config.validate_optional_fields = true;
+parser.config.collect_all_errors = true;
 
 // Use parse_with_errors for detailed error information
 match parser.parse_with_errors::<MT103>(&raw_message) {
     Ok(ParseResult::Success(msg)) => { /* All good */ }
-    Ok(ParseResult::PartialSuccess(msg, errors)) => { 
+    Ok(ParseResult::PartialSuccess(msg, errors)) => {
         // New: Can still use partially parsed message
     }
     Ok(ParseResult::Failure(errors)) => { /* Too many errors */ }
     Err(e) => { /* Catastrophic failure */ }
 }
 
-// Or use parse_message for automatic handling
-let msg = parser.parse_message::<MT103>(&raw_message)?;
-// Logs non-critical errors to stderr, returns message if possible
+// Or use the default parse method for fail-fast behavior
+let msg = SwiftParser::parse::<MT103>(&raw_message)?;
 ```
 
 ### Version Compatibility
@@ -577,14 +574,13 @@ match SwiftParser::parse::<MT103>(&raw_message) {
 ### Error Collection Usage (v3.0)
 
 ```rust
-use swift_mt_message::{SwiftParser, ParseResult, ParserConfig, messages::MT103};
+use swift_mt_message::{SwiftParser, ParseResult, messages::MT103};
 
 // Configure error collection parser
-let parser = SwiftParser::with_config(ParserConfig {
-    fail_fast: false,
-    validate_optional_fields: true,
-    collect_all_errors: true,
-});
+let mut parser = SwiftParser::new();
+parser.config.fail_fast = false;
+parser.config.validate_optional_fields = true;
+parser.config.collect_all_errors = true;
 
 // Parse message that may have multiple errors
 match parser.parse_with_errors::<MT103>(&raw_message) {
@@ -594,21 +590,19 @@ match parser.parse_with_errors::<MT103>(&raw_message) {
     }
     Ok(ParseResult::PartialSuccess(msg, errors)) => {
         println!("⚠ Parsed with {} errors", errors.len());
-        
+
         // Log all errors for debugging
         for (i, error) in errors.iter().enumerate() {
             eprintln!("Error {}: {}", i + 1, error.brief_message());
             eprintln!("{}", error.debug_report());
         }
-        
+
         // Still process valid fields
-        if let Some(ref_field) = msg.fields.get("20") {
-            println!("Transaction reference: {}", ref_field);
-        }
+        println!("Transaction reference: {}", msg.transaction_reference.reference);
     }
     Ok(ParseResult::Failure(errors)) => {
         println!("✗ Parsing failed with {} errors", errors.len());
-        
+
         // Show all errors
         for error in errors {
             eprintln!("{}", error.format_with_context(&raw_message));

@@ -5,7 +5,7 @@
 
 **A high-performance Rust library for parsing and building SWIFT MT messages.**
 
-*Compliant with SWIFT CBPR+ SR2025 specifications, featuring v3 macro system for enhanced type safety and comprehensive error handling.*
+*Compliant with SWIFT CBPR+ SR2025 specifications, featuring enhanced type safety, comprehensive error handling, and robust validation.*
 
   [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
   [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
@@ -21,68 +21,82 @@
 
 -----
 
-SwiftMTMessage is a production-ready Rust library for handling SWIFT MT financial messages, fully compliant with **SWIFT CBPR+ SR2025** standards. The v3 architecture features an advanced macro system with compile-time validation, comprehensive error collection, and support for all major MT message types including complex multi-sequence messages.
+SwiftMTMessage is a production-ready Rust library for handling SWIFT MT financial messages, fully compliant with **SWIFT CBPR+ SR2025** standards. The v3 architecture features enhanced error collection, comprehensive validation with 1,335 SWIFT error codes, and support for 30+ MT message types including complex multi-sequence messages.
 
 ## 🚀 Key Features
 
   - **SWIFT CBPR+ SR2025 Compliant:** Full compliance with the latest SWIFT Cross-Border Payments and Reporting Plus standards
-  - **v3 Macro System:** Enhanced `#[derive(SwiftField)]` and `#[derive(SwiftMessage)]` with compile-time validation and smart formatting
-  - **Comprehensive Coverage:** Support for 23+ MT message types including MT1xx, MT2xx, MT9xx series with multi-sequence parsing
+  - **Comprehensive Coverage:** Support for 30+ MT message types including MT1xx, MT2xx, MT9xx series with multi-sequence parsing
   - **Error Collection:** Permissive parsing mode that collects all validation errors instead of failing fast
-  - **Type-Safe Architecture:** Compile-time validation with macro-generated type checks and SWIFT format enforcement
-  - **Test Data Generation:** Format-driven sample generation with 400+ real-world test scenarios
+  - **Type-Safe Architecture:** Robust trait-based system with comprehensive SWIFT format enforcement and validation
+  - **1,335 SWIFT Error Codes:** Complete implementation of T-Series, C-Series, D-Series, E-Series, and G-Series validation codes
+  - **Test Data Generation:** Format-driven sample generation with 195+ real-world test scenarios
   - **Performance Optimized:** Zero-copy parsing, regex caching, and optimized memory allocation
-  - **Production Ready:** 100% round-trip test success rate with comprehensive SWIFT standard validation
+  - **Production Ready:** 100% round-trip test success rate (195/195) with comprehensive SWIFT standard validation
 
-## 🏗️ How It Works: v3 Macro Architecture
+## 🏗️ How It Works: v3 Architecture
 
-### `#[derive(SwiftField)]` - Enhanced Field Generation
+### Type-Safe Field System
 
-The v3 macro system provides compile-time validation and automatic implementation generation:
+The library implements a robust trait-based system for SWIFT field handling with comprehensive validation:
 
 ```rust
 use swift_mt_message::SwiftField;
 
-#[derive(SwiftField)]
-#[format("4!c")] // SWIFT format specification with compile-time validation
+// Field structures implement the SwiftField trait
 pub struct Field23B {
-    #[format("4!c")]
     pub bank_operation_code: String,
 }
 
-// The v3 macro automatically generates:
+impl SwiftField for Field23B {
+    fn parse(value: &str) -> Result<Self> {
+        // Format-aware parsing with SWIFT CBPR+ compliance
+        // Validates 4!c format (4 alphanumeric characters)
+        validate_format(value, "4!c")?;
+        Ok(Field23B { bank_operation_code: value.to_string() })
+    }
+
+    fn to_swift_string(&self) -> String {
+        // Smart serialization with proper field formatting
+        self.bank_operation_code.clone()
+    }
+}
+
+// The trait system provides:
 // - Format-aware parsing with SWIFT CBPR+ compliance
-// - Smart serialization with proper field formatting
 // - Comprehensive validation with detailed error contexts
 // - Sample generation for testing
 // - Serde traits with clean JSON output
 ```
 
-### `#[derive(SwiftMessage)]` - Sequence-Aware Message Composition
+### Message Structure with Sequence Support
 
-The v3 system supports complex multi-sequence messages with automatic field ordering:
+The v3 system supports complex multi-sequence messages with deterministic field ordering:
 
 ```rust
-use swift_mt_message::{SwiftMessage, swift_serde};
+use swift_mt_message::SwiftMessage;
 
-#[derive(SwiftMessage)]
-#[swift_serde(rename_all = "FIELD_TAGS")] 
 pub struct MT103 {
-    #[field("20")]
     pub transaction_reference: Field20,
-    
-    #[field("23B")]
     pub bank_operation_code: Field23B,
-    
-    #[field("32A")]
     pub value_date_currency_amount: Field32A,
-    
-    // Optional fields with CBPR+ validation
-    #[field("77T", optional)]
-    pub envelope_contents: Option<Field77T>,
+    pub envelope_contents: Option<Field77T>, // Optional fields with CBPR+ validation
 }
 
-// The v3 macro provides:
+impl SwiftMessageBody for MT103 {
+    fn message_type() -> &'static str { "103" }
+
+    fn parse_from_block4(block4: &str) -> Result<Self> {
+        // Sequence-aware parsing for complex messages
+        // Handles field extraction, validation, and error collection
+    }
+
+    fn validate_network_rules(&self, stop_on_first_error: bool) -> Vec<SwiftValidationError> {
+        // CBPR+ compliance validation with 1,335 error codes
+    }
+}
+
+// The system provides:
 // - Sequence-aware parsing for complex messages (MT104, MT107)
 // - CBPR+ compliance validation
 // - Error collection in permissive mode
@@ -135,7 +149,7 @@ Add `swift-mt-message` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-swift-mt-message = "3.0.0"
+swift-mt-message = "3.1"
 ```
 
 ## 📖 Usage
@@ -208,16 +222,17 @@ match parser.parse_with_errors::<MT103>(raw_message_with_errors) {
 
 ## 🧪 Testing Strategy
 
-SwiftMTMessage v3 includes a comprehensive testing framework with 400+ real-world scenarios across 23 message types, ensuring SWIFT CBPR+ SR2025 compliance.
+SwiftMTMessage v3 includes a comprehensive testing framework with 195+ real-world scenarios across 30 message types, ensuring SWIFT CBPR+ SR2025 compliance.
 
 ### Key Testing Features
 
-- **Scenario-Based Testing**: 400+ real-world scenarios covering all MT message types
+- **Scenario-Based Testing**: 195+ real-world scenarios covering all MT message types
 - **CBPR+ SR2025 Compliance**: 100+ dedicated CBPR+ scenarios for cross-border payment compliance
-- **Round-Trip Validation**: Bidirectional JSON ↔ MT conversion with 100% success rate
+- **Round-Trip Validation**: Bidirectional JSON ↔ MT conversion with 100% success rate (195/195 tests passing)
 - **Multi-Sequence Support**: Complex message testing (MT104, MT107) with repeated sequences
 - **Error Collection Testing**: Validation of permissive parsing mode with comprehensive error reporting
 - **Performance Benchmarks**: Optimized parsing achieving sub-millisecond performance
+- **100% Validation Success**: All 1,950 validation tests passing
 
 ### Quick Start
 
@@ -236,9 +251,9 @@ For detailed test scenarios, running instructions, and coverage information, see
 
 ## 📋 Supported Message Types
 
-SwiftMTMessage v3 supports comprehensive parsing and generation for the following MT message types:
+SwiftMTMessage v3 supports comprehensive parsing and generation for **30+ MT message types**:
 
-### Payment Messages (MT1xx)
+### Payment Messages (MT1xx) - 7 Types
 - **MT101**: Request for Transfer
 - **MT103**: Single Customer Credit Transfer (CBPR+ Enhanced)
 - **MT104**: Direct Debit and Request for Debit Transfer
@@ -247,18 +262,26 @@ SwiftMTMessage v3 supports comprehensive parsing and generation for the followin
 - **MT111**: Stop Payment of a Cheque
 - **MT112**: Status of a Request for Stop Payment
 
-### Financial Institution Transfers (MT2xx)
+### System Messages (MT19x) - 4 Types
+- **MT190**: Advice of Charges, Interest and Other Adjustments
+- **MT191**: Request for Payment of Charges, Interest and Other Expenses
 - **MT192**: Request for Cancellation
 - **MT196**: Answers (Cancellation/Inquiry)
+
+### Financial Institution Transfers (MT2xx) - 11 Types
 - **MT199**: Free Format Message
+- **MT200**: Financial Institution Transfer for its Own Account
 - **MT202**: General Financial Institution Transfer
+- **MT204**: Financial Markets Direct Debit Message
 - **MT205**: Financial Institution Transfer Execution
 - **MT210**: Notice to Receive
+- **MT290**: Advice of Charges, Interest and Other Adjustments
+- **MT291**: Request for Payment of Charges, Interest and Other Expenses
 - **MT292**: Request for Cancellation
 - **MT296**: Answers
 - **MT299**: Free Format Message
 
-### Cash Management & Statements (MT9xx)
+### Cash Management & Statements (MT9xx) - 8 Types
 - **MT900**: Confirmation of Debit
 - **MT910**: Confirmation of Credit
 - **MT920**: Request Message
@@ -273,20 +296,23 @@ All message types are fully compliant with SWIFT CBPR+ SR2025 specifications and
 ## 🚀 What's New in v3
 
 ### Architecture Improvements
-- **Complete Macro System Overhaul**: Rewritten from scratch with enhanced compile-time validation
-- **Modular Design**: Separated into dedicated modules (ast, codegen, format, error) for maintainability
-- **Sequence-Aware Parsing**: Native support for complex multi-sequence messages
+- **Parser-Based Architecture**: Complete migration to robust parser-based system
+- **Modular Design**: Separated into dedicated modules (parser, fields, messages, validation) for maintainability
+- **Sequence-Aware Parsing**: Native support for complex multi-sequence messages (MT104, MT107, etc.)
+- **Enhanced Trait System**: Comprehensive `SwiftField` and `SwiftMessageBody` trait implementations
 
 ### Enhanced Features
-- **Error Collection Mode**: Collect all validation errors instead of failing fast
-- **CBPR+ SR2025 Compliance**: Full support for latest SWIFT standards
+- **Error Collection Mode**: Collect all validation errors instead of failing fast (v3.0)
+- **CBPR+ SR2025 Compliance**: Full support for latest SWIFT standards with 100+ test scenarios
+- **1,335 SWIFT Error Codes**: Complete T-Series, C-Series, D-Series, E-Series, and G-Series validation
 - **Performance Optimizations**: Regex caching, reduced allocations, zero-copy parsing
-- **Comprehensive Documentation**: Added CLAUDE.md for AI-assisted development
+- **Comprehensive Documentation**: Enhanced error handling docs and AI-assisted development guide
 
 ### Testing & Quality
-- **400+ Test Scenarios**: Real-world scenarios for all message types
-- **100% Round-Trip Success**: All messages pass bidirectional conversion
-- **SWIFT Error Codes**: Complete implementation of standard SWIFT validation codes
+- **195+ Test Scenarios**: Real-world scenarios for all 30 message types
+- **100% Round-Trip Success**: All 195 messages pass bidirectional JSON ↔ MT conversion
+- **100% Validation Success**: All 1,950 validation tests passing
+- **SWIFT Standards Compliance**: Complete implementation of SWIFT CBPR+ SR2025 validation codes
 
 ## 🤝 Contributing
 

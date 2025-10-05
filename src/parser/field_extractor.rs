@@ -28,12 +28,25 @@ pub fn extract_field_content(input: &str, tag: &str) -> Option<(String, usize)> 
         (remaining[..end].to_string(), has_newline)
     } else {
         // No next field found, take everything until end marker
-        // Look for block end markers: "\n-}" or "\n-\n" (trailer separator)
-        // Do NOT stop at "\n-" alone as "-" can be valid field content (e.g., bullet points)
+        // Look for block end markers in order of specificity:
+        // 1. "\n-}" - end of block with closing brace
+        // 2. "\n-\n" - trailer separator
+        // 3. "\n-" at end of string - simple block end
+        // 4. "-}" - end marker without newline
         if let Some(end_pos) = remaining.find("\n-}") {
             (remaining[..end_pos].to_string(), true)
         } else if let Some(end_pos) = remaining.find("\n-\n") {
             (remaining[..end_pos].to_string(), true)
+        } else if let Some(end_pos) = remaining.find("\n-") {
+            // Only treat "\n-" as end marker if it's at the end of the string
+            // or followed by "}" (to avoid matching "-" in field content like bullet points)
+            let after_marker = end_pos + 2; // position after "\n-"
+            if after_marker >= remaining.len() || remaining[after_marker..].starts_with('}') {
+                (remaining[..end_pos].to_string(), true)
+            } else {
+                // Take all remaining content
+                (remaining.to_string(), false)
+            }
         } else if let Some(end_pos) = remaining.find("-}") {
             (remaining[..end_pos].to_string(), false)
         } else {

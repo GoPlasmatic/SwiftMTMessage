@@ -301,7 +301,10 @@ impl SwiftField for Field50F {
 
         if lines.len() < 2 {
             return Err(ParseError::InvalidFormat {
-                message: format!("Field 50F must have at least 2 lines (account + BIC), found {}", lines.len()),
+                message: format!(
+                    "Field 50F must have at least 2 lines (account + BIC), found {}",
+                    lines.len()
+                ),
             });
         }
 
@@ -348,7 +351,11 @@ impl SwiftField for Field50F {
         Ok(Field50F {
             account: account.to_string(),
             party_identifier,
-            name_and_address: if name_and_address.is_empty() { None } else { Some(name_and_address) },
+            name_and_address: if name_and_address.is_empty() {
+                None
+            } else {
+                Some(name_and_address)
+            },
             bic,
         })
     }

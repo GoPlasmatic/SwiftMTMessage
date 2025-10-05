@@ -235,9 +235,19 @@ impl SwiftField for Field61 {
         }
 
         // Parse bank reference and supplementary details (after //)
-        // Format after //: bank_reference[16x] supplementary_details[34x]
+        // Format after //: bank_reference[16x][\n]supplementary_details[34x]
+        // Supplementary details may be on a new line or directly concatenated
         let bank_reference = if let Some(bank_ref_str) = after_customer_ref {
-            if bank_ref_str.len() > 16 {
+            // Check if there's a newline separating bank ref from supplementary details
+            if let Some(newline_pos) = bank_ref_str.find('\n') {
+                // Bank reference is before newline, supplementary details after
+                let bank_ref = bank_ref_str[..newline_pos].to_string();
+                if newline_pos + 1 < bank_ref_str.len() {
+                    supplementary_details = Some(bank_ref_str[newline_pos + 1..].to_string());
+                }
+                Some(bank_ref)
+            } else if bank_ref_str.len() > 16 {
+                // No newline, but string is longer than bank ref max
                 // First 16 chars = bank reference, rest = supplementary details
                 supplementary_details = Some(bank_ref_str[16..].to_string());
                 Some(bank_ref_str[..16].to_string())
@@ -306,8 +316,9 @@ impl SwiftField for Field61 {
             result.push_str("//");
             result.push_str(bank_reference);
 
-            // Supplementary details come directly after bank reference if present
+            // Supplementary details come on new line after bank reference if present
             if let Some(ref supplementary_details) = self.supplementary_details {
+                result.push('\n');
                 result.push_str(supplementary_details);
             }
         } else if let Some(ref supplementary_details) = self.supplementary_details {
@@ -404,11 +415,16 @@ mod tests {
 
     #[test]
     fn test_field61_with_supplementary_details() {
-        // Test with bank reference and supplementary details
-        let field = Field61::parse("2412201220C10000,00NMSCREF100000//BA1-1234567890DUPLICATE-SEQ-1").unwrap();
+        // Test with bank reference and supplementary details (newline separated)
+        let field =
+            Field61::parse("2412201220C10000,00NMSCREF100000//BA1-1234567890\nDUPLICATE-SEQ-1")
+                .unwrap();
         assert_eq!(field.customer_reference, "REF100000");
         assert_eq!(field.bank_reference, Some("BA1-1234567890".to_string()));
-        assert_eq!(field.supplementary_details, Some("DUPLICATE-SEQ-1".to_string()));
+        assert_eq!(
+            field.supplementary_details,
+            Some("DUPLICATE-SEQ-1".to_string())
+        );
 
         // Test round-trip
         let swift_str = field.to_swift_string();

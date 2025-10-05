@@ -141,11 +141,7 @@ impl SwiftField for Field25NoOption {
         Self: Sized,
     {
         // Strip leading slash delimiter (MT format) - JSON should not contain delimiters
-        let input_stripped = if input.starts_with('/') {
-            &input[1..]
-        } else {
-            input
-        };
+        let input_stripped = input.strip_prefix('/').unwrap_or(input);
 
         // Parse as 35x - up to 35 SWIFT characters
         let authorisation = parse_max_length(input_stripped, 35, "Field 25 authorisation")?;

@@ -213,12 +213,8 @@ impl SwiftField for Field53B {
         if lines.len() >= 2 {
             // Two lines: first is party_identifier, second is location
             if !lines[0].is_empty() {
-                let party_id = if lines[0].starts_with('/') {
-                    &lines[0][1..] // Remove leading slash for storage
-                } else {
-                    lines[0]
-                };
-                party_identifier = Some(parse_max_length(party_id, 34, "Field53B party_identifier")?);
+                party_identifier =
+                    Some(parse_max_length(lines[0], 34, "Field53B party_identifier")?);
             }
             if !lines[1].is_empty() {
                 location = Some(parse_max_length(lines[1], 35, "Field53B location")?);
@@ -229,15 +225,12 @@ impl SwiftField for Field53B {
             // Determine if single line is party_identifier or location
             let is_party_identifier = line.starts_with('/')
                 || ((8..=11).contains(&line.len())
-                    && line.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()));
+                    && line
+                        .chars()
+                        .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()));
 
             if is_party_identifier {
-                let party_id = if line.starts_with('/') {
-                    &line[1..]
-                } else {
-                    line
-                };
-                party_identifier = Some(parse_max_length(party_id, 34, "Field53B party_identifier")?);
+                party_identifier = Some(parse_max_length(line, 34, "Field53B party_identifier")?);
             } else {
                 location = Some(parse_max_length(line, 35, "Field53B location")?);
             }
@@ -300,21 +293,17 @@ impl SwiftField for Field53D {
 
         // Check if first line is a party identifier
         // Party identifier can be on its own line (with or without leading /)
-        // If first line is short and there are more lines, it's likely a party identifier
+        // If first line starts with '/' and is short, it's a party identifier
         if let Some(first_line) = lines.first() {
-            let potential_party_id = if first_line.starts_with('/') {
-                &first_line[1..]
-            } else {
-                first_line
-            };
+            // If it starts with '/' or looks like an account identifier (short alphanumeric)
+            let looks_like_party_id = first_line.starts_with('/')
+                || (first_line.len() <= 34
+                    && !first_line.contains(' ')
+                    && first_line.chars().any(|c| c.is_ascii_digit()));
 
-            // If it looks like a party identifier (short, and more lines follow)
-            if potential_party_id.len() <= 34
-                && !potential_party_id.is_empty()
-                && lines.len() > 1
-            {
+            if looks_like_party_id && !first_line.is_empty() && lines.len() > 1 {
                 // Entire first line is party identifier
-                party_identifier = Some(potential_party_id.to_string());
+                party_identifier = Some(first_line.to_string());
                 lines.remove(0);
             }
         }

@@ -2,7 +2,7 @@
 //!
 //! This example shows how to handle parsing errors when parsing SWIFT MT messages.
 
-use swift_mt_message::errors::ParseResult;
+use swift_mt_message::ParseResult;
 use swift_mt_message::messages::MT103;
 use swift_mt_message::parser::SwiftParser;
 

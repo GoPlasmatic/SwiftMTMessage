@@ -42,8 +42,9 @@ pub use messages::*;
 
 // Re-export core types
 pub use errors::{
-    ParseError, Result, SwiftBusinessError, SwiftContentError, SwiftFormatError, SwiftGeneralError,
-    SwiftRelationError, SwiftValidationError, SwiftValidationResult, ValidationError, error_codes,
+    ParseError, ParseResult, Result, SwiftBusinessError, SwiftContentError, SwiftFormatError,
+    SwiftGeneralError, SwiftRelationError, SwiftValidationError, SwiftValidationResult,
+    ValidationError, error_codes,
 };
 pub use headers::{ApplicationHeader, BasicHeader, Trailer, UserHeader};
 pub use parsed_message::ParsedSwiftMessage;

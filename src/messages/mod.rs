@@ -14,7 +14,7 @@
 //! use swift_mt_message::traits::SwiftMessageBody;
 //!
 //! # fn main() -> swift_mt_message::Result<()> {
-//! let mt103 = MT103::parse_from_block4(":20:REF123\n:23B:CRED\n...")?;
+//! let mt103 = MT103::parse_from_block4(":20:REF123\r\n:23B:CRED\r\n:32A:240719USD1234,56\r\n:50K:/12345678\r\nJOHN DOE\r\n:59:/98765432\r\nJANE SMITH\r\n:71A:OUR\r\n-")?;
 //! let mt_string = mt103.to_mt_string();
 //! # Ok(())
 //! # }

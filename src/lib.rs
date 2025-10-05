@@ -14,7 +14,7 @@
 //! use swift_mt_message::parser::SwiftParser;
 //!
 //! # fn main() -> swift_mt_message::Result<()> {
-//! let message = "{1:F01BANKDEFF...}{2:I103...}{4:\n:20:REF123\n:23B:CRED\n-}";
+//! let message = "{1:F01BANKDEFFAXXX0000000000}{2:I103BANKDEFFAXXXU3003}{4:\r\n:20:REF123\r\n:23B:CRED\r\n:32A:240719USD1234,56\r\n:50K:/12345678\r\nJOHN DOE\r\n:59:/98765432\r\nJANE SMITH\r\n:71A:OUR\r\n-}";
 //! let parsed = SwiftParser::parse_auto(message)?;
 //! # Ok(())
 //! # }

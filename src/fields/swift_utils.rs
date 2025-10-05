@@ -336,10 +336,12 @@ pub fn parse_amount(input: &str) -> Result<f64, ParseError> {
 ///
 /// # Examples
 /// ```
-/// validate_amount_decimals(100.50, "USD") // Ok - 2 decimals allowed
-/// validate_amount_decimals(100.0, "JPY")  // Ok - 0 decimals allowed
-/// validate_amount_decimals(100.50, "JPY") // Err - JPY allows 0 decimals only
-/// validate_amount_decimals(100.505, "BHD") // Err - BHD allows 3 decimals max
+/// use swift_mt_message::fields::swift_utils::validate_amount_decimals;
+///
+/// validate_amount_decimals(100.50, "USD").unwrap(); // Ok - 2 decimals allowed
+/// validate_amount_decimals(100.0, "JPY").unwrap();  // Ok - 0 decimals allowed
+/// assert!(validate_amount_decimals(100.50, "JPY").is_err()); // JPY allows 0 decimals only
+/// assert!(validate_amount_decimals(100.5055, "BHD").is_err()); // BHD allows 3 decimals max
 /// ```
 pub fn validate_amount_decimals(amount: f64, currency: &str) -> Result<(), ParseError> {
     let max_decimals = get_currency_decimals(currency);
@@ -406,6 +408,8 @@ pub fn parse_amount_with_currency(input: &str, currency: &str) -> Result<f64, Pa
 ///
 /// # Examples
 /// ```
+/// use swift_mt_message::fields::swift_utils::format_swift_amount;
+///
 /// assert_eq!(format_swift_amount(1234.56, 2), "1234,56");
 /// assert_eq!(format_swift_amount(1000.00, 2), "1000");
 /// assert_eq!(format_swift_amount(1000.50, 2), "1000,5");
@@ -442,6 +446,8 @@ pub fn format_swift_amount(amount: f64, decimals: usize) -> String {
 ///
 /// # Examples
 /// ```
+/// use swift_mt_message::fields::swift_utils::format_swift_amount_for_currency;
+///
 /// assert_eq!(format_swift_amount_for_currency(1234.56, "USD"), "1234,56");
 /// assert_eq!(format_swift_amount_for_currency(1500000.0, "JPY"), "1500000");
 /// assert_eq!(format_swift_amount_for_currency(123.456, "BHD"), "123,456");

@@ -34,26 +34,22 @@ impl AsyncFunctionHandler for Parse {
             }
         };
 
-        let mt_message_field =
-            input
-                .get("mt_message")
-                .and_then(Value::as_str)
-                .ok_or_else(|| {
-                    DataflowError::Validation("'mt_message' parameter is required".to_string())
-                })?;
-
-        let parsed_field = input.get("parsed").and_then(Value::as_str).ok_or_else(|| {
-            DataflowError::Validation("'parsed' parameter is required".to_string())
+        let source_field = input.get("source").and_then(Value::as_str).ok_or_else(|| {
+            DataflowError::Validation("'source' parameter is required".to_string())
         })?;
 
-        let payload = if mt_message_field == "payload" {
+        let target_field = input.get("target").and_then(Value::as_str).ok_or_else(|| {
+            DataflowError::Validation("'target' parameter is required".to_string())
+        })?;
+
+        let payload = if source_field == "payload" {
             message.payload.to_string().replace("\\n", "\n")
         } else {
             // Check if the field contains an object with mt_message (from generate_mt output)
-            let field_value = message.data().get(mt_message_field).ok_or_else(|| {
+            let field_value = message.data().get(source_field).ok_or_else(|| {
                 DataflowError::Validation(format!(
                     "MT message field '{}' not found in message data",
-                    mt_message_field
+                    source_field
                 ))
             })?;
 
@@ -66,19 +62,19 @@ impl AsyncFunctionHandler for Parse {
             } else {
                 return Err(DataflowError::Validation(format!(
                     "Field '{}' does not contain a valid MT message",
-                    mt_message_field
+                    source_field
                 )));
             }
         };
 
         debug!(
-            mt_message_field = %mt_message_field,
-            parsed_field = %parsed_field,
+            source_field = %source_field,
+            target_field = %target_field,
             payload_length = payload.len(),
             "Extracted MT payload for parsing"
         );
 
-        self.parse_swift_mt(message, &payload, parsed_field)
+        self.parse_swift_mt(message, &payload, target_field)
     }
 }
 
@@ -87,7 +83,7 @@ impl Parse {
         &self,
         message: &mut Message,
         payload: &str,
-        parsed_field: &str,
+        target_field: &str,
     ) -> Result<(usize, Vec<Change>)> {
         debug!("Parsing SwiftMT message for forward transformation");
 
@@ -616,10 +612,10 @@ impl Parse {
             .data_mut()
             .as_object_mut()
             .unwrap()
-            .insert(parsed_field.to_string(), parsed_data.clone());
+            .insert(target_field.to_string(), parsed_data.clone());
 
         message.metadata_mut().as_object_mut().unwrap().insert(
-            parsed_field.to_string(),
+            target_field.to_string(),
             json!({
                 "message_type": message_type,
                 "method": method,
@@ -629,7 +625,7 @@ impl Parse {
         debug!(
             message_type = %message_type,
             method = %method,
-            parsed_field = %parsed_field,
+            target_field = %target_field,
             "MT message parsing completed successfully for forward transformation"
         );
 
@@ -639,7 +635,7 @@ impl Parse {
         Ok((
             200,
             vec![Change {
-                path: Arc::from(format!("data.{}", parsed_field)),
+                path: Arc::from(format!("data.{}", target_field)),
                 old_value: Arc::new(Value::Null),
                 new_value: Arc::new(parsed_data),
             }],

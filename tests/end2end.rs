@@ -123,10 +123,10 @@ async fn test_swift_mt_workflow_pipeline() {
                 }
             };
 
-            // Create message with initial data
-            let mut message = Message::from_value(&json!({}));
+            // Create message with schema as payload (for generate_mt plugin)
+            let mut message = Message::from_value(&schema);
 
-            // Set the data fields
+            // Set the data fields for workflow routing and tracking
             message
                 .data_mut()
                 .as_object_mut()
@@ -137,11 +137,6 @@ async fn test_swift_mt_workflow_pipeline() {
                 .as_object_mut()
                 .unwrap()
                 .insert("scenario".to_string(), json!(scenario));
-            message
-                .data_mut()
-                .as_object_mut()
-                .unwrap()
-                .insert("schema".to_string(), schema.clone());
 
             // Important: invalidate cache after modifying data
             message.invalidate_context_cache();
@@ -151,7 +146,7 @@ async fn test_swift_mt_workflow_pipeline() {
                 println!("  message_type: {}", message_type);
                 println!("  scenario: {}", scenario);
                 println!(
-                    "  schema: {} bytes",
+                    "  payload (schema): {} bytes",
                     serde_json::to_string(&schema).unwrap_or_default().len()
                 );
 
@@ -590,9 +585,7 @@ fn create_swift_mt_workflow(message_type: &str) -> Workflow {
                 "function": {
                     "name": "generate_mt",
                     "input": {
-                        "schema": "schema",
-                        "generated": "sample_json",
-                        "message_type": message_type
+                        "target": "sample_json"
                     }
                 },
             },
@@ -603,8 +596,8 @@ fn create_swift_mt_workflow(message_type: &str) -> Workflow {
                 "function": {
                     "name": "publish_mt",
                     "input": {
-                        "json_data": "sample_json",
-                        "mt_message": "sample_mt"
+                        "source": "sample_json",
+                        "target": "sample_mt"
                     }
                 },
             },
@@ -615,8 +608,8 @@ fn create_swift_mt_workflow(message_type: &str) -> Workflow {
                 "function": {
                     "name": "validate_mt",
                     "input": {
-                        "mt_message": "sample_mt",
-                        "validation_result": "validation_result"
+                        "source": "sample_mt",
+                        "target": "validation_result"
                     }
                 },
             },
@@ -627,8 +620,8 @@ fn create_swift_mt_workflow(message_type: &str) -> Workflow {
                 "function": {
                     "name": "parse_mt",
                     "input": {
-                        "mt_message": "sample_mt",
-                        "parsed": "mt_json"
+                        "source": "sample_mt",
+                        "target": "mt_json"
                     }
                 },
             }

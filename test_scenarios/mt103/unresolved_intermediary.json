@@ -2,12 +2,7 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "PAY",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["PAY", 100000000000]},
         "currency": "USD",
         "amount": 10000,
         "value_date": "2024-12-20",
@@ -21,92 +16,38 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "103",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "23B": {
-                "instruction_code": {
-                    "var": "bank_op_code"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
             "50K": {
                 "account": "GB82WEST12345698765432",
-                "name_and_address": [
-                    "ACME CORPORATION",
-                    "123 MAIN STREET",
-                    {
-                        "cat": [
-                            "NEW YORK",
-                            ", ",
-                            "US"
-                        ]
-                    }
-                ]
+                "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", {"cat": ["NEW YORK", ", ", "US"]}]
             },
-            "52A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
-            "56C": {
-                "party_identifier": "UNKNOWN"
-            },
+            "52A": {"bic": {"var": "sender_bic"}},
+            "56C": {"party_identifier": "UNKNOWN"},
             "57D": {
                 "party_identifier": "MISSING BIC",
                 "name_and_address": [
@@ -118,12 +59,7 @@
             },
             "59": {
                 "account": "??????????????????",
-                "name_and_address": [
-                    "ACME CORPORATION",
-                    "ADDRESS LINE 1",
-                    "ADDRESS LINE 2",
-                    "COUNTRY"
-                ]
+                "name_and_address": ["ACME CORPORATION", "ADDRESS LINE 1", "ADDRESS LINE 2", "COUNTRY"]
             },
             "70": {
                 "narrative": [
@@ -133,11 +69,7 @@
                     "/ACTION/MANUAL INTERVENTION"
                 ]
             },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            },
+            "71A": {"code": {"var": "charges"}},
             "72": {
                 "information": [
                     "/ERR/UNRESOLVED INTERMEDIARY",

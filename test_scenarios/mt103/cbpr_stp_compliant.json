@@ -14,88 +14,37 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
             "session_number": "0001",
             "sequence_number": "000123"
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            }
-        },
+        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
         "message_type": "103",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "23B": {
-                "instruction_code": {
-                    "var": "bank_op_code"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
             "50K": {
                 "account": "DE89370400440532013000",
-                "name_and_address": [
-                    "ACME CORPORATION",
-                    "123 MAIN STREET",
-                    "NEW YORK NY 10001",
-                    "USA"
-                ]
+                "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK NY 10001", "USA"]
             },
             "59": {
                 "account": "123456789",
-                "name_and_address": [
-                    "JANE DOE",
-                    "456 PARK AVENUE",
-                    "BOSTON MA 02101",
-                    "USA"
-                ]
+                "name_and_address": ["JANE DOE", "456 PARK AVENUE", "BOSTON MA 02101", "USA"]
             },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            }
+            "71A": {"code": {"var": "charges"}}
         }
     }
 }

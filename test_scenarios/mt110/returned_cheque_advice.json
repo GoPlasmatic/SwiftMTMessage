@@ -2,19 +2,9 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "message_ref": {
-            "cat": [
-                "RETCHQ",
-                100000
-            ]
-        },
+        "message_ref": {"cat": ["RETCHQ", 100000]},
         "currency": "GBP",
-        "cheque_ref": {
-            "cat": [
-                "CHQ",
-                1000000
-            ]
-        },
+        "cheque_ref": {"cat": ["CHQ", 1000000]},
         "cheque_amount": 10000,
         "cheque_date": "2024-12-15",
         "drawer_bic": "DEUTDEFF",
@@ -26,64 +16,28 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "110",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "110",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "message_ref"
-                }
-            },
-            "53A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
-            "54A": {
-                "bic": {
-                    "var": "receiver_bic"
-                }
-            },
+            "20": {"reference": {"var": "message_ref"}},
+            "53A": {"bic": {"var": "sender_bic"}},
+            "54A": {"bic": {"var": "receiver_bic"}},
             "72": {
                 "information": [
                     "/RETURN/CHEQUE RETURNED UNPAID",
@@ -96,38 +50,14 @@
             },
             "#": [
                 {
-                    "21": {
-                        "reference": {
-                            "var": "cheque_ref"
-                        }
-                    },
-                    "30": {
-                        "execution_date": {
-                            "var": "cheque_date"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "cheque_amount"
-                        }
-                    },
+                    "21": {"reference": {"var": "cheque_ref"}},
+                    "30": {"execution_date": {"var": "cheque_date"}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "cheque_amount"}},
                     "50K": {
                         "account": "GB12345678901234",
-                        "name_and_address": [
-                            "ACME CORPORATION",
-                            "123 MAIN STREET",
-                            "NEW YORK",
-                            "UNITED KINGDOM"
-                        ]
+                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "UNITED KINGDOM"]
                     },
-                    "52A": {
-                        "bic": {
-                            "var": "drawer_bic"
-                        }
-                    },
+                    "52A": {"bic": {"var": "drawer_bic"}},
                     "59F": {
                         "name_and_address": [
                             "1/ACME CORPORATION",

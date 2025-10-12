@@ -3,12 +3,7 @@
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
         "charity_bank_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "CHAR",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["CHAR", 100000000000]},
         "currency": "USD",
         "amount": 10000,
         "value_date": "2024-12-20",
@@ -16,145 +11,63 @@
         "charges": "SHA",
         "session_num": "0001",
         "sequence_num": "010123",
-        "donor_name": {
-            "fake": [
-                "name"
-            ]
-        },
+        "donor_name": {"fake": ["name"]},
         "donor_address": "123 MAIN STREET",
         "donor_city": "NEW YORK",
         "donor_country": "US",
         "donor_lei": "LEIXG8HWVXGGR1B2V9Q897",
         "charity_name": "GLOBAL RELIEF FOUNDATION",
         "charity_registration": "501C3-12345678",
-        "campaign_ref": {
-            "cat": [
-                "CAMP-",
-                1000
-            ]
-        },
-        "tax_receipt_num": {
-            "cat": [
-                "TAX-",
-                100000
-            ]
-        },
+        "campaign_ref": {"cat": ["CAMP-", 1000]},
+        "tax_receipt_num": {"cat": ["TAX-", 100000]},
         "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
     "schema": {
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "103",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "23B": {
-                "instruction_code": {
-                    "var": "bank_op_code"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
             "50K": {
                 "account": "PERSONAL-ACCOUNT",
                 "name_and_address": [
-                    {
-                        "var": "donor_name"
-                    },
-                    {
-                        "cat": [
-                            "/LEI/",
-                            {
-                                "var": "donor_lei"
-                            }
-                        ]
-                    },
-                    {
-                        "var": "donor_address"
-                    },
-                    {
-                        "var": "donor_city"
-                    }
+                    {"var": "donor_name"},
+                    {"cat": ["/LEI/", {"var": "donor_lei"}]},
+                    {"var": "donor_address"},
+                    {"var": "donor_city"}
                 ]
             },
-            "52A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
-            "57A": {
-                "bic": {
-                    "var": "charity_bank_bic"
-                }
-            },
+            "52A": {"bic": {"var": "sender_bic"}},
+            "57A": {"bic": {"var": "charity_bank_bic"}},
             "59": {
                 "account": "DONATIONS-ACCOUNT",
                 "name_and_address": [
-                    {
-                        "var": "charity_name"
-                    },
-                    {
-                        "cat": [
-                            "/REG/",
-                            {
-                                "var": "charity_registration"
-                            }
-                        ]
-                    },
+                    {"var": "charity_name"},
+                    {"cat": ["/REG/", {"var": "charity_registration"}]},
                     "HUMANITARIAN AID DIVISION",
                     "NEW YORK NY"
                 ]
@@ -162,40 +75,16 @@
             "70": {
                 "narrative": [
                     "/PURP/CHAR",
-                    {
-                        "cat": [
-                            "/DONREF/",
-                            {
-                                "var": "campaign_ref"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "/TAXREC/",
-                            {
-                                "var": "tax_receipt_num"
-                            }
-                        ]
-                    },
+                    {"cat": ["/DONREF/", {"var": "campaign_ref"}]},
+                    {"cat": ["/TAXREC/", {"var": "tax_receipt_num"}]},
                     "CHARITABLE DONATION"
                 ]
             },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            },
+            "71A": {"code": {"var": "charges"}},
             "72": {
-                "information": [
-                    "/ACC/CBPR+ COMPLIANT",
-                    "/INS/CHARITABLE CONTRIBUTION",
-                    "/REC/TAX DEDUCTIBLE"
-                ]
+                "information": ["/ACC/CBPR+ COMPLIANT", "/INS/CHARITABLE CONTRIBUTION", "/REC/TAX DEDUCTIBLE"]
             },
-            "77T": {
-                "envelope_content": "EXTENDED REMITTANCE INFORMATION"
-            }
+            "77T": {"envelope_content": "EXTENDED REMITTANCE INFORMATION"}
         }
     }
 }

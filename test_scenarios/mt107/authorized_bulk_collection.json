@@ -2,12 +2,7 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "AUTHDD",
-                1000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["AUTHDD", 1000000000]},
         "currency": "USD",
         "execution_date": "2024-12-31",
         "charges": "SHA",
@@ -21,195 +16,76 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "107",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            }
-        },
+        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
         "message_type": "107",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "execution_date"
-                }
-            },
-            "52A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
-            "26T": {
-                "type_code": "TAX"
-            },
-            "77B": {
-                "narrative": [
-                    "/ORDERRES/GB//TAX COLLECTION",
-                    "/BENEFRES/GB//GOVERNMENT"
-                ]
-            },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "52A": {"bic": {"var": "sender_bic"}},
+            "26T": {"type_code": "TAX"},
+            "77B": {"narrative": ["/ORDERRES/GB//TAX COLLECTION", "/BENEFRES/GB//GOVERNMENT"]},
+            "71A": {"code": {"var": "charges"}},
             "#": [
                 {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "TAX",
-                                10000000
-                            ]
-                        }
-                    },
-                    "23E": {
-                        "instruction_code": "AUTH"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
+                    "21": {"reference": {"cat": ["TAX", 10000000]}},
+                    "23E": {"instruction_code": "AUTH"},
+                    "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "70": {
                         "narrative": [
                             "/RFB/CORPORATE TAX",
-                            {
-                                "cat": [
-                                    "/TAXID/",
-                                    10000000
-                                ]
-                            },
+                            {"cat": ["/TAXID/", 10000000]},
                             "/PURP/TAXS",
                             "/PERIOD/Q4 2024"
                         ]
                     },
-                    "59": {
-                        "name_and_address": [
-                            "DEBTOR NAME",
-                            "DEBTOR ADDRESS LINE 1",
-                            "CITY, COUNTRY"
-                        ]
-                    },
+                    "59": {"name_and_address": ["DEBTOR NAME", "DEBTOR ADDRESS LINE 1", "CITY, COUNTRY"]},
                     "50K": {
                         "account": "TAX-AUTHORITY-001",
                         "name_and_address": [
                             "NATIONAL TAX AUTHORITY",
-                            {
-                                "cat": [
-                                    "GOV ENTITY/",
-                                    {
-                                        "var": "sender_lei"
-                                    }
-                                ]
-                            },
+                            {"cat": ["GOV ENTITY/", {"var": "sender_lei"}]},
                             "GOVERNMENT DISTRICT",
                             "CAPITAL CITY, GB"
                         ]
                     }
                 },
                 {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "VAT",
-                                10000000
-                            ]
-                        }
-                    },
-                    "23E": {
-                        "instruction_code": "AUTH"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
+                    "21": {"reference": {"cat": ["VAT", 10000000]}},
+                    "23E": {"instruction_code": "AUTH"},
+                    "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "70": {
                         "narrative": [
                             "/RFB/VAT PAYMENT",
-                            {
-                                "cat": [
-                                    "/VATID/",
-                                    10000000
-                                ]
-                            },
+                            {"cat": ["/VATID/", 10000000]},
                             "/PURP/TAXS",
                             "/PERIOD/DEC 2024"
                         ]
                     },
-                    "59": {
-                        "name_and_address": [
-                            "DEBTOR NAME",
-                            "DEBTOR ADDRESS LINE 1",
-                            "CITY, COUNTRY"
-                        ]
-                    },
+                    "59": {"name_and_address": ["DEBTOR NAME", "DEBTOR ADDRESS LINE 1", "CITY, COUNTRY"]},
                     "50K": {
                         "account": "TAX-AUTHORITY-001",
                         "name_and_address": [
                             "NATIONAL TAX AUTHORITY",
-                            {
-                                "cat": [
-                                    "GOV ENTITY/",
-                                    {
-                                        "var": "sender_lei"
-                                    }
-                                ]
-                            },
+                            {"cat": ["GOV ENTITY/", {"var": "sender_lei"}]},
                             "GOVERNMENT DISTRICT",
                             "CAPITAL CITY, GB"
                         ]
                     }
                 }
             ],
-            "32B": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": 20000
-            }
+            "32B": {"currency": {"var": "currency"}, "amount": 20000}
         }
     }
 }

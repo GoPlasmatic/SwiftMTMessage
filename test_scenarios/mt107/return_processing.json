@@ -2,18 +2,8 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "RTNDD",
-                10000000000
-            ]
-        },
-        "original_ref": {
-            "cat": [
-                "GDDBT",
-                10000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["RTNDD", 10000000000]},
+        "original_ref": {"cat": ["GDDBT", 10000000000]},
         "currency": "USD",
         "execution_date": "2024-12-29",
         "charges": "SHA",
@@ -26,71 +16,26 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "107",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            }
-        },
+        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
         "message_type": "107",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "23E": {
-                "instruction_code": "RTND"
-            },
-            "21E": {
-                "reference": {
-                    "var": "original_ref"
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "execution_date"
-                }
-            },
-            "51A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23E": {"instruction_code": "RTND"},
+            "21E": {"reference": {"var": "original_ref"}},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "51A": {"bic": {"var": "sender_bic"}},
             "50K": {
                 "account": "RETURN-PROCESSOR",
                 "name_and_address": [
@@ -100,148 +45,57 @@
                     "LONDON, GB"
                 ]
             },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            },
+            "71A": {"code": {"var": "charges"}},
             "72": {
                 "information": [
                     "/RETN/DIRECT DEBIT RETURNS",
-                    {
-                        "substr": [
-                            {
-                                "cat": [
-                                    "/ORGNL/",
-                                    {
-                                        "var": "original_ref"
-                                    }
-                                ]
-                            },
-                            0,
-                            35
-                        ]
-                    },
+                    {"substr": [{"cat": ["/ORGNL/", {"var": "original_ref"}]}, 0, 35]},
                     "/RSNCD/AC04",
                     "/DATE/2024-12-25"
                 ]
             },
             "#": [
                 {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "RTN",
-                                10000000
-                            ]
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
+                    "21": {"reference": {"cat": ["RTN", 10000000]}},
+                    "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "70": {
                         "narrative": [
                             "/RFB/DD RETURN",
                             "/RETN/AC04",
-                            {
-                                "cat": [
-                                    "/ORGNL/TXN",
-                                    10000000
-                                ]
-                            },
+                            {"cat": ["/ORGNL/TXN", 10000000]},
                             "/CD/ACCOUNT CLOSED"
                         ]
                     },
-                    "59": {
-                        "name_and_address": [
-                            "DEBTOR NAME",
-                            "DEBTOR ADDRESS LINE 1",
-                            "CITY, COUNTRY"
-                        ]
-                    }
+                    "59": {"name_and_address": ["DEBTOR NAME", "DEBTOR ADDRESS LINE 1", "CITY, COUNTRY"]}
                 },
                 {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "RTN",
-                                10000000
-                            ]
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
+                    "21": {"reference": {"cat": ["RTN", 10000000]}},
+                    "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "70": {
                         "narrative": [
                             "/RFB/DD RETURN",
                             "/RETN/AM04",
-                            {
-                                "cat": [
-                                    "/ORGNL/TXN",
-                                    10000000
-                                ]
-                            },
+                            {"cat": ["/ORGNL/TXN", 10000000]},
                             "/CD/INSUFFICIENT FUNDS"
                         ]
                     },
-                    "59": {
-                        "name_and_address": [
-                            "DEBTOR NAME",
-                            "DEBTOR ADDRESS LINE 1",
-                            "CITY, COUNTRY"
-                        ]
-                    }
+                    "59": {"name_and_address": ["DEBTOR NAME", "DEBTOR ADDRESS LINE 1", "CITY, COUNTRY"]}
                 },
                 {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "RTN",
-                                10000000
-                            ]
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
+                    "21": {"reference": {"cat": ["RTN", 10000000]}},
+                    "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "70": {
                         "narrative": [
                             "/RFB/DD RETURN",
                             "/RETN/MD01",
                             "/CD/NO MANDATE",
-                            {
-                                "cat": [
-                                    "/ORGNL/TXN",
-                                    10000000
-                                ]
-                            }
+                            {"cat": ["/ORGNL/TXN", 10000000]}
                         ]
                     },
-                    "59": {
-                        "name_and_address": [
-                            "DEBTOR NAME",
-                            "DEBTOR ADDRESS LINE 1",
-                            "CITY, COUNTRY"
-                        ]
-                    }
+                    "59": {"name_and_address": ["DEBTOR NAME", "DEBTOR ADDRESS LINE 1", "CITY, COUNTRY"]}
                 }
             ],
-            "32B": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": 30000
-            }
+            "32B": {"currency": {"var": "currency"}, "amount": 30000}
         }
     }
 }

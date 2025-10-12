@@ -2,29 +2,14 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "FXC",
-                100000000000
-            ]
-        },
-        "related_ref": {
-            "cat": [
-                "FX-",
-                10000
-            ]
-        },
+        "transaction_ref": {"cat": ["FXC", 100000000000]},
+        "related_ref": {"cat": ["FX-", 10000]},
         "currency": "USD",
         "charge_amount": 10000,
         "ordering_bic": "DEUTDEFF",
         "account_bic": "DEUTDEFF",
         "session_num": "0001",
-        "sequence_num": {
-            "cat": [
-                "",
-                100000
-            ]
-        },
+        "sequence_num": {"cat": ["", 100000]},
         "uetr": "550e8400-e29b-41d4-a716-446655440000",
         "fx_volume": 10000,
         "transaction_count": 5,
@@ -34,125 +19,49 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "191",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "191",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "related_ref"
-                }
-            },
-            "32B": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "charge_amount"
-                }
-            },
-            "52A": {
-                "bic": {
-                    "var": "ordering_bic"
-                }
-            },
-            "57A": {
-                "bic": {
-                    "var": "account_bic"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "32B": {"currency": {"var": "currency"}, "amount": {"var": "charge_amount"}},
+            "52A": {"bic": {"var": "ordering_bic"}},
+            "57A": {"bic": {"var": "account_bic"}},
             "71B": {
                 "details": [
                     "FX HANDLING CHARGES",
-                    {
-                        "cat": [
-                            "PERIOD: ",
-                            {
-                                "var": "period"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "VOLUME: USD ",
-                            {
-                                "var": "fx_volume"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "TRANSACTIONS: ",
-                            {
-                                "var": "transaction_count"
-                            }
-                        ]
-                    },
+                    {"cat": ["PERIOD: ", {"var": "period"}]},
+                    {"cat": ["VOLUME: USD ", {"var": "fx_volume"}]},
+                    {"cat": ["TRANSACTIONS: ", {"var": "transaction_count"}]},
                     {
                         "cat": [
                             "CHARGES: ",
-                            {
-                                "var": "currency"
-                            },
+                            {"var": "currency"},
                             " ",
-                            {
-                                "var": "charge_amount"
-                            }
+                            {"var": "charge_amount"}
                         ]
                     },
                     "MONTHLY FX SERVICE FEE"
                 ]
             },
             "72": {
-                "information": [
-                    "/FX/CURRENCY CONVERSION",
-                    "/VOL/MONTHLY VOLUME",
-                    "/CHG/HANDLING FEES"
-                ]
+                "information": ["/FX/CURRENCY CONVERSION", "/VOL/MONTHLY VOLUME", "/CHG/HANDLING FEES"]
             }
         }
     }

@@ -1,281 +1,131 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "msg_id": {
-      "cat": [
-        "SUPPBATCH",
-        100000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "msg_id": {"cat": ["SUPPBATCH", 100000]},
+        "exec_date": "2024-12-24",
+        "currency": "USD",
+        "account_id": {"cat": ["GB29NWBK", 10000000000000]},
+        "supplier1_amount": 10000,
+        "supplier2_amount": 10000,
+        "supplier3_amount": 10000,
+        "supplier4_amount": 10000,
+        "supplier5_amount": 10000,
+        "session_num": "0001",
+        "sequence_num": "001234",
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
-    "exec_date": "2024-12-24",
-    "currency": "USD",
-    "account_id": {
-      "cat": [
-        "GB29NWBK",
-        10000000000000
-      ]
-    },
-    "supplier1_amount": 10000,
-    "supplier2_amount": 10000,
-    "supplier3_amount": 10000,
-    "supplier4_amount": 10000,
-    "supplier5_amount": 10000,
-    "session_num": "0001",
-    "sequence_num": "001234",
-    "uetr": "550e8400-e29b-41d4-a716-446655440000"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "101",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "101",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "msg_id"
-        }
-      },
-      "28D": {
-        "index": 1,
-        "total": 1
-      },
-      "30": {
-        "execution_date": {
-          "var": "exec_date"
-        }
-      },
-      "#": [
-        {
-          "21": {
-            "reference": "SUPP-UK-001"
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "supplier1_amount"
-            }
-          },
-          "59": {
-            "account": "GB12BARC20201530093459",
-            "name_and_address": [
-              "FASHION TEXTILES LTD",
-              "45 GARMENT DISTRICT",
-              "MANCHESTER M1 2AB",
-              "UNITED KINGDOM"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "CBPR SUPPLIER PAYMENT",
-              "TEXTILE SUPPLIES Q4 2024",
-              "CONTRACT-2024-TEX"
-            ]
-          },
-          "71A": {
-            "code": "OUR"
-          },
-          "57A": {
-            "bic": "BARCGB22XXX"
-          }
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        {
-          "21": {
-            "reference": "SUPP-UK-002"
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "supplier2_amount"
-            }
-          },
-          "59": {
-            "account": "GB82HBUK40116041111111",
-            "name_and_address": [
-              "ELECTRONICS DISTRIBUTION UK",
-              "TECHNOLOGY PARK",
-              "READING RG2 6UZ",
-              "UNITED KINGDOM"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "CBPR SUPPLIER PAYMENT",
-              "ELECTRONICS DEC 2024",
-              "PO-2024-ELEC-Q4"
-            ]
-          },
-          "71A": {
-            "code": "OUR"
-          },
-          "57A": {
-            "bic": "HBUKGB4BXXX"
-          }
+        "application_header": {
+            "direction": "I",
+            "message_type": "101",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        {
-          "21": {
-            "reference": "SUPP-UK-003"
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "supplier3_amount"
-            }
-          },
-          "59": {
-            "account": "GB31LOYD30992711111111",
-            "name_and_address": [
-              "LOGISTICS PARTNERS LIMITED",
-              "DISTRIBUTION CENTRE",
-              "BIRMINGHAM B24 9PF",
-              "UNITED KINGDOM"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "CBPR SUPPLIER PAYMENT",
-              "LOGISTICS DEC 2024",
-              "SERVICE CONTRACT"
-            ]
-          },
-          "71A": {
-            "code": "OUR"
-          },
-          "57A": {
-            "bic": "LOYDGB2LXXX"
-          }
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
         },
-        {
-          "21": {
-            "reference": "SUPP-UK-004"
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "supplier4_amount"
-            }
-          },
-          "59": {
-            "account": "GB74NWBK60730811111111",
-            "name_and_address": [
-              "HOME FURNISHINGS CO UK",
-              "FURNITURE HOUSE",
-              "LEEDS LS1 4DY",
-              "UNITED KINGDOM"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "CBPR SUPPLIER PAYMENT",
-              "FURNITURE DEC 2024",
-              "DELIVERY COMPLETED"
-            ]
-          },
-          "71A": {
-            "code": "OUR"
-          },
-          "57A": {
-            "bic": "NWBKGB2LXXX"
-          }
-        },
-        {
-          "21": {
-            "reference": "SUPP-UK-005"
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "supplier5_amount"
-            }
-          },
-          "59": {
-            "account": "GB15RBSG16005011111111",
-            "name_and_address": [
-              "PREMIUM FOODS WHOLESALE LTD",
-              "FOOD COURT INDUSTRIAL",
-              "GLASGOW G1 1XP",
-              "SCOTLAND"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "CBPR SUPPLIER PAYMENT",
-              "FOOD SUPPLIES DEC 2024",
-              "SEASONAL INVENTORY"
-            ]
-          },
-          "71A": {
-            "code": "OUR"
-          },
-          "57A": {
-            "bic": "RBSGGB2LXXX"
-          }
+        "message_type": "101",
+        "fields": {
+            "20": {"reference": {"var": "msg_id"}},
+            "28D": {"index": 1, "total": 1},
+            "30": {"execution_date": {"var": "exec_date"}},
+            "#": [
+                {
+                    "21": {"reference": "SUPP-UK-001"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "supplier1_amount"}},
+                    "59": {
+                        "account": "GB12BARC20201530093459",
+                        "name_and_address": [
+                            "FASHION TEXTILES LTD",
+                            "45 GARMENT DISTRICT",
+                            "MANCHESTER M1 2AB",
+                            "UNITED KINGDOM"
+                        ]
+                    },
+                    "70": {
+                        "narrative": ["CBPR SUPPLIER PAYMENT", "TEXTILE SUPPLIES Q4 2024", "CONTRACT-2024-TEX"]
+                    },
+                    "71A": {"code": "OUR"},
+                    "57A": {"bic": "BARCGB22XXX"}
+                },
+                {
+                    "21": {"reference": "SUPP-UK-002"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "supplier2_amount"}},
+                    "59": {
+                        "account": "GB82HBUK40116041111111",
+                        "name_and_address": [
+                            "ELECTRONICS DISTRIBUTION UK",
+                            "TECHNOLOGY PARK",
+                            "READING RG2 6UZ",
+                            "UNITED KINGDOM"
+                        ]
+                    },
+                    "70": {"narrative": ["CBPR SUPPLIER PAYMENT", "ELECTRONICS DEC 2024", "PO-2024-ELEC-Q4"]},
+                    "71A": {"code": "OUR"},
+                    "57A": {"bic": "HBUKGB4BXXX"}
+                },
+                {
+                    "21": {"reference": "SUPP-UK-003"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "supplier3_amount"}},
+                    "59": {
+                        "account": "GB31LOYD30992711111111",
+                        "name_and_address": [
+                            "LOGISTICS PARTNERS LIMITED",
+                            "DISTRIBUTION CENTRE",
+                            "BIRMINGHAM B24 9PF",
+                            "UNITED KINGDOM"
+                        ]
+                    },
+                    "70": {"narrative": ["CBPR SUPPLIER PAYMENT", "LOGISTICS DEC 2024", "SERVICE CONTRACT"]},
+                    "71A": {"code": "OUR"},
+                    "57A": {"bic": "LOYDGB2LXXX"}
+                },
+                {
+                    "21": {"reference": "SUPP-UK-004"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "supplier4_amount"}},
+                    "59": {
+                        "account": "GB74NWBK60730811111111",
+                        "name_and_address": ["HOME FURNISHINGS CO UK", "FURNITURE HOUSE", "LEEDS LS1 4DY", "UNITED KINGDOM"]
+                    },
+                    "70": {
+                        "narrative": ["CBPR SUPPLIER PAYMENT", "FURNITURE DEC 2024", "DELIVERY COMPLETED"]
+                    },
+                    "71A": {"code": "OUR"},
+                    "57A": {"bic": "NWBKGB2LXXX"}
+                },
+                {
+                    "21": {"reference": "SUPP-UK-005"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "supplier5_amount"}},
+                    "59": {
+                        "account": "GB15RBSG16005011111111",
+                        "name_and_address": [
+                            "PREMIUM FOODS WHOLESALE LTD",
+                            "FOOD COURT INDUSTRIAL",
+                            "GLASGOW G1 1XP",
+                            "SCOTLAND"
+                        ]
+                    },
+                    "70": {
+                        "narrative": ["CBPR SUPPLIER PAYMENT", "FOOD SUPPLIES DEC 2024", "SEASONAL INVENTORY"]
+                    },
+                    "71A": {"code": "OUR"},
+                    "57A": {"bic": "RBSGGB2LXXX"}
+                }
+            ],
+            "50F": {"account": {"var": "account_id"}, "bic": {"var": "sender_bic"}},
+            "52A": {"bic": {"var": "sender_bic"}}
         }
-      ],
-      "50F": {
-        "account": {
-          "var": "account_id"
-        },
-        "bic": {
-          "var": "sender_bic"
-        }
-      },
-      "52A": {
-        "bic": {
-          "var": "sender_bic"
-        }
-      }
     }
-  }
 }

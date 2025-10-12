@@ -1,85 +1,40 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "transaction_ref": {
-      "cat": [
-        "FX",
-        100000000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {"cat": ["FX", 100000000]},
+        "currency": "USD",
+        "amount": 10000,
+        "value_date": "2025-01-15",
+        "session_num": "0001",
+        "sequence_num": "345678"
     },
-    "currency": "USD",
-    "amount": 10000,
-    "value_date": "2025-01-15",
-    "session_num": "0001",
-    "sequence_num": "345678"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "200",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "message_type": "200",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "currency": {
-          "var": "currency"
+        "application_header": {
+            "direction": "I",
+            "message_type": "200",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        "amount": {
-          "var": "amount"
+        "message_type": "200",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
+            },
+            "72": {"information": ["/INS/FX POSITION MGT", "/RATE/SPOT"]},
+            "57B": {"party_identifier": "FXTRADING", "location": "LONDON"}
         }
-      },
-      "72": {
-        "information": [
-          "/INS/FX POSITION MGT",
-          "/RATE/SPOT"
-        ]
-      },
-      "57B": {
-        "party_identifier": "FXTRADING",
-        "location": "LONDON"
-      }
     }
-  }
 }

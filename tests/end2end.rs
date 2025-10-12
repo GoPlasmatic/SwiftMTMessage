@@ -640,11 +640,17 @@ fn normalize_json_value(value: &Value) -> Value {
         Value::Number(n) => {
             // Convert all numbers to their canonical form
             if let Some(f) = n.as_f64() {
-                // If it's a whole number, keep it as integer
-                if f.fract() == 0.0 && f.is_finite() {
-                    Value::Number(serde_json::Number::from(f as i64))
+                // Round to 2 decimal places to handle MT message precision limits
+                let rounded = (f * 100.0).round() / 100.0;
+
+                // If it's a whole number after rounding, keep it as integer
+                if rounded.fract() == 0.0 && rounded.is_finite() {
+                    Value::Number(serde_json::Number::from(rounded as i64))
                 } else {
-                    value.clone()
+                    // Return the rounded float
+                    serde_json::Number::from_f64(rounded)
+                        .map(Value::Number)
+                        .unwrap_or_else(|| value.clone())
                 }
             } else {
                 value.clone()

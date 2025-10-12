@@ -3,12 +3,7 @@
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
         "hospital_bank_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "HLTC",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["HLTC", 100000000000]},
         "currency": "USD",
         "amount": 10000,
         "value_date": "2024-12-20",
@@ -20,18 +15,8 @@
         "insurance_lei": "LEIXG8HWVXGGR1B2V0S900",
         "hospital_name": "REGIONAL MEDICAL CENTER",
         "hospital_lei": "LEIXG8HWVXGGR1B2V1T901",
-        "patient_ref": {
-            "cat": [
-                "PAT-",
-                100000
-            ]
-        },
-        "claim_number": {
-            "cat": [
-                "CLM-",
-                10000000
-            ]
-        },
+        "patient_ref": {"cat": ["PAT-", 100000]},
+        "claim_number": {"cat": ["CLM-", 10000000]},
         "treatment_type": "SURGERY",
         "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
@@ -39,122 +24,50 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "103",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "23B": {
-                "instruction_code": {
-                    "var": "bank_op_code"
-                }
-            },
-            "23E": [
-                {
-                    "instruction_code": "INTC"
-                }
-            ],
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
+            "23E": [{"instruction_code": "INTC"}],
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
             "50K": {
                 "account": "CLAIMS-PAYABLE",
                 "name_and_address": [
-                    {
-                        "var": "insurance_company"
-                    },
-                    {
-                        "cat": [
-                            "/LEI/",
-                            {
-                                "var": "insurance_lei"
-                            }
-                        ]
-                    },
+                    {"var": "insurance_company"},
+                    {"cat": ["/LEI/", {"var": "insurance_lei"}]},
                     "HEALTH INSURANCE DIVISION",
                     "CORPORATE HEADQUARTERS"
                 ]
             },
-            "52A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
-            "56A": {
-                "bic": {
-                    "var": "hospital_bank_bic"
-                }
-            },
-            "57A": {
-                "bic": {
-                    "var": "hospital_bank_bic"
-                }
-            },
+            "52A": {"bic": {"var": "sender_bic"}},
+            "56A": {"bic": {"var": "hospital_bank_bic"}},
+            "57A": {"bic": {"var": "hospital_bank_bic"}},
             "59": {
                 "account": "ACCOUNTS-RECEIVABLE",
                 "name_and_address": [
-                    {
-                        "var": "hospital_name"
-                    },
-                    {
-                        "cat": [
-                            "/LEI/",
-                            {
-                                "var": "hospital_lei"
-                            }
-                        ]
-                    },
+                    {"var": "hospital_name"},
+                    {"cat": ["/LEI/", {"var": "hospital_lei"}]},
                     "FINANCE DEPARTMENT",
                     "MEDICAL DISTRICT"
                 ]
@@ -162,47 +75,16 @@
             "70": {
                 "narrative": [
                     "/PURP/HLTC",
-                    {
-                        "cat": [
-                            "/CLAIM/",
-                            {
-                                "var": "claim_number"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "/PATIENT/",
-                            {
-                                "var": "patient_ref"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "/TYPE/",
-                            {
-                                "var": "treatment_type"
-                            }
-                        ]
-                    }
+                    {"cat": ["/CLAIM/", {"var": "claim_number"}]},
+                    {"cat": ["/PATIENT/", {"var": "patient_ref"}]},
+                    {"cat": ["/TYPE/", {"var": "treatment_type"}]}
                 ]
             },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            },
+            "71A": {"code": {"var": "charges"}},
             "72": {
-                "information": [
-                    "/ACC/CBPR+ COMPLIANT",
-                    "/INS/HEALTHCARE PAYMENT",
-                    "/REC/INSURANCE SETTLEMENT"
-                ]
+                "information": ["/ACC/CBPR+ COMPLIANT", "/INS/HEALTHCARE PAYMENT", "/REC/INSURANCE SETTLEMENT"]
             },
-            "77T": {
-                "envelope_content": "EXTENDED REMITTANCE INFORMATION"
-            }
+            "77T": {"envelope_content": "EXTENDED REMITTANCE INFORMATION"}
         }
     }
 }

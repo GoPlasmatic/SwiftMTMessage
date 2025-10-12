@@ -2,18 +2,8 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "cancel_ref": {
-            "cat": [
-                "FRAUD",
-                100000
-            ]
-        },
-        "original_ref": {
-            "cat": [
-                "TRF",
-                100000000000
-            ]
-        },
+        "cancel_ref": {"cat": ["FRAUD", 100000]},
+        "original_ref": {"cat": ["TRF", 100000000000]},
         "reason_code": "FRAD",
         "session": "0002",
         "sequence": "789012",
@@ -25,59 +15,27 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "192",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "fin",
             "banking_priority": "9999",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            }
+            "unique_end_to_end_reference": {"var": "uetr"}
         },
         "message_type": "192",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "cancel_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "original_ref"
-                }
-            },
+            "20": {"reference": {"var": "cancel_ref"}},
+            "21": {"reference": {"var": "original_ref"}},
             "11S": {
                 "message_type": "103",
                 "date": "2024-12-21",

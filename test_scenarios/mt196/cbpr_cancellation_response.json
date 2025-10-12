@@ -2,18 +2,8 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "reference": {
-            "cat": [
-                "CBPRRESP",
-                100000
-            ]
-        },
-        "related_ref": {
-            "cat": [
-                "CBPRCAN",
-                100000
-            ]
-        },
+        "reference": {"cat": ["CBPRRESP", 100000]},
+        "related_ref": {"cat": ["CBPRCAN", 100000]},
         "uetr_original": "550e8400-e29b-41d4-a716-446655440000",
         "uetr_return": "550e8400-e29b-41d4-a716-446655440000",
         "session_num": "0001",
@@ -24,72 +14,32 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "196",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "196",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "reference"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "related_ref"
-                }
-            },
+            "20": {"reference": {"var": "reference"}},
+            "21": {"reference": {"var": "related_ref"}},
             "76": {
                 "information": [
                     "/CNCL/CANSTAT/ACCP",
                     "/ORIGUETR/",
-                    {
-                        "substr": [
-                            {
-                                "var": "uetr_original"
-                            },
-                            0,
-                            35
-                        ]
-                    },
+                    {"substr": [{"var": "uetr_original"}, 0, 35]},
                     "/CBPR/CANCELLATION ACCEPTED",
                     "/ORIGAMT/USD10000000",
                     "/VALUEDATE/2024-12-23"

@@ -2,18 +2,8 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "FX",
-                100000000000
-            ]
-        },
-        "related_ref": {
-            "cat": [
-                "SPOT",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["FX", 100000000000]},
+        "related_ref": {"cat": ["SPOT", 100000000000]},
         "debit_currency": "USD",
         "debit_amount": 10000,
         "value_date": "2024-12-22",
@@ -30,64 +20,28 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "900",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "900",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "related_ref"
-                }
-            },
-            "25": {
-                "authorisation": {
-                    "var": "account_number"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "25": {"authorisation": {"var": "account_number"}},
             "13D": {
                 "date": "241220",
                 "time": "1425",
@@ -95,21 +49,11 @@
                 "offset": "0100"
             },
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "debit_currency"
-                },
-                "amount": {
-                    "var": "debit_amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "debit_currency"},
+                "amount": {"var": "debit_amount"}
             },
-            "52A": {
-                "bic": {
-                    "var": "dealing_desk_bic"
-                }
-            },
+            "52A": {"bic": {"var": "dealing_desk_bic"}},
             "72": {
                 "information": [
                     "/INS/FX SPOT TRANSACTION",
@@ -118,45 +62,24 @@
                             {
                                 "cat": [
                                     "/EXCH/",
-                                    {
-                                        "var": "debit_currency"
-                                    },
+                                    {"var": "debit_currency"},
                                     "/",
-                                    {
-                                        "var": "contra_currency"
-                                    }
+                                    {"var": "contra_currency"}
                                 ]
                             },
                             0,
                             35
                         ]
                     },
-                    {
-                        "substr": [
-                            {
-                                "cat": [
-                                    "/RATE/",
-                                    {
-                                        "var": "exchange_rate"
-                                    }
-                                ]
-                            },
-                            0,
-                            35
-                        ]
-                    },
+                    {"substr": [{"cat": ["/RATE/", {"var": "exchange_rate"}]}, 0, 35]},
                     {
                         "substr": [
                             {
                                 "cat": [
                                     "/CTPY/",
-                                    {
-                                        "var": "contra_currency"
-                                    },
+                                    {"var": "contra_currency"},
                                     " ",
-                                    {
-                                        "var": "contra_amount"
-                                    }
+                                    {"var": "contra_amount"}
                                 ]
                             },
                             0,

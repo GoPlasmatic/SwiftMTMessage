@@ -2,23 +2,13 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "RETN",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["RETN", 100000000000]},
         "currency": "USD",
         "amount": 10000,
         "value_date": "2024-12-20",
         "bank_op_code": "CRED",
         "charges": "SHA",
-        "original_ref": {
-            "cat": [
-                "PAY",
-                100000000000
-            ]
-        },
+        "original_ref": {"cat": ["PAY", 100000000000]},
         "return_code": "MD01",
         "return_reason": "NO MANDATE",
         "session_num": "0001",
@@ -29,163 +19,56 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "103",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "23B": {
-                "instruction_code": {
-                    "var": "bank_op_code"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
             "50K": {
                 "account": "9876543210",
-                "name_and_address": [
-                    "ACME CORPORATION",
-                    "123 MAIN STREET",
-                    "NEW YORK",
-                    "USA"
-                ]
+                "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
             },
-            "52A": {
-                "bic": {
-                    "var": "receiver_bic"
-                }
-            },
-            "57A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
+            "52A": {"bic": {"var": "receiver_bic"}},
+            "57A": {"bic": {"var": "sender_bic"}},
             "59": {
                 "account": "RETURNED",
-                "name_and_address": [
-                    "ACME CORPORATION",
-                    "123 MAIN STREET",
-                    "NEW YORK",
-                    "USA"
-                ]
+                "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
             },
             "70": {
                 "narrative": [
                     "PAYMENT RETURN",
-                    {
-                        "cat": [
-                            "ORIGINAL TRN: ",
-                            {
-                                "var": "original_ref"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "RETURN CODE: ",
-                            {
-                                "var": "return_code"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "REASON: ",
-                            {
-                                "var": "return_reason"
-                            }
-                        ]
-                    }
+                    {"cat": ["ORIGINAL TRN: ", {"var": "original_ref"}]},
+                    {"cat": ["RETURN CODE: ", {"var": "return_code"}]},
+                    {"cat": ["REASON: ", {"var": "return_reason"}]}
                 ]
             },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            },
+            "71A": {"code": {"var": "charges"}},
             "72": {
                 "information": [
                     "/RETN/",
-                    {
-                        "substr": [
-                            {
-                                "cat": [
-                                    "/REAS/",
-                                    {
-                                        "var": "return_code"
-                                    }
-                                ]
-                            },
-                            0,
-                            35
-                        ]
-                    },
-                    {
-                        "substr": [
-                            {
-                                "cat": [
-                                    "/ORIG/",
-                                    {
-                                        "var": "original_ref"
-                                    }
-                                ]
-                            },
-                            0,
-                            35
-                        ]
-                    },
+                    {"substr": [{"cat": ["/REAS/", {"var": "return_code"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/ORIG/", {"var": "original_ref"}]}, 0, 35]},
                     "/ACC/FUNDS RETURNED",
                     "/INS/CREDIT ORIGINAL ORDERING PARTY"
                 ]

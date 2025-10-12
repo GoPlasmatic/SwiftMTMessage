@@ -1,201 +1,114 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "msg_id": {
-      "cat": [
-        "CBPR",
-        100000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "msg_id": {"cat": ["CBPR", 100000]},
+        "exec_date": "2024-12-23",
+        "currency": "USD",
+        "account_id": {"cat": ["US64SVBK", 10000000000000]},
+        "session_num": "0001",
+        "sequence_num": "000456",
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
-    "exec_date": "2024-12-23",
-    "currency": "USD",
-    "account_id": {
-      "cat": [
-        "US64SVBK",
-        10000000000000
-      ]
-    },
-    "session_num": "0001",
-    "sequence_num": "000456",
-    "uetr": "550e8400-e29b-41d4-a716-446655440000"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "101",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "101",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "msg_id"
-        }
-      },
-      "28D": {
-        "index": 1,
-        "total": 1
-      },
-      "30": {
-        "execution_date": {
-          "var": "exec_date"
-        }
-      },
-      "50F": {
-        "account": {
-          "var": "account_id"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "bic": "DEUTDEFF"
-      },
-      "#": [
-        {
-          "21": {
-            "reference": "SUPP-PAY-001"
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": 850000
-          },
-          "59": {
-            "account": "US12345678901234567890",
-            "name_and_address": [
-              "STEEL SUPPLIERS LLC",
-              "1234 METAL DRIVE",
-              "PITTSBURGH PA 15201",
-              "UNITED STATES"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "CBPR SUPPLIER PAYMENT",
-              "STEEL SUPPLIES",
-              "INV-2024-12-001-050",
-              "LEI:SUPPLIER1LEICODE1234"
-            ]
-          },
-          "71A": {
-            "code": "OUR"
-          },
-          "57A": {
-            "bic": "CHASUS33XXX"
-          }
+        "application_header": {
+            "direction": "I",
+            "message_type": "101",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        {
-          "21": {
-            "reference": "SUPP-PAY-002"
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": 1150000
-          },
-          "59": {
-            "account": "US98765432109876543210",
-            "name_and_address": [
-              "ELECTRONICS COMPONENTS INC",
-              "5678 CIRCUIT AVENUE",
-              "SAN JOSE CA 95110",
-              "UNITED STATES"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "CBPR SUPPLIER PAYMENT",
-              "ELECTRONICS COMPONENTS",
-              "INV-CI-2024-12",
-              "LEI:SUPPLIER2LEICODE5678"
-            ]
-          },
-          "71A": {
-            "code": "OUR"
-          },
-          "57A": {
-            "bic": "BOFAUS3NXXX"
-          }
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
         },
-        {
-          "21": {
-            "reference": "SUPP-PAY-003"
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": 500000
-          },
-          "59": {
-            "account": "US11223344556677889900",
-            "name_and_address": [
-              "PACKAGING SOLUTIONS CORP",
-              "9012 WAREHOUSE WAY",
-              "MEMPHIS TN 38103",
-              "UNITED STATES"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "CBPR SUPPLIER PAYMENT",
-              "PACKAGING SOLUTIONS",
-              "PKG-2024-Q4",
-              "LEI:SUPPLIER3LEICODE9012"
-            ]
-          },
-          "71A": {
-            "code": "OUR"
-          },
-          "57A": {
-            "bic": "WFBIUS6SXXX"
-          }
+        "message_type": "101",
+        "fields": {
+            "20": {"reference": {"var": "msg_id"}},
+            "28D": {"index": 1, "total": 1},
+            "30": {"execution_date": {"var": "exec_date"}},
+            "50F": {"account": {"var": "account_id"}, "bic": "DEUTDEFF"},
+            "#": [
+                {
+                    "21": {"reference": "SUPP-PAY-001"},
+                    "32B": {"currency": {"var": "currency"}, "amount": 850000},
+                    "59": {
+                        "account": "US12345678901234567890",
+                        "name_and_address": [
+                            "STEEL SUPPLIERS LLC",
+                            "1234 METAL DRIVE",
+                            "PITTSBURGH PA 15201",
+                            "UNITED STATES"
+                        ]
+                    },
+                    "70": {
+                        "narrative": [
+                            "CBPR SUPPLIER PAYMENT",
+                            "STEEL SUPPLIES",
+                            "INV-2024-12-001-050",
+                            "LEI:SUPPLIER1LEICODE1234"
+                        ]
+                    },
+                    "71A": {"code": "OUR"},
+                    "57A": {"bic": "CHASUS33XXX"}
+                },
+                {
+                    "21": {"reference": "SUPP-PAY-002"},
+                    "32B": {"currency": {"var": "currency"}, "amount": 1150000},
+                    "59": {
+                        "account": "US98765432109876543210",
+                        "name_and_address": [
+                            "ELECTRONICS COMPONENTS INC",
+                            "5678 CIRCUIT AVENUE",
+                            "SAN JOSE CA 95110",
+                            "UNITED STATES"
+                        ]
+                    },
+                    "70": {
+                        "narrative": [
+                            "CBPR SUPPLIER PAYMENT",
+                            "ELECTRONICS COMPONENTS",
+                            "INV-CI-2024-12",
+                            "LEI:SUPPLIER2LEICODE5678"
+                        ]
+                    },
+                    "71A": {"code": "OUR"},
+                    "57A": {"bic": "BOFAUS3NXXX"}
+                },
+                {
+                    "21": {"reference": "SUPP-PAY-003"},
+                    "32B": {"currency": {"var": "currency"}, "amount": 500000},
+                    "59": {
+                        "account": "US11223344556677889900",
+                        "name_and_address": [
+                            "PACKAGING SOLUTIONS CORP",
+                            "9012 WAREHOUSE WAY",
+                            "MEMPHIS TN 38103",
+                            "UNITED STATES"
+                        ]
+                    },
+                    "70": {
+                        "narrative": [
+                            "CBPR SUPPLIER PAYMENT",
+                            "PACKAGING SOLUTIONS",
+                            "PKG-2024-Q4",
+                            "LEI:SUPPLIER3LEICODE9012"
+                        ]
+                    },
+                    "71A": {"code": "OUR"},
+                    "57A": {"bic": "WFBIUS6SXXX"}
+                }
+            ],
+            "52A": {"bic": {"var": "receiver_bic"}}
         }
-      ],
-      "52A": {
-        "bic": {
-          "var": "receiver_bic"
-        }
-      }
     }
-  }
 }

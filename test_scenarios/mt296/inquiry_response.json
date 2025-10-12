@@ -2,24 +2,9 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "ANS",
-                100000000000
-            ]
-        },
-        "related_ref": {
-            "cat": [
-                "INQ",
-                100000000000
-            ]
-        },
-        "payment_ref": {
-            "cat": [
-                "PMT",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["ANS", 100000000000]},
+        "related_ref": {"cat": ["INQ", 100000000000]},
+        "payment_ref": {"cat": ["PMT", 100000000000]},
         "amount": 10000,
         "currency": "USD",
         "value_date": "2024-12-18",
@@ -34,112 +19,48 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "296",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "296",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "related_ref"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
             "76": {
                 "information": [
                     "/PDCR/",
                     "PAYMENT STATUS INFORMATION",
-                    {
-                        "cat": [
-                            "PAYMENT REF ",
-                            {
-                                "var": "payment_ref"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "STATUS ",
-                            {
-                                "var": "status"
-                            }
-                        ]
-                    },
+                    {"cat": ["PAYMENT REF ", {"var": "payment_ref"}]},
+                    {"cat": ["STATUS ", {"var": "status"}]},
                     {
                         "cat": [
                             "AMOUNT ",
-                            {
-                                "var": "currency"
-                            },
+                            {"var": "currency"},
                             " ",
-                            {
-                                "var": "amount"
-                            }
+                            {"var": "amount"}
                         ]
                     },
-                    {
-                        "cat": [
-                            "VALUE DATE ",
-                            {
-                                "var": "value_date"
-                            }
-                        ]
-                    }
+                    {"cat": ["VALUE DATE ", {"var": "value_date"}]}
                 ]
             },
             "77A": {
                 "narrative": [
                     "/QUERY TYPE/STATUS INQUIRY",
-                    {
-                        "cat": [
-                            "/ORIGINAL REF/",
-                            {
-                                "var": "payment_ref"
-                            }
-                        ]
-                    },
+                    {"cat": ["/ORIGINAL REF/", {"var": "payment_ref"}]},
                     "/REQUESTED BY/OPERATIONS"
                 ]
             }

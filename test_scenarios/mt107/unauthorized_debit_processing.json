@@ -2,12 +2,7 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "NAUTDD",
-                100000000
-            ]
-        },
+        "transaction_ref": {"cat": ["NAUTDD", 100000000]},
         "currency": "USD",
         "execution_date": "2024-12-30",
         "charges": "OUR",
@@ -19,154 +14,55 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "107",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "U"
         },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            }
-        },
+        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
         "message_type": "107",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "23E": {
-                "instruction_code": "NAUT"
-            },
-            "21E": {
-                "reference": {
-                    "cat": [
-                        "ORIG",
-                        1000000000
-                    ]
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "execution_date"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23E": {"instruction_code": "NAUT"},
+            "21E": {"reference": {"cat": ["ORIG", 1000000000]}},
+            "30": {"execution_date": {"var": "execution_date"}},
             "50K": {
                 "account": "COLLECTION-AGENCY",
                 "name_and_address": [
                     "DEBT COLLECTION AGENCY",
                     "RECOVERY DEPARTMENT",
                     "123 MAIN STREET",
-                    {
-                        "cat": [
-                            "NEW YORK",
-                            ", ",
-                            "US"
-                        ]
-                    }
+                    {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },
-            "52A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            },
+            "52A": {"bic": {"var": "sender_bic"}},
+            "71A": {"code": {"var": "charges"}},
             "#": [
                 {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "DEBT",
-                                10000000
-                            ]
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
+                    "21": {"reference": {"cat": ["DEBT", 10000000]}},
+                    "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "70": {
                         "narrative": [
                             "/RFB/DEBT RECOVERY",
-                            {
-                                "cat": [
-                                    "/ORIG/LOAN-",
-                                    100000
-                                ]
-                            },
+                            {"cat": ["/ORIG/LOAN-", 100000]},
                             "/PURP/LOAN",
                             "/NAUT/COURT AUTHORIZED"
                         ]
                     },
-                    "57A": {
-                        "bic": {
-                            "var": "receiver_bic"
-                        }
-                    },
-                    "59": {
-                        "name_and_address": [
-                            "DEBTOR NAME",
-                            "DEBTOR ADDRESS LINE 1",
-                            "CITY, COUNTRY"
-                        ]
-                    }
+                    "57A": {"bic": {"var": "receiver_bic"}},
+                    "59": {"name_and_address": ["DEBTOR NAME", "DEBTOR ADDRESS LINE 1", "CITY, COUNTRY"]}
                 },
                 {
-                    "21": {
-                        "reference": {
-                            "cat": [
-                                "DEBT",
-                                10000000
-                            ]
-                        }
-                    },
-                    "26T": {
-                        "type_code": "DEB"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": 10000
-                    },
+                    "21": {"reference": {"cat": ["DEBT", 10000000]}},
+                    "26T": {"type_code": "DEB"},
+                    "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "70": {
                         "narrative": [
                             "/RFB/COMMERCIAL DEBT",
@@ -187,30 +83,13 @@
                             "RECOVERY BANK INTERNATIONAL",
                             "COLLECTIONS DIVISION",
                             "123 MAIN STREET",
-                            {
-                                "cat": [
-                                    "NEW YORK",
-                                    ", ",
-                                    "US"
-                                ]
-                            }
+                            {"cat": ["NEW YORK", ", ", "US"]}
                         ]
                     },
-                    "59": {
-                        "name_and_address": [
-                            "DEBTOR NAME",
-                            "DEBTOR ADDRESS LINE 1",
-                            "CITY, COUNTRY"
-                        ]
-                    }
+                    "59": {"name_and_address": ["DEBTOR NAME", "DEBTOR ADDRESS LINE 1", "CITY, COUNTRY"]}
                 }
             ],
-            "32B": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": 20000
-            }
+            "32B": {"currency": {"var": "currency"}, "amount": 20000}
         }
     }
 }

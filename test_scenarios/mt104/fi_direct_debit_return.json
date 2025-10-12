@@ -1,191 +1,80 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "transaction_ref": {
-      "cat": [
-        "DDRET",
-        10000000000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {"cat": ["DDRET", 10000000000]},
+        "original_ref": {"cat": ["DD", 1000000000000]},
+        "currency": "USD",
+        "return_amount": 10000,
+        "execution_date": "2024-12-28",
+        "charges": "SHA",
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "original_uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "return_reason": "AC04",
+        "session_num": "0001",
+        "sequence_num": "000123"
     },
-    "original_ref": {
-      "cat": [
-        "DD",
-        1000000000000
-      ]
-    },
-    "currency": "USD",
-    "return_amount": 10000,
-    "execution_date": "2024-12-28",
-    "charges": "SHA",
-    "uetr": "550e8400-e29b-41d4-a716-446655440000",
-    "original_uetr": "550e8400-e29b-41d4-a716-446655440000",
-    "return_reason": "AC04",
-    "session_num": "0001",
-    "sequence_num": "000123"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "104",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      }
-    },
-    "message_type": "104",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "30": {
-        "execution_date": {
-          "var": "execution_date"
-        }
-      },
-      "#": [
-        {
-          "21": {
-            "reference": {
-              "cat": [
-                "RET",
-                10000000
-              ]
-            }
-          },
-          "23E": {
-            "instruction_code": "OTHR",
-            "additional_info": "RETURN"
-          },
-          "21C": {
-            "reference": {
-              "var": "original_ref"
-            }
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "return_amount"
-            }
-          },
-          "59": {
-            "account": "1000000000000000",
-            "name_and_address": [
-              "ACME CORPORATION",
-              "ORIGINAL DEBTOR",
-              "123 MAIN STREET",
-              {
-                "cat": [
-                  "NEW YORK",
-                  ", ",
-                  "US"
-                ]
-              }
-            ]
-          },
-          "70": {
-            "narrative": [
-              "/RFB/DD RETURN",
-              {
-                "cat": [
-                  "/RETN/",
-                  {
-                    "var": "return_reason"
-                  }
-                ]
-              },
-              {
-                "cat": [
-                  "/ORGNL/",
-                  {
-                    "var": "original_ref"
-                  }
-                ]
-              },
-              "/CD/RETURN TRANSACTION"
-            ]
-          },
-          "71A": {
-            "code": {
-              "var": "charges"
-            }
-          },
-          "50K": {
-            "account": "RETURN-PROCESSING",
-            "name_and_address": [
-              "ACME CORPORATION",
-              "RETURNS DEPARTMENT",
-              "123 MAIN STREET",
-              {
-                "cat": [
-                  "NEW YORK",
-                  ", ",
-                  "US"
-                ]
-              }
-            ]
-          },
-          "57A": {
-            "bic": {
-              "var": "receiver_bic"
-            }
-          }
-        }
-      ],
-      "32B": {
-        "currency": {
-          "var": "currency"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "amount": {
-          "var": "return_amount"
+        "application_header": {
+            "direction": "I",
+            "message_type": "104",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
+        "message_type": "104",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "#": [
+                {
+                    "21": {"reference": {"cat": ["RET", 10000000]}},
+                    "23E": {"instruction_code": "OTHR", "additional_info": "RETURN"},
+                    "21C": {"reference": {"var": "original_ref"}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "return_amount"}},
+                    "59": {
+                        "account": "1000000000000000",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "ORIGINAL DEBTOR",
+                            "123 MAIN STREET",
+                            {"cat": ["NEW YORK", ", ", "US"]}
+                        ]
+                    },
+                    "70": {
+                        "narrative": [
+                            "/RFB/DD RETURN",
+                            {"cat": ["/RETN/", {"var": "return_reason"}]},
+                            {"cat": ["/ORGNL/", {"var": "original_ref"}]},
+                            "/CD/RETURN TRANSACTION"
+                        ]
+                    },
+                    "71A": {"code": {"var": "charges"}},
+                    "50K": {
+                        "account": "RETURN-PROCESSING",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "RETURNS DEPARTMENT",
+                            "123 MAIN STREET",
+                            {"cat": ["NEW YORK", ", ", "US"]}
+                        ]
+                    },
+                    "57A": {"bic": {"var": "receiver_bic"}}
+                }
+            ],
+            "32B": {"currency": {"var": "currency"}, "amount": {"var": "return_amount"}},
+            "77B": {
+                "narrative": ["/RETN/DIRECT DEBIT RETURN", "/RSNCD/ACCOUNT CLOSED", "/PROC/AUTOMATED RETURN"]
+            }
         }
-      },
-      "77B": {
-        "narrative": [
-          "/RETN/DIRECT DEBIT RETURN",
-          "/RSNCD/ACCOUNT CLOSED",
-          "/PROC/AUTOMATED RETURN"
-        ]
-      }
     }
-  }
 }

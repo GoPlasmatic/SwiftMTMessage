@@ -2,22 +2,13 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "STOP",
-                100000
-            ]
-        },
+        "transaction_ref": {"cat": ["STOP", 100000]},
         "cheque_number": 100000,
         "issue_date": "2024-12-15",
         "currency": "USD",
         "amount": 10000,
         "drawer_bic": "DEUTDEFF",
-        "payee_name": {
-            "fake": [
-                "name"
-            ]
-        },
+        "payee_name": {"fake": ["name"]},
         "payee_address": "123 MAIN STREET",
         "payee_city": "NEW YORK",
         "payee_country": "US",
@@ -29,101 +20,35 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "111",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "111",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "cat": [
-                        "",
-                        {
-                            "var": "cheque_number"
-                        }
-                    ]
-                }
-            },
-            "30": {
-                "execution_date": {
-                    "var": "issue_date"
-                }
-            },
-            "32B": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "amount"
-                }
-            },
-            "52A": {
-                "bic": {
-                    "var": "drawer_bic"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"cat": ["", {"var": "cheque_number"}]}},
+            "30": {"execution_date": {"var": "issue_date"}},
+            "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount"}},
+            "52A": {"bic": {"var": "drawer_bic"}},
             "59": {
                 "name_and_address": [
-                    {
-                        "var": "payee_name"
-                    },
-                    {
-                        "var": "payee_address"
-                    },
-                    {
-                        "cat": [
-                            {
-                                "var": "payee_city"
-                            },
-                            ", ",
-                            {
-                                "var": "payee_country"
-                            }
-                        ]
-                    }
+                    {"var": "payee_name"},
+                    {"var": "payee_address"},
+                    {"cat": [{"var": "payee_city"}, ", ", {"var": "payee_country"}]}
                 ]
             },
             "75": {

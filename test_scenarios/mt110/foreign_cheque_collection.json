@@ -2,27 +2,12 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "message_ref": {
-            "cat": [
-                "FCOL",
-                100000
-            ]
-        },
+        "message_ref": {"cat": ["FCOL", 100000]},
         "currency": "CAD",
-        "cheque1_ref": {
-            "cat": [
-                "FCHQ",
-                1000000
-            ]
-        },
+        "cheque1_ref": {"cat": ["FCHQ", 1000000]},
         "cheque1_amount": 10000,
         "cheque1_date": "2024-12-22",
-        "cheque2_ref": {
-            "cat": [
-                "FCHQ",
-                1000000
-            ]
-        },
+        "cheque2_ref": {"cat": ["FCHQ", 1000000]},
         "cheque2_amount": 10000,
         "cheque2_date": "2024-12-21",
         "drawer_bic": "DEUTDEFF",
@@ -34,67 +19,31 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "110",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "110",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "message_ref"
-                }
-            },
+            "20": {"reference": {"var": "message_ref"}},
             "53D": {
                 "party_identifier": "CA/CLEARING123",
-                "name_and_address": [
-                    "CANADIAN CLEARING BANK",
-                    "FOREIGN CHEQUE PROCESSING",
-                    "TORONTO CANADA"
-                ]
+                "name_and_address": ["CANADIAN CLEARING BANK", "FOREIGN CHEQUE PROCESSING", "TORONTO CANADA"]
             },
-            "54A": {
-                "bic": {
-                    "var": "receiver_bic"
-                }
-            },
+            "54A": {"bic": {"var": "receiver_bic"}},
             "72": {
                 "information": [
                     "/COLLECTION/FOREIGN CHEQUES",
@@ -107,41 +56,16 @@
             },
             "#": [
                 {
-                    "21": {
-                        "reference": {
-                            "var": "cheque1_ref"
-                        }
-                    },
-                    "30": {
-                        "execution_date": {
-                            "var": "cheque1_date"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "cheque1_amount"
-                        }
-                    },
+                    "21": {"reference": {"var": "cheque1_ref"}},
+                    "30": {"execution_date": {"var": "cheque1_date"}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "cheque1_amount"}},
                     "50K": {
                         "account": "CA1234567890",
-                        "name_and_address": [
-                            "ACME CORPORATION",
-                            "EXPORT DIVISION",
-                            "123 MAIN STREET VANCOUVER",
-                            "CANADA"
-                        ]
+                        "name_and_address": ["ACME CORPORATION", "EXPORT DIVISION", "123 MAIN STREET VANCOUVER", "CANADA"]
                     },
                     "52D": {
                         "party_identifier": "CANBNK456",
-                        "name_and_address": [
-                            "BANK OF CANADA BRANCH",
-                            "COMMERCIAL BANKING",
-                            "VANCOUVER",
-                            "CANADA"
-                        ]
+                        "name_and_address": ["BANK OF CANADA BRANCH", "COMMERCIAL BANKING", "VANCOUVER", "CANADA"]
                     },
                     "59F": {
                         "name_and_address": [
@@ -153,45 +77,16 @@
                     }
                 },
                 {
-                    "21": {
-                        "reference": {
-                            "var": "cheque2_ref"
-                        }
-                    },
-                    "30": {
-                        "execution_date": {
-                            "var": "cheque2_date"
-                        }
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "cheque2_amount"
-                        }
-                    },
+                    "21": {"reference": {"var": "cheque2_ref"}},
+                    "30": {"execution_date": {"var": "cheque2_date"}},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "cheque2_amount"}},
                     "50K": {
                         "account": "CA9876543210",
-                        "name_and_address": [
-                            "ACME CORPORATION",
-                            "123 MAIN STREET",
-                            "MONTREAL",
-                            "CANADA"
-                        ]
+                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "MONTREAL", "CANADA"]
                     },
-                    "52A": {
-                        "bic": {
-                            "var": "drawer_bic"
-                        }
-                    },
+                    "52A": {"bic": {"var": "drawer_bic"}},
                     "59F": {
-                        "name_and_address": [
-                            "1/ACME CORPORATION",
-                            "2/HEADQUARTERS",
-                            "3/123 MAIN STREET",
-                            "4/NEW YORK/US"
-                        ]
+                        "name_and_address": ["1/ACME CORPORATION", "2/HEADQUARTERS", "3/123 MAIN STREET", "4/NEW YORK/US"]
                     }
                 }
             ]

@@ -2,18 +2,8 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "STO",
-                100000000000
-            ]
-        },
-        "related_ref": {
-            "cat": [
-                "STO",
-                100000000
-            ]
-        },
+        "transaction_ref": {"cat": ["STO", 100000000000]},
+        "related_ref": {"cat": ["STO", 100000000]},
         "currency": "USD",
         "standing_amount": 10000,
         "value_date": "2024-12-01",
@@ -21,12 +11,7 @@
         "beneficiary_bic": "DEUTDEFF",
         "beneficiary_name": "ACME CORPORATION",
         "beneficiary_account": "1000000000000000",
-        "order_ref": {
-            "cat": [
-                "STO-",
-                100000
-            ]
-        },
+        "order_ref": {"cat": ["STO-", 100000]},
         "payment_number": 1,
         "session_num": "0001",
         "sequence_num": "000123",
@@ -36,64 +21,28 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "900",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "900",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "related_ref"
-                }
-            },
-            "25": {
-                "authorisation": {
-                    "var": "account_number"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "25": {"authorisation": {"var": "account_number"}},
             "13D": {
                 "date": "241201",
                 "time": "0800",
@@ -101,21 +50,11 @@
                 "offset": "0000"
             },
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "standing_amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "standing_amount"}
             },
-            "52A": {
-                "bic": {
-                    "var": "beneficiary_bic"
-                }
-            },
+            "52A": {"bic": {"var": "beneficiary_bic"}},
             "72": {
                 "information": [
                     "/INS/STANDING ORDER EXECUTION",

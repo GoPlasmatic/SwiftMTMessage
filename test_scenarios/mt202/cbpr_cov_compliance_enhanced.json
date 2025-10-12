@@ -1,290 +1,111 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "intermediary_bic": "DEUTDEFF",
-    "account_with_bic": "DEUTDEFF",
-    "transaction_ref": {
-      "cat": [
-        "CMP",
-        100000000000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "intermediary_bic": "DEUTDEFF",
+        "account_with_bic": "DEUTDEFF",
+        "transaction_ref": {"cat": ["CMP", 100000000000]},
+        "related_ref": {"cat": ["SCRN", 100000000000]},
+        "currency": "USD",
+        "amount": 10000,
+        "value_date": "2024-12-20",
+        "session_num": "0001",
+        "sequence_num": "005678",
+        "ordering_bank_lei": "LEIXG8HWVXGGR1B2V5K893",
+        "ordering_customer_lei": "LEIXG8HWVXGGR1B2V8N896",
+        "ultimate_debtor_lei": "LEIXG8HWVXGGR1B2V9O897",
+        "beneficiary_bank_lei": "LEIZBQR12345HKLMNOP678",
+        "beneficiary_customer_lei": "LEIZBQR12345HKLMNOP679",
+        "ultimate_creditor_lei": "LEIZBQR12345HKLMNOP680",
+        "purpose_code": "INTC",
+        "screening_ref": {"cat": ["SCRN-", 10000000]},
+        "kyc_ref": {"cat": ["KYC-", 10000000]},
+        "aml_ref": {"cat": ["AML-", 10000000]},
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
-    "related_ref": {
-      "cat": [
-        "SCRN",
-        100000000000
-      ]
-    },
-    "currency": "USD",
-    "amount": 10000,
-    "value_date": "2024-12-20",
-    "session_num": "0001",
-    "sequence_num": "005678",
-    "ordering_bank_lei": "LEIXG8HWVXGGR1B2V5K893",
-    "ordering_customer_lei": "LEIXG8HWVXGGR1B2V8N896",
-    "ultimate_debtor_lei": "LEIXG8HWVXGGR1B2V9O897",
-    "beneficiary_bank_lei": "LEIZBQR12345HKLMNOP678",
-    "beneficiary_customer_lei": "LEIZBQR12345HKLMNOP679",
-    "ultimate_creditor_lei": "LEIZBQR12345HKLMNOP680",
-    "purpose_code": "INTC",
-    "screening_ref": {
-      "cat": [
-        "SCRN-",
-        10000000
-      ]
-    },
-    "kyc_ref": {
-      "cat": [
-        "KYC-",
-        10000000
-      ]
-    },
-    "aml_ref": {
-      "cat": [
-        "AML-",
-        10000000
-      ]
-    },
-    "uetr": "550e8400-e29b-41d4-a716-446655440000"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "202",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "202",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "21": {
-        "reference": {
-          "var": "related_ref"
-        }
-      },
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "currency": {
-          "var": "currency"
+        "application_header": {
+            "direction": "I",
+            "message_type": "202",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        "amount": {
-          "var": "amount"
-        }
-      },
-      "52A": {
-        "party_identifier": "C/COMPLIANCE-VERIFIED",
-        "bic": {
-          "var": "sender_bic"
-        }
-      },
-      "72": {
-        "information": [
-          "/ACC/CBPR+ COMPLIANCE ENHANCED",
-          {
-            "substr": [
-              {
-                "cat": [
-                  "/SCR/",
-                  {
-                    "var": "screening_ref"
-                  }
-                ]
-              },
-              0,
-              35
-            ]
-          },
-          {
-            "substr": [
-              {
-                "cat": [
-                  "/KYC/",
-                  {
-                    "var": "kyc_ref"
-                  }
-                ]
-              },
-              0,
-              35
-            ]
-          },
-          {
-            "substr": [
-              {
-                "cat": [
-                  "/AML/",
-                  {
-                    "var": "aml_ref"
-                  }
-                ]
-              },
-              0,
-              35
-            ]
-          }
-        ]
-      },
-      "56A": {
-        "bic": {
-          "var": "intermediary_bic"
-        }
-      },
-      "57A": {
-        "bic": {
-          "var": "account_with_bic"
-        }
-      },
-      "58A": {
-        "party_identifier": "S/SANCTIONS-CLEARED",
-        "bic": {
-          "var": "receiver_bic"
-        }
-      },
-      "#": {
-        "50K": {
-          "account": "VERIFIED-ACCOUNT-123456",
-          "name_and_address": [
-            "ACME CORPORATION",
-            {
-              "cat": [
-                "/LEI/",
-                {
-                  "var": "ordering_customer_lei"
-                }
-              ]
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "202",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
-            {
-              "cat": [
-                "/ULTD/",
-                {
-                  "var": "ultimate_debtor_lei"
-                }
-              ]
+            "52A": {"party_identifier": "C/COMPLIANCE-VERIFIED", "bic": {"var": "sender_bic"}},
+            "72": {
+                "information": [
+                    "/ACC/CBPR+ COMPLIANCE ENHANCED",
+                    {"substr": [{"cat": ["/SCR/", {"var": "screening_ref"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/KYC/", {"var": "kyc_ref"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/AML/", {"var": "aml_ref"}]}, 0, 35]}
+                ]
             },
-            {
-              "cat": [
-                "NEW YORK",
-                ", ",
-                "US"
-              ]
+            "56A": {"bic": {"var": "intermediary_bic"}},
+            "57A": {"bic": {"var": "account_with_bic"}},
+            "58A": {"party_identifier": "S/SANCTIONS-CLEARED", "bic": {"var": "receiver_bic"}},
+            "#": {
+                "50K": {
+                    "account": "VERIFIED-ACCOUNT-123456",
+                    "name_and_address": [
+                        "ACME CORPORATION",
+                        {"cat": ["/LEI/", {"var": "ordering_customer_lei"}]},
+                        {"cat": ["/ULTD/", {"var": "ultimate_debtor_lei"}]},
+                        {"cat": ["NEW YORK", ", ", "US"]}
+                    ]
+                },
+                "52A": {"bic": {"var": "sender_bic"}},
+                "56A": {"bic": {"var": "intermediary_bic"}},
+                "57A": {"bic": {"var": "account_with_bic"}},
+                "59": {
+                    "account": "VERIFIED-ACCOUNT-789012",
+                    "name_and_address": [
+                        "ACME CORPORATION",
+                        {"cat": ["/LEI/", {"var": "beneficiary_customer_lei"}]},
+                        {"cat": ["/ULTB/", {"var": "ultimate_creditor_lei"}]},
+                        {"cat": ["NEW YORK", ", ", "US"]}
+                    ]
+                },
+                "70": {
+                    "narrative": [
+                        {"cat": ["/PURP/", {"var": "purpose_code"}]},
+                        "/COMPL/SANCTIONS SCREENING PASSED",
+                        "/COMPL/KYC VERIFICATION COMPLETE",
+                        "/COMPL/AML CHECKS CLEARED"
+                    ]
+                },
+                "72": {
+                    "information": [
+                        "/ACC/NESTED LEI STRUCTURE",
+                        "/ORD/LEIXG8HWVXGGR1B2V5K893",
+                        "/BNF/LEIZBQR12345HKLMNOP678",
+                        "/ULTD/LEIXG8HWVXGGR1B2V9O897",
+                        "/ULTB/LEIZBQR12345HKLMNOP680",
+                        "/COMPL/ALL LEIS VERIFIED"
+                    ]
+                }
             }
-          ]
-        },
-        "52A": {
-          "bic": {
-            "var": "sender_bic"
-          }
-        },
-        "56A": {
-          "bic": {
-            "var": "intermediary_bic"
-          }
-        },
-        "57A": {
-          "bic": {
-            "var": "account_with_bic"
-          }
-        },
-        "59": {
-          "account": "VERIFIED-ACCOUNT-789012",
-          "name_and_address": [
-            "ACME CORPORATION",
-            {
-              "cat": [
-                "/LEI/",
-                {
-                  "var": "beneficiary_customer_lei"
-                }
-              ]
-            },
-            {
-              "cat": [
-                "/ULTB/",
-                {
-                  "var": "ultimate_creditor_lei"
-                }
-              ]
-            },
-            {
-              "cat": [
-                "NEW YORK",
-                ", ",
-                "US"
-              ]
-            }
-          ]
-        },
-        "70": {
-          "narrative": [
-            {
-              "cat": [
-                "/PURP/",
-                {
-                  "var": "purpose_code"
-                }
-              ]
-            },
-            "/COMPL/SANCTIONS SCREENING PASSED",
-            "/COMPL/KYC VERIFICATION COMPLETE",
-            "/COMPL/AML CHECKS CLEARED"
-          ]
-        },
-        "72": {
-          "information": [
-            "/ACC/NESTED LEI STRUCTURE",
-            "/ORD/LEIXG8HWVXGGR1B2V5K893",
-            "/BNF/LEIZBQR12345HKLMNOP678",
-            "/ULTD/LEIXG8HWVXGGR1B2V9O897",
-            "/ULTB/LEIZBQR12345HKLMNOP680",
-            "/COMPL/ALL LEIS VERIFIED"
-          ]
         }
-      }
     }
-  }
 }

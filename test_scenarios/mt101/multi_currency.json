@@ -1,235 +1,88 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "message_ref": {
-      "cat": [
-        "PAY",
-        100000000000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "message_ref": {"cat": ["PAY", 100000000000]},
+        "execution_date": "2024-12-20",
+        "session_num": "0001",
+        "sequence_num": "000345",
+        "fx_deal_1": "FX2024120600001",
+        "fx_deal_2": "FX2024120600002",
+        "exchange_rate_1": 10000,
+        "exchange_rate_2": 10000,
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
-    "execution_date": "2024-12-20",
-    "session_num": "0001",
-    "sequence_num": "000345",
-    "fx_deal_1": "FX2024120600001",
-    "fx_deal_2": "FX2024120600002",
-    "exchange_rate_1": 10000,
-    "exchange_rate_2": 10000,
-    "uetr": "550e8400-e29b-41d4-a716-446655440000"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "101",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "101",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "message_ref"
-        }
-      },
-      "28D": {
-        "index": 1,
-        "total": 1
-      },
-      "30": {
-        "execution_date": {
-          "var": "execution_date"
-        }
-      },
-      "#": [
-        {
-          "21": {
-            "reference": {
-              "cat": [
-                "PAY",
-                100000000000
-              ]
-            }
-          },
-          "21F": {
-            "reference": {
-              "var": "fx_deal_1"
-            }
-          },
-          "23E": [
-            {
-              "instruction_code": "EQUI"
-            }
-          ],
-          "32B": {
-            "currency": "USD",
-            "amount": 10000
-          },
-          "56A": {
-            "bic": "DEUTDEFF"
-          },
-          "57A": {
-            "bic": "DEUTDEFF"
-          },
-          "59": {
-            "account": "DE89370400440532013000",
-            "name_and_address": [
-              "ACME CORPORATION",
-              "123 MAIN STREET",
-              "NEW YORK",
-              "GERMANY"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "FX CONVERSION PAYMENT",
-              "EUR TO USD SETTLEMENT"
-            ]
-          },
-          "33B": {
-            "currency": "EUR",
-            "amount": 10000
-          },
-          "71A": {
-            "code": "SHA"
-          },
-          "36": {
-            "rate": {
-              "var": "exchange_rate_1"
-            }
-          }
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        {
-          "21": {
-            "reference": {
-              "cat": [
-                "PAY",
-                100000000000
-              ]
-            }
-          },
-          "21F": {
-            "reference": {
-              "var": "fx_deal_2"
-            }
-          },
-          "32B": {
-            "currency": "GBP",
-            "amount": 10000
-          },
-          "57A": {
-            "bic": "DEUTDEFF"
-          },
-          "59": {
-            "account": "GB82WEST12345698765432",
-            "name_and_address": [
-              "ACME CORPORATION",
-              "123 MAIN STREET",
-              "NEW YORK",
-              "UNITED KINGDOM"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "FX CONVERSION PAYMENT",
-              "USD TO GBP SETTLEMENT"
-            ]
-          },
-          "33B": {
-            "currency": "USD",
-            "amount": 10000
-          },
-          "71A": {
-            "code": "SHA"
-          },
-          "36": {
-            "rate": {
-              "var": "exchange_rate_2"
-            }
-          }
+        "application_header": {
+            "direction": "I",
+            "message_type": "101",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        {
-          "21": {
-            "reference": {
-              "cat": [
-                "PAY",
-                100000000000
-              ]
-            }
-          },
-          "32B": {
-            "currency": "JPY",
-            "amount": 10000
-          },
-          "57A": {
-            "bic": "DEUTDEFF"
-          },
-          "59": {
-            "account": "JP1234567890123456",
-            "name_and_address": [
-              "ACME CORPORATION",
-              "123 MAIN STREET",
-              "NEW YORK",
-              "JAPAN"
-            ]
-          },
-          "70": {
-            "narrative": [
-              "JPY DIRECT PAYMENT",
-              "NO CONVERSION REQUIRED"
-            ]
-          },
-          "71A": {
-            "code": "BEN"
-          }
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "101",
+        "fields": {
+            "20": {"reference": {"var": "message_ref"}},
+            "28D": {"index": 1, "total": 1},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "#": [
+                {
+                    "21": {"reference": {"cat": ["PAY", 100000000000]}},
+                    "21F": {"reference": {"var": "fx_deal_1"}},
+                    "23E": [{"instruction_code": "EQUI"}],
+                    "32B": {"currency": "USD", "amount": 10000},
+                    "56A": {"bic": "DEUTDEFF"},
+                    "57A": {"bic": "DEUTDEFF"},
+                    "59": {
+                        "account": "DE89370400440532013000",
+                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "GERMANY"]
+                    },
+                    "70": {"narrative": ["FX CONVERSION PAYMENT", "EUR TO USD SETTLEMENT"]},
+                    "33B": {"currency": "EUR", "amount": 10000},
+                    "71A": {"code": "SHA"},
+                    "36": {"rate": {"var": "exchange_rate_1"}}
+                },
+                {
+                    "21": {"reference": {"cat": ["PAY", 100000000000]}},
+                    "21F": {"reference": {"var": "fx_deal_2"}},
+                    "32B": {"currency": "GBP", "amount": 10000},
+                    "57A": {"bic": "DEUTDEFF"},
+                    "59": {
+                        "account": "GB82WEST12345698765432",
+                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "UNITED KINGDOM"]
+                    },
+                    "70": {"narrative": ["FX CONVERSION PAYMENT", "USD TO GBP SETTLEMENT"]},
+                    "33B": {"currency": "USD", "amount": 10000},
+                    "71A": {"code": "SHA"},
+                    "36": {"rate": {"var": "exchange_rate_2"}}
+                },
+                {
+                    "21": {"reference": {"cat": ["PAY", 100000000000]}},
+                    "32B": {"currency": "JPY", "amount": 10000},
+                    "57A": {"bic": "DEUTDEFF"},
+                    "59": {
+                        "account": "JP1234567890123456",
+                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "JAPAN"]
+                    },
+                    "70": {"narrative": ["JPY DIRECT PAYMENT", "NO CONVERSION REQUIRED"]},
+                    "71A": {"code": "BEN"}
+                }
+            ],
+            "50F": {"account": "TREASURY", "bic": "DEUTDEFF"},
+            "52A": {"bic": {"var": "receiver_bic"}}
         }
-      ],
-      "50F": {
-        "account": "TREASURY",
-        "bic": "DEUTDEFF"
-      },
-      "52A": {
-        "bic": {
-          "var": "receiver_bic"
-        }
-      }
     }
-  }
 }

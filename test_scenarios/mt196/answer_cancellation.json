@@ -2,18 +2,8 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "answer_ref": {
-            "cat": [
-                "ANS",
-                100000
-            ]
-        },
-        "cancel_ref": {
-            "cat": [
-                "CANCEL",
-                100000
-            ]
-        },
+        "answer_ref": {"cat": ["ANS", 100000]},
+        "cancel_ref": {"cat": ["CANCEL", 100000]},
         "original_mt": "192",
         "date": "2024-12-20",
         "session": "1234",
@@ -30,59 +20,27 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "196",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "196",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "answer_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "cancel_ref"
-                }
-            },
+            "20": {"reference": {"var": "answer_ref"}},
+            "21": {"reference": {"var": "cancel_ref"}},
             "76": {
                 "information": [
                     "/CUST/ACCEPTED",
@@ -93,14 +51,7 @@
                     "FUNDS WILL BE RETURNED"
                 ]
             },
-            "11": {
-                "message_type": {
-                    "var": "original_mt"
-                },
-                "date": {
-                    "var": "date"
-                }
-            },
+            "11": {"message_type": {"var": "original_mt"}, "date": {"var": "date"}},
             "79": {
                 "information": [
                     "RESPONSE TO CANCELLATION REQUEST",

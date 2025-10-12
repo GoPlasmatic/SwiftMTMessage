@@ -1,183 +1,73 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "transaction_ref": {
-      "cat": [
-        "DD",
-        100000000000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "transaction_ref": {"cat": ["DD", 100000000000]},
+        "currency": "USD",
+        "debit_amount": 10000,
+        "execution_date": "2024-12-25",
+        "charges": "SHA",
+        "debtor_ref": {"cat": ["DBT", 1000000]},
+        "mandate_ref": {"cat": ["MND", 1000000]},
+        "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "batch_ref": {"cat": ["BATCH", 100000]},
+        "session_num": "0001",
+        "sequence_num": "000123"
     },
-    "currency": "USD",
-    "debit_amount": 10000,
-    "execution_date": "2024-12-25",
-    "charges": "SHA",
-    "debtor_ref": {
-      "cat": [
-        "DBT",
-        1000000
-      ]
-    },
-    "mandate_ref": {
-      "cat": [
-        "MND",
-        1000000
-      ]
-    },
-    "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-    "uetr": "550e8400-e29b-41d4-a716-446655440000",
-    "batch_ref": {
-      "cat": [
-        "BATCH",
-        100000
-      ]
-    },
-    "session_num": "0001",
-    "sequence_num": "000123"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "104",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      }
-    },
-    "message_type": "104",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "30": {
-        "execution_date": {
-          "var": "execution_date"
-        }
-      },
-      "71A": {
-        "code": {
-          "var": "charges"
-        }
-      },
-      "#": [
-        {
-          "21": {
-            "reference": {
-              "var": "debtor_ref"
-            }
-          },
-          "23E": {
-            "instruction_code": "AUTH"
-          },
-          "32B": {
-            "currency": {
-              "var": "currency"
-            },
-            "amount": {
-              "var": "debit_amount"
-            }
-          },
-          "59": {
-            "account": "1000000000000000",
-            "name_and_address": [
-              "ACME CORPORATION",
-              "DEBTOR ACCOUNT HOLDER",
-              "123 MAIN STREET",
-              {
-                "cat": [
-                  "NEW YORK",
-                  ", ",
-                  "US"
-                ]
-              }
-            ]
-          },
-          "70": {
-            "narrative": [
-              "/RFB/DIRECT DEBIT COLLECTION",
-              {
-                "cat": [
-                  "/MREF/",
-                  {
-                    "var": "mandate_ref"
-                  }
-                ]
-              },
-              "/PURP/SUPP",
-              "/CD/RECURRING PAYMENT"
-            ]
-          },
-          "50K": {
-            "account": "CREDITOR-001",
-            "name_and_address": [
-              "ACME CORPORATION",
-              "123 MAIN STREET",
-              {
-                "cat": [
-                  "NEW YORK",
-                  ", ",
-                  "US"
-                ]
-              }
-            ]
-          },
-          "57A": {
-            "bic": {
-              "var": "receiver_bic"
-            }
-          }
-        }
-      ],
-      "32B": {
-        "currency": {
-          "var": "currency"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "amount": {
-          "var": "debit_amount"
+        "application_header": {
+            "direction": "I",
+            "message_type": "104",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
+        "message_type": "104",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "30": {"execution_date": {"var": "execution_date"}},
+            "71A": {"code": {"var": "charges"}},
+            "#": [
+                {
+                    "21": {"reference": {"var": "debtor_ref"}},
+                    "23E": {"instruction_code": "AUTH"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "debit_amount"}},
+                    "59": {
+                        "account": "1000000000000000",
+                        "name_and_address": [
+                            "ACME CORPORATION",
+                            "DEBTOR ACCOUNT HOLDER",
+                            "123 MAIN STREET",
+                            {"cat": ["NEW YORK", ", ", "US"]}
+                        ]
+                    },
+                    "70": {
+                        "narrative": [
+                            "/RFB/DIRECT DEBIT COLLECTION",
+                            {"cat": ["/MREF/", {"var": "mandate_ref"}]},
+                            "/PURP/SUPP",
+                            "/CD/RECURRING PAYMENT"
+                        ]
+                    },
+                    "50K": {
+                        "account": "CREDITOR-001",
+                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", {"cat": ["NEW YORK", ", ", "US"]}]
+                    },
+                    "57A": {"bic": {"var": "receiver_bic"}}
+                }
+            ],
+            "32B": {"currency": {"var": "currency"}, "amount": {"var": "debit_amount"}},
+            "52A": {"bic": {"var": "sender_bic"}}
         }
-      },
-      "52A": {
-        "bic": {
-          "var": "sender_bic"
-        }
-      }
     }
-  }
 }

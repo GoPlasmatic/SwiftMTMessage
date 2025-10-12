@@ -1,231 +1,154 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "account_id": {
-      "cat": [
-        "US64SVBK",
-        10000000000000
-      ]
-    },
-    "statement_num": 1000,
-    "opening_balance": 10000,
-    "closing_balance": 10000,
-    "currency": "EUR",
-    "value_date": "2024-12-23",
-    "entry_date": "1223",
-    "session_num": "0001",
-    "sequence_num": "000456",
-    "uetr": "550e8400-e29b-41d4-a716-446655440000"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "940",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "940",
-    "fields": {
-      "20": {
-        "reference": {
-          "cat": [
-            "STMT",
-            {
-              "var": "statement_num"
-            }
-          ]
-        }
-      },
-      "21": {
-        "reference": "DAILY"
-      },
-      "25": {
-        "authorisation": {
-          "var": "account_id"
-        }
-      },
-      "28C": {
-        "statement_number": {
-          "var": "statement_num"
-        },
-        "sequence_number": 1
-      },
-      "60F": {
-        "debit_credit_mark": "C",
-        "value_date": {
-          "var": "value_date"
-        },
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "opening_balance"
-        }
-      },
-      "62F": {
-        "debit_credit_mark": "C",
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "account_id": {"cat": ["US64SVBK", 10000000000000]},
+        "statement_num": 1000,
+        "opening_balance": 10000,
+        "closing_balance": 10000,
+        "currency": "EUR",
         "value_date": "2024-12-23",
-        "currency": {
-          "var": "currency"
+        "entry_date": "1223",
+        "session_num": "0001",
+        "sequence_num": "000456",
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "amount": {
-          "var": "closing_balance"
+        "application_header": {
+            "direction": "I",
+            "message_type": "940",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "940",
+        "fields": {
+            "20": {"reference": {"cat": ["STMT", {"var": "statement_num"}]}},
+            "21": {"reference": "DAILY"},
+            "25": {"authorisation": {"var": "account_id"}},
+            "28C": {"statement_number": {"var": "statement_num"}, "sequence_number": 1},
+            "60F": {
+                "debit_credit_mark": "C",
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "opening_balance"}
+            },
+            "62F": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-23",
+                "currency": {"var": "currency"},
+                "amount": {"var": "closing_balance"}
+            },
+            "64": {
+                "debit_credit_mark": "C",
+                "value_date": "2024-12-23",
+                "currency": {"var": "currency"},
+                "amount": {"var": "closing_balance"}
+            },
+            "statement_lines": [
+                {
+                    "61": {
+                        "value_date": "2024-12-23",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "C",
+                        "amount": 150000,
+                        "transaction_type": "NTRF",
+                        "customer_reference": "WIREIN0000000001",
+                        "bank_reference": "BA1-1234567890"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/ORIGINATOR/GLOBAL IMPORTS LTD",
+                            "/ORDPRTY/GB12ABCD12345678901234",
+                            "/BENEF/YOUR COMPANY NAME",
+                            "/REMI/CONTRACT PAYMENT Q4-2024"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-23",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "D",
+                        "amount": 75000,
+                        "transaction_type": "NTRF",
+                        "customer_reference": "WIREOUT000000001",
+                        "bank_reference": "BA2-1234567890"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/BENEF/SUPPLIER CORP",
+                            "/BENACC/DE89370400440532013000",
+                            "/REMI/INVOICE PAYMENT INV-2024-789",
+                            "/CHARGES/SHA"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-23",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "D",
+                        "amount": 25000,
+                        "transaction_type": "NCHK",
+                        "customer_reference": "CHK0000000001234",
+                        "bank_reference": "BA3-1234567890"
+                    },
+                    "86": {
+                        "narrative": ["/CHK/001234", "/PAYEE/LOCAL VENDOR INC", "/PURPOSE/MONTHLY SERVICES"]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-23",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "C",
+                        "amount": 500,
+                        "transaction_type": "NINT",
+                        "customer_reference": "INT00000DEC-2024",
+                        "bank_reference": "BA4-1234567890"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/INT/CREDIT INTEREST",
+                            "/PERIOD/01-DEC TO 23-DEC",
+                            "/RATE/2.5% PA",
+                            "/BALANCE/AVERAGE 4000000"
+                        ]
+                    }
+                },
+                {
+                    "61": {
+                        "value_date": "2024-12-23",
+                        "entry_date": {"var": "entry_date"},
+                        "debit_credit_mark": "D",
+                        "amount": 50,
+                        "transaction_type": "NCHG",
+                        "customer_reference": "FEE-WIRE-0010000",
+                        "bank_reference": "BA5-1234567890"
+                    },
+                    "86": {
+                        "narrative": [
+                            "/CHARGES/WIRE TRANSFER FEE",
+                            "/REF/WIRE-OUT-001",
+                            "/TYPE/OUTGOING INTERNATIONAL"
+                        ]
+                    }
+                }
+            ]
         }
-      },
-      "64": {
-        "debit_credit_mark": "C",
-        "value_date": "2024-12-23",
-        "currency": {
-          "var": "currency"
-        },
-        "amount": {
-          "var": "closing_balance"
-        }
-      },
-      "statement_lines": [
-        {
-          "61": {
-            "value_date": "2024-12-23",
-            "entry_date": {
-              "var": "entry_date"
-            },
-            "debit_credit_mark": "C",
-            "amount": 150000,
-            "transaction_type": "NTRF",
-            "customer_reference": "WIREIN0000000001",
-            "bank_reference": "BA1-1234567890"
-          },
-          "86": {
-            "narrative": [
-              "/ORIGINATOR/GLOBAL IMPORTS LTD",
-              "/ORDPRTY/GB12ABCD12345678901234",
-              "/BENEF/YOUR COMPANY NAME",
-              "/REMI/CONTRACT PAYMENT Q4-2024"
-            ]
-          }
-        },
-        {
-          "61": {
-            "value_date": "2024-12-23",
-            "entry_date": {
-              "var": "entry_date"
-            },
-            "debit_credit_mark": "D",
-            "amount": 75000,
-            "transaction_type": "NTRF",
-            "customer_reference": "WIREOUT000000001",
-            "bank_reference": "BA2-1234567890"
-          },
-          "86": {
-            "narrative": [
-              "/BENEF/SUPPLIER CORP",
-              "/BENACC/DE89370400440532013000",
-              "/REMI/INVOICE PAYMENT INV-2024-789",
-              "/CHARGES/SHA"
-            ]
-          }
-        },
-        {
-          "61": {
-            "value_date": "2024-12-23",
-            "entry_date": {
-              "var": "entry_date"
-            },
-            "debit_credit_mark": "D",
-            "amount": 25000,
-            "transaction_type": "NCHK",
-            "customer_reference": "CHK0000000001234",
-            "bank_reference": "BA3-1234567890"
-          },
-          "86": {
-            "narrative": [
-              "/CHK/001234",
-              "/PAYEE/LOCAL VENDOR INC",
-              "/PURPOSE/MONTHLY SERVICES"
-            ]
-          }
-        },
-        {
-          "61": {
-            "value_date": "2024-12-23",
-            "entry_date": {
-              "var": "entry_date"
-            },
-            "debit_credit_mark": "C",
-            "amount": 500,
-            "transaction_type": "NINT",
-            "customer_reference": "INT00000DEC-2024",
-            "bank_reference": "BA4-1234567890"
-          },
-          "86": {
-            "narrative": [
-              "/INT/CREDIT INTEREST",
-              "/PERIOD/01-DEC TO 23-DEC",
-              "/RATE/2.5% PA",
-              "/BALANCE/AVERAGE 4000000"
-            ]
-          }
-        },
-        {
-          "61": {
-            "value_date": "2024-12-23",
-            "entry_date": {
-              "var": "entry_date"
-            },
-            "debit_credit_mark": "D",
-            "amount": 50,
-            "transaction_type": "NCHG",
-            "customer_reference": "FEE-WIRE-0010000",
-            "bank_reference": "BA5-1234567890"
-          },
-          "86": {
-            "narrative": [
-              "/CHARGES/WIRE TRANSFER FEE",
-              "/REF/WIRE-OUT-001",
-              "/TYPE/OUTGOING INTERNATIONAL"
-            ]
-          }
-        }
-      ]
     }
-  }
 }

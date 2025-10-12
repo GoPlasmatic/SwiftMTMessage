@@ -2,21 +2,11 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "msg_id": {
-            "cat": [
-                "INSU",
-                100000
-            ]
-        },
+        "msg_id": {"cat": ["INSU", 100000]},
         "total_amount": 2500,
         "exec_date": "2024-12-27",
         "currency": "CHF",
-        "account_id": {
-            "cat": [
-                "CH9300762",
-                10000000000
-            ]
-        },
+        "account_id": {"cat": ["CH9300762", 10000000000]},
         "amount1": 850,
         "amount2": 1200,
         "amount3": 450,
@@ -29,78 +19,30 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "104",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
-        "user_header": {
-            "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            }
-        },
+        "user_header": {"service_type_identifier": "001", "unique_end_to_end_reference": {"var": "uetr"}},
         "message_type": "104",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "msg_id"
-                }
-            },
-            "23E": {
-                "instruction_code": "AUTH"
-            },
-            "30": {
-                "execution_date": {
-                    "var": "exec_date"
-                }
-            },
+            "20": {"reference": {"var": "msg_id"}},
+            "23E": {"instruction_code": "AUTH"},
+            "30": {"execution_date": {"var": "exec_date"}},
             "#": [
                 {
-                    "21": {
-                        "reference": "HEALTH001"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "amount1"
-                        }
-                    },
+                    "21": {"reference": "HEALTH001"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount1"}},
                     "59": {
-                        "account": {
-                            "var": "account_id"
-                        },
+                        "account": {"var": "account_id"},
                         "name_and_address": [
                             "SWISS HEALTH INSURANCE AG",
                             "PREMIUM COLLECTION DEPT",
@@ -116,9 +58,7 @@
                             "/PERIOD/JANUARY 2025"
                         ]
                     },
-                    "71A": {
-                        "code": "SHA"
-                    },
+                    "71A": {"code": "SHA"},
                     "77B": {
                         "narrative": [
                             "/ORDERRES/MUELLER, HANS",
@@ -128,38 +68,16 @@
                     },
                     "50K": {
                         "account": "CH1234567890123456789",
-                        "name_and_address": [
-                            "MUELLER, HANS",
-                            "BAHNHOFSTRASSE 123",
-                            "8001 ZURICH",
-                            "SWITZERLAND"
-                        ]
+                        "name_and_address": ["MUELLER, HANS", "BAHNHOFSTRASSE 123", "8001 ZURICH", "SWITZERLAND"]
                     },
-                    "52A": {
-                        "bic": {
-                            "var": "sender_bic"
-                        }
-                    },
-                    "57A": {
-                        "bic": "UBSWCHZHXXX"
-                    }
+                    "52A": {"bic": {"var": "sender_bic"}},
+                    "57A": {"bic": "UBSWCHZHXXX"}
                 },
                 {
-                    "21": {
-                        "reference": "AUTO002"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "amount2"
-                        }
-                    },
+                    "21": {"reference": "AUTO002"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount2"}},
                     "59": {
-                        "account": {
-                            "var": "account_id"
-                        },
+                        "account": {"var": "account_id"},
                         "name_and_address": [
                             "HELVETIA INSURANCE GROUP",
                             "AUTO INSURANCE DIVISION",
@@ -175,9 +93,7 @@
                             "/PERIOD/Q1 2025"
                         ]
                     },
-                    "71A": {
-                        "code": "SHA"
-                    },
+                    "71A": {"code": "SHA"},
                     "77B": {
                         "narrative": [
                             "/ORDERRES/SCHMID, ANNA",
@@ -187,38 +103,16 @@
                     },
                     "50K": {
                         "account": "CH9876543210987654321",
-                        "name_and_address": [
-                            "SCHMID, ANNA",
-                            "HAUPTSTRASSE 45",
-                            "4051 BASEL",
-                            "SWITZERLAND"
-                        ]
+                        "name_and_address": ["SCHMID, ANNA", "HAUPTSTRASSE 45", "4051 BASEL", "SWITZERLAND"]
                     },
-                    "52A": {
-                        "bic": {
-                            "var": "sender_bic"
-                        }
-                    },
-                    "57A": {
-                        "bic": "CRESCHZHXXX"
-                    }
+                    "52A": {"bic": {"var": "sender_bic"}},
+                    "57A": {"bic": "CRESCHZHXXX"}
                 },
                 {
-                    "21": {
-                        "reference": "HOME003"
-                    },
-                    "32B": {
-                        "currency": {
-                            "var": "currency"
-                        },
-                        "amount": {
-                            "var": "amount3"
-                        }
-                    },
+                    "21": {"reference": "HOME003"},
+                    "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount3"}},
                     "59": {
-                        "account": {
-                            "var": "account_id"
-                        },
+                        "account": {"var": "account_id"},
                         "name_and_address": [
                             "ZURICH INSURANCE COMPANY LTD",
                             "HOME INSURANCE DEPT",
@@ -234,9 +128,7 @@
                             "/PERIOD/JANUARY 2025"
                         ]
                     },
-                    "71A": {
-                        "code": "SHA"
-                    },
+                    "71A": {"code": "SHA"},
                     "77B": {
                         "narrative": [
                             "/ORDERRES/WEBER, PETER",
@@ -246,31 +138,13 @@
                     },
                     "50K": {
                         "account": "CH1122334455667788990",
-                        "name_and_address": [
-                            "WEBER, PETER",
-                            "SEESTRASSE 78",
-                            "6005 LUCERNE",
-                            "SWITZERLAND"
-                        ]
+                        "name_and_address": ["WEBER, PETER", "SEESTRASSE 78", "6005 LUCERNE", "SWITZERLAND"]
                     },
-                    "52A": {
-                        "bic": {
-                            "var": "sender_bic"
-                        }
-                    },
-                    "57A": {
-                        "bic": "ZKBKCHZZXXX"
-                    }
+                    "52A": {"bic": {"var": "sender_bic"}},
+                    "57A": {"bic": "ZKBKCHZZXXX"}
                 }
             ],
-            "32B": {
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "total_amount"
-                }
-            }
+            "32B": {"currency": {"var": "currency"}, "amount": {"var": "total_amount"}}
         }
     }
 }

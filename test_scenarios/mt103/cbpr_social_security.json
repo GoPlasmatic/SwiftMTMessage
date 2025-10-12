@@ -3,12 +3,7 @@
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
         "beneficiary_bank_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "SSBE",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["SSBE", 100000000000]},
         "currency": "USD",
         "amount": 10000,
         "value_date": "2024-12-20",
@@ -18,20 +13,11 @@
         "sequence_num": "009012",
         "government_agency": "SOCIAL SECURITY ADMINISTRATION",
         "government_lei": "LEIXG8HWVXGGR1B2V8P896",
-        "beneficiary_name": {
-            "fake": [
-                "name"
-            ]
-        },
+        "beneficiary_name": {"fake": ["name"]},
         "beneficiary_address": "123 MAIN STREET",
         "beneficiary_city": "NEW YORK",
         "beneficiary_country": "US",
-        "ssn_ref": {
-            "cat": [
-                "SSN-",
-                100000000
-            ]
-        },
+        "ssn_ref": {"cat": ["SSN-", 100000000]},
         "benefit_type": "RETIREMENT",
         "payment_month": "DEC-2024",
         "uetr": "550e8400-e29b-41d4-a716-446655440000"
@@ -40,157 +26,63 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "103",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "23B": {
-                "instruction_code": {
-                    "var": "bank_op_code"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
             "50K": {
                 "account": "GOVERNMENT-DISBURSEMENT",
                 "name_and_address": [
-                    {
-                        "var": "government_agency"
-                    },
-                    {
-                        "cat": [
-                            "/LEI/",
-                            {
-                                "var": "government_lei"
-                            }
-                        ]
-                    },
+                    {"var": "government_agency"},
+                    {"cat": ["/LEI/", {"var": "government_lei"}]},
                     "GOVERNMENT BENEFITS DIVISION",
                     "WASHINGTON DC"
                 ]
             },
-            "52A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
-            "57A": {
-                "bic": {
-                    "var": "beneficiary_bank_bic"
-                }
-            },
+            "52A": {"bic": {"var": "sender_bic"}},
+            "57A": {"bic": {"var": "beneficiary_bank_bic"}},
             "59": {
-                "account": {
-                    "var": "ssn_ref"
-                },
+                "account": {"var": "ssn_ref"},
                 "name_and_address": [
-                    {
-                        "var": "beneficiary_name"
-                    },
-                    {
-                        "var": "beneficiary_address"
-                    },
-                    {
-                        "var": "beneficiary_city"
-                    },
-                    {
-                        "var": "beneficiary_country"
-                    }
+                    {"var": "beneficiary_name"},
+                    {"var": "beneficiary_address"},
+                    {"var": "beneficiary_city"},
+                    {"var": "beneficiary_country"}
                 ]
             },
             "70": {
                 "narrative": [
                     "/PURP/SSBE",
-                    {
-                        "cat": [
-                            "/BENREF/",
-                            {
-                                "var": "ssn_ref"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "/TYPE/",
-                            {
-                                "var": "benefit_type"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "/PERIOD/",
-                            {
-                                "var": "payment_month"
-                            }
-                        ]
-                    }
+                    {"cat": ["/BENREF/", {"var": "ssn_ref"}]},
+                    {"cat": ["/TYPE/", {"var": "benefit_type"}]},
+                    {"cat": ["/PERIOD/", {"var": "payment_month"}]}
                 ]
             },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            },
+            "71A": {"code": {"var": "charges"}},
             "72": {
-                "information": [
-                    "/ACC/CBPR+ COMPLIANT",
-                    "/INS/GOVERNMENT BENEFIT",
-                    "/REC/MONTHLY DISBURSEMENT"
-                ]
+                "information": ["/ACC/CBPR+ COMPLIANT", "/INS/GOVERNMENT BENEFIT", "/REC/MONTHLY DISBURSEMENT"]
             }
         }
     }

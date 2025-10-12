@@ -2,18 +2,8 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "ANS",
-                100000000000
-            ]
-        },
-        "related_ref": {
-            "cat": [
-                "CANC",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["ANS", 100000000000]},
+        "related_ref": {"cat": ["CANC", 100000000000]},
         "total_amount": 10000,
         "cancelled_amount": 10000,
         "processed_amount": 10000,
@@ -28,59 +18,27 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "296",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "296",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "related_ref"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
             "76": {
                 "information": [
                     "/CNCL/",
@@ -88,49 +46,33 @@
                     {
                         "cat": [
                             "TOTAL AMOUNT ",
-                            {
-                                "var": "currency"
-                            },
+                            {"var": "currency"},
                             " ",
-                            {
-                                "var": "total_amount"
-                            }
+                            {"var": "total_amount"}
                         ]
                     },
                     {
                         "cat": [
                             "CANCELLED ",
-                            {
-                                "var": "currency"
-                            },
+                            {"var": "currency"},
                             " ",
-                            {
-                                "var": "cancelled_amount"
-                            }
+                            {"var": "cancelled_amount"}
                         ]
                     },
                     {
                         "cat": [
                             "PROCESSED ",
-                            {
-                                "var": "currency"
-                            },
+                            {"var": "currency"},
                             " ",
-                            {
-                                "var": "processed_amount"
-                            }
+                            {"var": "processed_amount"}
                         ]
                     },
                     {
                         "cat": [
                             "TRANSACTIONS ",
-                            {
-                                "var": "cancelled_count"
-                            },
+                            {"var": "cancelled_count"},
                             " OF ",
-                            {
-                                "var": "num_transactions"
-                            }
+                            {"var": "num_transactions"}
                         ]
                     }
                 ]

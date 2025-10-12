@@ -1,188 +1,72 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "ordering_bic": "DEUTDEFF",
-    "transaction_ref": {
-      "cat": [
-        "REJT",
-        1000000000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "ordering_bic": "DEUTDEFF",
+        "transaction_ref": {"cat": ["REJT", 1000000000]},
+        "original_ref": {"cat": ["ORIG", 1000000000]},
+        "currency": "GBP",
+        "amount": 10000,
+        "value_date": "2024-12-20",
+        "time_code": "SNDTIME",
+        "time_value": "0930+0000",
+        "session_num": "0001",
+        "sequence_num": "001234",
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "original_uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "rejection_reason_code": "AC01",
+        "reject_timestamp": "2024-12-20T10:30:45",
+        "additional_info": {"fake": ["sentence", 5, 10]}
     },
-    "original_ref": {
-      "cat": [
-        "ORIG",
-        1000000000
-      ]
-    },
-    "currency": "GBP",
-    "amount": 10000,
-    "value_date": "2024-12-20",
-    "time_code": "SNDTIME",
-    "time_value": "0930+0000",
-    "session_num": "0001",
-    "sequence_num": "001234",
-    "uetr": "550e8400-e29b-41d4-a716-446655440000",
-    "original_uetr": "550e8400-e29b-41d4-a716-446655440000",
-    "rejection_reason_code": "AC01",
-    "reject_timestamp": "2024-12-20T10:30:45",
-    "additional_info": {
-      "fake": [
-        "sentence",
-        5,
-        10
-      ]
-    }
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "205",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "U"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "205",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "21": {
-        "reference": {
-          "var": "original_ref"
-        }
-      },
-      "13C": [
-        {
-          "code": {
-            "var": "time_code"
-          },
-          "time": "0930",
-          "sign": "+",
-          "offset": "0000"
-        }
-      ],
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "currency": {
-          "var": "currency"
+        "application_header": {
+            "direction": "I",
+            "message_type": "205",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
         },
-        "amount": {
-          "var": "amount"
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "205",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "original_ref"}},
+            "13C": [
+                {
+                    "code": {"var": "time_code"},
+                    "time": "0930",
+                    "sign": "+",
+                    "offset": "0000"
+                }
+            ],
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
+            },
+            "72": {
+                "information": [
+                    {"substr": [{"cat": ["/REJT/", {"var": "rejection_reason_code"}]}, 0, 35]},
+                    "/NARRATIVE/PAYMENT REJECTED",
+                    {"substr": [{"cat": ["/UETR/", {"var": "original_uetr"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/TIMESTAMP/", {"var": "reject_timestamp"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/INFO/", {"var": "additional_info"}]}, 0, 35]}
+                ]
+            },
+            "58A": {"bic": {"var": "ordering_bic"}},
+            "52A": {"bic": {"var": "receiver_bic"}}
         }
-      },
-      "72": {
-        "information": [
-          {
-            "substr": [
-              {
-                "cat": [
-                  "/REJT/",
-                  {
-                    "var": "rejection_reason_code"
-                  }
-                ]
-              },
-              0,
-              35
-            ]
-          },
-          "/NARRATIVE/PAYMENT REJECTED",
-          {
-            "substr": [
-              {
-                "cat": [
-                  "/UETR/",
-                  {
-                    "var": "original_uetr"
-                  }
-                ]
-              },
-              0,
-              35
-            ]
-          },
-          {
-            "substr": [
-              {
-                "cat": [
-                  "/TIMESTAMP/",
-                  {
-                    "var": "reject_timestamp"
-                  }
-                ]
-              },
-              0,
-              35
-            ]
-          },
-          {
-            "substr": [
-              {
-                "cat": [
-                  "/INFO/",
-                  {
-                    "var": "additional_info"
-                  }
-                ]
-              },
-              0,
-              35
-            ]
-          }
-        ]
-      },
-      "58A": {
-        "bic": {
-          "var": "ordering_bic"
-        }
-      },
-      "52A": {
-        "bic": {
-          "var": "receiver_bic"
-        }
-      }
     }
-  }
 }

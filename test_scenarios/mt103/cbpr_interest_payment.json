@@ -3,12 +3,7 @@
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
         "customer_bank_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "INTE",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["INTE", 100000000000]},
         "currency": "USD",
         "amount": 10000,
         "value_date": "2024-12-20",
@@ -18,20 +13,11 @@
         "sequence_num": "012345",
         "bank_name": "ACME CORPORATION",
         "bank_lei": "LEIXG8HWVXGGR1B2V9R899",
-        "customer_name": {
-            "fake": [
-                "name"
-            ]
-        },
+        "customer_name": {"fake": ["name"]},
         "customer_address": "123 MAIN STREET",
         "customer_city": "NEW YORK",
         "customer_country": "US",
-        "account_number": {
-            "cat": [
-                "ACC-",
-                100000000
-            ]
-        },
+        "account_number": {"cat": ["ACC-", 100000000]},
         "interest_period": "Q4-2024",
         "interest_rate": "3.25",
         "uetr": "550e8400-e29b-41d4-a716-446655440000"
@@ -40,158 +26,63 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "103",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "103",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "23B": {
-                "instruction_code": {
-                    "var": "bank_op_code"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "23B": {"instruction_code": {"var": "bank_op_code"}},
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
             },
             "50K": {
                 "account": "INTEREST-PAYABLE",
                 "name_and_address": [
-                    {
-                        "var": "bank_name"
-                    },
-                    {
-                        "cat": [
-                            "/LEI/",
-                            {
-                                "var": "bank_lei"
-                            }
-                        ]
-                    },
+                    {"var": "bank_name"},
+                    {"cat": ["/LEI/", {"var": "bank_lei"}]},
                     "TREASURY DEPARTMENT",
                     "HEAD OFFICE"
                 ]
             },
-            "52A": {
-                "bic": {
-                    "var": "sender_bic"
-                }
-            },
-            "57A": {
-                "bic": {
-                    "var": "customer_bank_bic"
-                }
-            },
+            "52A": {"bic": {"var": "sender_bic"}},
+            "57A": {"bic": {"var": "customer_bank_bic"}},
             "59": {
-                "account": {
-                    "var": "account_number"
-                },
+                "account": {"var": "account_number"},
                 "name_and_address": [
-                    {
-                        "var": "customer_name"
-                    },
-                    {
-                        "var": "customer_address"
-                    },
-                    {
-                        "var": "customer_city"
-                    },
-                    {
-                        "var": "customer_country"
-                    }
+                    {"var": "customer_name"},
+                    {"var": "customer_address"},
+                    {"var": "customer_city"},
+                    {"var": "customer_country"}
                 ]
             },
             "70": {
                 "narrative": [
                     "/PURP/INTE",
-                    {
-                        "cat": [
-                            "/ACCNT/",
-                            {
-                                "var": "account_number"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "/PERIOD/",
-                            {
-                                "var": "interest_period"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "/RATE/",
-                            {
-                                "var": "interest_rate"
-                            },
-                            "%"
-                        ]
-                    }
+                    {"cat": ["/ACCNT/", {"var": "account_number"}]},
+                    {"cat": ["/PERIOD/", {"var": "interest_period"}]},
+                    {"cat": ["/RATE/", {"var": "interest_rate"}, "%"]}
                 ]
             },
-            "71A": {
-                "code": {
-                    "var": "charges"
-                }
-            },
+            "71A": {"code": {"var": "charges"}},
             "72": {
-                "information": [
-                    "/ACC/CBPR+ COMPLIANT",
-                    "/INS/INTEREST PAYMENT",
-                    "/REC/QUARTERLY CREDIT"
-                ]
+                "information": ["/ACC/CBPR+ COMPLIANT", "/INS/INTEREST PAYMENT", "/REC/QUARTERLY CREDIT"]
             }
         }
     }

@@ -1,158 +1,86 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "intermediary1_bic": "DEUTDEFF",
-    "intermediary2_bic": "DEUTDEFF",
-    "intermediary3_bic": "DEUTDEFF",
-    "account_with_bic": "DEUTDEFF",
-    "transaction_ref": {
-      "cat": [
-        "CRX",
-        100000000000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "intermediary1_bic": "DEUTDEFF",
+        "intermediary2_bic": "DEUTDEFF",
+        "intermediary3_bic": "DEUTDEFF",
+        "account_with_bic": "DEUTDEFF",
+        "transaction_ref": {"cat": ["CRX", 100000000000]},
+        "related_ref": {"cat": ["MT103", 1000000000]},
+        "settlement_currency": "USD",
+        "original_currency": "EUR",
+        "settlement_amount": 10000,
+        "instructed_amount": 10000,
+        "exchange_rate": 10000,
+        "value_date": "2024-12-20",
+        "session_num": "0001",
+        "sequence_num": "004567",
+        "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+        "receiver_lei": "LEIZBQR12345HKLMNOP678",
+        "intermediary1_lei": "LEIXG8HWVXGGR1B2V6L894",
+        "intermediary2_lei": "LEIXG8HWVXGGR1B2V7M895",
+        "purpose_code": "TRAD",
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
-    "related_ref": {
-      "cat": [
-        "MT103",
-        1000000000
-      ]
-    },
-    "settlement_currency": "USD",
-    "original_currency": "EUR",
-    "settlement_amount": 10000,
-    "instructed_amount": 10000,
-    "exchange_rate": 10000,
-    "value_date": "2024-12-20",
-    "session_num": "0001",
-    "sequence_num": "004567",
-    "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-    "receiver_lei": "LEIZBQR12345HKLMNOP678",
-    "intermediary1_lei": "LEIXG8HWVXGGR1B2V6L894",
-    "intermediary2_lei": "LEIXG8HWVXGGR1B2V7M895",
-    "purpose_code": "TRAD",
-    "uetr": "550e8400-e29b-41d4-a716-446655440000"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "202",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "U"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "202",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "21": {
-        "reference": {
-          "var": "related_ref"
-        }
-      },
-      "13C": [
-        {
-          "code": "SNDTIME",
-          "time": "1200",
-          "sign": "+",
-          "offset": "0100"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        {
-          "code": "RNCTIME",
-          "time": "1600",
-          "sign": "+",
-          "offset": "0500"
-        }
-      ],
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+        "application_header": {
+            "direction": "I",
+            "message_type": "202",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "U"
         },
-        "currency": {
-          "var": "settlement_currency"
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
         },
-        "amount": {
-          "var": "settlement_amount"
+        "message_type": "202",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "13C": [
+                {
+                    "code": "SNDTIME",
+                    "time": "1200",
+                    "sign": "+",
+                    "offset": "0100"
+                },
+                {
+                    "code": "RNCTIME",
+                    "time": "1600",
+                    "sign": "+",
+                    "offset": "0500"
+                }
+            ],
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "settlement_currency"},
+                "amount": {"var": "settlement_amount"}
+            },
+            "52A": {"bic": {"var": "sender_bic"}},
+            "72": {
+                "information": [
+                    "/ACC/CBPR+ COMPLEX ROUTING",
+                    "/UETR/c8bb451b-b6a2-419b-b0d1",
+                    "/INS/FX CONVERSION APPLIED",
+                    "/EXCH/EUR/USD/1.0916"
+                ]
+            },
+            "53A": {"bic": {"var": "intermediary1_bic"}},
+            "54A": {"bic": {"var": "intermediary2_bic"}},
+            "56A": {"bic": {"var": "intermediary3_bic"}},
+            "57A": {"bic": {"var": "account_with_bic"}},
+            "58A": {"bic": {"var": "receiver_bic"}}
         }
-      },
-      "52A": {
-        "bic": {
-          "var": "sender_bic"
-        }
-      },
-      "72": {
-        "information": [
-          "/ACC/CBPR+ COMPLEX ROUTING",
-          "/UETR/c8bb451b-b6a2-419b-b0d1",
-          "/INS/FX CONVERSION APPLIED",
-          "/EXCH/EUR/USD/1.0916"
-        ]
-      },
-      "53A": {
-        "bic": {
-          "var": "intermediary1_bic"
-        }
-      },
-      "54A": {
-        "bic": {
-          "var": "intermediary2_bic"
-        }
-      },
-      "56A": {
-        "bic": {
-          "var": "intermediary3_bic"
-        }
-      },
-      "57A": {
-        "bic": {
-          "var": "account_with_bic"
-        }
-      },
-      "58A": {
-        "bic": {
-          "var": "receiver_bic"
-        }
-      }
     }
-  }
 }

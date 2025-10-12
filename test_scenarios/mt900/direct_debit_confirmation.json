@@ -2,30 +2,15 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "DD",
-                100000000000
-            ]
-        },
-        "related_ref": {
-            "cat": [
-                "MND",
-                100000000000
-            ]
-        },
+        "transaction_ref": {"cat": ["DD", 100000000000]},
+        "related_ref": {"cat": ["MND", 100000000000]},
         "currency": "USD",
         "dd_amount": 10000,
         "value_date": "2024-12-15",
         "account_number": "1000000000000000",
         "creditor_bic": "DEUTDEFF",
         "creditor_name": "ACME CORPORATION",
-        "mandate_ref": {
-            "cat": [
-                "MANDATE-",
-                1000000
-            ]
-        },
+        "mandate_ref": {"cat": ["MANDATE-", 1000000]},
         "purpose": "UTILITY PAYMENT",
         "session_num": "0001",
         "sequence_num": "000123",
@@ -35,125 +20,40 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "900",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "900",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "related_ref"
-                }
-            },
-            "25": {
-                "authorisation": {
-                    "var": "account_number"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "25": {"authorisation": {"var": "account_number"}},
             "32A": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "dd_amount"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "dd_amount"}
             },
-            "52A": {
-                "bic": {
-                    "var": "creditor_bic"
-                }
-            },
+            "52A": {"bic": {"var": "creditor_bic"}},
             "72": {
                 "information": [
                     "/INS/DIRECT DEBIT",
-                    {
-                        "substr": [
-                            {
-                                "cat": [
-                                    "/CRED/",
-                                    {
-                                        "var": "creditor_name"
-                                    }
-                                ]
-                            },
-                            0,
-                            35
-                        ]
-                    },
-                    {
-                        "substr": [
-                            {
-                                "cat": [
-                                    "/MREF/",
-                                    {
-                                        "var": "mandate_ref"
-                                    }
-                                ]
-                            },
-                            0,
-                            35
-                        ]
-                    },
-                    {
-                        "substr": [
-                            {
-                                "cat": [
-                                    "/PURP/",
-                                    {
-                                        "var": "purpose"
-                                    }
-                                ]
-                            },
-                            0,
-                            35
-                        ]
-                    },
+                    {"substr": [{"cat": ["/CRED/", {"var": "creditor_name"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/MREF/", {"var": "mandate_ref"}]}, 0, 35]},
+                    {"substr": [{"cat": ["/PURP/", {"var": "purpose"}]}, 0, 35]},
                     "/FREQ/MONTHLY"
                 ]
             }

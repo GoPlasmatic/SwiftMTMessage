@@ -1,176 +1,82 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "ordering_bic": "DEUTDEFF",
-    "central_bank_bic": "ECBFDEFF",
-    "transaction_ref": {
-      "cat": [
-        "REG",
-        1000000000
-      ]
-    },
-    "related_ref": {
-      "cat": [
-        "RPT",
-        1000000000
-      ]
-    },
-    "currency": "EUR",
-    "amount": 10000,
-    "value_date": "2024-12-20",
-    "time_code": "SNDTIME",
-    "time_value": "1100+0000",
-    "session_num": "0001",
-    "sequence_num": "002345",
-    "uetr": "550e8400-e29b-41d4-a716-446655440000",
-    "reporting_reference": {
-      "cat": [
-        "REP-",
-        1000,
-        "-",
-        1000
-      ]
-    },
-    "lei_code": "5299009QA8BBE2OOB349"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "205",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "205",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "21": {
-        "reference": {
-          "var": "related_ref"
-        }
-      },
-      "13C": [
-        {
-          "code": {
-            "var": "time_code"
-          },
-          "time": "1100",
-          "sign": "+",
-          "offset": "0000"
-        }
-      ],
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "ordering_bic": "DEUTDEFF",
+        "central_bank_bic": "ECBFDEFF",
+        "transaction_ref": {"cat": ["REG", 1000000000]},
+        "related_ref": {"cat": ["RPT", 1000000000]},
+        "currency": "EUR",
+        "amount": 10000,
+        "value_date": "2024-12-20",
+        "time_code": "SNDTIME",
+        "time_value": "1100+0000",
+        "session_num": "0001",
+        "sequence_num": "002345",
+        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "reporting_reference": {
+            "cat": ["REP-", 1000, "-", 1000]
         },
-        "currency": {
-          "var": "currency"
+        "lei_code": "5299009QA8BBE2OOB349"
+    },
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "amount": {
-          "var": "amount"
-        }
-      },
-      "72": {
-        "information": [
-          "/BNF/REGULATORY RESERVE TRANSFER",
-          "/PURPOSE/RESERVE REQUIREMENTS",
-          {
-            "substr": [
-              {
-                "cat": [
-                  "/REF/",
-                  {
-                    "var": "reporting_reference"
-                  }
+        "application_header": {
+            "direction": "I",
+            "message_type": "205",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
+        },
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "205",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "13C": [
+                {
+                    "code": {"var": "time_code"},
+                    "time": "1100",
+                    "sign": "+",
+                    "offset": "0000"
+                }
+            ],
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
+            },
+            "72": {
+                "information": [
+                    "/BNF/REGULATORY RESERVE TRANSFER",
+                    "/PURPOSE/RESERVE REQUIREMENTS",
+                    {"substr": [{"cat": ["/REF/", {"var": "reporting_reference"}]}, 0, 35]},
+                    "/TYPE/MANDATORY RESERVE",
+                    "/PURP/REFU",
+                    "/REGULATORY/BASEL III COMPLIANCE"
                 ]
-              },
-              0,
-              35
-            ]
-          },
-          "/TYPE/MANDATORY RESERVE",
-          "/PURP/REFU",
-          "/REGULATORY/BASEL III COMPLIANCE"
-        ]
-      },
-      "56A": {
-        "bic": {
-          "var": "central_bank_bic"
-        }
-      },
-      "57A": {
-        "bic": {
-          "var": "receiver_bic"
-        }
-      },
-      "58A": {
-        "bic": {
-          "var": "receiver_bic"
-        },
-        "party_identifier": {
-          "cat": [
-            "//CH",
-            {
-              "var": "lei_code"
+            },
+            "56A": {"bic": {"var": "central_bank_bic"}},
+            "57A": {"bic": {"var": "receiver_bic"}},
+            "58A": {
+                "bic": {"var": "receiver_bic"},
+                "party_identifier": {"cat": ["//CH", {"var": "lei_code"}]}
+            },
+            "52A": {
+                "bic": {"var": "ordering_bic"},
+                "party_identifier": {"cat": ["//CH", {"var": "lei_code"}]}
             }
-          ]
         }
-      },
-      "52A": {
-        "bic": {
-          "var": "ordering_bic"
-        },
-        "party_identifier": {
-          "cat": [
-            "//CH",
-            {
-              "var": "lei_code"
-            }
-          ]
-        }
-      }
     }
-  }
 }

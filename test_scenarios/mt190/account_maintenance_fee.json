@@ -2,29 +2,14 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "transaction_ref": {
-            "cat": [
-                "AMF",
-                100000000000
-            ]
-        },
-        "related_ref": {
-            "cat": [
-                "MAINT-",
-                10000
-            ]
-        },
+        "transaction_ref": {"cat": ["AMF", 100000000000]},
+        "related_ref": {"cat": ["MAINT-", 10000]},
         "currency": "USD",
         "maintenance_fee": 10000,
         "value_date": "2024-12-31",
         "account_number": "1000000000000000",
         "session_num": "0001",
-        "sequence_num": {
-            "cat": [
-                "",
-                100000
-            ]
-        },
+        "sequence_num": {"cat": ["", 100000]},
         "uetr": "550e8400-e29b-41d4-a716-446655440000",
         "account_type": "PREMIUM"
     },
@@ -32,110 +17,51 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "190",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "N"
         },
         "user_header": {
             "service_type_identifier": "001",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            },
+            "unique_end_to_end_reference": {"var": "uetr"},
             "validation_flag": "STP"
         },
         "message_type": "190",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "transaction_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "related_ref"
-                }
-            },
-            "25": {
-                "authorisation": {
-                    "var": "account_number"
-                }
-            },
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "25": {"authorisation": {"var": "account_number"}},
             "32D": {
-                "value_date": {
-                    "var": "value_date"
-                },
-                "currency": {
-                    "var": "currency"
-                },
-                "amount": {
-                    "var": "maintenance_fee"
-                }
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "maintenance_fee"}
             },
             "71B": {
                 "details": [
                     "QUARTERLY MAINTENANCE FEE",
-                    {
-                        "cat": [
-                            "TYPE: ",
-                            {
-                                "var": "account_type"
-                            }
-                        ]
-                    },
+                    {"cat": ["TYPE: ", {"var": "account_type"}]},
                     "PERIOD: Q4 2024",
                     {
                         "cat": [
                             "FEE: ",
-                            {
-                                "var": "currency"
-                            },
+                            {"var": "currency"},
                             " ",
-                            {
-                                "var": "maintenance_fee"
-                            }
+                            {"var": "maintenance_fee"}
                         ]
                     },
                     "ONLINE BANKING INCLUDED",
                     "DEBIT TO YOUR ACCOUNT"
                 ]
             },
-            "72": {
-                "information": [
-                    "/ACC/PREMIUM ACCOUNT",
-                    "/FEE/QUARTERLY",
-                    "/SVC/FULL SERVICE"
-                ]
-            }
+            "72": {"information": ["/ACC/PREMIUM ACCOUNT", "/FEE/QUARTERLY", "/SVC/FULL SERVICE"]}
         }
     }
 }

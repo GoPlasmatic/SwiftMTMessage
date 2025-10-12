@@ -1,231 +1,102 @@
 {
-  "variables": {
-    "sender_bic": "DEUTDEFF",
-    "receiver_bic": "DEUTDEFF",
-    "intermediary_bic": "DEUTDEFF",
-    "account_with_bic": "DEUTDEFF",
-    "transaction_ref": {
-      "cat": [
-        "COV",
-        100000000000
-      ]
+    "variables": {
+        "sender_bic": "DEUTDEFF",
+        "receiver_bic": "DEUTDEFF",
+        "intermediary_bic": "DEUTDEFF",
+        "account_with_bic": "DEUTDEFF",
+        "transaction_ref": {"cat": ["COV", 100000000000]},
+        "related_ref": {"cat": ["REF", 100000000000]},
+        "currency": "USD",
+        "amount": 10000,
+        "instructed_amount": 10000,
+        "value_date": "2024-12-20",
+        "session_num": "0001",
+        "sequence_num": "003456",
+        "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
+        "receiver_lei": "LEIZBQR12345HKLMNOP678",
+        "purpose_code": "GDDS",
+        "uetr": "550e8400-e29b-41d4-a716-446655440000"
     },
-    "related_ref": {
-      "cat": [
-        "REF",
-        100000000000
-      ]
-    },
-    "currency": "USD",
-    "amount": 10000,
-    "instructed_amount": 10000,
-    "value_date": "2024-12-20",
-    "session_num": "0001",
-    "sequence_num": "003456",
-    "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-    "receiver_lei": "LEIZBQR12345HKLMNOP678",
-    "purpose_code": "GDDS",
-    "uetr": "550e8400-e29b-41d4-a716-446655440000"
-  },
-  "schema": {
-    "basic_header": {
-      "application_id": "F",
-      "service_id": "01",
-      "logical_terminal": {
-        "cat": [
-          {
-            "var": "sender_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "sender_bic": {
-        "var": "sender_bic"
-      },
-      "session_number": {
-        "var": "session_num"
-      },
-      "sequence_number": {
-        "var": "sequence_num"
-      }
-    },
-    "application_header": {
-      "direction": "I",
-      "message_type": "202",
-      "destination_address": {
-        "cat": [
-          {
-            "var": "receiver_bic"
-          },
-          "XXXX"
-        ]
-      },
-      "receiver_bic": {
-        "var": "receiver_bic"
-      },
-      "priority": "N"
-    },
-    "user_header": {
-      "service_type_identifier": "001",
-      "unique_end_to_end_reference": {
-        "var": "uetr"
-      },
-      "validation_flag": "STP"
-    },
-    "message_type": "202",
-    "fields": {
-      "20": {
-        "reference": {
-          "var": "transaction_ref"
-        }
-      },
-      "21": {
-        "reference": {
-          "var": "related_ref"
-        }
-      },
-      "32A": {
-        "value_date": {
-          "var": "value_date"
+    "schema": {
+        "basic_header": {
+            "application_id": "F",
+            "service_id": "01",
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
-        "currency": {
-          "var": "currency"
+        "application_header": {
+            "direction": "I",
+            "message_type": "202",
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
+            "priority": "N"
         },
-        "amount": {
-          "var": "amount"
-        }
-      },
-      "52A": {
-        "bic": {
-          "var": "sender_bic"
-        }
-      },
-      "72": {
-        "information": [
-          "/ACC/CBPR+ COV PAYMENT",
-          "/INS/UNDERLYING MT103 CBPR+",
-          {
-            "substr": [
-              {
-                "cat": [
-                  "/BNF/PURPOSE CODE ",
-                  {
-                    "var": "purpose_code"
-                  }
+        "user_header": {
+            "service_type_identifier": "001",
+            "unique_end_to_end_reference": {"var": "uetr"},
+            "validation_flag": "STP"
+        },
+        "message_type": "202",
+        "fields": {
+            "20": {"reference": {"var": "transaction_ref"}},
+            "21": {"reference": {"var": "related_ref"}},
+            "32A": {
+                "value_date": {"var": "value_date"},
+                "currency": {"var": "currency"},
+                "amount": {"var": "amount"}
+            },
+            "52A": {"bic": {"var": "sender_bic"}},
+            "72": {
+                "information": [
+                    "/ACC/CBPR+ COV PAYMENT",
+                    "/INS/UNDERLYING MT103 CBPR+",
+                    {"substr": [{"cat": ["/BNF/PURPOSE CODE ", {"var": "purpose_code"}]}, 0, 35]}
                 ]
-              },
-              0,
-              35
-            ]
-          }
-        ]
-      },
-      "56A": {
-        "bic": {
-          "var": "intermediary_bic"
-        }
-      },
-      "57A": {
-        "bic": {
-          "var": "account_with_bic"
-        }
-      },
-      "58A": {
-        "bic": {
-          "var": "receiver_bic"
-        }
-      },
-      "#": {
-        "50K": {
-          "account": "GB82WEST12345698765432",
-          "name_and_address": [
-            "ACME CORPORATION",
-            {
-              "cat": [
-                "/",
-                {
-                  "var": "sender_lei"
-                }
-              ]
             },
-            "123 MAIN STREET",
-            {
-              "cat": [
-                "NEW YORK",
-                ", ",
-                "US"
-              ]
+            "56A": {"bic": {"var": "intermediary_bic"}},
+            "57A": {"bic": {"var": "account_with_bic"}},
+            "58A": {"bic": {"var": "receiver_bic"}},
+            "#": {
+                "50K": {
+                    "account": "GB82WEST12345698765432",
+                    "name_and_address": [
+                        "ACME CORPORATION",
+                        {"cat": ["/", {"var": "sender_lei"}]},
+                        "123 MAIN STREET",
+                        {"cat": ["NEW YORK", ", ", "US"]}
+                    ]
+                },
+                "52A": {"bic": {"var": "sender_bic"}},
+                "56A": {"bic": {"var": "intermediary_bic"}},
+                "57A": {"bic": {"var": "account_with_bic"}},
+                "59": {
+                    "account": "DE89370400440532013000",
+                    "name_and_address": [
+                        "ACME CORPORATION",
+                        {"cat": ["/", {"var": "receiver_lei"}]},
+                        "123 MAIN STREET",
+                        {"cat": ["NEW YORK", ", ", "US"]}
+                    ]
+                },
+                "70": {
+                    "narrative": [
+                        {"cat": ["/PURP/", {"var": "purpose_code"}]},
+                        "/RFB/CBPR-PAYMENT-REF",
+                        "CBPR+ TRANSPARENCY MAINTAINED",
+                        "SEE UNDERLYING MT103"
+                    ]
+                },
+                "72": {
+                    "information": [
+                        "/ACC/TRANSPARENCY DATA",
+                        "/INS/FEE DEDUCTED 25.00 USD",
+                        "/BNF/PROCESSING TIME 2 DAYS"
+                    ]
+                },
+                "33B": {"currency": {"var": "currency"}, "amount": {"var": "instructed_amount"}}
             }
-          ]
-        },
-        "52A": {
-          "bic": {
-            "var": "sender_bic"
-          }
-        },
-        "56A": {
-          "bic": {
-            "var": "intermediary_bic"
-          }
-        },
-        "57A": {
-          "bic": {
-            "var": "account_with_bic"
-          }
-        },
-        "59": {
-          "account": "DE89370400440532013000",
-          "name_and_address": [
-            "ACME CORPORATION",
-            {
-              "cat": [
-                "/",
-                {
-                  "var": "receiver_lei"
-                }
-              ]
-            },
-            "123 MAIN STREET",
-            {
-              "cat": [
-                "NEW YORK",
-                ", ",
-                "US"
-              ]
-            }
-          ]
-        },
-        "70": {
-          "narrative": [
-            {
-              "cat": [
-                "/PURP/",
-                {
-                  "var": "purpose_code"
-                }
-              ]
-            },
-            "/RFB/CBPR-PAYMENT-REF",
-            "CBPR+ TRANSPARENCY MAINTAINED",
-            "SEE UNDERLYING MT103"
-          ]
-        },
-        "72": {
-          "information": [
-            "/ACC/TRANSPARENCY DATA",
-            "/INS/FEE DEDUCTED 25.00 USD",
-            "/BNF/PROCESSING TIME 2 DAYS"
-          ]
-        },
-        "33B": {
-          "currency": {
-            "var": "currency"
-          },
-          "amount": {
-            "var": "instructed_amount"
-          }
         }
-      }
     }
-  }
 }

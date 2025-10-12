@@ -2,18 +2,8 @@
     "variables": {
         "sender_bic": "DEUTDEFF",
         "receiver_bic": "DEUTDEFF",
-        "cancel_ref": {
-            "cat": [
-                "SYSER",
-                100000
-            ]
-        },
-        "original_ref": {
-            "cat": [
-                "BATCH",
-                10000000
-            ]
-        },
+        "cancel_ref": {"cat": ["SYSER", 100000]},
+        "original_ref": {"cat": ["BATCH", 10000000]},
         "message_type": "205",
         "date": "2024-12-21",
         "session": "3456",
@@ -29,111 +19,45 @@
         "basic_header": {
             "application_id": "F",
             "service_id": "01",
-            "logical_terminal": {
-                "cat": [
-                    {
-                        "var": "sender_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "sender_bic": {
-                "var": "sender_bic"
-            },
-            "session_number": {
-                "var": "session_num"
-            },
-            "sequence_number": {
-                "var": "sequence_num"
-            }
+            "logical_terminal": {"cat": [{"var": "sender_bic"}, "XXXX"]},
+            "sender_bic": {"var": "sender_bic"},
+            "session_number": {"var": "session_num"},
+            "sequence_number": {"var": "sequence_num"}
         },
         "application_header": {
             "direction": "I",
             "message_type": "292",
-            "destination_address": {
-                "cat": [
-                    {
-                        "var": "receiver_bic"
-                    },
-                    "XXXX"
-                ]
-            },
-            "receiver_bic": {
-                "var": "receiver_bic"
-            },
+            "destination_address": {"cat": [{"var": "receiver_bic"}, "XXXX"]},
+            "receiver_bic": {"var": "receiver_bic"},
             "priority": "U"
         },
         "user_header": {
             "service_type_identifier": "fin",
             "banking_priority": "9999",
-            "unique_end_to_end_reference": {
-                "var": "uetr"
-            }
+            "unique_end_to_end_reference": {"var": "uetr"}
         },
         "message_type": "292",
         "fields": {
-            "20": {
-                "reference": {
-                    "var": "cancel_ref"
-                }
-            },
-            "21": {
-                "reference": {
-                    "var": "original_ref"
-                }
-            },
+            "20": {"reference": {"var": "cancel_ref"}},
+            "21": {"reference": {"var": "original_ref"}},
             "11S": {
-                "message_type": {
-                    "var": "message_type"
-                },
-                "date": {
-                    "var": "date"
-                },
-                "session_number": {
-                    "var": "session"
-                },
-                "input_sequence_number": {
-                    "var": "sequence"
-                }
+                "message_type": {"var": "message_type"},
+                "date": {"var": "date"},
+                "session_number": {"var": "session"},
+                "input_sequence_number": {"var": "sequence"}
             },
             "79": {
                 "information": [
-                    {
-                        "cat": [
-                            "/",
-                            {
-                                "var": "reason_code"
-                            },
-                            "/"
-                        ]
-                    },
+                    {"cat": ["/", {"var": "reason_code"}, "/"]},
                     "SYSTEM ERROR - URGENT CANCELLATION",
-                    {
-                        "cat": [
-                            "ORIGINAL MESSAGE: MT",
-                            {
-                                "var": "message_type"
-                            }
-                        ]
-                    },
-                    {
-                        "cat": [
-                            "REFERENCE: ",
-                            {
-                                "var": "original_ref"
-                            }
-                        ]
-                    },
+                    {"cat": ["ORIGINAL MESSAGE: MT", {"var": "message_type"}]},
+                    {"cat": ["REFERENCE: ", {"var": "original_ref"}]},
                     {
                         "cat": [
                             "AMOUNT: ",
-                            {
-                                "var": "currency"
-                            },
+                            {"var": "currency"},
                             " ",
-                            {
-                                "var": "amount"
-                            }
+                            {"var": "amount"}
                         ]
                     },
                     "CRITICAL SYSTEM FAILURE DETECTED",

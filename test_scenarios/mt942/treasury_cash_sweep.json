@@ -1,7 +1,7 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["SWP", 1000000000000]},
         "related_ref": {"cat": ["MSTR", 1000]},
         "account_number": {"cat": ["SUB", 100000000]},
@@ -18,7 +18,7 @@
         "ref2": {"cat": ["0000000FEE", 100000]},
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -50,7 +50,7 @@
             "34F_debit": {"currency": {"var": "currency"}, "indicator": "D", "amount": {"var": "debit_limit"}},
             "34F_credit": {"currency": {"var": "currency"}, "indicator": "C", "amount": {"var": "credit_limit"}},
             "13D": {
-                "date": "241220",
+                "date": {"fake": ["date", "%y%m%d"]},
                 "time": "1700",
                 "offset_sign": "+",
                 "offset": "0000"
@@ -59,7 +59,7 @@
             "statement_lines": [
                 {
                     "61": {
-                        "value_date": "2024-12-20",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": "1220",
                         "debit_credit_mark": "D",
                         "amount": {"var": "sweep_amount"},
@@ -78,7 +78,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-20",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": "1220",
                         "debit_credit_mark": "D",
                         "amount": {"var": "fee_amount"},

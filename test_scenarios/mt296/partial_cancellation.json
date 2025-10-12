@@ -1,7 +1,7 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["ANS", 100000000000]},
         "related_ref": {"cat": ["CANC", 100000000000]},
         "total_amount": 10000,
@@ -12,7 +12,7 @@
         "cancelled_count": 3,
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

@@ -1,20 +1,20 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": "DIV20241231001",
         "currency": "USD",
         "dividend_amount": 10000,
-        "value_date": "2024-12-31",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "share_quantity": 100,
         "dividend_rate": "0.05",
         "isin": "US0378331005",
-        "record_date": "2024-12-15",
-        "payment_date": "2024-12-31",
+        "record_date": {"fake": ["date", "%Y-%m-%d"]},
+        "payment_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "000123"
     },
@@ -47,9 +47,9 @@
             "50K": {
                 "account": "CORP-DIVIDEND-DEPT",
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     "DIVIDEND DEPARTMENT",
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     "NEW YORK NY 10001 USA"
                 ]
             },

@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["DDRET", 10000000000]},
         "original_ref": {"cat": ["DD", 1000000000000]},
         "currency": "USD",
         "return_amount": 10000,
-        "execution_date": "2024-12-28",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "charges": "SHA",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
-        "original_uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
+        "original_uetr": {"fake": ["uuid"]},
         "return_reason": "AC04",
         "session_num": "0001",
         "sequence_num": "000123"
@@ -42,11 +42,11 @@
                     "21C": {"reference": {"var": "original_ref"}},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "return_amount"}},
                     "59": {
-                        "account": "1000000000000000",
+                        "account": {"fake": ["alphanumeric", 16, 16]},
                         "name_and_address": [
-                            "ACME CORPORATION",
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
                             "ORIGINAL DEBTOR",
-                            "123 MAIN STREET",
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
                             {"cat": ["NEW YORK", ", ", "US"]}
                         ]
                     },
@@ -62,9 +62,9 @@
                     "50K": {
                         "account": "RETURN-PROCESSING",
                         "name_and_address": [
-                            "ACME CORPORATION",
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
                             "RETURNS DEPARTMENT",
-                            "123 MAIN STREET",
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
                             {"cat": ["NEW YORK", ", ", "US"]}
                         ]
                     },

@@ -1,13 +1,13 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["PAY", 100000000000]},
-        "execution_date": "2024-12-20",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "000678",
         "currency": "USD",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -35,16 +35,21 @@
             "20": {"reference": {"var": "message_ref"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "execution_date"}},
-            "50F": {"account": "AP-MASTER-ACCOUNT", "bic": "DEUTDEFF"},
+            "50F": {"account": "AP-MASTER-ACCOUNT", "bic": {"fake": ["bic8"]}},
             "#": [
                 {
                     "21": {"reference": {"cat": ["INV-", 100000]}},
                     "23E": [{"instruction_code": "INTC"}],
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
-                    "56A": {"bic": "DEUTDEFF"},
+                    "56A": {"bic": {"fake": ["bic8"]}},
                     "59": {
-                        "account": "NL91ABNA0417164300",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
+                        "account": {"fake": ["iban", "NL"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {
                         "narrative": ["VENDOR PAYMENT", "INV-2024-12-001", "PO-2024-11-456", "GOODS DELIVERED"]
@@ -53,33 +58,43 @@
                     "77B": {
                         "narrative": ["/ORDERRES/US//TAX ID 12-3456789", "/BENEFRES/EU//VAT DE123456789"]
                     },
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"cat": ["INV-", 100000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "NL91ABNA0417164300",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
+                        "account": {"fake": ["iban", "NL"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {
                         "narrative": ["VENDOR PAYMENT", "INV-2024-12-002", "SERVICES RENDERED", "NET 30 TERMS"]
                     },
                     "71A": {"code": "SHA"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"cat": ["INV-", 100000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "NL91ABNA0417164300",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
+                        "account": {"fake": ["iban", "NL"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {
                         "narrative": ["VENDOR PAYMENT", "CONTRACT MILESTONE", "PROJECT PHASE 2", "50% COMPLETION"]
                     },
                     "71A": {"code": "BEN"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 }
             ],
             "52A": {"bic": {"var": "receiver_bic"}}

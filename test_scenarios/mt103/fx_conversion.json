@@ -1,16 +1,16 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["PAY", 100000000000]},
         "settlement_currency": "USD",
         "settlement_amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
         "sequence_num": "002345",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -43,14 +43,24 @@
                 "amount": {"var": "settlement_amount"}
             },
             "50K": {
-                "account": "AT611904300234573201",
-                "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "AUSTRIA"]
+                "account": {"fake": ["lei"]},
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                    "AUSTRIA"
+                ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "US1234567890123456",
-                "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "UNITED STATES"]
+                "account": {"fake": ["iban", "US"]},
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                    {"fake": ["country_code"]}
+                ]
             },
             "70": {"narrative": ["FX CONVERSION PAYMENT", "ORIGINAL CCY EUR", "SETTLEMENT CCY USD"]},
             "71A": {"code": {"var": "charges"}},

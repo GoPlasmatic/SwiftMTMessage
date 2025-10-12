@@ -1,20 +1,20 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["DD", 100000000000]},
         "related_ref": {"cat": ["MND", 100000000000]},
         "currency": "USD",
         "dd_amount": 10000,
-        "value_date": "2024-12-15",
-        "account_number": "1000000000000000",
-        "creditor_bic": "DEUTDEFF",
-        "creditor_name": "ACME CORPORATION",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
+        "account_number": {"cat": ["AUTH", {"fake": ["u64", 10000000, 999999999]}]},
+        "creditor_bic": {"fake": ["bic8"]},
+        "creditor_name": {"substr": [{"fake": ["company_name"]}, 0, 35]},
         "mandate_ref": {"cat": ["MANDATE-", 1000000]},
         "purpose": "UTILITY PAYMENT",
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

@@ -1,19 +1,19 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "ordering_bic": "DEUTDEFF",
-        "intermediary_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "ordering_bic": {"fake": ["bic8"]},
+        "intermediary_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["LIQ", 1000000000]},
         "related_ref": {"cat": ["URGNT", 1000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "time_code": "CLSTIME",
         "time_value": "1700+0100",
         "session_num": "0002",
         "sequence_num": "005678",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "treasury_reference": {"cat": ["TREAS", 1000000]}
     },
     "schema": {

@@ -1,19 +1,19 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "msg_id": {"cat": ["UTIL", 100000]},
         "total_amount": 460.4,
-        "exec_date": "2024-12-26",
+        "exec_date": {"fake": ["date", "%Y-%m-%d"]},
         "currency": "EUR",
         "account_id": {"cat": ["FR1420041", 10000000000]},
         "amount1": 125.5,
         "amount2": 89.9,
         "amount3": 245,
-        "lei_utility": "UTILITYCOLEICODE1234",
+        "lei_utility": {"fake": ["lei"]},
         "session_num": "0001",
         "sequence_num": "002345",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -47,7 +47,7 @@
                             "ELECTRICITE DE FRANCE",
                             "SERVICE RECOUVREMENT",
                             "92050 PARIS LA DEFENSE",
-                            "FRANCE"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -67,18 +67,28 @@
                         ]
                     },
                     "50K": {
-                        "account": "FR7612345678901234567890123",
-                        "name_and_address": ["DUPONT, MARIE", "15 RUE DE LA PAIX", "75002 PARIS", "FRANCE"]
+                        "account": {"fake": ["iban", "FR"]},
+                        "name_and_address": [
+                            "DUPONT, MARIE",
+                            "15 RUE DE LA PAIX",
+                            "75002 PARIS",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
-                    "57A": {"bic": "BNPAFRPPXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 },
                 {
                     "21": {"reference": "GASDEC002"},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount2"}},
                     "59": {
                         "account": {"var": "account_id"},
-                        "name_and_address": ["GAZ DE FRANCE SUEZ", "CENTRE ENCAISSEMENT", "59000 LILLE", "FRANCE"]
+                        "name_and_address": [
+                            "GAZ DE FRANCE SUEZ",
+                            "CENTRE ENCAISSEMENT",
+                            "59000 LILLE",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -97,11 +107,16 @@
                         ]
                     },
                     "50K": {
-                        "account": "FR9876543210987654321098765",
-                        "name_and_address": ["MARTIN, JACQUES", "45 AVENUE VICTOR HUGO", "69006 LYON", "FRANCE"]
+                        "account": {"fake": ["iban", "FR"]},
+                        "name_and_address": [
+                            "MARTIN, JACQUES",
+                            "45 AVENUE VICTOR HUGO",
+                            "69006 LYON",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
-                    "57A": {"bic": "CRLYFRPPXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 },
                 {
                     "21": {"reference": "WATERDEC003"},
@@ -112,7 +127,7 @@
                             "VEOLIA EAU ILE DE FRANCE",
                             "SERVICE CLIENTS",
                             "94400 VITRY SUR SEINE",
-                            "FRANCE"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -127,11 +142,16 @@
                         ]
                     },
                     "50K": {
-                        "account": "FR1122334455667788990011223",
-                        "name_and_address": ["BERNARD, SOPHIE", "78 RUE DE RIVOLI", "75004 PARIS", "FRANCE"]
+                        "account": {"fake": ["iban", "FR"]},
+                        "name_and_address": [
+                            "BERNARD, SOPHIE",
+                            "78 RUE DE RIVOLI",
+                            "75004 PARIS",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
-                    "57A": {"bic": "SOGEFRPPXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 }
             ],
             "32B": {"currency": {"var": "currency"}, "amount": {"var": "total_amount"}}

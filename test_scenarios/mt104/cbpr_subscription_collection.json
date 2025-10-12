@@ -1,21 +1,21 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "msg_id": {"cat": ["SUBS", 100000]},
         "total_amount": 184,
-        "exec_date": "2024-12-25",
+        "exec_date": {"fake": ["date", "%Y-%m-%d"]},
         "currency": "USD",
         "account_id": {"cat": ["US33CITI", 10000000000000]},
         "amount1": 20,
         "amount2": 50,
         "amount3": 99,
         "amount4": 15,
-        "lei_streaming": "STREAMCOLEICODE12345",
-        "lei_software": "SOFTWARELEICODE67890",
+        "lei_streaming": {"fake": ["lei"]},
+        "lei_software": {"fake": ["lei"]},
         "session_num": "0001",
         "sequence_num": "003456",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -49,7 +49,7 @@
                             "STREAMING PLUS INC",
                             "SUBSCRIPTION SERVICES",
                             "LOS ANGELES CA 90028",
-                            "UNITED STATES"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -69,8 +69,13 @@
                         ]
                     },
                     "50K": {
-                        "account": "US12345678901234567890",
-                        "name_and_address": ["SMITH, JOHN", "123 MAIN STREET APT 4B", "NEW YORK NY 10001", "UNITED STATES"]
+                        "account": {"fake": ["iban", "US"]},
+                        "name_and_address": [
+                            "SMITH, JOHN",
+                            "123 MAIN STREET APT 4B",
+                            "NEW YORK NY 10001",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
                     "57A": {"bic": "CHASUS33XXX"}
@@ -84,7 +89,7 @@
                             "CLOUD SOFTWARE CORP",
                             "BILLING DEPARTMENT",
                             "SEATTLE WA 98109",
-                            "UNITED STATES"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -104,8 +109,13 @@
                         ]
                     },
                     "50K": {
-                        "account": "US98765432109876543210",
-                        "name_and_address": ["JOHNSON, SARAH", "456 TECH AVENUE", "SAN FRANCISCO CA 94107", "UNITED STATES"]
+                        "account": {"fake": ["iban", "US"]},
+                        "name_and_address": [
+                            "JOHNSON, SARAH",
+                            "456 TECH AVENUE",
+                            "SAN FRANCISCO CA 94107",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
                     "57A": {"bic": "WFBIUS6SXXX"}
@@ -119,7 +129,7 @@
                             "FITNESS CLUB INTERNATIONAL",
                             "MEMBERSHIP SERVICES",
                             "MIAMI FL 33131",
-                            "UNITED STATES"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -139,8 +149,13 @@
                         ]
                     },
                     "50K": {
-                        "account": "US11223344556677889900",
-                        "name_and_address": ["DAVIS, MICHAEL", "789 HEALTH STREET", "BOSTON MA 02108", "UNITED STATES"]
+                        "account": {"fake": ["iban", "US"]},
+                        "name_and_address": [
+                            "DAVIS, MICHAEL",
+                            "789 HEALTH STREET",
+                            "BOSTON MA 02108",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
                     "57A": {"bic": "BOFAUS3NXXX"}
@@ -154,7 +169,7 @@
                             "DIGITAL NEWS CORPORATION",
                             "SUBSCRIPTION BILLING",
                             "NEW YORK NY 10036",
-                            "UNITED STATES"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -174,8 +189,13 @@
                         ]
                     },
                     "50K": {
-                        "account": "US99887766554433221100",
-                        "name_and_address": ["WILSON, EMMA", "321 READER LANE", "WASHINGTON DC 20001", "UNITED STATES"]
+                        "account": {"fake": ["iban", "US"]},
+                        "name_and_address": [
+                            "WILSON, EMMA",
+                            "321 READER LANE",
+                            "WASHINGTON DC 20001",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
                     "57A": {"bic": "PNBPUS3NXXX"}

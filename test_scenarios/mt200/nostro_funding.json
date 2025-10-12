@@ -1,11 +1,11 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["NOSTRO", 1000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2025-01-15",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "123456"
     },
@@ -35,7 +35,7 @@
             },
             "53B": {"party_identifier": "NOSTRO", "location": "CORRESPONDENT BANK"},
             "72": {"information": ["/INS/NOSTRO FUNDING", "/ACC/EOD SETTLEMENT"]},
-            "57A": {"bic": "DEUTDEFF"}
+            "57A": {"bic": {"fake": ["bic8"]}}
         }
     }
 }

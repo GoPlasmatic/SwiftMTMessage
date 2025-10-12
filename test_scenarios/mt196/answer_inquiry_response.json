@@ -1,11 +1,11 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "answer_ref": {"cat": ["INQ", 100000]},
         "inquiry_ref": {"cat": ["TRC", 100000]},
         "original_mt": "195",
-        "date": "2024-12-20",
+        "date": {"fake": ["date", "%Y-%m-%d"]},
         "session": "4567",
         "sequence": "456789",
         "response_code": "FOUND",
@@ -14,7 +14,7 @@
         "currency": "GBP",
         "session_num": "0003",
         "sequence_num": "001234",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

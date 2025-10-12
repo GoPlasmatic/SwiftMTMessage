@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["ROYH", 100000000000]},
         "currency": "USD",
         "royalty_amount": 10000,
-        "value_date": "2024-12-28",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "ip_owner_lei": "LEIXG9IPRIGHTSOWNER01",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "license_number": {"cat": ["LIC-", 100000]},
         "royalty_period": "Q4-2024",
         "session_num": "0001",
@@ -44,20 +44,20 @@
             "50K": {
                 "account": "LICENSEE-ACCOUNT",
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     "LICENSEE CORPORATION",
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "1000000000000000",
+                "account": {"fake": ["alphanumeric", 16, 16]},
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     {"cat": ["IP OWNER/", {"var": "ip_owner_lei"}]},
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },

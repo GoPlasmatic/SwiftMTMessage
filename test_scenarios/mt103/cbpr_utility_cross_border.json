@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": "TRA20241231001",
         "currency": "USD",
         "utility_amount": 10000,
-        "value_date": "2024-12-28",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
-        "utility_lei": "LEIXG9UTILITYCOMP001",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "utility_lei": {"fake": ["lei"]},
+        "uetr": {"fake": ["uuid"]},
         "account_number": "ACCOUNT_NUMBER20241231001",
         "billing_period": "DEC-2024",
         "session_num": "0001",
@@ -44,17 +44,22 @@
             "50K": {
                 "account": "CORPORATE-ACCOUNT",
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     "INTERNATIONAL OFFICE",
-                    "123 MAIN STREET",
-                    "ACME CORPORATION"
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]}
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "1000000000000000",
-                "name_and_address": ["ACME CORPORATION", "BENEFICIARY CORP", "123 MAIN STREET", "BENEFICIARY CORP"]
+                "account": {"fake": ["alphanumeric", 16, 16]},
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    "BENEFICIARY CORP",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    "BENEFICIARY CORP"
+                ]
             },
             "70": {
                 "narrative": [

@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["COMM", 100000000000]},
         "currency": "USD",
         "commission_amount": 10000,
-        "value_date": "2024-12-28",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "agent_lei": "LEIXG9JKLMNOPQRSTU2V3W",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "sales_amount": 10000,
         "commission_rate": "0.05",
         "period": "Q4-2024",
@@ -45,20 +45,20 @@
             "50K": {
                 "account": "COMMISSION-DEPT",
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     "BROKER DEALER",
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "1000000000000000",
+                "account": {"fake": ["alphanumeric", 16, 16]},
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     {"cat": ["AGENT/", {"var": "agent_lei"}]},
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },

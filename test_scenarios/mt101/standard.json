@@ -1,9 +1,9 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["PAY", 100000000000]},
-        "execution_date": "2024-12-20",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "000123",
         "transaction_ref_1": {"cat": ["PAY", 100000000000]},
@@ -11,7 +11,7 @@
         "currency": "USD",
         "amount_1": 10000,
         "amount_2": 10000,
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -39,40 +39,40 @@
             "20": {"reference": {"var": "message_ref"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "execution_date"}},
-            "50F": {"account": "1234567890", "bic": "DEUTDEFF"},
+            "50F": {"account": {"fake": ["alphanumeric", 10, 10]}, "bic": {"fake": ["bic8"]}},
             "52A": {"bic": {"var": "receiver_bic"}},
             "#": [
                 {
                     "21": {"reference": {"var": "transaction_ref_1"}},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount_1"}},
                     "59": {
-                        "account": "DE89370400440532013000",
+                        "account": {"fake": ["iban", "DE"]},
                         "name_and_address": [
                             {"fake": ["name"]},
-                            "123 MAIN STREET",
-                            "NEW YORK",
-                            "USA"
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {"narrative": ["PAYMENT FOR SERVICES", "INVOICE REF 2024-001"]},
                     "71A": {"code": "SHA"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"var": "transaction_ref_2"}},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "amount_2"}},
                     "59": {
-                        "account": "FR1420041010050500013M02606",
+                        "account": {"fake": ["iban", "FR"]},
                         "name_and_address": [
                             {"fake": ["name"]},
-                            "123 MAIN STREET",
-                            "NEW YORK",
-                            "USA"
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {"narrative": ["SUPPLIER PAYMENT", "PO NUMBER 2024-456"]},
                     "71A": {"code": "SHA"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 }
             ]
         }

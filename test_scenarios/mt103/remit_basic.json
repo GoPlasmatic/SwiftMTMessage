@@ -1,12 +1,12 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "beneficiary_bank_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "beneficiary_bank_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["REM", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
@@ -17,7 +17,7 @@
         "contract_ref": {"cat": ["CONT-", 10000]},
         "milestone_desc": {"fake": ["words", 4]},
         "payment_purpose": {"fake": ["words", 5]},
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -50,22 +50,22 @@
                 "amount": {"var": "amount"}
             },
             "50K": {
-                "account": "9876543210987654321098",
+                "account": {"fake": ["alphanumeric", 22, 22]},
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     {"cat": ["/LEI/", {"var": "ordering_customer_lei"}]},
-                    "NEW YORK",
+                    {"substr": [{"fake": ["city_name"]}, 0, 35]},
                     "US"
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "beneficiary_bank_bic"}},
             "59": {
-                "account": "1234567890123456789012",
+                "account": {"fake": ["alphanumeric", 22, 22]},
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     {"cat": ["/LEI/", {"var": "beneficiary_lei"}]},
-                    "NEW YORK",
+                    {"substr": [{"fake": ["city_name"]}, 0, 35]},
                     "US"
                 ]
             },

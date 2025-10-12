@@ -1,13 +1,13 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["DDMULTI", 10000000]},
         "currency": "USD",
-        "execution_date": "2024-12-26",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "charges": "SHA",
         "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "batch_ref": {"cat": ["BATCH", 100000]},
         "total_amount": 1000,
         "num_transactions": 5,
@@ -41,11 +41,11 @@
                     "23E": {"instruction_code": "AUTH"},
                     "32B": {"currency": {"var": "currency"}, "amount": 250},
                     "59": {
-                        "account": "1000000000000000",
+                        "account": {"fake": ["alphanumeric", 16, 16]},
                         "name_and_address": [
-                            "ACME CORPORATION",
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
                             {"cat": ["CUSTOMER ID ", 100000]},
-                            "123 MAIN STREET",
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
                             {"cat": ["NEW YORK", ", ", "US"]}
                         ]
                     },
@@ -69,11 +69,11 @@
                     "23E": {"instruction_code": "AUTH"},
                     "32B": {"currency": {"var": "currency"}, "amount": 350},
                     "59": {
-                        "account": "1000000000000000",
+                        "account": {"fake": ["alphanumeric", 16, 16]},
                         "name_and_address": [
-                            "ACME CORPORATION",
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
                             {"cat": ["CUSTOMER ID ", 100000]},
-                            "123 MAIN STREET",
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
                             {"cat": ["NEW YORK", ", ", "US"]}
                         ]
                     },
@@ -97,11 +97,11 @@
                     "23E": {"instruction_code": "AUTH"},
                     "32B": {"currency": {"var": "currency"}, "amount": 400},
                     "59": {
-                        "account": "1000000000000000",
+                        "account": {"fake": ["alphanumeric", 16, 16]},
                         "name_and_address": [
-                            "ACME CORPORATION",
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
                             {"cat": ["BUSINESS CUSTOMER ", 100000]},
-                            "123 MAIN STREET",
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
                             {"cat": ["NEW YORK", ", ", "US"]}
                         ]
                     },

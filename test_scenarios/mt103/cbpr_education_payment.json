@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["EDUC", 100000000000]},
         "currency": "USD",
         "tuition_amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "OUR",
         "institution_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "student_id": {"cat": ["STU", 1000000]},
         "academic_year": "2024-2025",
         "semester": "FALL-2024",
@@ -44,11 +44,11 @@
                 "amount": {"var": "tuition_amount"}
             },
             "50K": {
-                "account": "1000000000000000",
+                "account": {"fake": ["alphanumeric", 16, 16]},
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     {"cat": ["STUDENT/", {"var": "student_id"}]},
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },
@@ -57,7 +57,7 @@
             "59": {
                 "account": "UNIVERSITY-BURSAR",
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     {"cat": ["INSTITUTION/", {"var": "institution_lei"}]},
                     "STUDENT ACCOUNTS OFFICE",
                     {"cat": ["NEW YORK", ", ", "US"]}

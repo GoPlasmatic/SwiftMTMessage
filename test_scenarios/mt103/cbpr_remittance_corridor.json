@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["CASH", 100000000000]},
         "currency": "USD",
         "remittance_amount": 10000,
-        "value_date": "2024-12-28",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "corridor": "USA-MEX",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "beneficiary_id": {"cat": ["BEN-", 100000]},
         "purpose": "FAMILY SUPPORT",
         "session_num": "0001",
@@ -45,19 +45,19 @@
                 "account": "MIGRANT-WORKER",
                 "name_and_address": [
                     {"fake": ["name"]},
-                    "REMITTER",
-                    "123 MAIN STREET",
+                    {"fake": ["bic8"]},
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "1000000000000000",
+                "account": {"fake": ["alphanumeric", 16, 16]},
                 "name_and_address": [
                     {"fake": ["name"]},
                     {"cat": ["BENEFICIARY/", {"var": "beneficiary_id"}]},
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },

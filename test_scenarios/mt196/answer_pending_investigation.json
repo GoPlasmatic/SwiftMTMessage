@@ -1,11 +1,11 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "answer_ref": {"cat": ["PEND", 100000]},
         "cancel_ref": {"cat": ["FRAUD", 100000]},
         "original_mt": "192",
-        "date": "2024-12-21",
+        "date": {"fake": ["date", "%Y-%m-%d"]},
         "session": "3456",
         "sequence": "345678",
         "response_code": "PENDING",
@@ -14,7 +14,7 @@
         "currency": "USD",
         "session_num": "0002",
         "sequence_num": "000789",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

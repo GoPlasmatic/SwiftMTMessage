@@ -1,16 +1,16 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "reference": {"cat": ["CBPRCRED", 100000]},
         "account_id": {"cat": ["GB29NWBK", 10000000000000]},
         "amount": 750000,
         "currency": "GBP",
-        "value_date": "2024-12-23",
-        "uetr_payment": "550e8400-e29b-41d4-a716-446655440000",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
+        "uetr_payment": {"fake": ["uuid"]},
         "session_num": "0001",
         "sequence_num": "011234",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -44,8 +44,13 @@
                 "amount": {"var": "amount"}
             },
             "50K": {
-                "account": "DE89370400440532013000",
-                "name_and_address": ["EUROPEAN TECH BUYER GMBH", "KOENIGSALLEE 61", "40215 DUESSELDORF", "GERMANY"]
+                "account": {"fake": ["iban", "DE"]},
+                "name_and_address": [
+                    "EUROPEAN TECH BUYER GMBH",
+                    "KOENIGSALLEE 61",
+                    "40215 DUESSELDORF",
+                    {"fake": ["country_code"]}
+                ]
             },
             "72": {
                 "information": [

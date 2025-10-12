@@ -1,12 +1,12 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "pensioner_bank_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "pensioner_bank_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["PENS", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
@@ -14,13 +14,13 @@
         "pension_fund_name": "NATIONAL PENSION FUND",
         "pension_fund_lei": "LEIXG8HWVXGGR1B2V8P898",
         "pensioner_name": {"fake": ["name"]},
-        "pensioner_address": "123 MAIN STREET",
-        "pensioner_city": "NEW YORK",
+        "pensioner_address": {"substr": [{"fake": ["street_address"]}, 0, 35]},
+        "pensioner_city": {"substr": [{"fake": ["city_name"]}, 0, 35]},
         "pensioner_country": "US",
         "pension_ref": {"cat": ["PEN-", 100000000]},
         "pension_type": "RETIREMENT",
         "payment_month": "DEC-2024",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

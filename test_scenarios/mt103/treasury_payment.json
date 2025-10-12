@@ -1,16 +1,16 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": "TRA20241231001",
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
         "sequence_num": "006789",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -44,13 +44,23 @@
             },
             "50K": {
                 "account": "FXTR1234567890",
-                "name_and_address": ["ACME CORPORATION", "TREASURY DEPARTMENT", "123 MAIN STREET", "NEW YORK"]
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    "TREASURY DEPARTMENT",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"substr": [{"fake": ["city_name"]}, 0, 35]}
+                ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
                 "account": "CASH9876543210",
-                "name_and_address": ["ACME CORPORATION", "CASH MANAGEMENT", "123 MAIN STREET", "NEW YORK"]
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    "CASH MANAGEMENT",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"substr": [{"fake": ["city_name"]}, 0, 35]}
+                ]
             },
             "70": {
                 "narrative": ["TREASURY OPERATION", "LIQUIDITY MANAGEMENT", "INTERNAL FUNDING TRANSFER"]

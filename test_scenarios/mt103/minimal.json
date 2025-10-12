@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["PAY", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "007890",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -40,8 +40,14 @@
                 "currency": {"var": "currency"},
                 "amount": {"var": "amount"}
             },
-            "50K": {"account": "1234567890", "name_and_address": [{"fake": ["name"]}, "NEW YORK"]},
-            "59": {"account": "9876543210", "name_and_address": [{"fake": ["name"]}, "NEW YORK"]},
+            "50K": {
+                "account": {"fake": ["alphanumeric", 10, 10]},
+                "name_and_address": [{"fake": ["name"]}, {"substr": [{"fake": ["city_name"]}, 0, 35]}]
+            },
+            "59": {
+                "account": {"fake": ["alphanumeric", 10, 10]},
+                "name_and_address": [{"fake": ["name"]}, {"substr": [{"fake": ["city_name"]}, 0, 35]}]
+            },
             "71A": {"code": "SHA"}
         }
     }

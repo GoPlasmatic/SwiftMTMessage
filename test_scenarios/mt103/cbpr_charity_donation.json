@@ -1,26 +1,26 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "charity_bank_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "charity_bank_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["CHAR", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
         "sequence_num": "010123",
         "donor_name": {"fake": ["name"]},
-        "donor_address": "123 MAIN STREET",
-        "donor_city": "NEW YORK",
+        "donor_address": {"substr": [{"fake": ["street_address"]}, 0, 35]},
+        "donor_city": {"substr": [{"fake": ["city_name"]}, 0, 35]},
         "donor_country": "US",
         "donor_lei": "LEIXG8HWVXGGR1B2V9Q897",
         "charity_name": "GLOBAL RELIEF FOUNDATION",
         "charity_registration": "501C3-12345678",
         "campaign_ref": {"cat": ["CAMP-", 1000]},
         "tax_receipt_num": {"cat": ["TAX-", 100000]},
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

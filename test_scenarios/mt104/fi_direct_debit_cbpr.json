@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["DDCBPR", 1000000000]},
         "currency": "USD",
         "loan_payment": 10000,
-        "execution_date": "2024-12-15",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "charges": "SHA",
         "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
         "debtor_lei": "LEIXG9JKLMNOPQRSTU2V3W",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "loan_account": {"cat": ["LN", 1000000000]},
         "batch_ref": {"cat": ["LOANPMT", 100000]},
         "session_num": "0001",
@@ -42,11 +42,11 @@
                     "23E": {"instruction_code": "AUTH"},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "loan_payment"}},
                     "59": {
-                        "account": "1000000000000000",
+                        "account": {"fake": ["alphanumeric", 16, 16]},
                         "name_and_address": [
-                            "ACME CORPORATION",
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
                             {"cat": ["BORROWER LEI/", {"var": "debtor_lei"}]},
-                            "123 MAIN STREET",
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
                             {"cat": ["NEW YORK", ", ", "US"]}
                         ]
                     },
@@ -65,9 +65,9 @@
                     "50K": {
                         "account": {"var": "loan_account"},
                         "name_and_address": [
-                            "ACME CORPORATION",
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
                             {"cat": ["LEI/", {"var": "debtor_lei"}]},
-                            "123 MAIN STREET",
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
                             {"cat": ["NEW YORK", ", ", "US"]}
                         ]
                     },

@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "CHASUS33",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": "STP20241231001",
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-31",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -37,12 +37,22 @@
                 "amount": {"var": "amount"}
             },
             "50K": {
-                "account": "DE89370400440532013000",
-                "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK NY 10001", "USA"]
+                "account": {"fake": ["iban", "DE"]},
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    "NEW YORK NY 10001",
+                    {"fake": ["country_code"]}
+                ]
             },
             "59": {
                 "account": "123456789",
-                "name_and_address": ["JANE DOE", "456 PARK AVENUE", "BOSTON MA 02101", "USA"]
+                "name_and_address": [
+                    "JANE DOE",
+                    "456 PARK AVENUE",
+                    "BOSTON MA 02101",
+                    {"fake": ["country_code"]}
+                ]
             },
             "71A": {"code": {"var": "charges"}}
         }

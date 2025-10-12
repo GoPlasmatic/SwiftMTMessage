@@ -1,17 +1,17 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["FXRATE", 100000]},
-        "effective_date_1": "2024-12-29",
+        "effective_date_1": {"fake": ["date", "%Y-%m-%d"]},
         "usd_eur_rate": 10000,
         "eur_usd_rate": 10000,
-        "effective_date_2": "2024-12-29",
+        "effective_date_2": {"fake": ["date", "%Y-%m-%d"]},
         "gbp_usd_rate": 10000,
         "usd_gbp_rate": 10000,
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

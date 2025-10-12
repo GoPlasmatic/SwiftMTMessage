@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["SSI", 100000000000]},
         "session_num": "0002",
         "sequence_num": "001234",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
-        "effective_date": "2025-01-01",
-        "old_account": "GB82WEST12345698765432",
-        "new_account": "GB33BNBK20123456789012",
+        "uetr": {"fake": ["uuid"]},
+        "effective_date": {"fake": ["date", "%Y-%m-%d"]},
+        "old_account": {"fake": ["iban", "GB"]},
+        "new_account": {"fake": ["iban", "GB"]},
         "currency": "USD"
     },
     "schema": {
@@ -46,7 +46,7 @@
                     "NEW INSTRUCTIONS (FROM 2025-01-01):",
                     {"substr": [{"cat": ["ACCT: ", {"var": "new_account"}]}, 0, 50]},
                     "BIC: BNBKGB2LXXX",
-                    "TRANSITION: 2024-12-24 TO 2024-12-31",
+                    {"fake": ["uuid"]},
                     "BOTH ACCOUNTS ACTIVE",
                     "OTHER CURRENCIES UNCHANGED",
                     "CONFIRM RECEIPT VIA MT299",

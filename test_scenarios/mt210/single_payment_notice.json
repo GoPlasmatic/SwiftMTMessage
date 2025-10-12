@@ -1,17 +1,17 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["NTR", 100000]},
         "account_id": {"cat": ["US64SVBK", 10000000000000]},
-        "value_date": "2024-12-23",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "payment_ref": {"cat": ["WIRE", 100000000000]},
         "payment_currency": "EUR",
         "payment_amount": 10000,
-        "ordering_bic": "DEUTDEFF",
+        "ordering_bic": {"fake": ["bic8"]},
         "session_num": "0001",
         "sequence_num": "000456",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -43,7 +43,7 @@
                 {
                     "21": {"reference": {"var": "payment_ref"}},
                     "32B": {"currency": {"var": "payment_currency"}, "amount": {"var": "payment_amount"}},
-                    "50F": {"account": "DE89370400440532013000", "bic": "DEUTDEFF"}
+                    "50F": {"account": {"fake": ["iban", "DE"]}, "bic": {"fake": ["bic8"]}}
                 }
             ]
         }

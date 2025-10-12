@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["INVS", 100000000000]},
         "currency": "USD",
         "settlement_amount": 10000,
-        "value_date": "2024-12-28",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
-        "exchange_lei": "LEIXG9CRYPTOEXCHNG01",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "exchange_lei": {"fake": ["lei"]},
+        "uetr": {"fake": ["uuid"]},
         "transaction_hash": {"cat": ["TX", 100000]},
         "crypto_type": "BTC",
         "session_num": "0001",
@@ -44,20 +44,20 @@
             "50K": {
                 "account": "TRADING-ACCOUNT",
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     "CRYPTO TRADER",
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "1000000000000000",
+                "account": {"fake": ["alphanumeric", 16, 16]},
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     {"cat": ["EXCHANGE/", {"var": "exchange_lei"}]},
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },

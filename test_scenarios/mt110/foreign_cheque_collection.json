@@ -1,19 +1,19 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["FCOL", 100000]},
         "currency": "CAD",
         "cheque1_ref": {"cat": ["FCHQ", 1000000]},
         "cheque1_amount": 10000,
-        "cheque1_date": "2024-12-22",
+        "cheque1_date": {"fake": ["date", "%Y-%m-%d"]},
         "cheque2_ref": {"cat": ["FCHQ", 1000000]},
         "cheque2_amount": 10000,
-        "cheque2_date": "2024-12-21",
-        "drawer_bic": "DEUTDEFF",
+        "cheque2_date": {"fake": ["date", "%Y-%m-%d"]},
+        "drawer_bic": {"fake": ["bic8"]},
         "session_num": "0001",
         "sequence_num": "000789",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -61,7 +61,12 @@
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "cheque1_amount"}},
                     "50K": {
                         "account": "CA1234567890",
-                        "name_and_address": ["ACME CORPORATION", "EXPORT DIVISION", "123 MAIN STREET VANCOUVER", "CANADA"]
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            "EXPORT DIVISION",
+                            "123 MAIN STREET VANCOUVER",
+                            "CANADA"
+                        ]
                     },
                     "52D": {
                         "party_identifier": "CANBNK456",
@@ -82,7 +87,12 @@
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "cheque2_amount"}},
                     "50K": {
                         "account": "CA9876543210",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "MONTREAL", "CANADA"]
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"fake": ["bic8"]},
+                            "CANADA"
+                        ]
                     },
                     "52A": {"bic": {"var": "drawer_bic"}},
                     "59F": {

@@ -1,9 +1,9 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "msg_id": {"cat": ["PAYROLL", 100000]},
-        "exec_date": "2024-12-28",
+        "exec_date": {"fake": ["date", "%Y-%m-%d"]},
         "currency": "USD",
         "account_id": {"cat": ["DE89DEUT", 10000000000000]},
         "emp1_amount": 10000,
@@ -12,7 +12,7 @@
         "emp4_amount": 10000,
         "session_num": "0001",
         "sequence_num": "000789",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -45,45 +45,65 @@
                     "21": {"reference": "SAL-DEC-001"},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "emp1_amount"}},
                     "59": {
-                        "account": "DE12345678901234567890",
-                        "name_and_address": ["SCHMIDT, ANNA MARIA", "HAUPTSTRASSE 45", "80331 MUNICH", "GERMANY"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            "SCHMIDT, ANNA MARIA",
+                            "HAUPTSTRASSE 45",
+                            "80331 MUNICH",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["CBPR SALARY PAYMENT", "DECEMBER 2024", "EMP-001-2024"]},
                     "71A": {"code": "OUR"},
-                    "57A": {"bic": "DEUTDEFFXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 },
                 {
                     "21": {"reference": "SAL-DEC-002"},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "emp2_amount"}},
                     "59": {
-                        "account": "DE98765432109876543210",
-                        "name_and_address": ["MUELLER, THOMAS", "FRIEDRICHSTRASSE 123", "10117 BERLIN", "GERMANY"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            "MUELLER, THOMAS",
+                            "FRIEDRICHSTRASSE 123",
+                            "10117 BERLIN",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["CBPR SALARY PAYMENT", "DECEMBER 2024", "EMP-002-2024"]},
                     "71A": {"code": "OUR"},
-                    "57A": {"bic": "COBADEFFXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 },
                 {
                     "21": {"reference": "SAL-DEC-003"},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "emp3_amount"}},
                     "59": {
-                        "account": "DE11223344556677889900",
-                        "name_and_address": ["WEBER, JULIA", "GOETHESTRASSE 78", "60311 FRANKFURT", "GERMANY"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            "WEBER, JULIA",
+                            "GOETHESTRASSE 78",
+                            "60311 FRANKFURT",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["CBPR SALARY PAYMENT", "DECEMBER 2024 PLUS BONUS", "EMP-003-2024"]},
                     "71A": {"code": "OUR"},
-                    "57A": {"bic": "DRESDEFFXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 },
                 {
                     "21": {"reference": "SAL-DEC-004"},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "emp4_amount"}},
                     "59": {
-                        "account": "DE99887766554433221100",
-                        "name_and_address": ["FISCHER, MARKUS", "MAXIMILIANSTRASSE 15", "20355 HAMBURG", "GERMANY"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            "FISCHER, MARKUS",
+                            "MAXIMILIANSTRASSE 15",
+                            "20355 HAMBURG",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["CBPR SALARY PAYMENT", "DECEMBER 2024", "EMP-004-2024"]},
                     "71A": {"code": "OUR"},
-                    "57A": {"bic": "HYVEDEMMXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 }
             ],
             "50F": {"account": {"var": "account_id"}, "bic": {"var": "sender_bic"}},

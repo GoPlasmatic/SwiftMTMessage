@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["STMT", 100000000000]},
-        "account_number": "1000000000000000",
+        "account_number": {"cat": ["AUTH", {"fake": ["u64", 10000000, 999999999]}]},
         "statement_num": 1000,
         "currency": "USD",
         "opening_balance": 10000,
         "closing_balance": 10000,
         "available_balance": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "amount1": 10000,
         "amount2": 10000,
         "amount3": 10000,
@@ -18,7 +18,7 @@
         "ref3": {"cat": ["FEE", 100000]},
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -44,11 +44,11 @@
         "message_type": "950",
         "fields": {
             "20": {"reference": "STMT123456789012"},
-            "25": {"authorisation": "1234567890123456"},
+            "25": {"authorisation": {"fake": ["alphanumeric", 16, 16]}},
             "28C": {"statement_number": 1234, "sequence_number": 1},
             "61": [
                 {
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "debit_credit_mark": "C",
                     "amount": 15000,
                     "transaction_type": "NMSC",
@@ -56,7 +56,7 @@
                     "bank_reference": "BA1-1234567890"
                 },
                 {
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "debit_credit_mark": "D",
                     "amount": 25000,
                     "transaction_type": "NMSC",
@@ -64,7 +64,7 @@
                     "bank_reference": "BA2-1234567890"
                 },
                 {
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "debit_credit_mark": "D",
                     "amount": 8000,
                     "transaction_type": "NCHG",
@@ -74,14 +74,14 @@
             ],
             "64": {
                 "debit_credit_mark": "C",
-                "value_date": "2024-12-20",
+                "value_date": {"fake": ["date", "%Y-%m-%d"]},
                 "currency": {"var": "currency"},
                 "amount": 495000
             },
             "60": {
                 "F": {
                     "debit_credit_mark": "C",
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "currency": {"var": "currency"},
                     "amount": 250000
                 }
@@ -89,7 +89,7 @@
             "62": {
                 "F": {
                     "debit_credit_mark": "C",
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "currency": {"var": "currency"},
                     "amount": 258000
                 }

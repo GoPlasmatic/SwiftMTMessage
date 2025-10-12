@@ -1,24 +1,24 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "hospital_bank_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "hospital_bank_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["HLTC", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
         "sequence_num": "013456",
-        "insurance_company": "ACME CORPORATION",
+        "insurance_company": {"substr": [{"fake": ["company_name"]}, 0, 35]},
         "insurance_lei": "LEIXG8HWVXGGR1B2V0S900",
         "hospital_name": "REGIONAL MEDICAL CENTER",
         "hospital_lei": "LEIXG8HWVXGGR1B2V1T901",
         "patient_ref": {"cat": ["PAT-", 100000]},
         "claim_number": {"cat": ["CLM-", 10000000]},
         "treatment_type": "SURGERY",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

@@ -1,21 +1,21 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "intermediary_bic": "DEUTDEFF",
-        "account_with_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "intermediary_bic": {"fake": ["bic8"]},
+        "account_with_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["COV", 100000000000]},
         "related_ref": {"cat": ["REF", 100000000000]},
         "currency": "USD",
         "amount": 10000,
         "instructed_amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "003456",
         "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
         "receiver_lei": "LEIZBQR12345HKLMNOP678",
         "purpose_code": "GDDS",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -60,11 +60,11 @@
             "58A": {"bic": {"var": "receiver_bic"}},
             "#": {
                 "50K": {
-                    "account": "GB82WEST12345698765432",
+                    "account": {"fake": ["iban", "GB"]},
                     "name_and_address": [
-                        "ACME CORPORATION",
+                        {"substr": [{"fake": ["company_name"]}, 0, 35]},
                         {"cat": ["/", {"var": "sender_lei"}]},
-                        "123 MAIN STREET",
+                        {"substr": [{"fake": ["street_address"]}, 0, 35]},
                         {"cat": ["NEW YORK", ", ", "US"]}
                     ]
                 },
@@ -72,11 +72,11 @@
                 "56A": {"bic": {"var": "intermediary_bic"}},
                 "57A": {"bic": {"var": "account_with_bic"}},
                 "59": {
-                    "account": "DE89370400440532013000",
+                    "account": {"fake": ["iban", "DE"]},
                     "name_and_address": [
-                        "ACME CORPORATION",
+                        {"substr": [{"fake": ["company_name"]}, 0, 35]},
                         {"cat": ["/", {"var": "receiver_lei"}]},
-                        "123 MAIN STREET",
+                        {"substr": [{"fake": ["street_address"]}, 0, 35]},
                         {"cat": ["NEW YORK", ", ", "US"]}
                     ]
                 },

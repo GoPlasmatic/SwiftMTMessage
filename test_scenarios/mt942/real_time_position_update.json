@@ -1,7 +1,7 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["RT", 100000000000]},
         "account_number": {"cat": ["NOSTRO-", 10000000]},
         "statement_num": 1,
@@ -15,7 +15,7 @@
         "ref2": {"cat": ["T2", 100000]},
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -45,7 +45,7 @@
             "28C": {"statement_number": {"var": "statement_num"}, "sequence_number": 1},
             "34F_debit": {"currency": {"var": "currency"}, "amount": {"var": "debit_limit"}},
             "13D": {
-                "date": "241220",
+                "date": {"fake": ["date", "%y%m%d"]},
                 "time": "0945",
                 "offset_sign": "+",
                 "offset": "0100"
@@ -53,7 +53,7 @@
             "statement_lines": [
                 {
                     "61": {
-                        "value_date": "2024-12-20",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": "1220",
                         "debit_credit_mark": "C",
                         "amount": {"var": "amount1"},
@@ -72,7 +72,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-20",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": "1220",
                         "debit_credit_mark": "D",
                         "amount": {"var": "amount2"},

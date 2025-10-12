@@ -1,16 +1,16 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref1": {"cat": ["PAY", 100000000000]},
         "transaction_ref2": {"cat": ["PAY", 200000000000]},
         "currency": "USD",
         "amount1": 10000,
         "amount2": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
-        "duplicate_uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "duplicate_uetr": {"fake": ["uuid"]},
         "session_num": "0001",
         "sequence_num": "000123"
     },
@@ -45,14 +45,22 @@
                 "amount": {"var": "amount1"}
             },
             "50K": {
-                "account": "GB82WEST12345698765432",
-                "name_and_address": ["ALPHA CORPORATION", "123 MAIN STREET", {"cat": ["NEW YORK", ", ", "US"]}]
+                "account": {"fake": ["iban", "GB"]},
+                "name_and_address": [
+                    "ALPHA CORPORATION",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"cat": ["NEW YORK", ", ", "US"]}
+                ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "DE89370400440532013000",
-                "name_and_address": ["BETA INDUSTRIES", "123 MAIN STREET", {"cat": ["NEW YORK", ", ", "US"]}]
+                "account": {"fake": ["iban", "DE"]},
+                "name_and_address": [
+                    "BETA INDUSTRIES",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"cat": ["NEW YORK", ", ", "US"]}
+                ]
             },
             "70": {
                 "narrative": [

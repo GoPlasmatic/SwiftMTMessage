@@ -1,17 +1,17 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["SALA", 100000000000]},
         "currency": "USD",
         "payment_amount": 10000,
         "platform_fee": 10000,
         "net_amount": 10000,
-        "value_date": "2024-12-28",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
-        "platform_lei": "LEIXG9GIGPLATFORM001",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "platform_lei": {"fake": ["lei"]},
+        "uetr": {"fake": ["uuid"]},
         "freelancer_id": {"cat": ["FREE-", 100000]},
         "job_id": {"cat": ["JOB-", 10000000]},
         "session_num": "0001",
@@ -46,20 +46,20 @@
             "50K": {
                 "account": "PLATFORM-ESCROW",
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     {"cat": ["GIG PLATFORM/", {"var": "platform_lei"}]},
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "1000000000000000",
+                "account": {"fake": ["alphanumeric", 16, 16]},
                 "name_and_address": [
                     {"fake": ["name"]},
                     {"cat": ["FREELANCER/", {"var": "freelancer_id"}]},
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },

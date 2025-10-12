@@ -1,16 +1,16 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["PAY", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -43,8 +43,12 @@
                 "amount": {"var": "amount"}
             },
             "50K": {
-                "account": "GB82WEST12345698765432",
-                "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", {"cat": ["NEW YORK", ", ", "US"]}]
+                "account": {"fake": ["iban", "GB"]},
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"cat": ["NEW YORK", ", ", "US"]}
+                ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "56C": {"party_identifier": "UNKNOWN"},
@@ -59,7 +63,12 @@
             },
             "59": {
                 "account": "??????????????????",
-                "name_and_address": ["ACME CORPORATION", "ADDRESS LINE 1", "ADDRESS LINE 2", "COUNTRY"]
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    "ADDRESS LINE 1",
+                    "ADDRESS LINE 2",
+                    "COUNTRY"
+                ]
             },
             "70": {
                 "narrative": [

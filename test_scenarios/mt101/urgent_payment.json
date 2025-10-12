@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["PAY", 100000000000]},
-        "execution_date": "2024-12-20",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "000789",
         "currency": "USD",
         "urgent_ref": "URGENT24120001",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -36,18 +36,18 @@
             "20": {"reference": {"var": "message_ref"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "execution_date"}},
-            "50F": {"account": "TREASURY-URGENT", "bic": "DEUTDEFF"},
+            "50F": {"account": "TREASURY-URGENT", "bic": {"fake": ["bic8"]}},
             "#": [
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "23E": [{"instruction_code": "URGP"}, {"instruction_code": "RTGS"}],
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "FR1420041010050500013M02606",
+                        "account": {"fake": ["iban", "FR"]},
                         "name_and_address": [
-                            "ACME CORPORATION",
-                            "123 MAIN STREET",
-                            "NEW YORK",
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
                             {"substr": ["USA", 0, 34]}
                         ]
                     },
@@ -60,7 +60,7 @@
                         ]
                     },
                     "71A": {"code": "OUR"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
@@ -70,11 +70,11 @@
                     ],
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "FR1420041010050500013M02606",
+                        "account": {"fake": ["iban", "FR"]},
                         "name_and_address": [
-                            "ACME CORPORATION",
-                            "123 MAIN STREET",
-                            "NEW YORK",
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
                             {"substr": ["USA", 0, 34]}
                         ]
                     },
@@ -82,7 +82,7 @@
                         "narrative": ["URGENT MARGIN CALL", "IMMEDIATE EXECUTION", "TRADING DESK REQUIREMENT"]
                     },
                     "71A": {"code": "OUR"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 }
             ],
             "52A": {"bic": {"var": "receiver_bic"}}

@@ -1,11 +1,11 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["LIQ", 10000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2025-01-15",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "234567"
     },
@@ -34,14 +34,14 @@
                 "amount": {"var": "amount"}
             },
             "72": {"information": ["/INS/LIQUIDITY MANAGEMENT", "/REF/DAILY SWEEP"]},
-            "56A": {"party_identifier": "LIQUIDITY", "bic": "DEUTDEFF"},
+            "56A": {"party_identifier": "LIQUIDITY", "bic": {"fake": ["bic8"]}},
             "57D": {
                 "party_identifier": "POOL001",
                 "name_and_address": [
                     "LIQUIDITY MANAGEMENT",
                     "TREASURY OPERATIONS",
                     "LONDON EC2V 7HN",
-                    "UNITED KINGDOM"
+                    {"fake": ["country_code"]}
                 ]
             }
         }

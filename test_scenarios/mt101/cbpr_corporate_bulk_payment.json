@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "msg_id": {"cat": ["CBPR", 100000]},
-        "exec_date": "2024-12-23",
+        "exec_date": {"fake": ["date", "%Y-%m-%d"]},
         "currency": "USD",
         "account_id": {"cat": ["US64SVBK", 10000000000000]},
         "session_num": "0001",
         "sequence_num": "000456",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -36,18 +36,18 @@
             "20": {"reference": {"var": "msg_id"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "exec_date"}},
-            "50F": {"account": {"var": "account_id"}, "bic": "DEUTDEFF"},
+            "50F": {"account": {"var": "account_id"}, "bic": {"fake": ["bic8"]}},
             "#": [
                 {
                     "21": {"reference": "SUPP-PAY-001"},
                     "32B": {"currency": {"var": "currency"}, "amount": 850000},
                     "59": {
-                        "account": "US12345678901234567890",
+                        "account": {"fake": ["iban", "US"]},
                         "name_and_address": [
                             "STEEL SUPPLIERS LLC",
                             "1234 METAL DRIVE",
                             "PITTSBURGH PA 15201",
-                            "UNITED STATES"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -65,12 +65,12 @@
                     "21": {"reference": "SUPP-PAY-002"},
                     "32B": {"currency": {"var": "currency"}, "amount": 1150000},
                     "59": {
-                        "account": "US98765432109876543210",
+                        "account": {"fake": ["iban", "US"]},
                         "name_and_address": [
                             "ELECTRONICS COMPONENTS INC",
                             "5678 CIRCUIT AVENUE",
                             "SAN JOSE CA 95110",
-                            "UNITED STATES"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -88,12 +88,12 @@
                     "21": {"reference": "SUPP-PAY-003"},
                     "32B": {"currency": {"var": "currency"}, "amount": 500000},
                     "59": {
-                        "account": "US11223344556677889900",
+                        "account": {"fake": ["iban", "US"]},
                         "name_and_address": [
                             "PACKAGING SOLUTIONS CORP",
                             "9012 WAREHOUSE WAY",
                             "MEMPHIS TN 38103",
-                            "UNITED STATES"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {

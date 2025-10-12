@@ -1,13 +1,13 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["RSP", 100000000000]},
         "inquiry_ref": {"cat": ["INQ", 100000000000]},
         "session_num": "0001",
         "sequence_num": "004567",
         "payment_ref": {"cat": ["REF", 100000000000]},
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "processing_time": {"fake": ["i32", 1, 24]},
         "fee_amount": "25.00",
         "exchange_rate": "1.1200",

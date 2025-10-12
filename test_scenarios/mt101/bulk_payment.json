@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["PAY", 100000000000]},
         "customer_ref": "BULK-PAY-2024-Q4",
-        "execution_date": "2024-12-20",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "000234",
         "currency": "USD",
         "charges": "SHA",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -37,17 +37,22 @@
             "20": {"reference": {"var": "message_ref"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "execution_date"}},
-            "50F": {"account": "US1234567890123456", "bic": {"var": "sender_bic"}},
+            "50F": {"account": {"fake": ["iban", "US"]}, "bic": {"var": "sender_bic"}},
             "52A": {"bic": {"var": "receiver_bic"}},
             "#": [
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "23E": [{"instruction_code": "INTC"}],
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
-                    "57A": {"bic": "DEUTDEFF"},
+                    "57A": {"bic": {"fake": ["bic8"]}},
                     "59": {
-                        "account": "DE89370400440532013000",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["BULK PAYMENT BATCH", "VENDOR SETTLEMENT"]},
                     "71A": {"code": {"var": "charges"}}
@@ -55,10 +60,15 @@
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
-                    "57A": {"bic": "DEUTDEFF"},
+                    "57A": {"bic": {"fake": ["bic8"]}},
                     "59": {
-                        "account": "DE89370400440532013000",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["BULK PAYMENT BATCH", "SUPPLIER PAYMENT"]},
                     "71A": {"code": {"var": "charges"}}
@@ -66,10 +76,15 @@
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
-                    "57A": {"bic": "DEUTDEFF"},
+                    "57A": {"bic": {"fake": ["bic8"]}},
                     "59": {
-                        "account": "DE89370400440532013000",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["BULK PAYMENT BATCH", "SERVICE PROVIDER"]},
                     "71A": {"code": {"var": "charges"}}
@@ -77,10 +92,15 @@
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
-                    "57A": {"bic": "DEUTDEFF"},
+                    "57A": {"bic": {"fake": ["bic8"]}},
                     "59": {
-                        "account": "DE89370400440532013000",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["BULK PAYMENT BATCH", "CONTRACTOR PAYMENT"]},
                     "71A": {"code": {"var": "charges"}}
@@ -88,10 +108,15 @@
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
-                    "57A": {"bic": "DEUTDEFF"},
+                    "57A": {"bic": {"fake": ["bic8"]}},
                     "59": {
-                        "account": "DE89370400440532013000",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "USA"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["BULK PAYMENT BATCH", "MONTHLY SETTLEMENT"]},
                     "71A": {"code": {"var": "charges"}}

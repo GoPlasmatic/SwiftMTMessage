@@ -169,67 +169,11 @@ impl<'a> MessageParser<'a> {
             });
         }
 
-        #[cfg(debug_assertions)]
-        {
-            if tag.starts_with("21")
-                || tag.starts_with("32")
-                || tag.starts_with("57")
-                || tag.starts_with("59")
-            {
-                eprintln!(
-                    "DEBUG extract_field('{}') at position {} (allow_duplicates={})",
-                    tag, self.position, self.allow_duplicates
-                );
-                eprintln!(
-                    "  -> input slice (first 100 chars): {:?}",
-                    &self.input[self.position..]
-                        .chars()
-                        .take(100)
-                        .collect::<String>()
-                );
-            }
-        }
-
         // Extract field content using the field_extractor module
         let extract_result = extract_field_content(&self.input[self.position..], tag);
 
-        #[cfg(debug_assertions)]
-        {
-            if tag.starts_with("21")
-                || tag.starts_with("32")
-                || tag.starts_with("57")
-                || tag.starts_with("59")
-            {
-                eprintln!(
-                    "  -> extract_field_content returned: {:?}",
-                    extract_result
-                        .as_ref()
-                        .map(|(c, consumed)| (c.len(), *consumed))
-                );
-            }
-        }
-
         match extract_result {
             Some((content, consumed)) => {
-                #[cfg(debug_assertions)]
-                {
-                    if tag.starts_with("21")
-                        || tag.starts_with("32")
-                        || tag.starts_with("57")
-                        || tag.starts_with("59")
-                    {
-                        eprintln!(
-                            "  -> extracted content length={}, consumed={}, new position={}",
-                            content.len(),
-                            consumed,
-                            self.position + consumed
-                        );
-                        eprintln!(
-                            "  -> content (first 40 chars): {:?}",
-                            &content.chars().take(40).collect::<String>()
-                        );
-                    }
-                }
                 self.position += consumed;
                 // Only track fields if duplicates are not allowed
                 if !self.allow_duplicates {
@@ -238,16 +182,6 @@ impl<'a> MessageParser<'a> {
                 Ok(content)
             }
             None => {
-                #[cfg(debug_assertions)]
-                {
-                    if tag.starts_with("21")
-                        || tag.starts_with("32")
-                        || tag.starts_with("57")
-                        || tag.starts_with("59")
-                    {
-                        eprintln!("  -> NOT FOUND");
-                    }
-                }
                 if optional {
                     // For optional fields, just return a format error that will be caught
                     Err(ParseError::InvalidFormat {
@@ -276,53 +210,16 @@ impl<'a> MessageParser<'a> {
         // For required fields, we should find it immediately (possibly after whitespace)
         let trimmed = remaining.trim_start_matches(|c: char| c.is_whitespace());
 
-        #[cfg(debug_assertions)]
-        {
-            if base_tag == "59" {
-                eprintln!(
-                    "DEBUG detect_variant('{}') at position {}",
-                    base_tag, self.position
-                );
-                eprintln!(
-                    "  remaining (first 80 chars): {:?}",
-                    &remaining.chars().take(80).collect::<String>()
-                );
-                eprintln!(
-                    "  trimmed (first 80 chars): {:?}",
-                    &trimmed.chars().take(80).collect::<String>()
-                );
-            }
-        }
-
         for variant in common_variants {
             let full_tag = format!("{}{}", base_tag, variant);
             if trimmed.starts_with(&format!(":{}:", full_tag)) {
-                #[cfg(debug_assertions)]
-                {
-                    if base_tag == "59" {
-                        eprintln!("  -> Found variant '{}'", variant);
-                    }
-                }
                 return Ok(variant.to_string());
             }
         }
 
         // Also check for no-variant version (just the base tag)
         if trimmed.starts_with(&format!(":{}:", base_tag)) {
-            #[cfg(debug_assertions)]
-            {
-                if base_tag == "59" {
-                    eprintln!("  -> Found no-variant (base tag only)");
-                }
-            }
             return Ok(String::new());
-        }
-
-        #[cfg(debug_assertions)]
-        {
-            if base_tag == "59" {
-                eprintln!("  -> NOT FOUND - returning error");
-            }
         }
 
         Err(ParseError::MissingRequiredField {

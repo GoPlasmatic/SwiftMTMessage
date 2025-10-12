@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["PAY", 100000000000]},
         "dd_mandate_ref": "DD-MANDATE-2024",
-        "execution_date": "2024-12-20",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "000890",
         "currency": "USD",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -43,7 +43,12 @@
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
                         "account": "COLLECTION-ACCOUNT",
-                        "name_and_address": ["ACME CORPORATION", "COLLECTIONS", "NEW YORK", "USA"]
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -61,7 +66,12 @@
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
                         "account": "COLLECTION-ACCOUNT",
-                        "name_and_address": ["ACME CORPORATION", "COLLECTIONS", "NEW YORK", "USA"]
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -79,7 +89,12 @@
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
                         "account": "COLLECTION-ACCOUNT",
-                        "name_and_address": ["ACME CORPORATION", "COLLECTIONS", "NEW YORK", "USA"]
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {
                         "narrative": [
@@ -93,7 +108,7 @@
                     "57A": {"bic": {"var": "receiver_bic"}}
                 }
             ],
-            "50F": {"account": "DD/COLLECTOR", "bic": "DEUTDEFF"},
+            "50F": {"account": "DD/COLLECTOR", "bic": {"fake": ["bic8"]}},
             "52A": {"bic": {"var": "receiver_bic"}}
         }
     }

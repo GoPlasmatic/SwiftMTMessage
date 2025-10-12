@@ -1,23 +1,23 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "intermediary_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "intermediary_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["COV", 1000000000]},
         "related_ref": {"cat": ["MT103", 1000000000]},
         "currency": "USD",
         "mt103_amount": 10000,
         "mt202_amount": 10000,
-        "value_date": "2024-12-20",
-        "ordering_name_mt103": "ACME CORPORATION",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
+        "ordering_name_mt103": {"substr": [{"fake": ["company_name"]}, 0, 35]},
         "ordering_name_mt202": "ACME INDUSTRIES LTD",
-        "beneficiary_acct_mt103": "DE89370400440532013000",
-        "beneficiary_acct_mt202": "DE89370400440532013001",
+        "beneficiary_acct_mt103": {"fake": ["iban", "DE"]},
+        "beneficiary_acct_mt202": {"fake": ["iban", "DE"]},
         "invoice_mt103": {"cat": ["INV-2024-", 10000]},
         "invoice_mt202": {"cat": ["INV-2024-", 10000]},
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -66,17 +66,22 @@
             "58A": {"bic": {"var": "receiver_bic"}},
             "#": {
                 "50K": {
-                    "account": "GB82WEST12345698765432",
+                    "account": {"fake": ["iban", "GB"]},
                     "name_and_address": [
                         {"var": "ordering_name_mt202"},
-                        "123 MAIN STREET",
+                        {"substr": [{"fake": ["street_address"]}, 0, 35]},
                         "LONDON EC1A 1BB",
-                        "UNITED KINGDOM"
+                        {"fake": ["country_code"]}
                     ]
                 },
                 "59": {
                     "account": {"var": "beneficiary_acct_mt202"},
-                    "name_and_address": ["GLOBAL TRADING GMBH", "456 COMMERCE STRASSE", "FRANKFURT 60311", "GERMANY"]
+                    "name_and_address": [
+                        "GLOBAL TRADING GMBH",
+                        "456 COMMERCE STRASSE",
+                        "FRANKFURT 60311",
+                        {"fake": ["country_code"]}
+                    ]
                 },
                 "70": {
                     "narrative": [

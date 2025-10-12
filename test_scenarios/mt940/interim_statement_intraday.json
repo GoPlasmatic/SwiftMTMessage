@@ -1,16 +1,16 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "account_id": {"cat": ["JP33MUFG", 10000000000000]},
         "statement_num": 1000,
         "opening_balance": 10000,
         "currency": "JPY",
-        "value_date": "2024-12-22",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "entry_date": "1222",
         "session_num": "0002",
         "sequence_num": "000789",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -42,7 +42,7 @@
             "statement_lines": [
                 {
                     "61": {
-                        "value_date": "2024-12-22",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "C",
                         "amount": 25000000,
@@ -61,7 +61,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-22",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "D",
                         "amount": 10000000,
@@ -79,7 +79,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-22",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "D",
                         "amount": 5000000,
@@ -104,7 +104,7 @@
             },
             "62F": {
                 "debit_credit_mark": "C",
-                "value_date": "2024-12-22",
+                "value_date": {"fake": ["date", "%Y-%m-%d"]},
                 "currency": {"var": "currency"},
                 "amount": 60000000
             }

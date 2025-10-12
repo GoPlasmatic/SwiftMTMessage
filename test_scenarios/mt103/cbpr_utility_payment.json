@@ -1,19 +1,21 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": "TRA20241231001",
         "currency": "USD",
         "utility_amount": 10000,
-        "value_date": "2024-12-25",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "OUR",
         "utility_provider_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "customer_id": "CUSTOMER_ID20241231001",
         "meter_number": "METER_NUMBER20241231001",
         "billing_period": "DEC-2024",
-        "service_type": "ELECTRICITY",
+        "service_type": {
+            "pick": ["ELECTRICITY", "WATER", "GAS", "INTERNET", "PHONE"]
+        },
         "session_num": "0001",
         "sequence_num": "000123"
     },
@@ -44,8 +46,13 @@
                 "amount": {"var": "utility_amount"}
             },
             "50K": {
-                "account": "1000000000000000",
-                "name_and_address": ["ACME CORPORATION", "ACME CORPORATION", "123 MAIN STREET", "ACME CORPORATION"]
+                "account": {"fake": ["alphanumeric", 16, 16]},
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]}
+                ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},

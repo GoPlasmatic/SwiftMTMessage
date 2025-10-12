@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "intermediary_bic": "DEUTDEFF",
-        "account_with_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "intermediary_bic": {"fake": ["bic8"]},
+        "account_with_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["CMP", 100000000000]},
         "related_ref": {"cat": ["SCRN", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "005678",
         "ordering_bank_lei": "LEIXG8HWVXGGR1B2V5K893",
@@ -21,7 +21,7 @@
         "screening_ref": {"cat": ["SCRN-", 10000000]},
         "kyc_ref": {"cat": ["KYC-", 10000000]},
         "aml_ref": {"cat": ["AML-", 10000000]},
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -69,7 +69,7 @@
                 "50K": {
                     "account": "VERIFIED-ACCOUNT-123456",
                     "name_and_address": [
-                        "ACME CORPORATION",
+                        {"substr": [{"fake": ["company_name"]}, 0, 35]},
                         {"cat": ["/LEI/", {"var": "ordering_customer_lei"}]},
                         {"cat": ["/ULTD/", {"var": "ultimate_debtor_lei"}]},
                         {"cat": ["NEW YORK", ", ", "US"]}
@@ -81,7 +81,7 @@
                 "59": {
                     "account": "VERIFIED-ACCOUNT-789012",
                     "name_and_address": [
-                        "ACME CORPORATION",
+                        {"substr": [{"fake": ["company_name"]}, 0, 35]},
                         {"cat": ["/LEI/", {"var": "beneficiary_customer_lei"}]},
                         {"cat": ["/ULTB/", {"var": "ultimate_creditor_lei"}]},
                         {"cat": ["NEW YORK", ", ", "US"]}

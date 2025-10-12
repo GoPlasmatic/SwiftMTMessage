@@ -1,22 +1,22 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": "TRA20241231001",
         "currency": "USD",
         "loan_amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "loan_ref": "LOA20241231001",
-        "contract_date": "2024-12-01",
-        "maturity_date": "2029-12-01",
+        "contract_date": {"fake": ["date", "%Y-%m-%d"]},
+        "maturity_date": {"fake": ["date", "%Y-%m-%d"]},
         "interest_rate": "0.05",
         "repayment_schedule": "MONTHLY",
         "disbursement_seq": 1,
         "total_facility": 10000,
         "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "session_num": "0001",
         "sequence_num": "000123"
     },
@@ -48,13 +48,23 @@
             },
             "50K": {
                 "account": "LENDING-DEPT-001",
-                "name_and_address": ["ACME CORPORATION", "ACME CORPORATION", "123 MAIN STREET", "ACME CORPORATION"]
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]}
+                ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "1000000000000000",
-                "name_and_address": ["ACME CORPORATION", "LOAN BORROWER", "123 MAIN STREET", "BENEFICIARY CORP"]
+                "account": {"fake": ["alphanumeric", 16, 16]},
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    "LOAN BORROWER",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    "BENEFICIARY CORP"
+                ]
             },
             "70": {
                 "narrative": [

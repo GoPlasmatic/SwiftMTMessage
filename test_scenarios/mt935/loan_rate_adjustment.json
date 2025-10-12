@@ -1,16 +1,16 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["LOAN", 100000]},
         "loan_account": {"cat": ["LOAN", 1000000000]},
-        "effective_date": "2025-02-01",
+        "effective_date": {"fake": ["date", "%Y-%m-%d"]},
         "base_rate": 10000,
         "spread": 10000,
         "total_rate": 10000,
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

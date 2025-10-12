@@ -1,7 +1,7 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "cancel_ref": {"cat": ["FRAUD", 100000]},
         "original_ref": {"cat": ["TRF", 100000000000]},
         "reason_code": "FRAD",
@@ -9,7 +9,7 @@
         "sequence": "789012",
         "session_num": "0002",
         "sequence_num": "000789",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -38,7 +38,7 @@
             "21": {"reference": {"var": "original_ref"}},
             "11S": {
                 "message_type": "103",
-                "date": "2024-12-21",
+                "date": {"fake": ["date", "%Y-%m-%d"]},
                 "session_number": "0002",
                 "input_sequence_number": "789012"
             },

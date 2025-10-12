@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": "FEE20241231001",
         "currency": "USD",
         "fee_amount": 10000,
-        "value_date": "2024-12-28",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "service_provider_lei": "LEIXG9FEESVCPROVIDER01",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "invoice_number": {"cat": ["INV-", 1000000]},
         "service_period": "JAN-2024",
         "session_num": "0001",
@@ -48,17 +48,22 @@
             "50K": {
                 "account": "CORP-FINANCE",
                 "name_and_address": [
-                    "ACME CORPORATION",
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
                     "CORPORATE SERVICES",
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "1234567890123456",
-                "name_and_address": ["ACME CORPORATION", "SERVICE PROVIDER", "123 MAIN STREET", "NEW YORK NY US"]
+                "account": {"fake": ["alphanumeric", 16, 16]},
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    "SERVICE PROVIDER",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    "NEW YORK NY US"
+                ]
             },
             "70": {
                 "narrative": [

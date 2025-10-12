@@ -1,12 +1,12 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "account_id": {"cat": ["GB82WEST", 10000000000000]},
         "statement_num": 1000,
         "opening_balance": 10000,
         "currency": "USD",
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "entry_date": "1220",
         "amount1": 10000,
         "amount2": 10000,
@@ -14,7 +14,7 @@
         "ref2": {"cat": ["REF", 100000]},
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -51,14 +51,14 @@
             },
             "62F": {
                 "debit_credit_mark": "C",
-                "value_date": "2024-12-20",
+                "value_date": {"fake": ["date", "%Y-%m-%d"]},
                 "currency": {"var": "currency"},
                 "amount": {"var": "opening_balance"}
             },
             "statement_lines": [
                 {
                     "61": {
-                        "value_date": "2024-12-20",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "C",
                         "amount": {"var": "amount1"},
@@ -77,7 +77,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-20",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "C",
                         "amount": {"var": "amount1"},
@@ -96,7 +96,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-20",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "D",
                         "amount": {"var": "amount2"},
@@ -114,7 +114,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-20",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "C",
                         "amount": {"var": "amount1"},

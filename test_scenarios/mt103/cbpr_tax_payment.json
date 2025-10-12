@@ -1,25 +1,25 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "tax_authority_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "tax_authority_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["TAX", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "OUR",
         "session_num": "0001",
         "sequence_num": "006789",
-        "sender_name": "ACME CORPORATION",
-        "sender_address": "123 MAIN STREET",
-        "sender_city": "NEW YORK",
+        "sender_name": {"substr": [{"fake": ["company_name"]}, 0, 35]},
+        "sender_address": {"substr": [{"fake": ["street_address"]}, 0, 35]},
+        "sender_city": {"substr": [{"fake": ["city_name"]}, 0, 35]},
         "sender_country": "US",
         "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
         "tax_id": {"cat": ["TIN-", 100000000]},
         "tax_period": {"cat": ["Q", 1, "-2024"]},
         "tax_type": "CORPORATE",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

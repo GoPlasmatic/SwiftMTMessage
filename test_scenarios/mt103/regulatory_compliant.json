@@ -1,16 +1,16 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["PAY", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
         "sequence_num": "003456",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -43,23 +43,23 @@
                 "amount": {"var": "amount"}
             },
             "50K": {
-                "account": "GB82WEST12345698765432",
+                "account": {"fake": ["iban", "GB"]},
                 "name_and_address": [
                     {"fake": ["name"]},
-                    "123 MAIN STREET",
-                    "NEW YORK",
-                    "UNITED KINGDOM"
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                    {"fake": ["country_code"]}
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "DE89370400440532013000",
+                "account": {"fake": ["iban", "DE"]},
                 "name_and_address": [
                     {"fake": ["name"]},
-                    "123 MAIN STREET",
-                    "NEW YORK",
-                    "GERMANY"
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                    {"fake": ["country_code"]}
                 ]
             },
             "70": {

@@ -1,7 +1,7 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "main_ref": {"cat": ["CLR", 10000000]},
         "transaction_ref1": {"cat": ["FEE", 1000]},
         "transaction_ref2": {"cat": ["FEE", 1000]},
@@ -9,7 +9,7 @@
         "transaction_ref4": {"cat": ["FEE", 1000]},
         "currency": "GBP",
         "transaction_amount": 1000,
-        "value_date": "2025-01-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "678901"
     },
@@ -40,28 +40,31 @@
                     "20": {"reference": {"var": "transaction_ref1"}},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "transaction_amount"}},
                     "72": {"information": ["/FEE/CLEARING"]},
-                    "53A": {"party_identifier": "/M/EMBER001", "bic": "DEUTDEFF"}
+                    "53A": {"party_identifier": "/M/EMBER001", "bic": {"fake": ["bic8"]}}
                 },
                 {
                     "20": {"reference": {"var": "transaction_ref2"}},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "transaction_amount"}},
                     "72": {"information": ["/FEE/SETTLEMENT"]},
-                    "53A": {"party_identifier": "/M/EMBER002", "bic": "DEUTDEFF"}
+                    "53A": {"party_identifier": "/M/EMBER002", "bic": {"fake": ["bic8"]}}
                 },
                 {
                     "20": {"reference": {"var": "transaction_ref3"}},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "transaction_amount"}},
                     "72": {"information": ["/FEE/MEMBERSHIP"]},
-                    "53A": {"party_identifier": "/M/EMBER003", "bic": "DEUTDEFF"}
+                    "53A": {"party_identifier": "/M/EMBER003", "bic": {"fake": ["bic8"]}}
                 },
                 {
                     "20": {"reference": {"var": "transaction_ref4"}},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "transaction_amount"}},
                     "72": {"information": ["/FEE/REGULATORY"]},
-                    "53A": {"party_identifier": "/M/EMBER004", "bic": "DEUTDEFF"}
+                    "53A": {"party_identifier": "/M/EMBER004", "bic": {"fake": ["bic8"]}}
                 }
             ],
-            "57B": {"party_identifier": "/C/LCHCLEAR", "location": "LONDON"}
+            "57B": {
+                "party_identifier": "/C/LCHCLEAR",
+                "location": {"substr": [{"fake": ["city_name"]}, 0, 35]}
+            }
         }
     }
 }

@@ -1,20 +1,20 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["DSTOP", 100000]},
         "cheque_number": 100000,
-        "issue_date": "2024-12-10",
+        "issue_date": {"fake": ["date", "%Y-%m-%d"]},
         "currency": "USD",
         "amount": 10000,
-        "drawer_bic": "DEUTDEFF",
-        "payee_name": "ACME CORPORATION",
-        "payee_address": "123 MAIN STREET",
-        "payee_city": "NEW YORK",
+        "drawer_bic": {"fake": ["bic8"]},
+        "payee_name": {"substr": [{"fake": ["company_name"]}, 0, 35]},
+        "payee_address": {"substr": [{"fake": ["street_address"]}, 0, 35]},
+        "payee_city": {"substr": [{"fake": ["city_name"]}, 0, 35]},
         "payee_country": "US",
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -48,7 +48,7 @@
                 "name_and_address": [
                     {"var": "payee_name"},
                     {"var": "payee_address"},
-                    {"cat": [{"var": "payee_city"}, ", ", {"var": "payee_country"}]}
+                    {"substr": [{"cat": [{"var": "payee_city"}, ", ", {"var": "payee_country"}]}, 0, 35]}
                 ]
             },
             "75": {

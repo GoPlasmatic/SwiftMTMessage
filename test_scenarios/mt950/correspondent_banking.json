@@ -1,7 +1,7 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["COR", 1000000000000]},
         "nostro_account": {"cat": ["NOSTRO-", 100000000]},
         "statement_num": 1,
@@ -9,7 +9,7 @@
         "opening_balance": 10000,
         "closing_balance": 10000,
         "available_balance": 10000,
-        "value_date": "241220",
+        "value_date": {"fake": ["date", "%y%m%d"]},
         "swift_amount": 10000,
         "clearing_amount": 10000,
         "interest_amount": 10000,
@@ -18,7 +18,7 @@
         "interest_ref": {"cat": ["INT", 100000]},
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -48,7 +48,7 @@
             "28C": {"statement_number": 999, "sequence_number": 1},
             "61": [
                 {
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "debit_credit_mark": "C",
                     "amount": 1250000,
                     "transaction_type": "NMSC",
@@ -56,7 +56,7 @@
                     "bank_reference": "BA1-1234567890"
                 },
                 {
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "debit_credit_mark": "D",
                     "amount": 1500000,
                     "transaction_type": "NMSC",
@@ -64,7 +64,7 @@
                     "bank_reference": "BA2-1234567890"
                 },
                 {
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "debit_credit_mark": "C",
                     "amount": 3000,
                     "transaction_type": "NINT",
@@ -74,14 +74,14 @@
             ],
             "64": {
                 "debit_credit_mark": "C",
-                "value_date": "2024-12-20",
+                "value_date": {"fake": ["date", "%Y-%m-%d"]},
                 "currency": "GBP",
                 "amount": 4500000
             },
             "60": {
                 "M": {
                     "debit_credit_mark": "C",
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "currency": "GBP",
                     "amount": 5000000
                 }
@@ -89,7 +89,7 @@
             "62": {
                 "M": {
                     "debit_credit_mark": "C",
-                    "value_date": "2024-12-20",
+                    "value_date": {"fake": ["date", "%Y-%m-%d"]},
                     "currency": "GBP",
                     "amount": 4773000
                 }

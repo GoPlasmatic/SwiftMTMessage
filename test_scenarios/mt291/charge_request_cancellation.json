@@ -1,17 +1,17 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["CAN", 100000000000]},
         "related_ref": {"cat": ["CHG", 100000000000]},
         "currency": "USD",
         "charge_amount": 10000,
-        "ordering_bic": "DEUTDEFF",
-        "account_bic": "DEUTDEFF",
+        "ordering_bic": {"fake": ["bic8"]},
+        "account_bic": {"fake": ["bic8"]},
         "session_num": "0001",
         "sequence_num": {"cat": ["", 100000]},
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
-        "original_date": "2024-12-30"
+        "uetr": {"fake": ["uuid"]},
+        "original_date": {"fake": ["date", "%Y-%m-%d"]}
     },
     "schema": {
         "basic_header": {

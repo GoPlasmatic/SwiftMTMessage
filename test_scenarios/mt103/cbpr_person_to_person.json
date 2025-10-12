@@ -1,26 +1,26 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
-        "intermediary_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
+        "intermediary_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["P2P", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
         "session_num": "0001",
         "sequence_num": "003457",
         "sender_name": {"fake": ["name"]},
-        "sender_address": "123 MAIN STREET",
-        "sender_city": "NEW YORK",
+        "sender_address": {"substr": [{"fake": ["street_address"]}, 0, 35]},
+        "sender_city": {"substr": [{"fake": ["city_name"]}, 0, 35]},
         "sender_country": "US",
         "beneficiary_name": {"fake": ["name"]},
-        "beneficiary_address": "123 MAIN STREET",
-        "beneficiary_city": "NEW YORK",
+        "beneficiary_address": {"substr": [{"fake": ["street_address"]}, 0, 35]},
+        "beneficiary_city": {"substr": [{"fake": ["city_name"]}, 0, 35]},
         "beneficiary_country": "US",
         "purpose_text": {"fake": ["bs"]},
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

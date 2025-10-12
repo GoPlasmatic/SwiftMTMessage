@@ -1,18 +1,18 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["CBPR", 100000000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "bank_op_code": "CRED",
         "charges": "SHA",
-        "sender_company": "ACME CORPORATION",
-        "receiver_company": "ACME CORPORATION",
+        "sender_company": {"substr": [{"fake": ["company_name"]}, 0, 35]},
+        "receiver_company": {"substr": [{"fake": ["company_name"]}, 0, 35]},
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -45,22 +45,22 @@
                 "amount": {"var": "amount"}
             },
             "50K": {
-                "account": "GB82WEST12345698765432",
+                "account": {"fake": ["iban", "GB"]},
                 "name_and_address": [
                     {"var": "sender_company"},
                     "CORPORATE ENTITY - LEI MISSING",
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "57A": {"bic": {"var": "receiver_bic"}},
             "59": {
-                "account": "DE89370400440532013000",
+                "account": {"fake": ["iban", "DE"]},
                 "name_and_address": [
                     {"var": "receiver_company"},
                     "BUSINESS ENTITY - NO LEI PROVIDED",
-                    "123 MAIN STREET",
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
                     {"cat": ["NEW YORK", ", ", "US"]}
                 ]
             },

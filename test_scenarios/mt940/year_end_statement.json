@@ -1,17 +1,17 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "account_id": {"cat": ["GB33BNBK", 10000000000000]},
         "statement_num": 9000,
         "opening_balance": 10000,
         "closing_balance": 10000,
         "currency": "GBP",
-        "value_date": "2024-12-31",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "entry_date": "1231",
         "session_num": "0003",
         "sequence_num": "009999",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -42,26 +42,26 @@
             "28C": {"statement_number": {"var": "statement_num"}},
             "60F": {
                 "debit_credit_mark": "C",
-                "value_date": "2024-01-01",
+                "value_date": {"fake": ["date", "%Y-%m-%d"]},
                 "currency": {"var": "currency"},
                 "amount": {"var": "opening_balance"}
             },
             "62F": {
                 "debit_credit_mark": "C",
-                "value_date": "2024-12-31",
+                "value_date": {"fake": ["date", "%Y-%m-%d"]},
                 "currency": {"var": "currency"},
                 "amount": {"var": "closing_balance"}
             },
             "64": {
                 "debit_credit_mark": "C",
-                "value_date": "2024-12-31",
+                "value_date": {"fake": ["date", "%Y-%m-%d"]},
                 "currency": {"var": "currency"},
                 "amount": {"var": "closing_balance"}
             },
             "statement_lines": [
                 {
                     "61": {
-                        "value_date": "2024-03-31",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": "0331",
                         "debit_credit_mark": "C",
                         "amount": 250000,
@@ -80,7 +80,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-06-30",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": "0630",
                         "debit_credit_mark": "C",
                         "amount": 175000,
@@ -99,7 +99,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-09-30",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": "0930",
                         "debit_credit_mark": "D",
                         "amount": 50000,
@@ -118,7 +118,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-31",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "C",
                         "amount": 125000,
@@ -137,7 +137,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-31",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "C",
                         "amount": 15000,
@@ -156,7 +156,7 @@
                 },
                 {
                     "61": {
-                        "value_date": "2024-12-31",
+                        "value_date": {"fake": ["date", "%Y-%m-%d"]},
                         "entry_date": {"var": "entry_date"},
                         "debit_credit_mark": "D",
                         "amount": 2500,

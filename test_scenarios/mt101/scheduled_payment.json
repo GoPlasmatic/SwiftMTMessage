@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["PAY", 100000000000]},
-        "future_date": "2024-12-31",
+        "future_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "000456",
         "currency": "USD",
         "standing_order_ref": "SO-2024-Q4-001",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -36,43 +36,58 @@
             "20": {"reference": {"var": "message_ref"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "future_date"}},
-            "50F": {"account": "CORP/12345", "bic": "DEUTDEFF"},
+            "50F": {"account": "CORP/12345", "bic": {"fake": ["bic8"]}},
             "#": [
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "23E": [{"instruction_code": "INTC"}],
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "NL91ABNA0417164300",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "NETHERLANDS"]
+                        "account": {"fake": ["iban", "NL"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {
                         "narrative": ["SCHEDULED PAYMENT", "QUARTERLY RENT PAYMENT", "DUE DATE: END OF MONTH"]
                     },
                     "71A": {"code": "OUR"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "BE68539007547034",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "BELGIUM"]
+                        "account": {"fake": ["iban", "BE"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            "BELGIUM"
+                        ]
                     },
                     "70": {"narrative": ["SCHEDULED PAYMENT", "LEASE PAYMENT", "CONTRACT REF: LS-2024"]},
                     "71A": {"code": "SHA"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "AT611904300234573201",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "AUSTRIA"]
+                        "account": {"fake": ["lei"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            "AUSTRIA"
+                        ]
                     },
                     "70": {"narrative": ["SCHEDULED PAYMENT", "INSURANCE PREMIUM", "POLICY: INS-2024-789"]},
                     "71A": {"code": "SHA"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 }
             ],
             "52A": {"bic": {"var": "receiver_bic"}}

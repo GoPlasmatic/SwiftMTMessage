@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["PAY", 100000000000]},
         "payroll_ref": "PAYROLL-2024-12",
-        "execution_date": "2024-12-25",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "000567",
         "currency": "USD",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -41,72 +41,72 @@
                     "21": {"reference": {"cat": ["EMP-", 10000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "GB82WEST12345698765432",
+                        "account": {"fake": ["iban", "GB"]},
                         "name_and_address": [
                             {"fake": ["name"]},
-                            "123 MAIN STREET",
-                            "NEW YORK",
-                            "USA"
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {"narrative": ["SALARY PAYMENT", "DECEMBER 2024", "EMPLOYEE ID: 10001"]},
                     "71A": {"code": "OUR"},
                     "25A": {"account": "PAYROLL-CHARGES"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"cat": ["EMP-", 10000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "GB82WEST12345698765432",
+                        "account": {"fake": ["iban", "GB"]},
                         "name_and_address": [
                             {"fake": ["name"]},
-                            "123 MAIN STREET",
-                            "NEW YORK",
-                            "USA"
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {"narrative": ["SALARY PAYMENT", "DECEMBER 2024", "EMPLOYEE ID: 10002"]},
                     "71A": {"code": "OUR"},
                     "25A": {"account": "PAYROLL-CHARGES"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"cat": ["EMP-", 10000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "GB82WEST12345698765432",
+                        "account": {"fake": ["iban", "GB"]},
                         "name_and_address": [
                             {"fake": ["name"]},
-                            "123 MAIN STREET",
-                            "NEW YORK",
-                            "USA"
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {"narrative": ["SALARY PAYMENT", "DECEMBER 2024", "EMPLOYEE ID: 10003"]},
                     "71A": {"code": "OUR"},
                     "25A": {"account": "PAYROLL-CHARGES"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"cat": ["BONUS-", 10000]}},
                     "32B": {"currency": {"var": "currency"}, "amount": 10000},
                     "59": {
-                        "account": "GB82WEST12345698765432",
+                        "account": {"fake": ["iban", "GB"]},
                         "name_and_address": [
                             {"fake": ["name"]},
-                            "123 MAIN STREET",
-                            "NEW YORK",
-                            "USA"
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {"narrative": ["YEAR-END BONUS", "DECEMBER 2024", "PERFORMANCE BONUS"]},
                     "71A": {"code": "OUR"},
                     "25A": {"account": "PAYROLL-CHARGES"},
-                    "57A": {"bic": "DEUTDEFF"}
+                    "57A": {"bic": {"fake": ["bic8"]}}
                 }
             ],
-            "50F": {"account": "HR/PAYROLL", "bic": "DEUTDEFF"},
+            "50F": {"account": "HR/PAYROLL", "bic": {"fake": ["bic8"]}},
             "52A": {"bic": {"var": "receiver_bic"}}
         }
     }

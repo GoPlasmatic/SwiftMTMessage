@@ -1,15 +1,15 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["INT", 100000000]},
-        "account_number": "1000000000000000",
+        "account_number": {"cat": ["AUTH", {"fake": ["u64", 10000000, 999999999]}]},
         "currency": "USD",
         "debit_floor": 1000.5,
         "credit_floor": 500.5,
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

@@ -1,17 +1,17 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["FEE", 100000000000]},
         "related_ref": {"cat": ["CHG", 100000000000]},
         "currency": "USD",
         "fee_amount": 10000.0,
-        "value_date": "2024-12-20",
-        "account_number": "1000000000000000",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
+        "account_number": {"cat": ["AUTH", {"fake": ["u64", 10000000, 999999999]}]},
         "fee_type": "WIRE TRANSFER FEE",
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

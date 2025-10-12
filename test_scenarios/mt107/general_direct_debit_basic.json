@@ -1,13 +1,13 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["GDDBT", 10000000000]},
         "currency": "USD",
-        "execution_date": "2024-12-28",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "charges": "SHA",
         "sender_lei": "LEIXG8HWVXGGR1B2V5K893",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
         "num_transactions": 3,
         "session_num": "0001",
         "sequence_num": "000123"
@@ -36,7 +36,11 @@
             "23E": {"instruction_code": "AUTH"},
             "50K": {
                 "account": "CREDITOR-GEN-001",
-                "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", {"cat": ["NEW YORK", ", ", "US"]}]
+                "name_and_address": [
+                    {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                    {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                    {"cat": ["NEW YORK", ", ", "US"]}
+                ]
             },
             "52A": {"bic": {"var": "sender_bic"}},
             "71A": {"code": {"var": "charges"}},

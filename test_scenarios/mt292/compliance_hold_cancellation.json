@@ -1,11 +1,11 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "cancel_ref": {"cat": ["CHOLD", 100000]},
         "original_ref": {"cat": ["CORP", 100000000000]},
         "message_type": "103",
-        "date": "2024-12-22",
+        "date": {"fake": ["date", "%Y-%m-%d"]},
         "session": "2345",
         "sequence": "678901",
         "reason_code": "LEGL",
@@ -13,7 +13,7 @@
         "currency": "EUR",
         "session_num": "0001",
         "sequence_num": "000456",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

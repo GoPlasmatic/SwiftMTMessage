@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["RTNDD", 10000000000]},
         "original_ref": {"cat": ["GDDBT", 10000000000]},
         "currency": "USD",
-        "execution_date": "2024-12-29",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "charges": "SHA",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000",
-        "original_uetr": "550e8400-e29b-41d4-a716-446655440000",
+        "uetr": {"fake": ["uuid"]},
+        "original_uetr": {"fake": ["uuid"]},
         "session_num": "0001",
         "sequence_num": "000123"
     },

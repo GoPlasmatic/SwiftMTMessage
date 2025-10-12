@@ -1,14 +1,14 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "main_ref": {"cat": ["MARG", 10000000]},
         "transaction_ref1": {"cat": ["MC", 10000]},
         "transaction_ref2": {"cat": ["MC", 10000]},
         "currency": "USD",
         "total_amount": 200000,
         "transaction_amount": 100000,
-        "value_date": "2025-01-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "567890"
     },
@@ -40,7 +40,10 @@
                     "21": {"reference": "FUTURES001"},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "transaction_amount"}},
                     "72": {"information": ["/MARG/INITIAL"]},
-                    "53B": {"party_identifier": "MEMBER001", "location": "NEW YORK"}
+                    "53B": {
+                        "party_identifier": "MEMBER001",
+                        "location": {"substr": [{"fake": ["city_name"]}, 0, 35]}
+                    }
                 },
                 {
                     "20": {"reference": {"var": "transaction_ref2"}},
@@ -51,12 +54,12 @@
                 }
             ],
             "58D": {
-                "party_identifier": "CLEARING",
+                "party_identifier": {"fake": ["bic8"]},
                 "name_and_address": [
                     "DERIVATIVES CLEARING HOUSE",
                     "100 WALL STREET",
                     "NEW YORK NY 10005",
-                    "UNITED STATES"
+                    {"fake": ["country_code"]}
                 ]
             }
         }

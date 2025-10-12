@@ -1,19 +1,19 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "msg_id": {"cat": ["INSU", 100000]},
         "total_amount": 2500,
-        "exec_date": "2024-12-27",
+        "exec_date": {"fake": ["date", "%Y-%m-%d"]},
         "currency": "CHF",
         "account_id": {"cat": ["CH9300762", 10000000000]},
         "amount1": 850,
         "amount2": 1200,
         "amount3": 450,
-        "lei_insurance": "INSURERLEICODE123456",
+        "lei_insurance": {"fake": ["lei"]},
         "session_num": "0001",
         "sequence_num": "004567",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -47,7 +47,7 @@
                             "SWISS HEALTH INSURANCE AG",
                             "PREMIUM COLLECTION DEPT",
                             "3000 BERN",
-                            "SWITZERLAND"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -67,11 +67,16 @@
                         ]
                     },
                     "50K": {
-                        "account": "CH1234567890123456789",
-                        "name_and_address": ["MUELLER, HANS", "BAHNHOFSTRASSE 123", "8001 ZURICH", "SWITZERLAND"]
+                        "account": {"fake": ["iban", "CH"]},
+                        "name_and_address": [
+                            "MUELLER, HANS",
+                            "BAHNHOFSTRASSE 123",
+                            "8001 ZURICH",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
-                    "57A": {"bic": "UBSWCHZHXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 },
                 {
                     "21": {"reference": "AUTO002"},
@@ -82,7 +87,7 @@
                             "HELVETIA INSURANCE GROUP",
                             "AUTO INSURANCE DIVISION",
                             "9001 ST GALLEN",
-                            "SWITZERLAND"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -102,11 +107,16 @@
                         ]
                     },
                     "50K": {
-                        "account": "CH9876543210987654321",
-                        "name_and_address": ["SCHMID, ANNA", "HAUPTSTRASSE 45", "4051 BASEL", "SWITZERLAND"]
+                        "account": {"fake": ["iban", "CH"]},
+                        "name_and_address": [
+                            "SCHMID, ANNA",
+                            "HAUPTSTRASSE 45",
+                            "4051 BASEL",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
-                    "57A": {"bic": "CRESCHZHXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 },
                 {
                     "21": {"reference": "HOME003"},
@@ -117,7 +127,7 @@
                             "ZURICH INSURANCE COMPANY LTD",
                             "HOME INSURANCE DEPT",
                             "8002 ZURICH",
-                            "SWITZERLAND"
+                            {"fake": ["country_code"]}
                         ]
                     },
                     "70": {
@@ -137,11 +147,16 @@
                         ]
                     },
                     "50K": {
-                        "account": "CH1122334455667788990",
-                        "name_and_address": ["WEBER, PETER", "SEESTRASSE 78", "6005 LUCERNE", "SWITZERLAND"]
+                        "account": {"fake": ["iban", "CH"]},
+                        "name_and_address": [
+                            "WEBER, PETER",
+                            "SEESTRASSE 78",
+                            "6005 LUCERNE",
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "52A": {"bic": {"var": "sender_bic"}},
-                    "57A": {"bic": "ZKBKCHZZXXX"}
+                    "57A": {"bic": {"fake": ["bic11"]}}
                 }
             ],
             "32B": {"currency": {"var": "currency"}, "amount": {"var": "total_amount"}}

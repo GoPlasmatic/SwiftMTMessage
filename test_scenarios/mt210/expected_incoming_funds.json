@@ -1,10 +1,10 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["NOTICE", 100000]},
         "account_id": {"cat": ["GB82WEST", 10000000000000]},
-        "value_date": "2024-12-20",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "payment1_ref": {"cat": ["PAY", 1000000000000]},
         "payment1_currency": "USD",
         "payment1_amount": 10000,
@@ -14,11 +14,11 @@
         "payment3_ref": {"cat": ["LIQ", 1000000000000]},
         "payment3_currency": "USD",
         "payment3_amount": 10000,
-        "ordering_bic": "DEUTDEFF",
-        "intermediary_bic": "DEUTDEFF",
+        "ordering_bic": {"fake": ["bic8"]},
+        "intermediary_bic": {"fake": ["bic8"]},
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -59,7 +59,12 @@
                     "52A": {"bic": {"var": "ordering_bic"}},
                     "56D": {
                         "party_identifier": "CLRHOUSE001",
-                        "name_and_address": ["CLEARING HOUSE", "SETTLEMENT SYSTEM", "NEW YORK", "USA"]
+                        "name_and_address": [
+                            "CLEARING HOUSE",
+                            "SETTLEMENT SYSTEM",
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     }
                 },
                 {
@@ -67,7 +72,12 @@
                     "32B": {"currency": {"var": "payment3_currency"}, "amount": {"var": "payment3_amount"}},
                     "52D": {
                         "party_identifier": "CB12345",
-                        "name_and_address": ["CENTRAL BANK", "LIQUIDITY OPERATIONS", "MONETARY DEPARTMENT", "USA"]
+                        "name_and_address": [
+                            "CENTRAL BANK",
+                            "LIQUIDITY OPERATIONS",
+                            "MONETARY DEPARTMENT",
+                            {"fake": ["country_code"]}
+                        ]
                     }
                 }
             ]

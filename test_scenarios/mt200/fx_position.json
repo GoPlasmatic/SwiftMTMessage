@@ -1,11 +1,11 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["FX", 100000000]},
         "currency": "USD",
         "amount": 10000,
-        "value_date": "2025-01-15",
+        "value_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "345678"
     },
@@ -34,7 +34,10 @@
                 "amount": {"var": "amount"}
             },
             "72": {"information": ["/INS/FX POSITION MGT", "/RATE/SPOT"]},
-            "57B": {"party_identifier": "FXTRADING", "location": "LONDON"}
+            "57B": {
+                "party_identifier": "FXTRADING",
+                "location": {"substr": [{"fake": ["city_name"]}, 0, 35]}
+            }
         }
     }
 }

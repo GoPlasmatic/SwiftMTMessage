@@ -1,19 +1,19 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "transaction_ref": {"cat": ["RATE", 100000]},
         "account_1": {"cat": ["ACC", 1000000000]},
-        "effective_date_1": "2025-01-01",
+        "effective_date_1": {"fake": ["date", "%Y-%m-%d"]},
         "old_rate_1": 10000,
         "new_rate_1": 10000,
         "account_2": {"cat": ["ACC", 1000000000]},
-        "effective_date_2": "2025-01-15",
+        "effective_date_2": {"fake": ["date", "%Y-%m-%d"]},
         "old_rate_2": 10000,
         "new_rate_2": 10000,
         "session_num": "0001",
         "sequence_num": "000123",
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {

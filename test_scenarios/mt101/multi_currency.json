@@ -1,16 +1,16 @@
 {
     "variables": {
-        "sender_bic": "DEUTDEFF",
-        "receiver_bic": "DEUTDEFF",
+        "sender_bic": {"fake": ["bic8"]},
+        "receiver_bic": {"fake": ["bic8"]},
         "message_ref": {"cat": ["PAY", 100000000000]},
-        "execution_date": "2024-12-20",
+        "execution_date": {"fake": ["date", "%Y-%m-%d"]},
         "session_num": "0001",
         "sequence_num": "000345",
-        "fx_deal_1": "FX2024120600001",
-        "fx_deal_2": "FX2024120600002",
+        "fx_deal_1": {"cat": ["FX", {"fake": ["u64", 10000000, 99999999]}]},
+        "fx_deal_2": {"cat": ["FX", {"fake": ["u64", 10000000, 99999999]}]},
         "exchange_rate_1": 10000,
         "exchange_rate_2": 10000,
-        "uetr": "550e8400-e29b-41d4-a716-446655440000"
+        "uetr": {"fake": ["uuid"]}
     },
     "schema": {
         "basic_header": {
@@ -44,11 +44,16 @@
                     "21F": {"reference": {"var": "fx_deal_1"}},
                     "23E": [{"instruction_code": "EQUI"}],
                     "32B": {"currency": "USD", "amount": 10000},
-                    "56A": {"bic": "DEUTDEFF"},
-                    "57A": {"bic": "DEUTDEFF"},
+                    "56A": {"bic": {"fake": ["bic8"]}},
+                    "57A": {"bic": {"fake": ["bic8"]}},
                     "59": {
-                        "account": "DE89370400440532013000",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "GERMANY"]
+                        "account": {"fake": ["iban", "DE"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["FX CONVERSION PAYMENT", "EUR TO USD SETTLEMENT"]},
                     "33B": {"currency": "EUR", "amount": 10000},
@@ -59,10 +64,15 @@
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "21F": {"reference": {"var": "fx_deal_2"}},
                     "32B": {"currency": "GBP", "amount": 10000},
-                    "57A": {"bic": "DEUTDEFF"},
+                    "57A": {"bic": {"fake": ["bic8"]}},
                     "59": {
-                        "account": "GB82WEST12345698765432",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "UNITED KINGDOM"]
+                        "account": {"fake": ["iban", "GB"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["FX CONVERSION PAYMENT", "USD TO GBP SETTLEMENT"]},
                     "33B": {"currency": "USD", "amount": 10000},
@@ -72,16 +82,21 @@
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},
                     "32B": {"currency": "JPY", "amount": 10000},
-                    "57A": {"bic": "DEUTDEFF"},
+                    "57A": {"bic": {"fake": ["bic8"]}},
                     "59": {
-                        "account": "JP1234567890123456",
-                        "name_and_address": ["ACME CORPORATION", "123 MAIN STREET", "NEW YORK", "JAPAN"]
+                        "account": {"fake": ["iban", "JP"]},
+                        "name_and_address": [
+                            {"substr": [{"fake": ["company_name"]}, 0, 35]},
+                            {"substr": [{"fake": ["street_address"]}, 0, 35]},
+                            {"substr": [{"fake": ["city_name"]}, 0, 35]},
+                            {"fake": ["country_code"]}
+                        ]
                     },
                     "70": {"narrative": ["JPY DIRECT PAYMENT", "NO CONVERSION REQUIRED"]},
                     "71A": {"code": "BEN"}
                 }
             ],
-            "50F": {"account": "TREASURY", "bic": "DEUTDEFF"},
+            "50F": {"account": {"fake": ["alphanumeric", 10, 16]}, "bic": {"fake": ["bic8"]}},
             "52A": {"bic": {"var": "receiver_bic"}}
         }
     }

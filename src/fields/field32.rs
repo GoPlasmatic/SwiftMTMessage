@@ -483,10 +483,7 @@ mod tests {
         );
         assert_eq!(field.currency, "EUR");
         assert_eq!(field.amount, 1250.50);
-        assert_eq!(
-            field.to_swift_string(),
-            ":32A:240719EUR1250,50"
-        );
+        assert_eq!(field.to_swift_string(), ":32A:240719EUR1250,50");
 
         let field = Field32A::parse("240720USD10000,00").unwrap();
         assert_eq!(field.currency, "USD");

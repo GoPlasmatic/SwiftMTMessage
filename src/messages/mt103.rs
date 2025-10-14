@@ -149,8 +149,7 @@ impl MT103 {
         append_optional_field(&mut result, &self.field_77b);
         append_optional_field(&mut result, &self.field_77t);
 
-        result.push('-');
-        result
+        finalize_mt_string(result, false)
     }
 
     /// Check if this MT103 message contains reject codes

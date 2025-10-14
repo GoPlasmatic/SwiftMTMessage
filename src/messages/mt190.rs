@@ -91,8 +91,7 @@ impl MT190 {
         append_field(&mut result, &self.field_71b);
         append_optional_field(&mut result, &self.field_72);
 
-        result.push('-');
-        result
+        finalize_mt_string(result, false)
     }
 
     // ========================================================================

@@ -90,8 +90,7 @@ impl MT112 {
         append_optional_field(&mut result, &self.field_59);
         append_field(&mut result, &self.field_76);
 
-        result.push('-');
-        result
+        finalize_mt_string(result, false)
     }
 
     // ========================================================================

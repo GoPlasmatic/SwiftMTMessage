@@ -85,8 +85,7 @@ impl MT200 {
         append_field(&mut result, &self.field_57);
         append_optional_field(&mut result, &self.field_72);
 
-        result.push('-');
-        result
+        finalize_mt_string(result, false)
     }
 
     // ========================================================================

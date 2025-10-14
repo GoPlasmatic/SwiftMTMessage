@@ -485,7 +485,7 @@ mod tests {
         assert_eq!(field.amount, 1250.50);
         assert_eq!(
             field.to_swift_string(),
-            ":32A:240719EUR1250.5".replace('.', ",")
+            ":32A:240719EUR1250,50"
         );
 
         let field = Field32A::parse("240720USD10000,00").unwrap();
@@ -521,7 +521,7 @@ mod tests {
         let field = Field32B::parse("EUR5000,00").unwrap();
         assert_eq!(field.currency, "EUR");
         assert_eq!(field.amount, 5000.0);
-        assert_eq!(field.to_swift_string(), ":32B:EUR5000");
+        assert_eq!(field.to_swift_string(), ":32B:EUR5000,00");
 
         let field = Field32B::parse("USD100").unwrap();
         assert_eq!(field.currency, "USD");
@@ -621,7 +621,7 @@ mod tests {
             currency: "USD".to_string(),
             amount: 1000.00,
         });
-        assert_eq!(field_b.to_swift_string(), ":32B:USD1000");
+        assert_eq!(field_b.to_swift_string(), ":32B:USD1000,00");
     }
 
     #[test]
@@ -662,7 +662,7 @@ mod tests {
             currency: "USD".to_string(),
             amount: 750.50,
         });
-        assert_eq!(debit_field.to_swift_string(), ":32D:240720USD750,5");
+        assert_eq!(debit_field.to_swift_string(), ":32D:240720USD750,50");
     }
 
     #[test]
@@ -709,7 +709,7 @@ mod tests {
             currency: "USD".to_string(),
             amount: 1000.50,
         };
-        assert_eq!(field_usd.to_swift_string(), ":32A:240719USD1000,5");
+        assert_eq!(field_usd.to_swift_string(), ":32A:240719USD1000,50");
 
         let field_jpy = Field32A {
             value_date: NaiveDate::from_ymd_opt(2024, 7, 19).unwrap(),

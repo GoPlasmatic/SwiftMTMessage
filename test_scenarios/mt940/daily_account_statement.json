@@ -58,7 +58,7 @@
                 "currency": {"var": "currency"},
                 "amount": {"var": "closing_balance"}
             },
-            "statement_lines": [
+            "#": [
                 {
                     "61": {
                         "value_date": {"fake": ["date", "%Y-%m-%d"]},

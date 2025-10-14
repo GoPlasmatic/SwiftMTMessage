@@ -12,19 +12,63 @@ use std::sync::Arc;
 use tracing::{debug, error, instrument};
 
 /// Helper function to clean null values from fields before serialization
+/// This function recursively processes:
+/// - Fields object: removes fields with null nested values
+/// - Arrays: recursively cleans each array element
+/// - Objects within arrays: removes null-valued keys
 fn clean_null_fields(data: &Value) -> Value {
-    let mut cleaned = data.clone();
-    if let Some(fields) = cleaned.get_mut("fields").and_then(|f| f.as_object_mut()) {
-        fields.retain(|_key, value| {
-            if let Some(obj) = value.as_object() {
-                // Remove fields where any nested values are null
-                !obj.values().any(|v| v.is_null())
-            } else {
-                true // Keep non-object values
+    match data {
+        Value::Object(obj) => {
+            let mut cleaned = serde_json::Map::new();
+
+            for (key, value) in obj.iter() {
+                match value {
+                    Value::Null => {
+                        // Skip null values - don't include them in the output
+                        continue;
+                    }
+                    Value::Object(_) => {
+                        // Recursively clean nested objects
+                        let cleaned_inner = clean_null_fields(value);
+                        // Only include non-null objects that have remaining content
+                        if !cleaned_inner.is_null()
+                            && !cleaned_inner.as_object().is_some_and(|o| o.is_empty())
+                        {
+                            cleaned.insert(key.clone(), cleaned_inner);
+                        }
+                    }
+                    Value::Array(arr) => {
+                        // Clean array elements
+                        let cleaned_array: Vec<Value> = arr
+                            .iter()
+                            .map(clean_null_fields)
+                            .filter(|item| !item.is_null())
+                            .collect();
+                        if !cleaned_array.is_empty() {
+                            cleaned.insert(key.clone(), Value::Array(cleaned_array));
+                        }
+                    }
+                    _ => {
+                        // Keep all other types (String, Number, Boolean)
+                        cleaned.insert(key.clone(), value.clone());
+                    }
+                }
             }
-        });
+
+            Value::Object(cleaned)
+        }
+        Value::Array(arr) => {
+            // Recursively clean each element in the array
+            let cleaned_array: Vec<Value> = arr
+                .iter()
+                .map(clean_null_fields)
+                .filter(|item| !item.is_null())
+                .collect();
+            Value::Array(cleaned_array)
+        }
+        // For all other types (String, Number, Boolean, Null), return as-is
+        other => other.clone(),
     }
-    cleaned
 }
 
 /// Parse JSON into a SwiftMessage and convert to MT format

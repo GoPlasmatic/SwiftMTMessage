@@ -56,7 +56,7 @@
                 "offset": "0000"
             },
             "90D": {"number": 2, "currency": {"var": "currency"}, "amount": 250050},
-            "statement_lines": [
+            "#": [
                 {
                     "61": {
                         "value_date": {"fake": ["date", "%Y-%m-%d"]},

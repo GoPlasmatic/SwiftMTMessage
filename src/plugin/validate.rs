@@ -115,10 +115,14 @@ impl AsyncFunctionHandler for Validate {
 impl Validate {
     fn validate_mt_message(&self, mt_content: &str) -> Result<Value> {
         let mut errors = Vec::new();
+        let mut message_type: Option<String> = None;
 
         // Try to parse the message
         match SwiftParser::parse_auto(mt_content) {
             Ok(parsed_message) => {
+                // Extract message type from parsed message
+                message_type = Some(parsed_message.message_type().to_string());
+
                 // Use the new network validation rules from SwiftMessageBody trait
                 let validation_errors = self.validate_network_rules(&parsed_message);
 
@@ -170,11 +174,21 @@ impl Validate {
 
         let is_valid = errors.is_empty();
 
-        Ok(json!({
+        let mut result = json!({
             "valid": is_valid,
             "errors": errors,
             "timestamp": chrono::Utc::now().to_rfc3339(),
-        }))
+        });
+
+        // Add message_type if detected
+        if let Some(msg_type) = message_type {
+            result
+                .as_object_mut()
+                .unwrap()
+                .insert("message_type".to_string(), json!(msg_type));
+        }
+
+        Ok(result)
     }
 
     /// Validate network rules on parsed message using the SwiftMessageBody trait

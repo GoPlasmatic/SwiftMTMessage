@@ -39,7 +39,7 @@
             "21": {"reference": "INTERIM"},
             "25": {"authorisation": {"var": "account_id"}},
             "28C": {"statement_number": {"var": "statement_num"}, "sequence_number": 3},
-            "statement_lines": [
+            "#": [
                 {
                     "61": {
                         "value_date": {"fake": ["date", "%Y-%m-%d"]},

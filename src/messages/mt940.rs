@@ -33,7 +33,7 @@ pub struct MT940 {
     pub field_60f: Field60F,
 
     /// Statement lines (1-500 occurrences)
-    #[serde(rename = "statement_lines")]
+    #[serde(rename = "#")]
     pub statement_lines: Vec<MT940StatementLine>,
 
     /// Closing Balance (Field 62F)

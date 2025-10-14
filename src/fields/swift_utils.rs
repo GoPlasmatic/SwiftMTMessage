@@ -395,9 +395,9 @@ pub fn parse_amount_with_currency(input: &str, currency: &str) -> Result<f64, Pa
 ///
 /// This function ensures SWIFT-compliant amount formatting:
 /// - Uses comma (,) as decimal separator instead of period (.)
-/// - Maintains proper decimal precision (typically 2 decimal places)
+/// - Maintains proper decimal precision as specified
+/// - Keeps all decimal places including trailing zeros (per SWIFT spec)
 /// - Ensures at least one digit in the integer part
-/// - Removes trailing zeros after decimal for cleaner output
 ///
 /// # Arguments
 /// * `amount` - The amount to format
@@ -411,25 +411,12 @@ pub fn parse_amount_with_currency(input: &str, currency: &str) -> Result<f64, Pa
 /// use swift_mt_message::fields::swift_utils::format_swift_amount;
 ///
 /// assert_eq!(format_swift_amount(1234.56, 2), "1234,56");
-/// assert_eq!(format_swift_amount(1000.00, 2), "1000");
-/// assert_eq!(format_swift_amount(1000.50, 2), "1000,5");
+/// assert_eq!(format_swift_amount(1000.00, 2), "1000,00");
+/// assert_eq!(format_swift_amount(1000.50, 2), "1000,50");
 /// ```
 pub fn format_swift_amount(amount: f64, decimals: usize) -> String {
     let formatted = format!("{:.width$}", amount, width = decimals);
-    let with_comma = formatted.replace('.', ",");
-
-    // Remove trailing zeros after comma for cleaner output
-    // e.g., "1000,00" -> "1000", "1000,50" -> "1000,5"
-    if with_comma.contains(',') {
-        let trimmed = with_comma.trim_end_matches('0');
-        if trimmed.ends_with(',') {
-            trimmed.trim_end_matches(',').to_string()
-        } else {
-            trimmed.to_string()
-        }
-    } else {
-        with_comma
-    }
+    formatted.replace('.', ",")
 }
 
 /// Format amount for SWIFT output with currency-specific decimal precision
@@ -702,19 +689,19 @@ mod tests {
     fn test_format_swift_amount() {
         // Test standard 2 decimal formatting
         assert_eq!(format_swift_amount(1234.56, 2), "1234,56");
-        assert_eq!(format_swift_amount(1000.00, 2), "1000");
-        assert_eq!(format_swift_amount(1000.50, 2), "1000,5");
+        assert_eq!(format_swift_amount(1000.00, 2), "1000,00");
+        assert_eq!(format_swift_amount(1000.50, 2), "1000,50");
 
-        // Test trailing zero removal
-        assert_eq!(format_swift_amount(5000.00, 2), "5000");
-        assert_eq!(format_swift_amount(2500.00, 2), "2500");
+        // Test with trailing zeros (per SWIFT spec, keep all decimals)
+        assert_eq!(format_swift_amount(5000.00, 2), "5000,00");
+        assert_eq!(format_swift_amount(2500.00, 2), "2500,00");
 
         // Test with single decimal
         assert_eq!(format_swift_amount(250.75, 2), "250,75");
         assert_eq!(format_swift_amount(99.99, 2), "99,99");
 
         // Test large amounts
-        assert_eq!(format_swift_amount(1000000.0, 2), "1000000");
+        assert_eq!(format_swift_amount(1000000.0, 2), "1000000,00");
         assert_eq!(format_swift_amount(1234567.89, 2), "1234567,89");
 
         // Test zero decimals (for currencies like JPY)
@@ -868,8 +855,8 @@ mod tests {
     fn test_format_swift_amount_for_currency() {
         // USD (2 decimals)
         assert_eq!(format_swift_amount_for_currency(1234.56, "USD"), "1234,56");
-        assert_eq!(format_swift_amount_for_currency(1000.00, "USD"), "1000");
-        assert_eq!(format_swift_amount_for_currency(1000.50, "USD"), "1000,5");
+        assert_eq!(format_swift_amount_for_currency(1000.00, "USD"), "1000,00");
+        assert_eq!(format_swift_amount_for_currency(1000.50, "USD"), "1000,50");
 
         // JPY (0 decimals)
         assert_eq!(
@@ -880,11 +867,11 @@ mod tests {
 
         // BHD (3 decimals)
         assert_eq!(format_swift_amount_for_currency(123.456, "BHD"), "123,456");
-        assert_eq!(format_swift_amount_for_currency(100.5, "BHD"), "100,5");
-        assert_eq!(format_swift_amount_for_currency(100.0, "BHD"), "100");
+        assert_eq!(format_swift_amount_for_currency(100.5, "BHD"), "100,500");
+        assert_eq!(format_swift_amount_for_currency(100.0, "BHD"), "100,000");
 
         // EUR (2 decimals)
-        assert_eq!(format_swift_amount_for_currency(5000.00, "EUR"), "5000");
+        assert_eq!(format_swift_amount_for_currency(5000.00, "EUR"), "5000,00");
         assert_eq!(format_swift_amount_for_currency(250.75, "EUR"), "250,75");
     }
 }

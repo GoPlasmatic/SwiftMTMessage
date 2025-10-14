@@ -383,8 +383,7 @@ impl MT104 {
         append_optional_field(&mut result, &self.field_71g);
         append_optional_field(&mut result, &self.field_53);
 
-        result.push('-');
-        result
+        finalize_mt_string(result, false)
     }
 
     // ========================================================================

@@ -83,7 +83,7 @@ mod tests {
         let field = Field33B::parse("USD1250,00").unwrap();
         assert_eq!(field.currency, "USD");
         assert_eq!(field.amount, 1250.00);
-        assert_eq!(field.to_swift_string(), ":33B:USD1250");
+        assert_eq!(field.to_swift_string(), ":33B:USD1250,00");
 
         let field = Field33B::parse("EUR950,50").unwrap();
         assert_eq!(field.currency, "EUR");

@@ -110,8 +110,7 @@ impl MT920 {
             append_optional_field(&mut result, &seq.floor_limit_credit);
         }
 
-        result.push('-');
-        result
+        finalize_mt_string(result, false)
     }
 
     // ========================================================================

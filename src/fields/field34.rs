@@ -104,7 +104,7 @@ mod tests {
         assert_eq!(field.currency, "USD");
         assert_eq!(field.indicator, None);
         assert_eq!(field.amount, 5000.00);
-        assert_eq!(field.to_swift_string(), ":34F:USD5000");
+        assert_eq!(field.to_swift_string(), ":34F:USD5000,00");
 
         // With D indicator
         let field = Field34F::parse("USDD2500,00").unwrap();

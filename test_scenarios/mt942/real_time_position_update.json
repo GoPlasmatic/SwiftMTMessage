@@ -50,7 +50,7 @@
                 "offset_sign": "+",
                 "offset": "0100"
             },
-            "statement_lines": [
+            "#": [
                 {
                     "61": {
                         "value_date": {"fake": ["date", "%Y-%m-%d"]},

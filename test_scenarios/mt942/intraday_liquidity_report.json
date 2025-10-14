@@ -58,7 +58,7 @@
             },
             "90D": {"number": 2, "currency": {"var": "currency"}, "amount": 100000},
             "90C": {"number": 1, "currency": {"var": "currency"}, "amount": {"var": "amount3"}},
-            "statement_lines": [
+            "#": [
                 {
                     "61": {
                         "value_date": {"fake": ["date", "%Y-%m-%d"]},

@@ -106,8 +106,7 @@ impl MT910 {
         append_optional_field(&mut result, &self.field_56);
         append_optional_field(&mut result, &self.field_72);
 
-        result.push('-');
-        result
+        finalize_mt_string(result, false)
     }
 
     // ========================================================================

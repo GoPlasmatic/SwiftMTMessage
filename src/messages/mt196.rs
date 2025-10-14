@@ -78,8 +78,7 @@ impl MT196 {
         append_optional_field(&mut result, &self.field_11);
         append_optional_field(&mut result, &self.field_79);
 
-        result.push('-');
-        result
+        finalize_mt_string(result, false)
     }
 
     // ========================================================================

@@ -301,8 +301,7 @@ impl MT101 {
             append_optional_field(&mut result, &transaction.field_36);
         }
 
-        result.push('-');
-        result
+        finalize_mt_string(result, false)
     }
 
     // ========================================================================

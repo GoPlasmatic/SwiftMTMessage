@@ -40,7 +40,7 @@ pub struct MT942 {
     pub field_13d: Field13D,
 
     /// Statement lines
-    #[serde(rename = "statement_lines")]
+    #[serde(rename = "#")]
     pub statement_lines: Vec<MT942StatementLine>,
 
     /// Number and Sum of Debits (Field 90D)

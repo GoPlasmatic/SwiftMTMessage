@@ -39,4 +39,4 @@ datafake-rs = "0.2"
 [dev-dependencies]
 pretty_assertions = "1.4"
 tempfile = "3.23"
-tokio = { version = "1.47", features = ["rt", "macros", "test-util"] }
+tokio = { version = "1.48", features = ["rt", "macros", "test-util"] }

@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Statement requests, account information inquiries
 /// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT920 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
@@ -22,6 +23,7 @@ pub struct MT920 {
 
 /// Repetitive sequence for MT920 request message
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT920Sequence {
     /// Message Type (Field 12)
     #[serde(rename = "12")]

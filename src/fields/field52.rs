@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Identifies the ordering customer's bank when different from message sender.
 /// Format: [/1!a][/34x] + BIC (8 or 11 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field52A {
     /// Optional party identifier (max 34 chars, clearing/account ref)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -72,6 +73,7 @@ impl SwiftField for Field52A {
 /// Domestic routing using party identifier and location.
 /// Format: [/1!a][/34x] + [35x]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field52B {
     /// Optional party identifier (max 34 chars)
     pub party_identifier: Option<String>,
@@ -157,6 +159,7 @@ impl SwiftField for Field52B {
 /// Simplified institutional reference with party identifier only.
 /// Format: /34x (mandatory slash prefix)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field52C {
     /// Party identifier (1-34 chars, domestic/clearing codes)
     pub party_identifier: String,
@@ -198,6 +201,7 @@ impl SwiftField for Field52C {
 /// Detailed institutional identification with full name and address.
 /// Format: [/1!a][/34x] + 4*35x
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field52D {
     /// Optional party identifier (max 34 chars)
     pub party_identifier: Option<String>,
@@ -273,6 +277,7 @@ impl SwiftField for Field52D {
 
 /// Enum for Field52 Account Servicing Institution variants (A, C)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field52AccountServicingInstitution {
     #[serde(rename = "52A")]
     A(Field52A),
@@ -335,6 +340,7 @@ impl SwiftField for Field52AccountServicingInstitution {
 
 /// Enum for Field52 Ordering Institution variants (A, D)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field52OrderingInstitution {
     #[serde(rename = "52A")]
     A(Field52A),
@@ -404,6 +410,7 @@ impl SwiftField for Field52OrderingInstitution {
 
 /// Enum for Field52 Creditor Bank variants (A, C, D)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field52CreditorBank {
     #[serde(rename = "52A")]
     A(Field52A),
@@ -480,6 +487,7 @@ impl SwiftField for Field52CreditorBank {
 
 /// Enum for Field52 Drawer Bank variants (A, B, D)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field52DrawerBank {
     #[serde(rename = "52A")]
     A(Field52A),

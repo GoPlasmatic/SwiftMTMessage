@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Specifies the receiver's correspondent bank for fund availability.
 /// Format: [/1!a][/34x] + BIC (8 or 11 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field54A {
     /// Optional party identifier (max 34 chars, vostro account ref)
     pub party_identifier: Option<String>,
@@ -71,6 +72,7 @@ impl SwiftField for Field54A {
 /// Domestic receiver correspondent routing with party identifier and location.
 /// Format: [/1!a][/34x] + [35x]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field54B {
     /// Optional party identifier (max 34 chars, vostro account)
     pub party_identifier: Option<String>,
@@ -133,6 +135,7 @@ impl SwiftField for Field54B {
 /// Detailed receiver correspondent identification with name and address.
 /// Format: [/1!a][/34x] + 4*35x
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field54D {
     /// Optional party identifier (max 34 chars, vostro account)
     pub party_identifier: Option<String>,
@@ -189,6 +192,7 @@ impl SwiftField for Field54D {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field54ReceiverCorrespondent {
     #[serde(rename = "54A")]
     A(Field54A),

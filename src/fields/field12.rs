@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 /// :12:103
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field12 {
     /// Sub-message type code (3 digits, numeric only)
     pub type_code: String,

@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 /// /INST/CREDIT ACCOUNT IMMEDIATELY
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field72 {
     /// Sender to receiver information (max 6 lines, 35 chars each)
     pub information: Vec<String>,

@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 /// :28:12345/01
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field28 {
     /// Statement number (up to 5 digits)
     pub statement_number: u32,
@@ -86,6 +87,7 @@ impl SwiftField for Field28 {
 /// :28C:98765/00123
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field28C {
     /// Statement number (up to 5 digits)
     pub statement_number: u32,
@@ -159,6 +161,7 @@ impl SwiftField for Field28C {
 /// :28D:001/010
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field28D {
     /// Message index (current position, up to 5 digits)
     pub index: u32,

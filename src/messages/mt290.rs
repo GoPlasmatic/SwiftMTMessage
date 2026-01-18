@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Interbank charge notifications, interest advice
 /// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT290 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]

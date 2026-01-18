@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Structured beneficiary identification with numbered lines.
 /// Format: [/34x]4*(1!n/33x)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field59F {
     /// Optional party ID (max 34 chars)
     pub party_identifier: Option<String>,
@@ -21,6 +22,7 @@ pub struct Field59F {
 /// BIC-based beneficiary identification (STP-preferred).
 /// Format: [/34x] + BIC (8 or 11 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field59A {
     /// Optional account (max 34 chars, IBAN or domestic)
     pub account: Option<String>,
@@ -33,6 +35,7 @@ pub struct Field59A {
 /// Most common variant. Flexible beneficiary identification.
 /// Format: [/34x]4*35x
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field59NoOption {
     /// Optional account (max 34 chars)
     pub account: Option<String>,
@@ -56,6 +59,7 @@ pub struct Field59NoOption {
 /// 456 RESIDENTIAL AVENUE
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field59 {
     #[serde(rename = "59A")]
     A(Field59A),
@@ -409,6 +413,7 @@ impl SwiftField for Field59Debtor {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field59Debtor {
     #[serde(rename = "59A")]
     A(Field59A),

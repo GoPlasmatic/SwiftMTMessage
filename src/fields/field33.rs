@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 /// :33B:JPY125000
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field33B {
     /// ISO 4217 currency code (e.g., USD, EUR, GBP)
     pub currency: String,

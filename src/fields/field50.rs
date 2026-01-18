@@ -29,6 +29,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Free-format name and address (4*35x).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field50NoOption {
     /// Name/address (max 4 lines, 35 chars each)
     pub name_and_address: Vec<String>,
@@ -81,6 +82,7 @@ impl SwiftField for Field50NoOption {
 /// Structured format with numbered lines (1/text, 2/text, etc.).
 /// Format: [/34x]4*(1!n/33x)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field50A {
     /// Optional account/party ID (max 34 chars)
     pub party_identifier: Option<String>,
@@ -194,6 +196,7 @@ impl SwiftField for Field50A {
 /// Enhanced identification with BIC.
 /// Format: account + [/party_id] + [name/address] + BIC
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field50F {
     /// Account (max 35 chars)
     pub account: String,
@@ -297,6 +300,7 @@ impl SwiftField for Field50F {
 /// Most common variant. Free-format name and address.
 /// Format: [/34x]4*35x
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field50K {
     /// Optional account (max 34 chars)
     pub account: Option<String>,
@@ -390,6 +394,7 @@ impl SwiftField for Field50K {
 ///
 /// Institution-based identification.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field50C {
     /// BIC code (8 or 11 chars)
     pub bic: String,
@@ -413,6 +418,7 @@ impl SwiftField for Field50C {
 ///
 /// Single-line party identifier (35x).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field50L {
     /// Party ID (max 35 chars)
     pub party_identifier: String,
@@ -453,6 +459,7 @@ impl SwiftField for Field50L {
 ///
 /// Simple account and BIC identification.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field50G {
     /// Account (max 34 chars)
     pub account: String,
@@ -506,6 +513,7 @@ impl SwiftField for Field50G {
 ///
 /// Account with free-format name/address.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field50H {
     /// Account (max 34 chars)
     pub account: String,
@@ -577,6 +585,7 @@ impl SwiftField for Field50H {
 
 /// Enum for Field50 Instructing Party variants (C, L)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field50InstructingParty {
     #[serde(rename = "50C")]
     C(Field50C),
@@ -644,6 +653,7 @@ impl SwiftField for Field50InstructingParty {
 
 /// Enum for Field50 Ordering Customer variants (F, G, H)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field50OrderingCustomerFGH {
     #[serde(rename = "50F")]
     F(Field50F),
@@ -730,6 +740,7 @@ impl SwiftField for Field50OrderingCustomerFGH {
 
 /// Enum for Field50 Ordering Customer variants (A, F, K)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field50OrderingCustomerAFK {
     #[serde(rename = "50A")]
     A(Field50A),
@@ -830,6 +841,7 @@ impl SwiftField for Field50OrderingCustomerAFK {
 
 /// Enum for Field50 Ordering Customer variants (No Option, C, F)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field50OrderingCustomerNCF {
     #[serde(rename = "50")]
     NoOption(Field50NoOption),
@@ -912,6 +924,7 @@ impl SwiftField for Field50OrderingCustomerNCF {
 
 /// Enum for Field50 Creditor variants (A, K)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field50Creditor {
     #[serde(rename = "50A")]
     A(Field50A),

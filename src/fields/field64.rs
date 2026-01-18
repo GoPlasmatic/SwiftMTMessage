@@ -15,11 +15,13 @@ use serde::{Deserialize, Serialize};
 /// :64:C231225USD1234,56
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field64 {
     /// Debit/Credit mark (D or C)
     pub debit_credit_mark: String,
 
     /// Value date (YYMMDD)
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub value_date: NaiveDate,
 
     /// ISO 4217 currency code

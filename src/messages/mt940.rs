@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Daily statements, account reconciliation
 /// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT940 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
@@ -51,6 +52,7 @@ pub struct MT940 {
 
 /// Statement line for MT940
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT940StatementLine {
     /// Statement Line (Field 61)
     #[serde(rename = "61")]

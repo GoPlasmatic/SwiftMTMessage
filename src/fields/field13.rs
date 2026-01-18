@@ -82,12 +82,14 @@ mod date_format {
 /// :13C:/SNDTIME/1230+0100
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field13C {
     /// Time indication code (SNDTIME, CLSTIME, etc.)
     pub code: String,
 
     /// Time in HHMM format (24-hour)
     #[serde(with = "time_format")]
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub time: NaiveTime,
 
     /// UTC offset sign (+ or -)
@@ -216,13 +218,16 @@ impl SwiftField for Field13C {
 /// :13D:2407191230+0100
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field13D {
     /// Date in YYMMDD format
     #[serde(with = "date_format")]
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub date: NaiveDate,
 
     /// Time in HHMM format (24-hour)
     #[serde(with = "time_format")]
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub time: NaiveTime,
 
     /// UTC offset sign (+ or -)

@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 /// :26T:PAY
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field26T {
     /// Transaction type code (3 chars, alphanumeric)
     pub type_code: String,

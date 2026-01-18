@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// Sequence B - Cover Payment Details (MT202 COV)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT202SequenceB {
     /// Ordering Customer (Field 50)
     #[serde(flatten, skip_serializing_if = "Option::is_none")]
@@ -48,6 +49,7 @@ pub struct MT202SequenceB {
 /// **Usage:** Interbank transfers, cover payments, correspondent banking
 /// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT202 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]

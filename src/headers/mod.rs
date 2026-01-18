@@ -35,6 +35,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// **Example:** `F01DEUTDEFFAXXX0000123456`
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct BasicHeader {
     /// Application ID (F, A, L)
     pub application_id: String,
@@ -235,6 +236,7 @@ impl std::fmt::Display for BasicHeader {
 ///
 /// **Format:** `I103DDDDDDDDDDDDP[M][OOO]` (17-21 chars)
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct InputApplicationHeader {
     /// Message type (3 digits: 103, 202, 940, etc.)
     pub message_type: String,
@@ -332,6 +334,7 @@ impl<'de> serde::Deserialize<'de> for InputApplicationHeader {
 ///
 /// **Format:** `O103HHMMYYYYMMDDDDDDDDDDDDDDNNNNSSSSSSYYYYMMDDHHMMP` (46-47 chars)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct OutputApplicationHeader {
     /// Message type (3 digits)
     pub message_type: String,
@@ -357,6 +360,7 @@ pub struct OutputApplicationHeader {
 /// - **Input:** Message being sent to SWIFT (format: `I103DDDDDDDDDDDDP[M][OOO]`)
 /// - **Output:** Message delivered from SWIFT (format: `O103HHMMYYYYMMDDDDDDDDDDDDDDNNNNSSSSSSYYYYMMDDHHMMP`)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 #[serde(tag = "direction")]
 pub enum ApplicationHeader {
     /// Input message sent to SWIFT network
@@ -656,6 +660,7 @@ impl std::fmt::Display for OutputApplicationHeader {
 /// - **108:** Message user reference
 /// - **433/434:** Sanctions screening and payment controls
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct UserHeader {
     /// Tag 103 - Service Identifier (3!a) - Mandatory for FINcopy Service
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -713,6 +718,7 @@ pub struct UserHeader {
 
 /// Balance checkpoint for Tag 423 (MIRS recovery)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct BalanceCheckpoint {
     /// Date (YYMMDD)
     pub date: String,
@@ -725,6 +731,7 @@ pub struct BalanceCheckpoint {
 
 /// Message Input Reference (Tag 106, MIR format)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MessageInputReference {
     /// Date (YYMMDD)
     pub date: String,
@@ -740,6 +747,7 @@ pub struct MessageInputReference {
 
 /// Payment release info for Tag 165 (FINInform)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct PaymentReleaseInfo {
     /// Code (3 chars)
     pub code: String,
@@ -750,6 +758,7 @@ pub struct PaymentReleaseInfo {
 
 /// Sanctions screening info for Tag 433
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct SanctionsScreeningInfo {
     /// Code word (AOK, FPO, NOK)
     pub code_word: String,
@@ -760,6 +769,7 @@ pub struct SanctionsScreeningInfo {
 
 /// Payment controls info for Tag 434
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct PaymentControlsInfo {
     /// Code word (3 chars)
     pub code_word: String,
@@ -1033,6 +1043,7 @@ impl std::fmt::Display for UserHeader {
 /// - **PDM/PDE:** Possible duplicate detection tags
 /// - **DLM:** Delayed message indicator
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Trailer {
     /// CHK - Checksum (12!h) - Mandatory
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1069,6 +1080,7 @@ pub struct Trailer {
 
 /// Possible Duplicate Emission for PDE tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct PossibleDuplicateEmission {
     /// Time (HHMM)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1080,6 +1092,7 @@ pub struct PossibleDuplicateEmission {
 
 /// Message Reference for MRF tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MessageReference {
     /// Date (YYMMDD)
     pub date: String,
@@ -1091,6 +1104,7 @@ pub struct MessageReference {
 
 /// Possible Duplicate Message for PDM tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct PossibleDuplicateMessage {
     /// Time (HHMM)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1102,6 +1116,7 @@ pub struct PossibleDuplicateMessage {
 
 /// Message Output Reference (MOR format)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MessageOutputReference {
     /// Date (YYMMDD)
     pub date: String,
@@ -1117,6 +1132,7 @@ pub struct MessageOutputReference {
 
 /// System Originated Message for SYS tag
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct SystemOriginatedMessage {
     /// Time (HHMM)
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 /// :23:BASREFERENCE
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field23 {
     /// Function code (3 chars, uppercase)
     pub function_code: String,
@@ -134,6 +135,7 @@ impl SwiftField for Field23 {
 /// :23B:SSTD
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field23B {
     /// Bank operation code (4 chars, uppercase)
     pub instruction_code: String,
@@ -188,6 +190,7 @@ impl SwiftField for Field23B {
 /// :23E:URGP
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field23E {
     /// Instruction code (4 chars, uppercase)
     pub instruction_code: String,

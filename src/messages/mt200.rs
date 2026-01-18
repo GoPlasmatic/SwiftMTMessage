@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Nostro funding, liquidity management, internal transfers
 /// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT200 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]

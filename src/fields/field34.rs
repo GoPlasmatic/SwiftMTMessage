@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 /// :34F:USDD2500,00
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field34F {
     /// ISO 4217 currency code (e.g., USD, EUR, GBP)
     pub currency: String,

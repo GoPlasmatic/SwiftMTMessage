@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Stop payment status notifications
 /// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT112 {
     /// Transaction reference (Field 20)
     #[serde(rename = "20")]

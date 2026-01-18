@@ -15,12 +15,14 @@ use serde::{Deserialize, Serialize};
 /// :11R:1032407191234567890
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field11R {
     /// Message type (3 digits)
     pub message_type: String,
 
     /// Date (YYMMDD format)
     #[serde(with = "date_string")]
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub date: NaiveDate,
 
     /// Session number (4 digits, optional)
@@ -137,12 +139,14 @@ impl SwiftField for Field11R {
 /// :11S:1922407191234567890
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field11S {
     /// Message type (3 digits)
     pub message_type: String,
 
     /// Date (YYMMDD format)
     #[serde(with = "date_string")]
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub date: NaiveDate,
 
     /// Session number (4 digits, optional)
@@ -371,11 +375,13 @@ mod tests {
 /// :11:196240719
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field11 {
     /// Message type (3 digits)
     pub message_type: String,
 
     /// Date (YYMMDD format)
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub date: NaiveDate,
 }
 

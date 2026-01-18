@@ -25,6 +25,7 @@ use serde::{Deserialize, Serialize};
 /// :90D:2GBP250050,00
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field90D {
     /// Number of debit transactions (max 5 digits)
     pub number: u32,
@@ -127,6 +128,7 @@ impl SwiftField for Field90D {
 /// :90C:5USD12500,50
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field90C {
     /// Number of credit transactions (max 5 digits)
     pub number: u32,

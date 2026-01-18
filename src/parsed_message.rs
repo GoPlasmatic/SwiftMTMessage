@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 /// Enum of all supported SWIFT message types (30+ types)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 #[serde(tag = "mt_type")]
 pub enum ParsedSwiftMessage {
     #[serde(rename = "101")]

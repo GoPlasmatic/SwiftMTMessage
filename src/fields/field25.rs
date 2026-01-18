@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 /// :25:/AUTH123456789
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field25NoOption {
     /// Authorization code or digital signature (max 35 chars)
     pub authorisation: String,
@@ -50,6 +51,7 @@ impl SwiftField for Field25NoOption {
 ///
 /// **Format:** `/34x` (slash + max 34 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field25A {
     /// Account identifier (max 34 chars, stored without slash)
     pub account: String,
@@ -107,6 +109,7 @@ impl SwiftField for Field25A {
 ///
 /// **Format:** `35x` + `4!a2!a2!c[3!c]` (account + BIC)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field25P {
     /// Account identifier (max 35 chars)
     pub account: String,
@@ -184,6 +187,7 @@ impl SwiftField for Field25P {
 ///
 /// Account identification options for different specification needs.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 #[serde(untagged)]
 pub enum Field25AccountIdentification {
     /// Authorization code

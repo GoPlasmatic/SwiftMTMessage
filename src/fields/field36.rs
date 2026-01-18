@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 /// :36:1,2500
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field36 {
     /// Exchange rate (from Field 33B currency to Field 32A currency)
     pub rate: f64,

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Sequence B - Transaction details
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT104Transaction {
     /// Transaction reference (Field 21)
     #[serde(rename = "21")]
@@ -91,6 +92,7 @@ pub struct MT104Transaction {
 /// **Usage:** Direct debits, batch collections, SEPA debits
 /// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT104 {
     /// Sender's reference (Field 20)
     #[serde(rename = "20")]

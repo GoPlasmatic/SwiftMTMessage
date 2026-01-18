@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Deposit notifications, account funding notices
 /// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT210 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
@@ -31,6 +32,7 @@ pub struct MT210 {
 
 /// Individual transaction within MT210
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT210Transaction {
     /// Related Reference (Field 21)
     #[serde(rename = "21", skip_serializing_if = "Option::is_none")]

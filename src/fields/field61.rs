@@ -16,8 +16,10 @@ use serde::{Deserialize, Serialize};
 /// :61:231225D1234,56NTRFREF123456
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field61 {
     /// Value date (YYMMDD)
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub value_date: NaiveDate,
 
     /// Entry date (MMDD, optional)

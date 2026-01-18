@@ -6,6 +6,7 @@ use std::collections::HashSet;
 
 /// Sequence B - Transaction details
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT101Transaction {
     /// Transaction reference (Field 21)
     #[serde(rename = "21")]
@@ -80,6 +81,7 @@ pub struct MT101Transaction {
 /// **Usage:** Batch payments, salary payments, vendor payments
 /// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT101 {
     /// Sender's reference (Field 20)
     #[serde(rename = "20")]

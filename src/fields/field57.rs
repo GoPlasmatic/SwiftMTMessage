@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 /// DEUTDEFF
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field57A {
     /// Optional party identifier (max 34 chars, may include //FW, //RT, //AU, //IN codes)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -81,6 +82,7 @@ impl SwiftField for Field57A {
 /// Domestic routing with party identifier and location.
 /// Format: [/1!a][/34x] + [35x]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field57B {
     /// Optional party identifier (max 34 chars)
     pub party_identifier: Option<String>,
@@ -149,6 +151,7 @@ impl SwiftField for Field57B {
 /// Simplified institutional reference with party identifier only.
 /// Format: /34x (mandatory slash prefix)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field57C {
     /// Party identifier (1-34 chars, domestic/clearing codes)
     pub party_identifier: String,
@@ -190,6 +193,7 @@ impl SwiftField for Field57C {
 /// Detailed institutional identification with name and address.
 /// Format: [/1!a][/34x] + 4*35x
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field57D {
     /// Optional party identifier (max 34 chars, routing codes)
     pub party_identifier: Option<String>,
@@ -246,6 +250,7 @@ impl SwiftField for Field57D {
 
 /// Enum for Field57 Account With Institution variants (A, B, C, D)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field57 {
     #[serde(rename = "57A")]
     A(Field57A),
@@ -438,6 +443,7 @@ pub type Field57DebtorBank = Field57;
 /// Restricted enum supporting only variants A, B, and D per SWIFT specification.
 /// Used in MT200 where Field 57 is mandatory and limited to these options.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field57DebtInstitution {
     #[serde(rename = "57A")]
     A(Field57A),

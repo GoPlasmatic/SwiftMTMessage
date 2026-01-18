@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 /// DEUTDEFF
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field58A {
     /// Optional party identifier (max 34 chars, institutional account)
     pub party_identifier: Option<String>,
@@ -32,6 +33,7 @@ pub struct Field58A {
 /// **Format:** [/1!a][/34x] + 4*35x
 /// **Extended Clearing Codes:** CH (CHIPS), CP (CHIPS Participant), FW (Fedwire), RU (Russian), SW (Swiss)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field58D {
     /// Optional party identifier (max 34 chars, may include CH, CP, FW, RU, SW codes)
     pub party_identifier: Option<String>,
@@ -41,6 +43,7 @@ pub struct Field58D {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field58 {
     #[serde(rename = "58A")]
     A(Field58A),

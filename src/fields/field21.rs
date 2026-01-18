@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 /// :21:REF20240719001
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field21NoOption {
     /// Transaction reference (max 16 chars, no slashes at start/end or consecutive)
     pub reference: String,
@@ -59,6 +60,7 @@ impl SwiftField for Field21NoOption {
 ///
 /// **Format:** `35x` (max 35 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field21C {
     /// Customer reference (max 35 chars)
     pub reference: String,
@@ -98,6 +100,7 @@ impl SwiftField for Field21C {
 ///
 /// **Format:** `35x` (max 35 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field21D {
     /// Deal reference (max 35 chars)
     pub reference: String,
@@ -137,6 +140,7 @@ impl SwiftField for Field21D {
 ///
 /// **Format:** `35x` (max 35 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field21E {
     /// Related reference (max 35 chars)
     pub reference: String,
@@ -176,6 +180,7 @@ impl SwiftField for Field21E {
 ///
 /// **Format:** `16x` (max 16 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field21F {
     /// File reference (max 16 chars)
     pub reference: String,
@@ -215,6 +220,7 @@ impl SwiftField for Field21F {
 ///
 /// **Format:** `16x` (max 16 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field21R {
     /// Related file reference (max 16 chars)
     pub reference: String,

@@ -12,6 +12,11 @@ use std::any::Any;
 
 /// Complete SWIFT message (headers + typed body)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(
+    feature = "jsonschema",
+    derive(schemars::JsonSchema),
+    schemars(bound = "T: schemars::JsonSchema")
+)]
 pub struct SwiftMessage<T: SwiftMessageBody> {
     /// Basic Header (Block 1)
     pub basic_header: BasicHeader,

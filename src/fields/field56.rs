@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 /// CHASUS33XXX
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field56A {
     /// Optional party identifier (max 34 chars, may include //FW, //RT, //AU, //IN codes)
     pub party_identifier: Option<String>,
@@ -30,6 +31,7 @@ pub struct Field56A {
 /// Simplified intermediary reference with party identifier only.
 /// Format: /34x (mandatory slash prefix)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field56C {
     /// Party identifier (1-34 chars, domestic routing codes)
     pub party_identifier: String,
@@ -40,6 +42,7 @@ pub struct Field56C {
 /// Detailed intermediary identification with name and address.
 /// Format: [/1!a][/34x] + 4*35x
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field56D {
     /// Optional party identifier (max 34 chars, routing codes)
     pub party_identifier: Option<String>,
@@ -49,6 +52,7 @@ pub struct Field56D {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field56Intermediary {
     #[serde(rename = "56A")]
     A(Field56A),
@@ -59,6 +63,7 @@ pub enum Field56Intermediary {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field56IntermediaryAD {
     #[serde(rename = "56A")]
     A(Field56A),

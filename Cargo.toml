@@ -12,7 +12,13 @@ repository = "https://github.com/GoPlasmatic/SwiftMTMessage"
 keywords = ["swift", "mt", "message", "parsing", "macro"]
 categories = ["data-structures", "development-tools", "parsing"]
 
+[features]
+default = []
+jsonschema = ["dep:schemars"]
+
 [dependencies]
+# JSON Schema generation (optional)
+schemars = { version = "0.8", optional = true }
 # Core serialization and parsing
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -40,3 +46,8 @@ datafake-rs = "0.2"
 pretty_assertions = "1.4"
 tempfile = "3.23"
 tokio = { version = "1.48", features = ["rt", "macros", "test-util"] }
+schemars = "0.8"
+
+[[example]]
+name = "generate_manifest"
+required-features = ["jsonschema"]

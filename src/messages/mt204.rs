@@ -13,6 +13,7 @@ use std::collections::HashSet;
 /// **Usage:** Multiple transaction clearing, settlement batches
 /// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT204 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
@@ -45,6 +46,7 @@ pub struct MT204 {
 
 /// Individual transaction within MT204
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT204Transaction {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]

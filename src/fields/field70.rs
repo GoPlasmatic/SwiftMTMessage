@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 /// PAYMENT FOR SERVICES
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field70 {
     /// Remittance narrative (max 4 lines, 35 chars each)
     pub narrative: Vec<String>,

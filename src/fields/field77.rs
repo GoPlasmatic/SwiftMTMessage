@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// **Format:** `9000z` (max 9000 characters, any character including spaces/newlines)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field77T {
     /// Envelope content (max 9000 characters)
     pub envelope_content: String,
@@ -50,6 +51,7 @@ impl SwiftField for Field77T {
 ///
 /// **Format:** `20*35x` (max 20 lines, 35 chars each)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field77A {
     /// Extended narrative content (max 20 lines, 35 chars each)
     pub narrative: Vec<String>,
@@ -76,6 +78,7 @@ impl SwiftField for Field77A {
 ///
 /// **Format:** `3*35x` (max 3 lines, 35 chars each)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field77B {
     /// Short narrative content (max 3 lines, 35 chars each)
     pub narrative: Vec<String>,

@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** General correspondence, operational messages
 /// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT299 {
     /// Transaction Reference (Field 20)
     #[serde(rename = "20")]

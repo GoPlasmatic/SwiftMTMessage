@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Charge reimbursement requests, expense recovery
 /// **Category:** Category 1 (Customer Payments & Cheques)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT191 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]

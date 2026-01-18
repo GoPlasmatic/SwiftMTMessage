@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 /// :71A:SHA
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field71A {
     /// Charge code: BEN, OUR, or SHA
     pub code: String,
@@ -64,6 +65,7 @@ impl SwiftField for Field71A {
 /// :71F:USD25,00
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field71F {
     /// ISO 4217 currency code
     pub currency: String,
@@ -121,6 +123,7 @@ impl SwiftField for Field71F {
 /// :71G:EUR10,50
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field71G {
     /// ISO 4217 currency code
     pub currency: String,
@@ -180,6 +183,7 @@ impl SwiftField for Field71G {
 /// INTEREST USD 10.50
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field71B {
     /// Charge details (max 6 lines, 35 chars each)
     pub details: Vec<String>,

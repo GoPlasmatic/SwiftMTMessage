@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Specifies the receiver's branch in complex reimbursement chains.
 /// Format: [/1!a][/34x] + BIC (8 or 11 chars)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field55A {
     /// Optional party identifier (max 34 chars, specialized account)
     pub party_identifier: Option<String>,
@@ -71,6 +72,7 @@ impl SwiftField for Field55A {
 /// Domestic third institution routing with party identifier and location.
 /// Format: [/1!a][/34x] + [35x]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field55B {
     /// Optional party identifier (max 34 chars)
     pub party_identifier: Option<String>,
@@ -133,6 +135,7 @@ impl SwiftField for Field55B {
 /// Detailed third institution identification with name and address.
 /// Format: [/1!a][/34x] + 4*35x
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field55D {
     /// Optional party identifier (max 34 chars)
     pub party_identifier: Option<String>,
@@ -189,6 +192,7 @@ impl SwiftField for Field55D {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field55ThirdReimbursementInstitution {
     #[serde(rename = "55A")]
     A(Field55A),

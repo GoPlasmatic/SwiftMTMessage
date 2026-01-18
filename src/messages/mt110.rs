@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 /// Cheque details (repeating sequence)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT110Cheque {
     /// Cheque number (Field 21)
     #[serde(rename = "21")]
@@ -40,6 +41,7 @@ pub struct MT110Cheque {
 /// **Usage:** Cheque issuance advice, payment notifications
 /// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT110 {
     /// Sender's reference (Field 20)
     #[serde(rename = "20")]

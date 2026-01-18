@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 /// :19:123456,78
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field19 {
     /// Sum of transaction amounts (must match sum of Field 32B)
     pub amount: f64,

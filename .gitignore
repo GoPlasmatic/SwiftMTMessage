@@ -22,3 +22,4 @@ target/
 /specifications/
 .DS_Store
 .claude/
+schemas/

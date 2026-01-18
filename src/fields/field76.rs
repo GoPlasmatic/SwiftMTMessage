@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field76 {
     /// Answer information (max 6 lines, 35 chars each)
     pub information: Vec<String>,

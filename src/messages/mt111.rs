@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Cheque stop payment requests
 /// **Category:** Category 1 (Customer Payments)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT111 {
     /// Sender's reference (Field 20)
     #[serde(rename = "20")]

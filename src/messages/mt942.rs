@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Intraday reporting, real-time cash positioning
 /// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT942 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
@@ -58,6 +59,7 @@ pub struct MT942 {
 
 /// Statement line for MT942
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT942StatementLine {
     /// Statement Line (Field 61)
     #[serde(rename = "61")]

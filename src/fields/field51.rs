@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 /// CHASUS33XXX
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field51A {
     /// Optional party identifier (max 34 chars, clearing/account ref)
     pub party_identifier: Option<String>,

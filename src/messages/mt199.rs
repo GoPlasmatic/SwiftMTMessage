@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** General payment inquiries, informal communication, status messages
 /// **Category:** Category 1 (Customer Payments & Cheques)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT199 {
     /// Sender's Reference (Field 20)
     #[serde(rename = "20")]

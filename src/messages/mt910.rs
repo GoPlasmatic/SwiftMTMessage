@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Credit confirmations, account reconciliation
 /// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT910 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]

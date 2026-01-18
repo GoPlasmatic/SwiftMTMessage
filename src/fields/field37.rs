@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 /// :37H:CN0,2500
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field37H {
     /// Rate type indicator: 'C' (Credit) or 'D' (Debit)
     pub rate_indicator: char,

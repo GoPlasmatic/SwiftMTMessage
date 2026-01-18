@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 /// :20:PAYMENT123456
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field20 {
     /// Sender's reference (max 16 chars, no leading/trailing slashes)
     pub reference: String,

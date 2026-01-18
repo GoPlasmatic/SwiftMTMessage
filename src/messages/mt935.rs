@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 /// **Usage:** Rate change notifications, interest rate updates
 /// **Category:** Category 9 (Cash Management & Customer Status)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT935 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]
@@ -26,6 +27,7 @@ pub struct MT935 {
 
 /// Rate change sequence for MT935
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT935RateChange {
     /// Further Identification (Field 23)
     #[serde(rename = "23", skip_serializing_if = "Option::is_none")]

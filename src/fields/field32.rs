@@ -28,9 +28,11 @@ use serde::{Deserialize, Serialize};
 /// Settlement information with value date.
 /// Format: `6!n3!a15d` (YYMMDD + currency + amount)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field32A {
     /// Value date (YYMMDD)
     #[serde(with = "date_string")]
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub value_date: NaiveDate,
     /// ISO 4217 currency code
     pub currency: String,
@@ -99,6 +101,7 @@ impl SwiftField for Field32A {
 /// Currency and amount without value date.
 /// Format: `3!a15d` (currency + amount)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field32B {
     /// ISO 4217 currency code
     pub currency: String,
@@ -159,9 +162,11 @@ impl SwiftField for Field32B {
 /// Credit amount with value date (MT n90 messages).
 /// Format: `6!n3!a15d`
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field32C {
     /// Value date (YYMMDD)
     #[serde(with = "date_string")]
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub value_date: NaiveDate,
     /// ISO 4217 currency code
     pub currency: String,
@@ -245,9 +250,11 @@ impl SwiftField for Field32C {
 /// Debit amount with value date (MT n90 messages).
 /// Format: `6!n3!a15d`
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field32D {
     /// Value date (YYMMDD)
     #[serde(with = "date_string")]
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub value_date: NaiveDate,
     /// ISO 4217 currency code
     pub currency: String,
@@ -309,6 +316,7 @@ impl SwiftField for Field32D {
 ///
 /// Enum wrapper for Field 32 variants (A/B/C/D).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field32 {
     #[serde(rename = "32A")]
     A(Field32A),
@@ -368,6 +376,7 @@ impl SwiftField for Field32 {
 /// Used in MT110, MT111, MT112 (cheque messages).
 /// Supports only 32A (with date) or 32B (without date).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field32AB {
     #[serde(rename = "32A")]
     A(Field32A),
@@ -408,6 +417,7 @@ impl SwiftField for Field32AB {
 /// Used in MT190 and similar messages.
 /// Supports 32C (credit) or 32D (debit).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field32AmountCD {
     #[serde(rename = "32C")]
     C(Field32C),

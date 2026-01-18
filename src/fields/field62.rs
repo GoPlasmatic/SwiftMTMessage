@@ -20,11 +20,13 @@ use serde::{Deserialize, Serialize};
 ///
 /// Final balance at statement end.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field62F {
     /// Debit/Credit mark (D or C)
     pub debit_credit_mark: String,
 
     /// Value date (YYMMDD)
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub value_date: NaiveDate,
 
     /// ISO 4217 currency code
@@ -38,11 +40,13 @@ pub struct Field62F {
 ///
 /// Balance at sequence break within statement.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct Field62M {
     /// Debit/Credit mark (D or C)
     pub debit_credit_mark: String,
 
     /// Value date (YYMMDD)
+    #[cfg_attr(feature = "jsonschema", schemars(with = "String"))]
     pub value_date: NaiveDate,
 
     /// ISO 4217 currency code
@@ -53,6 +57,7 @@ pub struct Field62M {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum Field62 {
     F(Field62F),
     M(Field62M),

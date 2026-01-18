@@ -12,6 +12,7 @@ use std::collections::HashMap;
 /// **Usage:** Payment cancellation requests
 /// **Category:** Category 2 (Financial Institution Transfers)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct MT292 {
     /// Transaction Reference Number (Field 20)
     #[serde(rename = "20")]

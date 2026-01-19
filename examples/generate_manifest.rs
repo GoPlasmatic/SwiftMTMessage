@@ -28,6 +28,7 @@ struct Manifest {
     repository: String,
     license: String,
     authors: Vec<String>,
+    functions: HashMap<String, String>,
     supported_messages: Vec<MessageInfo>,
 }
 
@@ -223,6 +224,14 @@ fn main() -> std::io::Result<()> {
 
     // Step 3: Generate manifest.json
     println!("\nStep 3: Generating manifest.json...");
+
+    // Build functions lookup table for dataflow plugin
+    let mut functions = HashMap::new();
+    functions.insert("parse".to_string(), "parse_mt".to_string());
+    functions.insert("publish".to_string(), "publish_mt".to_string());
+    functions.insert("validate".to_string(), "validate_mt".to_string());
+    functions.insert("generate".to_string(), "generate_mt".to_string());
+
     let manifest = Manifest {
         name: "swift-mt-message".to_string(),
         version: version.clone(),
@@ -230,6 +239,7 @@ fn main() -> std::io::Result<()> {
         repository: "https://github.com/GoPlasmatic/SwiftMTMessage".to_string(),
         license: "Apache-2.0".to_string(),
         authors: vec!["Plasmatic Engineering <shankar@goplasmatic.io>".to_string()],
+        functions,
         supported_messages,
     };
 

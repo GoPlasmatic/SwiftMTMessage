@@ -202,7 +202,7 @@ impl<'a> MessageParser<'a> {
     /// Detect which variant is present for an enum field
     fn detect_variant(&self, base_tag: &str) -> Result<String, ParseError> {
         // Look for common variants in order of preference
-        let common_variants = vec!["A", "B", "C", "D", "F", "K", "L"];
+        let common_variants = vec!["A", "B", "C", "D", "E", "F", "G", "H", "K", "L"];
 
         // Get the remaining input
         let remaining = &self.input[self.position..];
@@ -233,7 +233,7 @@ impl<'a> MessageParser<'a> {
     /// Detect variant for optional fields
     pub fn detect_variant_optional(&self, base_tag: &str) -> Option<String> {
         // Look for common variants
-        let common_variants = vec!["A", "B", "C", "D", "F", "K", "L"];
+        let common_variants = vec!["A", "B", "C", "D", "E", "F", "G", "H", "K", "L"];
 
         // Get the remaining input
         let remaining = &self.input[self.position..];

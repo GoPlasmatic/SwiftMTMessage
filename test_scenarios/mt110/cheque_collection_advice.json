@@ -74,8 +74,8 @@
                     "21": {"reference": {"var": "cheque2_ref"}},
                     "30": {"execution_date": {"var": "cheque2_date"}},
                     "32B": {"currency": {"var": "currency"}, "amount": {"var": "cheque2_amount"}},
-                    "50A": {
-                        "party_identifier": "US/123456789",
+                    "50K": {
+                        "account": "US/123456789",
                         "name_and_address": [
                             {"substr": [{"fake": ["company_name"]}, 0, 33]},
                             {"substr": [{"fake": ["street_address"]}, 0, 33]},

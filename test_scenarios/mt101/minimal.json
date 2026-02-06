@@ -48,7 +48,7 @@
                     "71A": {"code": "SHA"}
                 }
             ],
-            "50F": {"account": "MINIMAL-ACCOUNT", "bic": {"fake": ["bic8"]}}
+            "50G": {"account": "MINIMAL-ACCOUNT", "bic": {"fake": ["bic8"]}}
         }
     }
 }

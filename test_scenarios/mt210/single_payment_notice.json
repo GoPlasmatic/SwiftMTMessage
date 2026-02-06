@@ -43,7 +43,7 @@
                 {
                     "21": {"reference": {"var": "payment_ref"}},
                     "32B": {"currency": {"var": "payment_currency"}, "amount": {"var": "payment_amount"}},
-                    "50F": {"account": {"fake": ["iban", "DE"]}, "bic": {"fake": ["bic8"]}}
+                    "50C": {"bic": {"fake": ["bic8"]}}
                 }
             ]
         }

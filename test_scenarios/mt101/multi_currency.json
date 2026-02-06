@@ -96,7 +96,7 @@
                     "71A": {"code": "BEN"}
                 }
             ],
-            "50F": {"account": {"fake": ["alphanumeric", 10, 16]}, "bic": {"fake": ["bic8"]}},
+            "50G": {"account": {"fake": ["alphanumeric", 10, 16]}, "bic": {"fake": ["bic8"]}},
             "52A": {"bic": {"var": "receiver_bic"}}
         }
     }

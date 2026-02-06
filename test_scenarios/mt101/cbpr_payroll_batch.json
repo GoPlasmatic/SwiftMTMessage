@@ -106,7 +106,7 @@
                     "57A": {"bic": {"fake": ["bic11"]}}
                 }
             ],
-            "50F": {"account": {"var": "account_id"}, "bic": {"var": "sender_bic"}},
+            "50G": {"account": {"var": "account_id"}, "bic": {"var": "sender_bic"}},
             "52A": {"bic": {"var": "sender_bic"}}
         }
     }

@@ -46,12 +46,12 @@
                 {
                     "21": {"reference": {"var": "fx_leg1_ref"}},
                     "32B": {"currency": {"var": "fx_leg1_currency"}, "amount": {"var": "fx_leg1_amount"}},
-                    "50F": {"account": "FX1234567890", "bic": {"fake": ["bic8"]}}
+                    "50C": {"bic": {"fake": ["bic8"]}}
                 },
                 {
                     "21": {"reference": {"var": "fx_leg2_ref"}},
                     "32B": {"currency": {"var": "fx_leg2_currency"}, "amount": {"var": "fx_leg2_amount"}},
-                    "50F": {"account": "FX9876543210", "bic": {"fake": ["bic8"]}}
+                    "50C": {"bic": {"fake": ["bic8"]}}
                 }
             ]
         }

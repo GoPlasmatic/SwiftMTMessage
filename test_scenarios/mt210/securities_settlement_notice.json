@@ -51,15 +51,13 @@
                         "amount": {"var": "settlement1_amount"}
                     },
                     "50F": {
-                        "account": {"fake": ["iban", "CH"]},
-                        "party_identifier": "SEC/1234567890",
+                        "party_identifier": "/SEC1234567890",
                         "name_and_address": [
                             "BONDS SETTLEMENT",
-                            "ISIN: CH0012345678",
-                            "NOMINAL: CHF 2,000,000",
-                            "TRADE DATE: 2024-12-21"
-                        ],
-                        "bic": {"fake": ["bic8"]}
+                            "ISIN CH0012345678",
+                            "NOMINAL CHF 2000000",
+                            "TRADE DATE 2024-12-21"
+                        ]
                     },
                     "56A": {"bic": {"var": "clearinghouse_bic"}}
                 },
@@ -70,10 +68,8 @@
                         "amount": {"var": "settlement2_amount"}
                     },
                     "50F": {
-                        "account": {"fake": ["iban", "CH"]},
-                        "party_identifier": "INCOME/COUPON",
-                        "name_and_address": ["COUPON PAYMENT", "BOND: CH0012345678", "RATE: 2.5% P.A.", "PERIOD: 2024H2"],
-                        "bic": {"fake": ["bic8"]}
+                        "party_identifier": "/INCOME/COUPON",
+                        "name_and_address": ["COUPON PAYMENT", "BOND CH0012345678", "RATE 2.5 PCT PA", "PERIOD 2024H2"]
                     }
                 }
             ]

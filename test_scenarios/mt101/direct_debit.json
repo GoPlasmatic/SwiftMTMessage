@@ -108,7 +108,7 @@
                     "57A": {"bic": {"var": "receiver_bic"}}
                 }
             ],
-            "50F": {"account": "DD/COLLECTOR", "bic": {"fake": ["bic8"]}},
+            "50G": {"account": "DD/COLLECTOR", "bic": {"fake": ["bic8"]}},
             "52A": {"bic": {"var": "receiver_bic"}}
         }
     }

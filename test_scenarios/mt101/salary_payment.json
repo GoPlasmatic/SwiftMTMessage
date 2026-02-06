@@ -106,7 +106,7 @@
                     "57A": {"bic": {"fake": ["bic8"]}}
                 }
             ],
-            "50F": {"account": "HR/PAYROLL", "bic": {"fake": ["bic8"]}},
+            "50G": {"account": "HR/PAYROLL", "bic": {"fake": ["bic8"]}},
             "52A": {"bic": {"var": "receiver_bic"}}
         }
     }

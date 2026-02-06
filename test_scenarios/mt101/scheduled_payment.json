@@ -36,7 +36,7 @@
             "20": {"reference": {"var": "message_ref"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "future_date"}},
-            "50F": {"account": "CORP/12345", "bic": {"fake": ["bic8"]}},
+            "50G": {"account": "CORP/12345", "bic": {"fake": ["bic8"]}},
             "#": [
                 {
                     "21": {"reference": {"cat": ["PAY", 100000000000]}},

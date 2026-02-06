@@ -39,7 +39,7 @@
             "20": {"reference": {"var": "message_ref"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "execution_date"}},
-            "50F": {"account": {"fake": ["alphanumeric", 10, 10]}, "bic": {"fake": ["bic8"]}},
+            "50G": {"account": {"fake": ["alphanumeric", 10, 10]}, "bic": {"fake": ["bic8"]}},
             "52A": {"bic": {"var": "receiver_bic"}},
             "#": [
                 {

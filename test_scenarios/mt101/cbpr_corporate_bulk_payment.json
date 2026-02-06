@@ -36,7 +36,7 @@
             "20": {"reference": {"var": "msg_id"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "exec_date"}},
-            "50F": {"account": {"var": "account_id"}, "bic": {"fake": ["bic8"]}},
+            "50G": {"account": {"var": "account_id"}, "bic": {"fake": ["bic8"]}},
             "#": [
                 {
                     "21": {"reference": "SUPP-PAY-001"},

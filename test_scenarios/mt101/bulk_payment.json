@@ -37,7 +37,7 @@
             "20": {"reference": {"var": "message_ref"}},
             "28D": {"index": 1, "total": 1},
             "30": {"execution_date": {"var": "execution_date"}},
-            "50F": {"account": {"fake": ["iban", "US"]}, "bic": {"var": "sender_bic"}},
+            "50G": {"account": {"fake": ["iban", "US"]}, "bic": {"var": "sender_bic"}},
             "52A": {"bic": {"var": "receiver_bic"}},
             "#": [
                 {

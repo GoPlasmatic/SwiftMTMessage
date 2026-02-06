@@ -1,6 +1,6 @@
 [package]
 name = "swift-mt-message"
-version = "3.1.4"
+version = "3.1.5"
 edition = "2024"
 exclude = [".DS_Store", "/target", ".vscode", ".github"]
 authors = ["Plasmatic Engineering <shankar@goplasmatic.io>"]
@@ -44,8 +44,8 @@ datafake-rs = "0.2"
 
 [dev-dependencies]
 pretty_assertions = "1.4"
-tempfile = "3.23"
-tokio = { version = "1.48", features = ["rt", "macros", "test-util"] }
+tempfile = "3.24"
+tokio = { version = "1.49", features = ["rt", "macros", "test-util"] }
 schemars = "0.8"
 
 [[example]]
